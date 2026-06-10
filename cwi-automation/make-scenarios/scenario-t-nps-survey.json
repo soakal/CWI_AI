@@ -1,0 +1,236 @@
+{
+  "name": "scenario-t-nps-survey",
+  "flow": {
+    "name": "NPS Survey - Monthly Client Outreach",
+    "description": "Runs on the 1st of every month at 10AM ET. Reads active clients from HubSpot and sends NPS survey emails via Resend HTTP POST, then logs a HubSpot note on each contact.",
+    "label": "NPS Survey Monthly",
+    "schedulingType": "cron",
+    "scheduling": {
+      "cron": "0 10 1 * *",
+      "timezone": "America/New_York"
+    },
+    "modules": [
+      {
+        "id": 1,
+        "type": "builtin:BasicTrigger",
+        "name": "Scheduled Trigger",
+        "metadata": {
+          "instant": false
+        },
+        "parameters": {}
+      },
+      {
+        "id": 2,
+        "type": "gateway:CustomApiCallModule",
+        "name": "Get Active Clients from HubSpot",
+        "metadata": {
+          "expect": [
+            {
+              "name": "results",
+              "type": "array"
+            }
+          ]
+        },
+        "parameters": {
+          "url": "https://api.hubapi.com/crm/v3/objects/contacts/search",
+          "method": "POST",
+          "headers": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": {
+            "filterGroups": [
+              {
+                "filters": [
+                  {
+                    "propertyName": "lifecyclestage",
+                    "operator": "EQ",
+                    "value": "customer"
+                  },
+                  {
+                    "propertyName": "hs_lead_status",
+                    "operator": "EQ",
+                    "value": "Client Active"
+                  }
+                ]
+              }
+            ],
+            "properties": [
+              "email",
+              "firstname",
+              "lastname",
+              "hs_lead_status",
+              "lifecyclestage"
+            ],
+            "limit": 100
+          },
+          "handleErrors": true
+        }
+      },
+      {
+        "id": 3,
+        "type": "builtin:BasicIterator",
+        "name": "Iterate Over Active Clients",
+        "parameters": {
+          "array": "{{2.body.results}}"
+        }
+      },
+      {
+        "id": 4,
+        "type": "gateway:CustomApiCallModule",
+        "name": "Send NPS Survey Email via Resend",
+        "metadata": {
+          "expect": [
+            {
+              "name": "id",
+              "type": "text"
+            }
+          ]
+        },
+        "parameters": {
+          "url": "https://api.resend.com/emails",
+          "method": "POST",
+          "headers": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{env.RESEND_API_KEY}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": {
+            "from": "{{env.RESEND_FROM_ADDRESS}}",
+            "to": "{{3.value.properties.email}}",
+            "subject": "How are we doing? Quick 1-question survey",
+            "html": "<p>Hi {{3.value.properties.firstname}},</p><p>We'd love to hear how we're doing! Please take a moment to rate us on a scale of 0–10:</p><p><a href=\"{{env.NPS_SURVEY_LINK}}\">{{env.NPS_SURVEY_LINK}}</a></p><p>Your feedback means a lot to us and helps us continue improving.</p><p>Thank you,<br>The CWI AI Team</p>"
+          },
+          "handleErrors": true
+        }
+      },
+      {
+        "id": 5,
+        "type": "gateway:CustomApiCallModule",
+        "name": "Log HubSpot Note on Contact",
+        "parameters": {
+          "url": "https://api.hubapi.com/crm/v3/objects/notes",
+          "method": "POST",
+          "headers": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": {
+            "properties": {
+              "hs_note_body": "NPS survey email sent on {{formatDate(now; 'YYYY-MM-DD')}}. Survey link: {{env.NPS_SURVEY_LINK}}",
+              "hs_timestamp": "{{now}}"
+            },
+            "associations": [
+              {
+                "to": {
+                  "id": "{{3.value.id}}"
+                },
+                "types": [
+                  {
+                    "associationCategory": "HUBSPOT_DEFINED",
+                    "associationTypeId": 202
+                  }
+                ]
+              }
+            ]
+          },
+          "handleErrors": true
+        }
+      },
+      {
+        "id": 6,
+        "type": "gateway:CustomApiCallModule",
+        "name": "Send Internal Alert on Error",
+        "filter": {
+          "condition": "{{or(4.error; 5.error)}}",
+          "label": "On Email or Note Error"
+        },
+        "parameters": {
+          "url": "https://api.resend.com/emails",
+          "method": "POST",
+          "headers": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{env.RESEND_API_KEY}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": {
+            "from": "{{env.CWI_ALERT_FROM_ADDRESS}}",
+            "to": "{{env.CWI_ALERT_FROM_ADDRESS}}",
+            "subject": "NPS Survey Error - {{3.value.properties.email}}",
+            "html": "<p>An error occurred during the NPS survey scenario for contact <strong>{{3.value.properties.email}}</strong> (ID: {{3.value.id}}).</p><p><strong>Email Send Error:</strong> {{4.error}}</p><p><strong>HubSpot Note Error:</strong> {{5.error}}</p><p>Please review and retry manually if needed.</p>"
+          },
+          "handleErrors": true
+        }
+      }
+    ],
+    "routes": [
+      {
+        "from": 1,
+        "to": 2
+      },
+      {
+        "from": 2,
+        "to": 3
+      },
+      {
+        "from": 3,
+        "to": 4
+      },
+      {
+        "from": 4,
+        "to": 5
+      },
+      {
+        "from": 5,
+        "to": 6
+      }
+    ]
+  },
+  "metadata": {
+    "instant": false,
+    "version": 1,
+    "scenario_name": "NPS Survey - Monthly Client Outreach",
+    "timezone": "America/New_York",
+    "notes": [
+      "Runs on the 1st of every month at 10AM America/New_York (cron: 0 10 1 * *).",
+      "Module 2: HubSpot CRM search filters for lifecycle stage = customer AND hs_lead_status = Client Active.",
+      "Module 4: Email sent via Resend HTTP POST using env.RESEND_FROM_ADDRESS. Never uses brian@cwiai.net.",
+      "Module 5: Creates a HubSpot note associated to the contact via association type 202 (note-to-contact).",
+      "Module 6: Internal alert email sent to env.CWI_ALERT_FROM_ADDRESS on any error in modules 4 or 5.",
+      "All secrets referenced via env.VARIABLE_NAME: HUBSPOT_PRIVATE_APP_TOKEN, RESEND_API_KEY, RESEND_FROM_ADDRESS, CWI_ALERT_FROM_ADDRESS, NPS_SURVEY_LINK.",
+      "handleErrors: true is set on all HTTP/gateway modules (2, 4, 5, 6).",
+      "Model referenced in scenario spec: anthropic/claude-sonnet-4-6 via OpenRouter (no Claude API call module required for this workflow - model reference is metadata only).",
+      "OpenRouter fallback model env variable: env.OPENROUTER_FALLBACK_MODEL (available if an OpenRouter HTTP module is added)."
+    ],
+    "env_variables_required": [
+      "HUBSPOT_PRIVATE_APP_TOKEN",
+      "RESEND_API_KEY",
+      "RESEND_FROM_ADDRESS",
+      "CWI_ALERT_FROM_ADDRESS",
+      "NPS_SURVEY_LINK",
+      "OPENROUTER_FALLBACK_MODEL"
+    ]
+  }
+}

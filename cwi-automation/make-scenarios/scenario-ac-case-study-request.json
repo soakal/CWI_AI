@@ -1,0 +1,253 @@
+{
+  "name": "AC Case Study Request",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": "{{env.HUBSPOT_WEBHOOK_HOOK_ID}}"
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0
+        },
+        "restore": {
+          "parameters": {
+            "hook": {
+              "label": "HubSpot Contact Onboarding Webhook"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "module": "util:Sleep",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "duration": 7776000
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": 3,
+      "module": "hubspot:makeAnAPICall",
+      "version": 1,
+      "parameters": {
+        "connection": "{{env.HUBSPOT_CONNECTION_ID}}"
+      },
+      "mapper": {
+        "method": "GET",
+        "url": "/crm/v3/objects/contacts/{{1.objectId}}",
+        "qs": [
+          {
+            "key": "properties",
+            "value": "firstname,lastname,email,lifecyclestage,company"
+          }
+        ],
+        "headers": [],
+        "body": {}
+      },
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": 4,
+      "module": "builtin:BasicRouter",
+      "version": 1,
+      "parameters": {},
+      "mapper": {},
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 0
+        }
+      },
+      "routes": [
+        {
+          "flow": [
+            {
+              "id": 5,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": true,
+                "useNewZLibDeCompress": true
+              },
+              "mapper": {
+                "url": "https://openrouter.ai/api/v1/chat/completions",
+                "method": "POST",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.OPENROUTER_API_KEY}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\"models\": [\"anthropic/claude-sonnet-4-6\", \"{{env.OPENROUTER_FALLBACK_MODEL}}\"], \"messages\": [{\"role\": \"user\", \"content\": \"Write a warm, professional email to {{3.body.properties.firstname}} {{3.body.properties.lastname}} at {{3.body.properties.company}}. It has been 90 days since they became a customer. Thank them sincerely for choosing us over the past 3 months and ask if they would be willing to participate in a brief 15-minute case study call. Include their Calendly booking link for easy scheduling: {{env.CALENDLY_BOOKING_LINK}}. Keep the tone friendly and appreciative. Do not include a subject line — just the email body.\"}]}"
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1200,
+                  "y": -150
+                }
+              }
+            },
+            {
+              "id": 6,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": true,
+                "useNewZLibDeCompress": true
+              },
+              "mapper": {
+                "url": "https://api.resend.com/emails",
+                "method": "POST",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.RESEND_API_KEY}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\"from\": \"{{env.RESEND_FROM_ADDRESS}}\", \"to\": [\"{{3.body.properties.email}}\"], \"subject\": \"Would you share your story? (15 min)\", \"text\": \"{{5.body.choices[].message.content}}\"}"
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1500,
+                  "y": -150
+                }
+              }
+            },
+            {
+              "id": 7,
+              "module": "hubspot:makeAnAPICall",
+              "version": 1,
+              "parameters": {
+                "connection": "{{env.HUBSPOT_CONNECTION_ID}}"
+              },
+              "mapper": {
+                "method": "POST",
+                "url": "/crm/v3/objects/notes",
+                "headers": [],
+                "qs": [],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\"properties\": {\"hs_note_body\": \"Case study request sent {{now | date: '%Y-%m-%d'}}\", \"hs_timestamp\": \"{{now | date: '%s'}}000\"}, \"associations\": [{\"to\": {\"id\": \"{{1.objectId}}\"}, \"types\": [{\"associationCategory\": \"HUBSPOT_DEFINED\", \"associationTypeId\": 202}]}]}"
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1800,
+                  "y": -150
+                }
+              }
+            },
+            {
+              "id": 8,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": true,
+                "useNewZLibDeCompress": true
+              },
+              "mapper": {
+                "url": "https://api.resend.com/emails",
+                "method": "POST",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.RESEND_API_KEY}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\", \"to\": [\"{{env.ALERT_EMAIL}}\"], \"subject\": \"Case study request sent to {{3.body.properties.firstname}} {{3.body.properties.lastname}}\", \"text\": \"A case study request email was automatically sent to {{3.body.properties.firstname}} {{3.body.properties.lastname}} ({{3.body.properties.email}}) at {{3.body.properties.company}} on {{now | date: '%Y-%m-%d'}}.\"}"
+              },
+              "metadata": {
+                "designer": {
+                  "x": 2100,
+                  "y": -150
+                }
+              }
+            }
+          ],
+          "label": "Route A — Customer",
+          "filter": {
+            "name": "Is Customer",
+            "conditions": [
+              [
+                {
+                  "a": "{{3.body.properties.lifecyclestage}}",
+                  "b": "customer",
+                  "o": "text:equal"
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "flow": [],
+          "label": "Route B — Not Customer",
+          "filter": {
+            "name": "Not Customer",
+            "conditions": [
+              [
+                {
+                  "a": "{{3.body.properties.lifecyclestage}}",
+                  "b": "customer",
+                  "o": "text:notequal"
+                }
+              ]
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": {
+      "orphans": []
+    }
+  }
+}

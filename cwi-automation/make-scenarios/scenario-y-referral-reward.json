@@ -1,0 +1,276 @@
+{
+  "name": "Referral Reward — HubSpot Webhook",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": "{{env.HUBSPOT_REFERRAL_WEBHOOK_ID}}",
+        "maxResults": 1
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 0, "y": 0 },
+        "restore": {
+          "parameters": {
+            "hook": {
+              "label": "HubSpot Contact Property Change — referred_by_email"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hook",
+            "type": "hook:gateway-webhook",
+            "label": "Webhook",
+            "required": true
+          },
+          {
+            "name": "maxResults",
+            "type": "number",
+            "label": "Maximum number of results"
+          }
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "module": "builtin:BasicFeeder",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "newContactEmail": "{{1.body.propertyValue}}",
+        "newContactFirstName": "{{1.body.firstName}}",
+        "newContactLastName": "{{1.body.lastName}}",
+        "newContactName": "{{ifempty(trim(concat(1.body.firstName, ' ', 1.body.lastName)), 1.body.email)}}",
+        "referrerEmail": "{{1.body.referred_by_email}}",
+        "hubspotContactId": "{{1.body.objectId}}"
+      },
+      "metadata": {
+        "designer": { "x": 300, "y": 0 },
+        "restore": {}
+      }
+    },
+    {
+      "id": 3,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true
+      },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/contacts/search",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\"filterGroups\":[{\"filters\":[{\"propertyName\":\"email\",\"operator\":\"EQ\",\"value\":\"{{2.referrerEmail}}\"}]}],\"properties\":[\"email\",\"firstname\",\"lastname\",\"hs_object_id\"]}"
+      },
+      "metadata": {
+        "designer": { "x": 600, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "POST" },
+            "bodyType": { "label": "Raw" },
+            "contentType": { "label": "JSON (application/json)" }
+          }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "module": "builtin:BasicFeeder",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "referrerHubspotId": "{{3.data.results[].id}}",
+        "referrerFirstName": "{{3.data.results[].properties.firstname}}",
+        "referrerLastName": "{{3.data.results[].properties.lastname}}",
+        "referrerFullName": "{{ifempty(trim(concat(3.data.results[].properties.firstname, ' ', 3.data.results[].properties.lastname)), 2.referrerEmail)}}",
+        "referrerEmail": "{{3.data.results[].properties.email}}",
+        "todayDate": "{{formatDate(now; 'MMMM D, YYYY'; 'America/New_York')}}"
+      },
+      "metadata": {
+        "designer": { "x": 900, "y": 0 },
+        "restore": {}
+      }
+    },
+    {
+      "id": 5,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true
+      },
+      "mapper": {
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.OPENROUTER_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "name": "HTTP-Referer",
+            "value": "{{env.APP_URL}}"
+          },
+          {
+            "name": "X-Title",
+            "value": "CWI Referral Reward"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\"models\":[\"anthropic/claude-sonnet-4-6\",\"{{env.OPENROUTER_FALLBACK_MODEL}}\"],\"messages\":[{\"role\":\"system\",\"content\":\"You are a warm, professional email writer for CWI (a managed IT services company). Write concise, genuine thank-you emails. Do not use placeholders — all values will be provided. Output ONLY the email body (no subject line, no headers, no markdown).\"},{\"role\":\"user\",\"content\":\"Write a personalized thank-you email to {{4.referrerFullName}} (email: {{4.referrerEmail}}) letting them know that their referral {{2.newContactName}} ({{2.newContactEmail}}) has officially signed up as a client. Thank them warmly for the referral. Let them know they have earned a $50 account credit that will be applied to their next invoice. Keep it friendly, professional, and under 150 words. Sign off from the CWI Team.\"}]}"
+      },
+      "metadata": {
+        "designer": { "x": 1200, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "POST" },
+            "bodyType": { "label": "Raw" },
+            "contentType": { "label": "JSON (application/json)" }
+          }
+        }
+      }
+    },
+    {
+      "id": 6,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true
+      },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.RESEND_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\"from\":\"{{env.RESEND_FROM_ADDRESS}}\",\"to\":[\"{{4.referrerEmail}}\"],\"subject\":\"Thank you for your referral, {{4.referrerFirstName}}! 🎉 Your $50 credit is on its way.\",\"text\":\"{{replace(5.data.choices[].message.content; '\"'; '\\\\\"')}}\"}"
+      },
+      "metadata": {
+        "designer": { "x": 1500, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "POST" },
+            "bodyType": { "label": "Raw" },
+            "contentType": { "label": "JSON (application/json)" }
+          }
+        }
+      }
+    },
+    {
+      "id": 7,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true
+      },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/notes",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\"properties\":{\"hs_note_body\":\"Referral reward earned for referring {{2.newContactName}} on {{4.todayDate}}. $50 credit applied.\",\"hs_timestamp\":\"{{formatDate(now; 'x')}}\"},\"associations\":[{\"to\":{\"id\":\"{{4.referrerHubspotId}}\"},\"types\":[{\"associationCategory\":\"HUBSPOT_DEFINED\",\"associationTypeId\":202}]}]}"
+      },
+      "metadata": {
+        "designer": { "x": 1800, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "POST" },
+            "bodyType": { "label": "Raw" },
+            "contentType": { "label": "JSON (application/json)" }
+          }
+        }
+      }
+    },
+    {
+      "id": 8,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true
+      },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.RESEND_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\"from\":\"{{env.CWI_ALERT_FROM_ADDRESS}}\",\"to\":[\"{{env.ALERT_EMAIL}}\"],\"subject\":\"Referral received! {{4.referrerFullName}} -> {{2.newContactName}} — apply $50 credit\",\"text\":\"A new referral has been processed.\\n\\nReferrer: {{4.referrerFullName}} ({{4.referrerEmail}})\\nNew Client: {{2.newContactName}} ({{2.newContactEmail}})\\nDate: {{4.todayDate}}\\n\\nAction required: Apply a $50 account credit to {{4.referrerFullName}}'s next invoice.\\n\\nHubSpot referrer contact ID: {{4.referrerHubspotId}}\\nNew HubSpot contact ID: {{2.hubspotContactId}}\"}"
+      },
+      "metadata": {
+        "designer": { "x": 2100, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "POST" },
+            "bodyType": { "label": "Raw" },
+            "contentType": { "label": "JSON (application/json)" }
+          }
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": {
+      "orphans": []
+    },
+    "zone": "us2.make.com"
+  }
+}

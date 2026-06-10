@@ -1,0 +1,371 @@
+{
+  "name": "AB — Monthly MRR Snapshot",
+  "flow": [
+    {
+      "id": 1,
+      "module": "builtin:BasicTrigger",
+      "version": 1,
+      "parameters": {},
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 0, "y": 0 },
+        "restore": {}
+      }
+    },
+    {
+      "id": 2,
+      "module": "util:SetVariable2",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "now_unix",
+        "scope": "roundtrip",
+        "type": "number",
+        "value": "{{round(now / 1000)}}"
+      },
+      "metadata": {
+        "designer": { "x": 300, "y": 0 },
+        "restore": { "parameters": { "scope": { "label": "One cycle" } } }
+      }
+    },
+    {
+      "id": 3,
+      "module": "util:SetVariable2",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "thirty_days_ago_unix",
+        "scope": "roundtrip",
+        "type": "number",
+        "value": "{{round((now - 2592000000) / 1000)}}"
+      },
+      "metadata": {
+        "designer": { "x": 600, "y": 0 },
+        "restore": { "parameters": { "scope": { "label": "One cycle" } } }
+      }
+    },
+    {
+      "id": 4,
+      "module": "util:SetVariable2",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "report_month_year",
+        "scope": "roundtrip",
+        "type": "text",
+        "value": "{{formatDate(now; 'MMMM YYYY'; 'America/New_York')}}"
+      },
+      "metadata": {
+        "designer": { "x": 900, "y": 0 },
+        "restore": { "parameters": { "scope": { "label": "One cycle" } } }
+      }
+    },
+    {
+      "id": 5,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": true },
+      "mapper": {
+        "url": "https://api.stripe.com/v1/subscriptions",
+        "method": "GET",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.STRIPE_SECRET_KEY}}"
+          }
+        ],
+        "qs": [
+          { "name": "status", "value": "active" },
+          { "name": "limit", "value": "100" },
+          { "name": "expand[]", "value": "data.plan" }
+        ],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "timeout": 30
+      },
+      "metadata": {
+        "designer": { "x": 1200, "y": 0 },
+        "restore": {
+          "parameters": { "handleErrors": true },
+          "expect": { "method": { "label": "GET" }, "bodyType": { "label": "Raw" } }
+        }
+      }
+    },
+    {
+      "id": 6,
+      "module": "util:SetVariable2",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "total_mrr",
+        "scope": "roundtrip",
+        "type": "number",
+        "value": "{{round(sum(map(5.body.data; item; if(item.plan.interval = 'year'; item.plan.amount / 100 / 12; item.plan.amount / 100))); 2)}}"
+      },
+      "metadata": {
+        "designer": { "x": 1500, "y": 0 },
+        "restore": { "parameters": { "scope": { "label": "One cycle" } } }
+      }
+    },
+    {
+      "id": 7,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": true },
+      "mapper": {
+        "url": "https://api.stripe.com/v1/subscriptions",
+        "method": "GET",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.STRIPE_SECRET_KEY}}"
+          }
+        ],
+        "qs": [
+          { "name": "status", "value": "active" },
+          { "name": "limit", "value": "100" },
+          { "name": "created[gte]", "value": "{{3.value}}" },
+          { "name": "expand[]", "value": "data.plan" }
+        ],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "timeout": 30
+      },
+      "metadata": {
+        "designer": { "x": 1800, "y": 0 },
+        "restore": {
+          "parameters": { "handleErrors": true },
+          "expect": { "method": { "label": "GET" }, "bodyType": { "label": "Raw" } }
+        }
+      }
+    },
+    {
+      "id": 8,
+      "module": "util:SetVariable2",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "new_mrr",
+        "scope": "roundtrip",
+        "type": "number",
+        "value": "{{round(sum(map(7.body.data; item; if(item.plan.interval = 'year'; item.plan.amount / 100 / 12; item.plan.amount / 100))); 2)}}"
+      },
+      "metadata": {
+        "designer": { "x": 2100, "y": 0 },
+        "restore": { "parameters": { "scope": { "label": "One cycle" } } }
+      }
+    },
+    {
+      "id": 9,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": true },
+      "mapper": {
+        "url": "https://api.stripe.com/v1/subscriptions",
+        "method": "GET",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.STRIPE_SECRET_KEY}}"
+          }
+        ],
+        "qs": [
+          { "name": "status", "value": "canceled" },
+          { "name": "limit", "value": "100" },
+          { "name": "canceled_at[gte]", "value": "{{3.value}}" },
+          { "name": "expand[]", "value": "data.plan" }
+        ],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "timeout": 30
+      },
+      "metadata": {
+        "designer": { "x": 2400, "y": 0 },
+        "restore": {
+          "parameters": { "handleErrors": true },
+          "expect": { "method": { "label": "GET" }, "bodyType": { "label": "Raw" } }
+        }
+      }
+    },
+    {
+      "id": 10,
+      "module": "util:SetVariable2",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "churned_mrr",
+        "scope": "roundtrip",
+        "type": "number",
+        "value": "{{round(sum(map(9.body.data; item; if(item.plan.interval = 'year'; item.plan.amount / 100 / 12; item.plan.amount / 100))); 2)}}"
+      },
+      "metadata": {
+        "designer": { "x": 2700, "y": 0 },
+        "restore": { "parameters": { "scope": { "label": "One cycle" } } }
+      }
+    },
+    {
+      "id": 11,
+      "module": "util:SetVariable2",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "net_mrr_change",
+        "scope": "roundtrip",
+        "type": "number",
+        "value": "{{round(8.value - 10.value; 2)}}"
+      },
+      "metadata": {
+        "designer": { "x": 3000, "y": 0 },
+        "restore": { "parameters": { "scope": { "label": "One cycle" } } }
+      }
+    },
+    {
+      "id": 12,
+      "module": "util:SetVariable2",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "prior_month_mrr",
+        "scope": "roundtrip",
+        "type": "number",
+        "value": "{{ifempty(env.PRIOR_MONTH_MRR; 0)}}"
+      },
+      "metadata": {
+        "designer": { "x": 3300, "y": 0 },
+        "restore": { "parameters": { "scope": { "label": "One cycle" } } }
+      }
+    },
+    {
+      "id": 13,
+      "module": "util:SetVariable2",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "mom_trend",
+        "scope": "roundtrip",
+        "type": "text",
+        "value": "{{if(12.value > 0; concat('Prior month MRR: $'; 12.value; '. MoM change: $'; round(6.value - 12.value; 2)); 'No prior month data available.')}}"
+      },
+      "metadata": {
+        "designer": { "x": 3600, "y": 0 },
+        "restore": { "parameters": { "scope": { "label": "One cycle" } } }
+      }
+    },
+    {
+      "id": 14,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": true },
+      "mapper": {
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.OPENROUTER_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "name": "HTTP-Referer",
+            "value": "{{env.OPENROUTER_SITE_URL}}"
+          },
+          {
+            "name": "X-Title",
+            "value": "CWI Automation — MRR Snapshot"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{{toJSON(object('model'; 'anthropic/claude-sonnet-4-6'; 'models'; array('anthropic/claude-sonnet-4-6'; env.OPENROUTER_FALLBACK_MODEL); 'route'; 'fallback'; 'messages'; array(object('role'; 'system'; 'content'; 'You are a concise SaaS business analyst. Generate a clear, professional monthly MRR snapshot report in plain text. Use dollar amounts formatted with two decimal places. Be brief and data-driven.'); object('role'; 'user'; 'content'; concat('Generate a monthly MRR snapshot report for '; 4.value; '.\n\nData:\n- Total Current MRR: $'; 6.value; '\n- New MRR Added (last 30 days): $'; 8.value; '\n- Churned MRR (last 30 days): $'; 10.value; '\n- Net MRR Change: $'; 11.value; '\n- Month-over-Month Trend: '; 13.value; '\n\nPlease provide:\n1. A brief summary of total MRR\n2. New MRR analysis\n3. Churned MRR analysis\n4. Net MRR change assessment\n5. Month-over-month trend commentary\n6. One key insight or recommendation\n\nKeep the report concise, professional, and under 300 words.')))))}",
+        "parseResponse": true,
+        "timeout": 60
+      },
+      "metadata": {
+        "designer": { "x": 3900, "y": 0 },
+        "restore": {
+          "parameters": { "handleErrors": true },
+          "expect": { "method": { "label": "POST" }, "bodyType": { "label": "Raw" }, "contentType": { "label": "JSON (application/json)" } }
+        }
+      }
+    },
+    {
+      "id": 15,
+      "module": "util:SetVariable2",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "ai_report",
+        "scope": "roundtrip",
+        "type": "text",
+        "value": "{{14.body.choices[].message.content}}"
+      },
+      "metadata": {
+        "designer": { "x": 4200, "y": 0 },
+        "restore": { "parameters": { "scope": { "label": "One cycle" } } }
+      }
+    },
+    {
+      "id": 16,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": true },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.RESEND_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{{toJSON(object('from'; env.CWI_ALERT_FROM_ADDRESS; 'to'; array(env.ALERT_EMAIL); 'subject'; concat('Monthly MRR Snapshot — '; 4.value; ' — $'; 6.value); 'text'; concat('Monthly MRR Snapshot Report\n'; repeat('='; 40); '\n\n'; 15.value; '\n\n'; repeat('-'; 40); '\nRaw Metrics:\n- Total MRR: $'; 6.value; '\n- New MRR (last 30 days): $'; 8.value; '\n- Churned MRR (last 30 days): $'; 10.value; '\n- Net MRR Change: $'; 11.value; '\n- '; 13.value; '\n\nGenerated: '; formatDate(now; 'MMMM D, YYYY h:mm A'; 'America/New_York'); ' ET')))}}"        ,
+        "parseResponse": true,
+        "timeout": 30
+      },
+      "metadata": {
+        "designer": { "x": 4500, "y": 0 },
+        "restore": {
+          "parameters": { "handleErrors": true },
+          "expect": { "method": { "label": "POST" }, "bodyType": { "label": "Raw" }, "contentType": { "label": "JSON (application/json)" } }
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "instant": false,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "slots": null,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": {
+      "orphans": []
+    },
+    "zone": "us1.make.com"
+  },
+  "scheduling": {
+    "type": "cron",
+    "interval": 1,
+    "cron": {
+      "expression": "0 8 1 * *",
+      "timezone": "America/New_York"
+    }
+  }
+}

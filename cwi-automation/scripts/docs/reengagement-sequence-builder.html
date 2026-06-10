@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Re-Engagement Email Sequence Builder</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --accent: #FF5A1F;
+    --accent-dark: #e04a12;
+    --accent-light: #fff3ef;
+    --bg: #f8f9fa;
+    --card: #ffffff;
+    --border: #e2e8f0;
+    --text: #1a202c;
+    --muted: #64748b;
+    --success: #10b981;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0 0 60px;
+  }
+
+  /* HEADER */
+  header {
+    background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+    padding: 32px 40px;
+    border-bottom: 3px solid var(--accent);
+  }
+  header h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 6px;
+  }
+  header p {
+    color: #94a3b8;
+    font-size: 0.95rem;
+  }
+  header span {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  /* MAIN LAYOUT */
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* SEQUENCE TYPE TABS */
+  .tabs {
+    display: flex;
+    gap: 12px;
+    margin: 32px 0 28px;
+    flex-wrap: wrap;
+  }
+  .tab-btn {
+    padding: 12px 28px;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    background: var(--card);
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--muted);
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .tab-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .tab-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(255,90,31,0.35);
+  }
+  .tab-icon { font-size: 1.1rem; }
+
+  /* SEQUENCE PANEL */
+  .sequence-panel { display: none; }
+  .sequence-panel.active { display: block; }
+
+  /* CONTROLS BAR */
+  .controls-bar {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .controls-bar label {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .controls-bar select {
+    padding: 8px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.92rem;
+    color: var(--text);
+    background: #fff;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .controls-bar select:focus { border-color: var(--accent); }
+
+  /* SEQUENCE DESCRIPTION */
+  .seq-description {
+    background: var(--accent-light);
+    border-left: 4px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    margin-bottom: 24px;
+    font-size: 0.9rem;
+    color: #7c2d12;
+    line-height: 1.6;
+  }
+
+  /* EMAIL CARD */
+  .email-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+    transition: box-shadow 0.2s;
+  }
+  .email-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.09); }
+
+  .email-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .email-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .email-number {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .email-title {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text);
+  }
+  .email-subtitle {
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  /* TIMING SELECTOR */
+  .timing-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #fff;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 12px;
+  }
+  .timing-group label {
+    font-size: 0.82rem;
+    color: var(--muted);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .timing-group select {
+    border: none;
+    outline: none;
+    font-size: 0.88rem;
+    color: var(--text);
+    font-weight: 600;
+    background: transparent;
+    cursor: pointer;
+    padding: 0;
+  }
+
+  /* COPY BUTTON */
+  .copy-btn {
+    padding: 7px 16px;
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 7px;
+    font-size: 0.83rem;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+  .copy-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+  .copy-btn.copied { border-color: var(--success); color: var(--success); background: #f0fdf4; }
+
+  /* EMAIL BODY */
+  .email-body { padding: 20px; }
+
+  .field-group { margin-bottom: 16px; }
+  .field-group:last-child { margin-bottom: 0; }
+
+  .field-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .field-label .badge {
+    background: var(--accent-light);
+    color: var(--accent);
+    font-size: 0.7rem;
+    padding: 1px 7px;
+    border-radius: 20px;
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 600;
+  }
+
+  input[type="text"].subject-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.95rem;
+    color: var(--text);
+    background: #fafafa;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  input[type="text"].subject-input:focus {
+    border-color: var(--accent);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(255,90,31,0.1);
+  }
+
+  textarea.body-input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.88rem;
+    color: var(--text);
+    background: #fafafa;
+    outline: none;
+    resize: vertical;
+    line-height: 1.65;
+    min-height: 180px;
+    font-family: inherit;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  textarea.body-input:focus {
+    border-color: var(--accent);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(255,90,31,0.1);
+  }
+
+  /* CONNECTOR */
+  .connector {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: -8px 0 12px 18px;
+    color: var(--muted);
+    font-size: 0.82rem;
+    font-weight: 600;
+  }
+  .connector-line {
+    width: 2px;
+    height: 28px;
+    background: linear-gradient(to bottom, var(--border), var(--accent));
+    border-radius: 2px;
+    margin-left: 17px;
+  }
+
+  /* EXPORT SECTION */
+  .export-section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-top: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+  }
+  .export-info h3 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .export-info p {
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  .export-btn {
+    padding: 12px 28px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 14px rgba(255,90,31,0.3);
+  }
+  .export-btn:hover {
+    background: var(--accent-dark);
+    box-shadow: 0 6px 20px rgba(255,90,31,0.4);
+    transform: translateY(-1px);
+  }
+  .export-btn:active { transform: translateY(0); }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: #1a202c;
+    color: #fff;
+    padding: 13px 22px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    opacity: 0;
+    transform: translateY(12px);
+    transition: all 0.3s;
+    pointer-events: none;
+    z-index: 1000;
+    border-left: 4px solid var(--accent);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  /* RESPONSIVE */
+  @media (max-width: 640px) {
+    header { padding: 24px 20px; }
+    header h1 { font-size: 1.4rem; }
+    .container { padding: 0 16px; }
+    .tabs { gap: 8px; }
+    .tab-btn { padding: 10px 18px; font-size: 0.88rem; }
+    .email-header { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <h1>Re-Engagement Email <span>Sequence Builder</span></h1>
+    <p>Build, customize, and export email sequences for cold leads and churned clients.</p>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('cold')" id="tab-cold">
+      <span class="tab-icon">&#10052;</span> Cold Lead Re-Engagement
+    </button>
+    <button class="tab-btn" onclick="switchTab('churned')" id="tab-churned">
+      <span class="tab-icon">&#8635;</span> Churned Client Win-Back
+    </button>
+  </div>
+
+  <!-- ==================== COLD LEAD SEQUENCE ==================== -->
+  <div class="sequence-panel active" id="panel-cold">
+
+    <div class="seq-description">
+      <strong>Cold Lead Re-Engagement</strong> &mdash; For prospects who went silent 30+ days ago. This 3-email sequence gently re-opens the door, builds credibility with a real client result, and closes with a low-pressure final offer.
+    </div>
+
+    <!-- INDUSTRY SELECTOR -->
+    <div class="controls-bar">
+      <label for="industry-select">&#127981; Industry for Email 2 Result:</label>
+      <select id="industry-select" onchange="updateIndustryResult()">
+        <option value="saas">SaaS / Technology</option>
+        <option value="ecommerce">E-Commerce / Retail</option>
+        <option value="healthcare">Healthcare / Wellness</option>
+        <option value="realestate">Real Estate</option>
+        <option value="finance">Finance / Accounting</option>
+        <option value="agency">Marketing Agency</option>
+        <option value="manufacturing">Manufacturing / Industrial</option>
+        <option value="nonprofit">Non-Profit</option>
+      </select>
+    </div>
+
+    <!-- EMAIL 1 -->
+    <div class="email-card">
+      <div class="email-header">
+        <div class="email-label">
+          <div class="email-number">1</div>
+          <div>
+            <div class="email-title">Check-In Email</div>
+            <div class="email-subtitle">Casual re-opener, no pressure</div>
+          </div>
+        </div>
+        <div class="header-actions">
+          <div class="timing-group">
+            <label>Send on Day:</label>
+            <select id="cold-timing-1" onchange="updateTimingLabel('cold', 1)">
+              <option value="30" selected>30</option>
+              <option value="31">31</option>
+              <option value="35">35</option>
+              <option value="45">45</option>
+              <option value="60">60</option>
+            </select>
+          </div>
+          <button class="copy-btn" onclick="copyEmail('cold', 1, this)">
+            &#128203; Copy Email
+          </button>
+        </div>
+      </div>
+      <div class="email-body">
+        <div class="field-group">
+          <div class="field-label">Subject Line <span class="badge">Editable</span></div>
+          <input type="text" class="subject-input" id="cold-subject-1"
+            value="Still thinking about it?" />
+        </div>
+        <div class="field-group">
+          <div class="field-label">Email Body <span class="badge">Editable</span></div>
+          <textarea class="body-input" id="cold-body-1">Hey [First Name],
+
+I noticed it's been a little while since we last connected, and I wanted to check in — no agenda, just a genuine hello.
+
+I know decisions like this don't always happen on a straight line. Life gets busy, priorities shift, or maybe you just needed more time to think it through. Totally get it.
+
+If you still have questions about whether [Product/Service] is the right fit for you, I'm happy to jump on a quick 15-minute call to talk it through — zero pressure, just a conversation.
+
+Or if things have changed and this isn't the right time, just let me know. No hard feelings at all.
+
+Either way, I'm here when it makes sense.
+
+[Your Name]
+[Company]
+[Phone / Calendar Link]</textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="connector-line"></div>
+    <div class="connector">&#8595; Wait <strong id="cold-gap-label-1">14 days</strong> then send Email 2</div>
+
+    <!-- EMAIL 2 -->
+    <div class="email-card">
+      <div class="email-header">
+        <div class="email-label">
+          <div class="email-number">2</div>
+          <div>
+            <div class="email-title">Social Proof Email</div>
+            <div class="email-subtitle">Industry-relevant client result</div>
+          </div>
+        </div>
+        <div class="header-actions">
+          <div class="timing-group">
+            <label>Send on Day:</label>
+            <select id="cold-timing-2" onchange="updateTimingLabel('cold', 2)">
+              <option value="40">40</option>
+              <option value="44" selected>44</option>
+              <option value="50">50</option>
+              <option value="60">60</option>
+            </select>
+          </div>
+          <button class="copy-btn" onclick="copyEmail('cold', 2, this)">
+            &#128203; Copy Email
+          </button>
+        </div>
+      </div>
+      <div class="email-body">
+        <div class="field-group">
+          <div class="field-label">Subject Line <span class="badge">Editable</span></div>
+          <input type="text" class="subject-input" id="cold-subject-2"
+            value="What happened when [Company] tried this..." />
+        </div>
+        <div class="field-group">
+          <div class="field-label">Email Body <span class="badge">Editable &amp; Industry-Aware</span></div>
+          <textarea class="body-input" id="cold-body-2">Hey [First Name],
+
+I was thinking about you when I saw this result come in last week, and thought it might be relevant to what you're working on.
+
+[INDUSTRY_RESULT]
+
+I'm not sharing this to brag — I'm sharing it because I genuinely think we could get you somewhere similar.
+
+If you've been on the fence, maybe this is the nudge worth acting on. Happy to walk you through exactly what we did and whether it maps to your situation.
+
+Would a 20-minute call this week work?
+
+[Your Name]
+[Company]
+[Calendar Link]</textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="connector-line"></div>
+    <div class="connector">&#8595; Wait <strong id="cold-gap-label-2">14 days</strong> then send Email 3 (Final)</div>
+
+    <!-- EMAIL 3 -->
+    <div class="email-card">
+      <div class="email-header">
+        <div class="email-label">
+          <div class="email-number">3</div>
+          <div>
+            <div class="email-title">Breakup Email</div>
+            <div class="email-subtitle">Low-pressure final close</div>
+          </div>
+        </div>
+        <div class="header-actions">
+          <div class="timing-group">
+            <label>Send on Day:</label>
+            <select id="cold-timing-3" onchange="updateTimingLabel('cold', 3)">
+              <option value="54">54</option>
+              <option value="58" selected>58</option>
+              <option value="65">65</option>
+              <option value="75">75</option>
+            </select>
+          </div>
+          <button class="copy-btn" onclick="copyEmail('cold', 3, this)">
+            &#128203; Copy Email
+          </button>
+        </div>
+      </div>
+      <div class="email-body">
+        <div class="field-group">
+          <div class="field-label">Subject Line <span class="badge">Editable</span></div>
+          <input type="text" class="subject-input" id="cold-subject-3"
+            value="Closing the loop on this..." />
+        </div>
+        <div class="field-group">
+          <div class="field-label">Email Body <span class="badge">Editable</span></div>
+          <textarea class="body-input" id="cold-body-3">Hey [First Name],
+
+I've reached out a couple of times, and I want to respect your time — so I'll keep this short.
+
+If now's not the right time, that's completely okay. I'm going to stop reaching out after this so I'm not clogging up your inbox.
+
+But if there's even a small part of you still curious about [Product/Service], I'd love one final 15-minute conversation. No pitch, no pressure — just an honest talk about whether this could actually help you.
+
+If I don't hear back, I'll take you off my outreach list and wish you nothing but the best. Genuinely.
+
+Either way — good luck with everything you've got going on.
+
+[Your Name]
+[Company]
+[Calendar Link]
+
+P.S. If the timing ever does get right down the road, my door is always open. Just reply to this email.</textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- EXPORT -->
+    <div class="export-section">
+      <div class="export-info">
+        <h3>Export Cold Lead Sequence</h3>
+        <p>Downloads a formatted .txt file with all 3 emails, subjects, timing, and body copy.</p>
+      </div>
+      <button class="export-btn" onclick="exportSequence('cold')">
+        &#8659; Export Sequence
+      </button>
+    </div>
+
+  </div><!-- /panel-cold -->
+
+
+  <!-- ==================== CHURNED CLIENT SEQUENCE ==================== -->
+  <div class="sequence-panel" id="panel-churned">
+
+    <div class="seq-description">
+      <strong>Churned Client Win-Back</strong> &mdash; For clients who cancelled 60&ndash;90 days ago. This 2-email sequence acknowledges the time apart, highlights what's new, and extends a meaningful discount to bring them back.
+    </div>
+
+    <!-- EMAIL 1 -->
+    <div class="email-card">
+      <div class="email-header">
+        <div class="email-label">
+          <div class="email-number">1</div>
+          <div>
+            <div class="email-title">Re-Introduction Email</div>
+            <div class="email-subtitle">Acknowledge, update, offer discount</div>
+          </div>
+        </div>
+        <div class="header-actions">
+          <div class="timing-group">
+            <label>Send on Day:</label>
+            <select id="churned-timing-1" onchange="updateTimingLabel('churned', 1)">
+              <option value="60" selected>60</option>
+              <option value="70">70</option>
+              <option value="75">75</option>
+              <option value="90">90</option>
+            </select>
+          </div>
+          <button class="copy-btn" onclick="copyEmail('churned', 1, this)">
+            &#128203; Copy Email
+          </button>
+        </div>
+      </div>
+      <div class="email-body">
+        <div class="field-group">
+          <div class="field-label">Subject Line <span class="badge">Editable</span></div>
+          <input type="text" class="subject-input" id="churned-subject-1"
+            value="We've missed you — and a lot has changed" />
+        </div>
+        <div class="field-group">
+          <div class="field-label">Email Body <span class="badge">Editable</span></div>
+          <textarea class="body-input" id="churned-body-1">Hi [First Name],
+
+It's been a couple of months since you were last with us, and I wanted to personally reach out.
+
+First — if your experience with us fell short, I'm sorry. That matters to me, and we've been working hard to address the things our clients told us weren't working.
+
+Here's what's new since you left:
+
+  • [New Feature 1] — [One-line description of the improvement]
+  • [New Feature 2] — [One-line description of the improvement]
+  • [Improvement] — [e.g., "Faster support response times, now under 2 hours"]
+
+We'd love to earn your business back — and to make that decision easier, I'd like to offer you 20% off for your first 3 months back. No long-term commitment required.
+
+If you're open to it, I'd love to jump on a 20-minute call to show you what's changed and see if it makes sense.
+
+Interested? Just reply to this email or grab a time here: [Calendar Link]
+
+Genuinely hope to talk soon.
+
+[Your Name]
+[Title], [Company]
+[Phone]</textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="connector-line"></div>
+    <div class="connector">&#8595; Wait <strong id="churned-gap-label-1">14 days</strong> then send Email 2 (Final Offer)</div>
+
+    <!-- EMAIL 2 -->
+    <div class="email-card">
+      <div class="email-header">
+        <div class="email-label">
+          <div class="email-number">2</div>
+          <div>
+            <div class="email-title">Final Offer Email</div>
+            <div class="email-subtitle">Direct booking link, last chance</div>
+          </div>
+        </div>
+        <div class="header-actions">
+          <div class="timing-group">
+            <label>Send on Day:</label>
+            <select id="churned-timing-2" onchange="updateTimingLabel('churned', 2)">
+              <option value="70">70</option>
+              <option value="74" selected>74</option>
+              <option value="80">80</option>
+              <option value="90">90</option>
+            </select>
+          </div>
+          <button class="copy-btn" onclick="copyEmail('churned', 2, this)">
+            &#128203; Copy Email
+          </button>
+        </div>
+      </div>
+      <div class="email-body">
+        <div class="field-group">
+          <div class="field-label">Subject Line <span class="badge">Editable</span></div>
+          <input type="text" class="subject-input" id="churned-subject-2"
+            value="Last chance: 20% off — offer expires soon" />
+        </div>
+        <div class="field-group">
+          <div class="field-label">Email Body <span class="badge">Editable</span></div>
+          <textarea class="body-input" id="churned-body-2">Hi [First Name],
+
+I sent you a note a couple weeks back and wanted to follow up one last time before I close this out.
+
+The 20% discount for returning clients expires at the end of this week — so if you've been considering coming back, this is the moment.
+
+Here's what I'd suggest: let's get on a call this week, I'll show you the updates we've made in 20 minutes, and you can decide right then whether it makes sense. If it doesn't, no hard feelings — I'll take you off my follow-up list and wish you well.
+
+Book a time directly here: [CALENDAR BOOKING LINK]
+
+Or just reply to this email and we'll find something that works.
+
+Either way, [First Name] — thank you for the time you spent with us. It genuinely meant a lot, and I hope our paths cross again.
+
+[Your Name]
+[Title], [Company]
+[Phone]
+
+P.S. Your discount code is [DISCOUNT_CODE] — apply it at checkout for 20% off your first 3 months.</textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- EXPORT -->
+    <div class="export-section">
+      <div class="export-info">
+        <h3>Export Win-Back Sequence</h3>
+        <p>Downloads a formatted .txt file with both emails, subjects, timing, and body copy.</p>
+      </div>
+      <button class="export-btn" onclick="exportSequence('churned')">
+        &#8659; Export Sequence
+      </button>
+    </div>
+
+  </div><!-- /panel-churned -->
+
+</div><!-- /container -->
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─────────────────────────────────────────────
+//  INDUSTRY RESULTS
+// ─────────────────────────────────────────────
+const industryResults = {
+  saas: `A SaaS client in the project management space came to us after months of flat trial-to-paid conversions. Within 90 days of working together, they increased their trial-to-paid rate by 34% and reduced churn by 18% — just by tightening their onboarding flow and adding one targeted email trigger.`,
+  ecommerce: `An e-commerce brand selling home goods was stuck at a 1.2% conversion rate on paid traffic. After restructuring their funnel and product pages, they hit 3.1% — nearly tripling their revenue from the same ad spend within 60 days.`,
+  healthcare: `A wellness clinic was relying entirely on referrals and had zero digital lead flow. In 45 days, we built them a system that now generates 18–22 new patient inquiries per month on autopilot — without any paid ads.`,
+  realestate: `A real estate team was manually following up with hundreds of leads. We helped them build an automated nurture system that re-engaged cold leads from their CRM — and they closed 3 deals in the first 60 days from contacts they'd written off over 6 months ago.`,
+  finance: `A financial advisory firm was struggling to convert website visitors into consultations. After optimizing their intake process and adding a targeted follow-up sequence, they went from 4 booked calls per month to 17 — without changing their ad budget.`,
+  agency: `A marketing agency was losing clients at the 4-month mark due to lack of visible results reporting. We helped them build a reporting and communication cadence that increased their average client retention from 5.2 months to over 11 months.`,
+  manufacturing: `A mid-size manufacturer was losing quotes in the follow-up phase — prospects would go dark after the initial proposal. A structured 3-touch follow-up system helped them close 6 deals in 90 days that would have otherwise fallen off completely.`,
+  nonprofit: `A nonprofit running an annual fundraiser was re-engaging lapsed donors by hand. We helped them build a segmented re-engagement campaign that brought back 23% of lapsed donors in a single cycle — their highest re-engagement rate in 7 years.`
+};
+
+// ─────────────────────────────────────────────
+//  TABS
+// ─────────────────────────────────────────────
+function switchTab(type) {
+  document.querySelectorAll('.sequence-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + type).classList.add('active');
+  document.getElementById('tab-' + type).classList.add('active');
+}
+
+// ─────────────────────────────────────────────
+//  INDUSTRY RESULT INJECTOR
+// ─────────────────────────────────────────────
+function updateIndustryResult() {
+  const industry = document.getElementById('industry-select').value;
+  const result = industryResults[industry];
+  const body = document.getElementById('cold-body-2');
+  const current = body.value;
+  // Replace the [INDUSTRY_RESULT] placeholder or any previously injected block
+  const updated = current.replace(/\[INDUSTRY_RESULT\][\s\S]*?(?=\n\nI'm not sharing)|\[INDUSTRY_RESULT\]/,
+    '[INDUSTRY_RESULT]');
+  body.value = updated.replace('[INDUSTRY_RESULT]', result);
+}
+
+// Init on load
+window.addEventListener('DOMContentLoaded', () => {
+  updateIndustryResult();
+  updateAllGaps();
+});
+
+// ─────────────────────────────────────────────
+//  TIMING GAP LABELS
+// ─────────────────────────────────────────────
+function updateTimingLabel(seq, emailNum) {
+  updateAllGaps();
+}
+
+function updateAllGaps() {
+  // Cold gaps
+  const c1 = parseInt(document.getElementById('cold-timing-1')?.value || 30);
+  const c2 = parseInt(document.getElementById('cold-timing-2')?.value || 44);
+  const c3 = parseInt(document.getElementById('cold-timing-3')?.value || 58);
+  const gap12 = c2 - c1;
+  const gap23 = c3 - c2;
+  const lbl1 = document.getElementById('cold-gap-label-1');
+  const lbl2 = document.getElementById('cold-gap-label-2');
+  if (lbl1) lbl1.textContent = gap12 + ' day' + (gap12 !== 1 ? 's' : '');
+  if (lbl2) lbl2.textContent = gap23 + ' day' + (gap23 !== 1 ? 's' : '');
+
+  // Churned gaps
+  const h1 = parseInt(document.getElementById('churned-timing-1')?.value || 60);
+  const h2 = parseInt(document.getElementById('churned-timing-2')?.value || 74);
+  const hgap = h2 - h1;
+  const hlbl = document.getElementById('churned-gap-label-1');
+  if (hlbl) hlbl.textContent = hgap + ' day' + (hgap !== 1 ? 's' : '');
+}
+
+// ─────────────────────────────────────────────
+//  COPY EMAIL
+// ─────────────────────────────────────────────
+function copyEmail(seq, num, btn) {
+  const subject = document.getElementById(seq + '-subject-' + num).value.trim();
+  const body = document.getElementById(seq + '-body-' + num).value.trim();
+  const timingEl = document.getElementById(seq + '-timing-' + num);
+  const day = timingEl ? timingEl.value : '—';
+  const text = `SUBJECT: ${subject}\nSEND: Day ${day}\n\n${body}`;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.classList.add('copied');
+    btn.innerHTML = '&#10003; Copied!';
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.innerHTML = '&#128203; Copy Email';
+    }, 2200);
+    showToast('Email copied to clipboard.');
+  }).catch(() => {
+    // Fallback
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    btn.classList.add('copied');
+    btn.innerHTML = '&#10003; Copied!';
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.innerHTML = '&#128203; Copy Email';
+    }, 2200);
+    showToast('Email copied to clipboard.');
+  });
+}
+
+// ─────────────────────────────────────────────
+//  EXPORT SEQUENCE
+// ─────────────────────────────────────────────
+function exportSequence(seq) {
+  let output = '';
+  const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+  if (seq === 'cold') {
+    output += '='.repeat(60) + '\n';
+    output += 'COLD LEAD RE-ENGAGEMENT SEQUENCE\n';
+    output += 'Generated: ' + today + '\n';
+    output += '='.repeat(60) + '\n\n';
+
+    const industry = document.getElementById('industry-select');
+    const industryLabel = industry ? industry.options[industry.selectedIndex].text : '';
+    output += 'Target Industry: ' + industryLabel + '\n\n';
+
+    for (let i = 1; i <= 3; i++) {
+      const subject = document.getElementById('cold-subject-' + i).value.trim();
+      const body = document.getElementById('cold-body-' + i).value.trim();
+      const timingEl = document.getElementById('cold-timing-' + i);
+      const day = timingEl ? timingEl.value : '—';
+      const titles = ['Check-In Email', 'Social Proof Email', 'Breakup Email'];
+      output += '-'.repeat(60) + '\n';
+      output += 'EMAIL ' + i + ': ' + titles[i - 1] + '\n';
+      output += 'SEND: Day ' + day + ' after last contact\n';
+      output += 'SUBJECT: ' + subject + '\n';
+      output += '-'.repeat(60) + '\n';
+      output += body + '\n\n';
+    }
+
+  } else {
+    output += '='.repeat(60) + '\n';
+    output += 'CHURNED CLIENT WIN-BACK SEQUENCE\n';
+    output += 'Generated: ' + today + '\n';
+    output += '='.repeat(60) + '\n\n';
+
+    for (let i = 1; i <= 2; i++) {
+      const subject = document.getElementById('churned-subject-' + i).value.trim();
+      const body = document.getElementById('churned-body-' + i).value.trim();
+      const timingEl = document.getElementById('churned-timing-' + i);
+      const day = timingEl ? timingEl.value : '—';
+      const titles = ['Re-Introduction Email', 'Final Offer Email'];
+      output += '-'.repeat(60) + '\n';
+      output += 'EMAIL ' + i + ': ' + titles[i - 1] + '\n';
+      output += 'SEND: Day ' + day + ' after cancellation\n';
+      output += 'SUBJECT: ' + subject + '\n';
+      output += '-'.repeat(60) + '\n';
+      output += body + '\n\n';
+    }
+  }
+
+  output += '='.repeat(60) + '\n';
+  output += 'END OF SEQUENCE\n';
+  output += '='.repeat(60) + '\n';
+
+  const filename = seq === 'cold'
+    ? 'cold-lead-reengagement-sequence.txt'
+    : 'churned-client-winback-sequence.txt';
+
+  const blob = new Blob([output], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Sequence exported as ' + filename);
+}
+
+// ─────────────────────────────────────────────
+//  TOAST
+// ─────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,632 @@
+{
+  "name": "Scenario U: Testimonial Request — 30-Day Post-Onboarding",
+  "comments": "SCENARIO U — TESTIMONIAL REQUEST\n\nPURPOSE: When a HubSpot deal's 'client_onboarding_date' property is set (via a HubSpot Workflow that fires a webhook), wait 30 days (2592000 seconds), then verify the client is still active (HubSpot GET contact by email), generate a personalized testimonial request email via OpenRouter (anthropic/claude-sonnet-4-6 with fallback to env.OPENROUTER_FALLBACK_MODEL), and send it via Resend HTTP POST. The email asks the client for both a Google review AND a short written testimonial for the website.\n\nWHITE-LABEL NOTE: The client-facing email MUST send from env.RESEND_FROM_ADDRESS. Never use brian@cwiai.net as a client-facing sender. Internal alerts use env.CWI_ALERT_FROM_ADDRESS.\n\nOPENROUTER FALLBACK: The OpenRouter request body includes a 'models' array [anthropic/claude-sonnet-4-6, env.OPENROUTER_FALLBACK_MODEL] so OpenRouter automatically falls back to the secondary model if the primary is unavailable.\n\nFLOW OVERVIEW:\n  Module 1 (gateway:CustomWebHook hook 3020) — HubSpot webhook: deal property 'client_onboarding_date' set\n  Module 2 (builtin:Sleep 2592000 s)          — Wait 30 days (2592000 seconds)\n  Module 3 (http:ActionSendData)              — HubSpot GET contact by email to confirm client is still active\n  Module 4 (builtin:BasicFeeder / filter)     — Guard: only proceed if hs_lead_status = 'Client Active'\n  Module 5 (http:ActionSendData)              — OpenRouter POST — Claude generates personalized testimonial request email body\n  Module 6 (http:ActionSendData)              — Resend POST — sends testimonial request to client\n  Module 7 (http:ActionSendData)              — HubSpot POST — logs 'Testimonial request sent' note on contact\n  Module 8 (http:ActionSendData)              — Resend POST — internal alert to env.CWI_ALERT_FROM_ADDRESS confirming send\n  Error Handler (http:ActionSendData)         — Resend alert to env.CWI_ALERT_FROM_ADDRESS on any failure\n\nSECRETS (all via env.VARIABLE_NAME — never hardcoded):\n  env.HUBSPOT_PRIVATE_APP_TOKEN    — HubSpot Private App token\n  env.OPENROUTER_API_KEY           — OpenRouter API key\n  env.OPENROUTER_FALLBACK_MODEL    — Fallback model slug for OpenRouter (e.g. openai/gpt-4o)\n  env.RESEND_API_KEY               — Resend API key\n  env.RESEND_FROM_ADDRESS          — Verified client-facing sender (never brian@cwiai.net)\n  env.CWI_ALERT_FROM_ADDRESS       — Internal CWI alert sender for internal alerts and error emails\n  env.GOOGLE_REVIEW_LINK           — Full Google Business review URL\n  env.CLIENT_NAME                  — White-labeled business display name used in the AI prompt\n\nTIMEZONE: America/New_York\n\nTESTING: POST a test webhook payload with { dealId, contactEmail, contactFirstName, contactLastName, onboardingDate } to hook 3020. Confirm the 30-day sleep fires, the HubSpot contact check passes, OpenRouter returns a valid email body, Resend delivers from env.RESEND_FROM_ADDRESS, and the HubSpot note appears on the contact.",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": 3020,
+        "maxResults": 1
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 0, "y": 0 },
+        "restore": {
+          "parameters": {
+            "hook": {
+              "label": "HubSpot Deal — client_onboarding_date Set (hook 3020)",
+              "data": { "editable": true }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hook",
+            "type": "hook:gateway-webhook",
+            "label": "Webhook",
+            "required": true
+          },
+          {
+            "name": "maxResults",
+            "type": "number",
+            "label": "Maximum number of results"
+          }
+        ],
+        "label": "HubSpot Webhook: deal.propertyChange -> client_onboarding_date",
+        "note": "Module 1: Instant webhook trigger on hook ID 3020. Configure a HubSpot deal-based Workflow that enrolls when the property 'client_onboarding_date' is known / is set, and adds a 'Send a webhook' action (POST) to the Make.com webhook URL. Expected payload: { dealId, contactEmail, contactFirstName, contactLastName, onboardingDate }. Key downstream fields: 1.body.contactEmail, 1.body.contactFirstName, 1.body.contactLastName, 1.body.dealId, 1.body.onboardingDate."
+      }
+    },
+    {
+      "id": 2,
+      "module": "builtin:Sleep",
+      "version": 1,
+      "parameters": {
+        "delay": 2592000
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 300, "y": 0 },
+        "note": "Module 2: Sleep 2592000 seconds (30 days exactly: 30 * 24 * 60 * 60 = 2592000). Pauses the scenario run so the testimonial request fires 30 days after the onboarding date is set — enough time for the client to experience real results. Make.com Enterprise plans support long-running scenario pauses; confirm your plan supports waits exceeding 24 hours before enabling."
+      }
+    },
+    {
+      "id": 3,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDecompression": true
+      },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/contacts/search",
+        "serializeUrl": false,
+        "method": "post",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "data": "{\n  \"filterGroups\": [\n    {\n      \"filters\": [\n        {\n          \"propertyName\": \"email\",\n          \"operator\": \"EQ\",\n          \"value\": \"{{1.body.contactEmail}}\"\n        }\n      ]\n    }\n  ],\n  \"properties\": [\"email\", \"firstname\", \"lastname\", \"hs_lead_status\", \"lifecyclestage\"],\n  \"limit\": 1\n}",
+        "parseResponse": true,
+        "timeout": 30,
+        "shareCookies": false,
+        "rejectUnauthorized": true,
+        "followRedirect": true,
+        "gzip": true,
+        "useMtls": false
+      },
+      "metadata": {
+        "designer": { "x": 600, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "POST" },
+            "bodyType": { "label": "Raw" },
+            "contentType": { "label": "JSON (application/json)" }
+          }
+        },
+        "parameters": [
+          {
+            "name": "handleErrors",
+            "type": "boolean",
+            "label": "Evaluate all states as errors (except for 2xx and 3xx)",
+            "required": true
+          },
+          {
+            "name": "useNewZLibDecompression",
+            "type": "boolean",
+            "label": "Use new ZLib decompression library",
+            "required": true
+          }
+        ],
+        "expect": [
+          { "name": "url",           "type": "url",     "label": "URL",            "required": true },
+          { "name": "method",        "type": "select",  "label": "Method",         "required": true },
+          { "name": "headers",       "type": "array",   "label": "Headers"                          },
+          { "name": "bodyType",      "type": "select",  "label": "Body type"                        },
+          { "name": "contentType",   "type": "select",  "label": "Content type"                     },
+          { "name": "data",          "type": "string",  "label": "Request content"                  },
+          { "name": "parseResponse", "type": "boolean", "label": "Parse response"                   }
+        ],
+        "note": "Module 3: POST https://api.hubapi.com/crm/v3/objects/contacts/search. Searches for the HubSpot contact by email (1.body.contactEmail). Returns contact id, email, firstname, lastname, hs_lead_status, and lifecyclestage. The guard filter in module 4 reads 3.body.results[0].properties.hs_lead_status to confirm the client is still active before sending any email. If the contact is not found (empty results), the filter blocks execution and the error handler fires."
+      }
+    },
+    {
+      "id": 4,
+      "module": "builtin:BasicFeeder",
+      "version": 1,
+      "parameters": {},
+      "filter": {
+        "name": "Client is still active",
+        "conditions": [
+          [
+            {
+              "a": "{{3.body.results[0].properties.hs_lead_status}}",
+              "b": "Client Active",
+              "o": "text:equal"
+            }
+          ]
+        ]
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 900, "y": 0 },
+        "note": "Module 4: Guard filter. Only proceeds when hs_lead_status == 'Client Active' on the contact returned from module 3. Prevents sending a testimonial request to churned, paused, or inactive clients. If the contact has left or their status changed in the 30-day window, execution halts here silently (no error — the error handler is not triggered for a legitimate skip)."
+      }
+    },
+    {
+      "id": 5,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDecompression": true
+      },
+      "mapper": {
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "serializeUrl": false,
+        "method": "post",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.OPENROUTER_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "name": "HTTP-Referer",
+            "value": "https://make.com"
+          },
+          {
+            "name": "X-Title",
+            "value": "CWI Automation — Scenario U"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "data": "{\n  \"models\": [\"anthropic/claude-sonnet-4-6\", \"{{env.OPENROUTER_FALLBACK_MODEL}}\"],\n  \"max_tokens\": 500,\n  \"temperature\": 0.7,\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You write warm, professional, concise business emails. Never mention internal tools, automation platforms, or CWI AI. Return only the email body — no subject line, no greeting header, no sign-off line unless instructed.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Write a warm 3-paragraph testimonial request email for {{1.body.contactFirstName}} {{1.body.contactLastName}}, a client of {{env.CLIENT_NAME}} who completed onboarding 30 days ago. The email should:\\n1. Open by acknowledging their 30-day milestone and expressing genuine excitement about their progress.\\n2. Ask them to do two things: (a) leave a Google review using the link that will be appended after the email body, and (b) share a short written testimonial (2-4 sentences) that we can feature on the website — they can simply reply to this email with their testimonial.\\n3. Close warmly, make it feel personal and low-pressure, and thank them for being a client.\\nReturn only the email body paragraphs. Do not include a subject line, greeting, or sign-off.\"\n    }\n  ]\n}",
+        "parseResponse": true,
+        "timeout": 60,
+        "shareCookies": false,
+        "rejectUnauthorized": true,
+        "followRedirect": true,
+        "gzip": true,
+        "useMtls": false
+      },
+      "metadata": {
+        "designer": { "x": 1200, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "POST" },
+            "bodyType": { "label": "Raw" },
+            "contentType": { "label": "JSON (application/json)" }
+          }
+        },
+        "parameters": [
+          {
+            "name": "handleErrors",
+            "type": "boolean",
+            "label": "Evaluate all states as errors (except for 2xx and 3xx)",
+            "required": true
+          },
+          {
+            "name": "useNewZLibDecompression",
+            "type": "boolean",
+            "label": "Use new ZLib decompression library",
+            "required": true
+          }
+        ],
+        "expect": [
+          { "name": "url",           "type": "url",     "label": "URL",            "required": true },
+          { "name": "method",        "type": "select",  "label": "Method",         "required": true },
+          { "name": "headers",       "type": "array",   "label": "Headers"                          },
+          { "name": "bodyType",      "type": "select",  "label": "Body type"                        },
+          { "name": "contentType",   "type": "select",  "label": "Content type"                     },
+          { "name": "data",          "type": "string",  "label": "Request content"                  },
+          { "name": "parseResponse", "type": "boolean", "label": "Parse response"                   }
+        ],
+        "note": "Module 5: POST https://openrouter.ai/api/v1/chat/completions. Uses the 'models' array [anthropic/claude-sonnet-4-6, env.OPENROUTER_FALLBACK_MODEL] for automatic OpenRouter fallback if the primary model is unavailable. System prompt instructs Claude to write warm, professional email copy with no CWI branding. User prompt requests a 3-paragraph body: (1) acknowledge the 30-day milestone, (2) request a Google review AND a written testimonial via reply, (3) warm close. max_tokens: 500, temperature: 0.7. Claude response is at 5.body.choices[0].message.content."
+      }
+    },
+    {
+      "id": 6,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDecompression": true
+      },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "serializeUrl": false,
+        "method": "post",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.RESEND_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "data": "{\n  \"from\": \"{{env.RESEND_FROM_ADDRESS}}\",\n  \"to\": [\"{{1.body.contactEmail}}\"],\n  \"subject\": \"Your 30-day milestone — could we ask a quick favour?\",\n  \"text\": \"{{5.body.choices[0].message.content}}\\n\\nLeave a Google Review:\\n{{env.GOOGLE_REVIEW_LINK}}\\n\\nOr simply reply to this email with 2-4 sentences about your experience and we'll feature it on our website.\",\n  \"html\": \"<div style=\\\"font-family:Arial,Helvetica,sans-serif;max-width:580px;margin:0 auto;color:#1a1a1a;line-height:1.75;\\\"><p>Hi {{1.body.contactFirstName}},</p>{{replace(replace(5.body.choices[0].message.content; '\\n\\n'; '</p><p>'); '\\n'; '<br>')}}<p style=\\\"margin-top:28px;\\\"><strong>1. Leave a Google Review</strong></p><p><a href=\\\"{{env.GOOGLE_REVIEW_LINK}}\\\" style=\\\"display:inline-block;background:#4285F4;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:6px;font-weight:bold;\\\">Leave a Google Review</a></p><p style=\\\"font-size:13px;color:#555;\\\">Or copy this link: <a href=\\\"{{env.GOOGLE_REVIEW_LINK}}\\\">{{env.GOOGLE_REVIEW_LINK}}</a></p><p style=\\\"margin-top:24px;\\\"><strong>2. Share a Written Testimonial</strong></p><p>If you'd be willing to share 2-4 sentences about your experience for our website, simply reply to this email with your testimonial. We'll format it and send you a preview before publishing anything.</p><p style=\\\"margin-top:28px;font-size:13px;color:#888;\\\">Thank you for being a client of {{env.CLIENT_NAME}}.</p></div>\"\n}",
+        "parseResponse": true,
+        "timeout": 30,
+        "shareCookies": false,
+        "rejectUnauthorized": true,
+        "followRedirect": true,
+        "gzip": true,
+        "useMtls": false
+      },
+      "metadata": {
+        "designer": { "x": 1500, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "POST" },
+            "bodyType": { "label": "Raw" },
+            "contentType": { "label": "JSON (application/json)" }
+          }
+        },
+        "parameters": [
+          {
+            "name": "handleErrors",
+            "type": "boolean",
+            "label": "Evaluate all states as errors (except for 2xx and 3xx)",
+            "required": true
+          },
+          {
+            "name": "useNewZLibDecompression",
+            "type": "boolean",
+            "label": "Use new ZLib decompression library",
+            "required": true
+          }
+        ],
+        "expect": [
+          { "name": "url",           "type": "url",     "label": "URL",            "required": true },
+          { "name": "method",        "type": "select",  "label": "Method",         "required": true },
+          { "name": "headers",       "type": "array",   "label": "Headers"                          },
+          { "name": "bodyType",      "type": "select",  "label": "Body type"                        },
+          { "name": "contentType",   "type": "select",  "label": "Content type"                     },
+          { "name": "data",          "type": "string",  "label": "Request content"                  },
+          { "name": "parseResponse", "type": "boolean", "label": "Parse response"                   }
+        ],
+        "note": "Module 6: POST https://api.resend.com/emails. FROM env.RESEND_FROM_ADDRESS (verified client-facing sender — never brian@cwiai.net). TO 1.body.contactEmail. SUBJECT 'Your 30-day milestone — could we ask a quick favour?'. HTML body: greeting with contactFirstName, Claude-generated 3-paragraph body (5.body.choices[0].message.content), a Google Review CTA button (env.GOOGLE_REVIEW_LINK), and a written testimonial reply-to-email CTA. Plain-text fallback also appends env.GOOGLE_REVIEW_LINK. env.RESEND_FROM_ADDRESS must be a verified Resend sender domain."
+      }
+    },
+    {
+      "id": 7,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDecompression": true
+      },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/notes",
+        "serializeUrl": false,
+        "method": "post",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "data": "{\n  \"properties\": {\n    \"hs_note_body\": \"Testimonial request sent — {{formatDate(now; 'YYYY-MM-DD HH:mm'; 'America/New_York')}} ET. Contact: {{1.body.contactFirstName}} {{1.body.contactLastName}} ({{1.body.contactEmail}}). Deal ID: {{1.body.dealId}}. Email sent from {{env.RESEND_FROM_ADDRESS}}. Google Review link: {{env.GOOGLE_REVIEW_LINK}}. Client asked for both a Google review and a written website testimonial (reply to email). Sent via Make.com Scenario U.\",\n    \"hs_timestamp\": \"{{formatDate(now; 'x')}}\"\n  },\n  \"associations\": [\n    {\n      \"to\": {\n        \"id\": \"{{3.body.results[0].id}}\"\n      },\n      \"types\": [\n        {\n          \"associationCategory\": \"HUBSPOT_DEFINED\",\n          \"associationTypeId\": 202\n        }\n      ]\n    }\n  ]\n}",
+        "parseResponse": true,
+        "timeout": 30,
+        "shareCookies": false,
+        "rejectUnauthorized": true,
+        "followRedirect": true,
+        "gzip": true,
+        "useMtls": false
+      },
+      "metadata": {
+        "designer": { "x": 1800, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "POST" },
+            "bodyType": { "label": "Raw" },
+            "contentType": { "label": "JSON (application/json)" }
+          }
+        },
+        "parameters": [
+          {
+            "name": "handleErrors",
+            "type": "boolean",
+            "label": "Evaluate all states as errors (except for 2xx and 3xx)",
+            "required": true
+          },
+          {
+            "name": "useNewZLibDecompression",
+            "type": "boolean",
+            "label": "Use new ZLib decompression library",
+            "required": true
+          }
+        ],
+        "expect": [
+          { "name": "url",           "type": "url",     "label": "URL",            "required": true },
+          { "name": "method",        "type": "select",  "label": "Method",         "required": true },
+          { "name": "headers",       "type": "array",   "label": "Headers"                          },
+          { "name": "bodyType",      "type": "select",  "label": "Body type"                        },
+          { "name": "contentType",   "type": "select",  "label": "Content type"                     },
+          { "name": "data",          "type": "string",  "label": "Request content"                  },
+          { "name": "parseResponse", "type": "boolean", "label": "Parse response"                   }
+        ],
+        "note": "Module 7: POST https://api.hubapi.com/crm/v3/objects/notes. Creates a HubSpot note associated to the contact (3.body.results[0].id) via associationTypeId 202 (Note-to-Contact, HUBSPOT_DEFINED). Note body records: send date/time ET, contact name and email, deal ID, from address, Google review link, and that both Google review and written testimonial were requested. hs_timestamp uses Unix milliseconds via formatDate(now; 'x'). env.HUBSPOT_PRIVATE_APP_TOKEN must have crm.objects.notes.write scope."
+      }
+    },
+    {
+      "id": 8,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDecompression": true
+      },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "serializeUrl": false,
+        "method": "post",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.RESEND_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "data": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"{{env.CWI_ALERT_FROM_ADDRESS}}\"],\n  \"subject\": \"Testimonial request sent — {{1.body.contactFirstName}} {{1.body.contactLastName}} ({{1.body.contactEmail}})\",\n  \"html\": \"<h2 style='color:#1d4ed8;'>Testimonial Request Sent</h2><p>A testimonial request email was successfully sent 30 days after client onboarding.</p><table style='border-collapse:collapse;font-family:Arial,sans-serif;font-size:14px;'><tr><td style='padding:6px 12px;font-weight:bold;'>Client Name</td><td style='padding:6px 12px;'>{{1.body.contactFirstName}} {{1.body.contactLastName}}</td></tr><tr style='background:#f3f4f6;'><td style='padding:6px 12px;font-weight:bold;'>Client Email</td><td style='padding:6px 12px;'>{{1.body.contactEmail}}</td></tr><tr><td style='padding:6px 12px;font-weight:bold;'>Deal ID</td><td style='padding:6px 12px;'>{{1.body.dealId}}</td></tr><tr style='background:#f3f4f6;'><td style='padding:6px 12px;font-weight:bold;'>Onboarding Date</td><td style='padding:6px 12px;'>{{1.body.onboardingDate}}</td></tr><tr><td style='padding:6px 12px;font-weight:bold;'>Email Sent From</td><td style='padding:6px 12px;'>{{env.RESEND_FROM_ADDRESS}}</td></tr><tr style='background:#f3f4f6;'><td style='padding:6px 12px;font-weight:bold;'>Google Review Link</td><td style='padding:6px 12px;'><a href='{{env.GOOGLE_REVIEW_LINK}}'>{{env.GOOGLE_REVIEW_LINK}}</a></td></tr><tr><td style='padding:6px 12px;font-weight:bold;'>Sent At</td><td style='padding:6px 12px;'>{{formatDate(now; 'MMMM D, YYYY h:mm A'; 'America/New_York')}} ET</td></tr><tr style='background:#f3f4f6;'><td style='padding:6px 12px;font-weight:bold;'>HubSpot Contact ID</td><td style='padding:6px 12px;'>{{3.body.results[0].id}}</td></tr></table><p>HubSpot note has been logged on the contact. If the client does not respond within 7 business days, follow up manually.</p><hr><p style='color:#888;font-size:12px;'><em>Automated alert from Make.com CWI Automation &mdash; Scenario U: Testimonial Request.</em></p>\"\n}",
+        "parseResponse": true,
+        "timeout": 30,
+        "shareCookies": false,
+        "rejectUnauthorized": true,
+        "followRedirect": true,
+        "gzip": true,
+        "useMtls": false
+      },
+      "metadata": {
+        "designer": { "x": 2100, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "POST" },
+            "bodyType": { "label": "Raw" },
+            "contentType": { "label": "JSON (application/json)" }
+          }
+        },
+        "parameters": [
+          {
+            "name": "handleErrors",
+            "type": "boolean",
+            "label": "Evaluate all states as errors (except for 2xx and 3xx)",
+            "required": true
+          },
+          {
+            "name": "useNewZLibDecompression",
+            "type": "boolean",
+            "label": "Use new ZLib decompression library",
+            "required": true
+          }
+        ],
+        "expect": [
+          { "name": "url",           "type": "url",     "label": "URL",            "required": true },
+          { "name": "method",        "type": "select",  "label": "Method",         "required": true },
+          { "name": "headers",       "type": "array",   "label": "Headers"                          },
+          { "name": "bodyType",      "type": "select",  "label": "Body type"                        },
+          { "name": "contentType",   "type": "select",  "label": "Content type"                     },
+          { "name": "data",          "type": "string",  "label": "Request content"                  },
+          { "name": "parseResponse", "type": "boolean", "label": "Parse response"                   }
+        ],
+        "note": "Module 8: Resend HTTP POST — internal success alert. FROM env.CWI_ALERT_FROM_ADDRESS. TO env.CWI_ALERT_FROM_ADDRESS (self-alert to internal inbox). Subject includes client name and email. HTML body contains a styled confirmation table: client name, email, deal ID, onboarding date, sending from address, Google review link, sent-at timestamp (ET), and HubSpot contact ID. Prompts follow-up if no response within 7 business days."
+      }
+    }
+  ],
+  "errorHandlers": [
+    {
+      "id": 9,
+      "label": "Error Handler — Testimonial Request Failed (Resend alert)",
+      "type": "error",
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": false,
+        "useNewZLibDecompression": true
+      },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "serializeUrl": false,
+        "method": "post",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.RESEND_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "data": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"{{env.CWI_ALERT_FROM_ADDRESS}}\"],\n  \"subject\": \"[ERROR] Make.com \\u2014 Scenario U Testimonial Request Failed\",\n  \"html\": \"<h2 style='color:#b00020;'>&#9888;&#65039; Scenario U \\u2014 Testimonial Request Failed</h2><p>A step in the automated Testimonial Request flow failed. The testimonial request email may NOT have been delivered to the client \\u2014 please verify and follow up manually.</p><hr><h3>Client</h3><ul><li><strong>Name:</strong> {{1.body.contactFirstName}} {{1.body.contactLastName}}</li><li><strong>Email:</strong> {{1.body.contactEmail}}</li><li><strong>Deal ID:</strong> {{1.body.dealId}}</li><li><strong>Onboarding Date:</strong> {{1.body.onboardingDate}}</li></ul><hr><h3>Error Details</h3><ul><li><strong>Error Message:</strong> {{error.message}}</li><li><strong>Failed Module:</strong> {{error.module}}</li><li><strong>Scenario Run ID:</strong> {{scenario.runId}}</li><li><strong>Timestamp:</strong> {{formatDate(now; 'YYYY-MM-DD HH:mm:ss'; 'America/New_York')}} ET</li></ul><hr><p style='color:#888;font-size:12px;'><em>Automated alert from Make.com CWI Automation \\u2014 Scenario U: Testimonial Request. Review the Make.com execution log and send the testimonial request manually if the email was not delivered.</em></p>\"\n}",
+        "parseResponse": true,
+        "timeout": 30,
+        "shareCookies": false,
+        "rejectUnauthorized": true,
+        "followRedirect": true,
+        "gzip": true,
+        "useMtls": false
+      },
+      "metadata": {
+        "designer": { "x": 1050, "y": 400 },
+        "restore": {
+          "expect": {
+            "method": { "label": "POST" },
+            "bodyType": { "label": "Raw" },
+            "contentType": { "label": "JSON (application/json)" }
+          }
+        },
+        "note": "Error Handler (module 9): Catches any failure in modules 3–8 (HubSpot contact check, OpenRouter call, Resend send, HubSpot note, internal alert). Sends a Resend alert FROM env.CWI_ALERT_FROM_ADDRESS TO env.CWI_ALERT_FROM_ADDRESS with client details (name, email, deal ID, onboarding date), error message, failed module, scenario run ID, and ET timestamp. handleErrors: false prevents recursive error loops. Manual follow-up is required when this fires."
+      }
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": true,
+      "slots": null,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false,
+      "timezone": "America/New_York"
+    },
+    "designer": {
+      "orphans": []
+    },
+    "zone": "us1.make.com",
+    "notes": [
+      {
+        "id": 1,
+        "content": "Module 1: Instant webhook trigger (hook 3020). HubSpot deal-based Workflow fires when client_onboarding_date is set. Payload: { dealId, contactEmail, contactFirstName, contactLastName, onboardingDate }.",
+        "position": { "x": 0, "y": -80 }
+      },
+      {
+        "id": 2,
+        "content": "Module 2: builtin:Sleep 2592000 seconds (30 days). Delays execution so the testimonial request fires after the client has had meaningful time to experience results.",
+        "position": { "x": 300, "y": -80 }
+      },
+      {
+        "id": 3,
+        "content": "Module 3: HubSpot CRM contact search by email (1.body.contactEmail). Returns contact id, hs_lead_status, lifecyclestage. Used by module 4 guard filter.",
+        "position": { "x": 600, "y": -80 }
+      },
+      {
+        "id": 4,
+        "content": "Module 4: Guard filter — hs_lead_status == 'Client Active'. Stops execution for churned or inactive clients without triggering the error handler.",
+        "position": { "x": 900, "y": -80 }
+      },
+      {
+        "id": 5,
+        "content": "Module 5: OpenRouter POST — models array [anthropic/claude-sonnet-4-6, env.OPENROUTER_FALLBACK_MODEL]. Generates a personalized 3-paragraph email asking for a Google review AND a written website testimonial. max_tokens: 500, temperature: 0.7.",
+        "position": { "x": 1200, "y": -80 }
+      },
+      {
+        "id": 6,
+        "content": "Module 6: Resend HTTP POST — client testimonial request email. FROM env.RESEND_FROM_ADDRESS (never brian@cwiai.net). TO contactEmail. Subject: 'Your 30-day milestone — could we ask a quick favour?'. Body: Claude-generated email + Google Review button (env.GOOGLE_REVIEW_LINK) + written testimonial reply-to CTA.",
+        "position": { "x": 1500, "y": -80 }
+      },
+      {
+        "id": 7,
+        "content": "Module 7: HubSpot POST /crm/v3/objects/notes. Logs 'Testimonial request sent' note on the contact (associationTypeId 202). Records send timestamp ET, from address, Google review link, and both ask types.",
+        "position": { "x": 1800, "y": -80 }
+      },
+      {
+        "id": 8,
+        "content": "Module 8: Resend HTTP POST — internal success alert. FROM and TO env.CWI_ALERT_FROM_ADDRESS. Styled table: client name, email, deal ID, onboarding date, send timestamp ET, HubSpot contact ID, Google review link.",
+        "position": { "x": 2100, "y": -80 }
+      },
+      {
+        "id": 9,
+        "content": "Error Handler (module 9): Fires on any failure in modules 3-8. Resend alert FROM and TO env.CWI_ALERT_FROM_ADDRESS. Includes error message, failed module, scenario run ID, client details, and ET timestamp for manual remediation. handleErrors: false.",
+        "position": { "x": 1050, "y": 320 }
+      }
+    ]
+  },
+  "connections": {
+    "hubspot": {
+      "label": "HubSpot CWI Private App",
+      "note": "HubSpot Private App access token stored in env.HUBSPOT_PRIVATE_APP_TOKEN. Required scopes: crm.objects.contacts.read, crm.objects.notes.write.",
+      "scopes": [
+        "crm.objects.contacts.read",
+        "crm.objects.notes.write"
+      ]
+    },
+    "openrouter": {
+      "label": "OpenRouter HTTP connection",
+      "note": "No native Make.com module — uses http:ActionSendData. Authenticated via 'Authorization: Bearer {{env.OPENROUTER_API_KEY}}'. Uses 'models' array for automatic fallback: [anthropic/claude-sonnet-4-6, env.OPENROUTER_FALLBACK_MODEL]. max_tokens: 500, temperature: 0.7."
+    },
+    "resend": {
+      "label": "Resend HTTP connection",
+      "note": "No native Make.com module — uses http:ActionSendData. Authenticated via 'Authorization: Bearer {{env.RESEND_API_KEY}}'. Client-facing email uses env.RESEND_FROM_ADDRESS (verified sending domain, never brian@cwiai.net). Internal alerts and error emails use env.CWI_ALERT_FROM_ADDRESS."
+    }
+  },
+  "webhooks": [
+    {
+      "id": 3020,
+      "name": "HubSpot Deal — client_onboarding_date Set",
+      "url": "GENERATED_BY_MAKE_ON_IMPORT",
+      "method": "POST",
+      "headers": [],
+      "stringify": false,
+      "retrieval": "lastdup",
+      "type": "gateway",
+      "json": true,
+      "typedConfig": null,
+      "rawConfig": null,
+      "note": "Create a HubSpot deal-based Workflow enrolled when the deal property 'client_onboarding_date' has a known value (is set). Add a 'Send a webhook' action (POST) to the Make.com webhook URL with body: { \"dealId\": {{deal.hs_object_id}}, \"contactEmail\": {{deal.associations.contact.email}}, \"contactFirstName\": {{deal.associations.contact.firstname}}, \"contactLastName\": {{deal.associations.contact.lastname}}, \"onboardingDate\": {{deal.client_onboarding_date}} }. Hook ID 3020 must match the ID assigned in Make."
+    }
+  ],
+  "environmentVariables": {
+    "HUBSPOT_PRIVATE_APP_TOKEN": {
+      "description": "HubSpot Private App access token. Required scopes: crm.objects.contacts.read, crm.objects.notes.write.",
+      "sensitive": true
+    },
+    "OPENROUTER_API_KEY": {
+      "description": "OpenRouter API key. Get from https://openrouter.ai/keys.",
+      "sensitive": true
+    },
+    "OPENROUTER_FALLBACK_MODEL": {
+      "description": "Fallback model slug for OpenRouter in case anthropic/claude-sonnet-4-6 is unavailable (e.g. openai/gpt-4o or anthropic/claude-3-5-haiku).",
+      "sensitive": false,
+      "example": "openai/gpt-4o"
+    },
+    "RESEND_API_KEY": {
+      "description": "Resend API key. Get from https://resend.com/api-keys.",
+      "sensitive": true
+    },
+    "RESEND_FROM_ADDRESS": {
+      "description": "Verified client-facing sending address in Resend. Must NOT be brian@cwiai.net. Used as the FROM address on all client-facing testimonial request emails.",
+      "sensitive": false,
+      "example": "hello@clientdomain.com"
+    },
+    "CWI_ALERT_FROM_ADDRESS": {
+      "description": "Internal CWI verified sender in Resend used for internal success alerts and error notifications. Also used as the TO address for internal alerts.",
+      "sensitive": false,
+      "example": "alerts@cwiai.net"
+    },
+    "GOOGLE_REVIEW_LINK": {
+      "description": "Full Google Business review URL for the client. Included as a CTA button and plain-text link in the testimonial request email.",
+      "sensitive": false,
+      "example": "https://g.page/r/XXXXXXXXXXXXXX/review"
+    },
+    "CLIENT_NAME": {
+      "description": "White-labeled business display name passed to the Claude prompt (e.g. 'Acme Plumbing'). Never use 'CWI AI' here unless this is an internal scenario.",
+      "sensitive": false,
+      "example": "Acme Plumbing"
+    }
+  },
+  "setupInstructions": {
+    "step1_hubspot_webhook": "Create a HubSpot deal-based Workflow that enrolls deals when the property 'client_onboarding_date' is known / becomes set. Add a 'Send a webhook' action (POST) to the Make.com webhook URL (hook 3020) with body fields: dealId, contactEmail, contactFirstName, contactLastName, onboardingDate. Use HubSpot deal tokens to populate these values.",
+    "step2_hubspot_scopes": "Create a HubSpot Private App (Settings > Integrations > Private Apps > Create) with scopes: crm.objects.contacts.read and crm.objects.notes.write. Store the token in env.HUBSPOT_PRIVATE_APP_TOKEN.",
+    "step3_openrouter": "Set env.OPENROUTER_API_KEY from https://openrouter.ai/keys. Confirm anthropic/claude-sonnet-4-6 is enabled on your OpenRouter account. Set env.OPENROUTER_FALLBACK_MODEL to a secondary model slug (e.g. openai/gpt-4o) — OpenRouter uses the 'models' array to automatically fall back if the primary model is unavailable or over capacity.",
+    "step4_resend": "Set env.RESEND_API_KEY. Verify the sender domain for env.RESEND_FROM_ADDRESS in Resend (Domains > Add domain > add DNS records). This must be a client-appropriate domain — never brian@cwiai.net. Verify env.CWI_ALERT_FROM_ADDRESS as a separate CWI internal sender in Resend.",
+    "step5_env_variables": "Set env.GOOGLE_REVIEW_LINK to the client's full Google Business review URL. Set env.CLIENT_NAME to the white-labeled business name used in the Claude prompt.",
+    "step6_sleep_duration": "builtin:Sleep is set to 2592000 seconds (exactly 30 days). Make.com Enterprise and higher plans support long-running pauses; confirm your plan accommodates waits exceeding 24 hours before enabling this scenario in production.",
+    "step7_active_check": "Module 3 performs a HubSpot contact search by email (1.body.contactEmail) after the 30-day sleep. Module 4 filters on hs_lead_status == 'Client Active'. Clients who have churned, paused, or changed status in the 30-day window will be silently skipped — no error is raised and no email is sent.",
+    "step8_testing": "Full test flow: POST a test webhook payload { dealId, contactEmail, contactFirstName, contactLastName, onboardingDate } to hook 3020. Confirm: (1) sleep fires after 2592000 s (or shorten for testing), (2) HubSpot contact is found and is 'Client Active', (3) OpenRouter returns a 3-paragraph email body, (4) Resend delivers from env.RESEND_FROM_ADDRESS (not brian@cwiai.net), (5) email body includes both Google review CTA and written testimonial CTA, (6) HubSpot note appears on the contact, (7) internal success alert arrives at env.CWI_ALERT_FROM_ADDRESS. Test the error handler by temporarily setting an invalid OPENROUTER_API_KEY and verifying the error email fires."
+  }
+}

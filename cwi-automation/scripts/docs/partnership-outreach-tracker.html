@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CWI AI — Partnership & Referral Outreach Tracker</title>
+<style>
+  :root {
+    --accent: #FF5A1F;
+    --accent-dark: #d94a12;
+    --accent-light: #fff0eb;
+    --bg: #f8f9fa;
+    --card: #ffffff;
+    --border: #e2e8f0;
+    --text: #1a202c;
+    --text-muted: #718096;
+    --success: #38a169;
+    --warning: #d69e2e;
+    --danger: #e53e3e;
+    --info: #3182ce;
+    --overdue: #fff5f5;
+    --overdue-border: #fc8181;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; }
+
+  /* HEADER */
+  .header { background: #1a202c; color: #fff; padding: 16px 24px; display: flex; align-items: center; gap: 16px; }
+  .header-logo { font-size: 22px; font-weight: 800; color: var(--accent); letter-spacing: -0.5px; }
+  .header-title { font-size: 16px; font-weight: 600; color: #e2e8f0; }
+  .header-sub { font-size: 12px; color: #a0aec0; }
+  .header-spacer { flex: 1; }
+  .btn-export { background: var(--accent); color: #fff; border: none; padding: 8px 18px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+  .btn-export:hover { background: var(--accent-dark); }
+
+  /* PIPELINE */
+  .pipeline { display: flex; gap: 12px; padding: 16px 24px; overflow-x: auto; background: #fff; border-bottom: 1px solid var(--border); }
+  .pipeline-stage { flex: 1; min-width: 130px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; text-align: center; }
+  .pipeline-stage .stage-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-muted); margin-bottom: 4px; }
+  .pipeline-stage .stage-count { font-size: 26px; font-weight: 800; color: var(--accent); line-height: 1; }
+  .pipeline-stage .stage-mrr { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+  .pipeline-stage.active { border-color: var(--accent); background: var(--accent-light); }
+  .pipeline-stage.active .stage-label { color: var(--accent-dark); }
+
+  /* TOOLBAR */
+  .toolbar { display: flex; gap: 10px; align-items: center; padding: 14px 24px; background: var(--card); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .toolbar select, .toolbar input[type="text"] { padding: 7px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; background: #fff; color: var(--text); outline: none; }
+  .toolbar select:focus, .toolbar input:focus { border-color: var(--accent); }
+  .toolbar-spacer { flex: 1; }
+  .btn-add { background: var(--accent); color: #fff; border: none; padding: 8px 18px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s; white-space: nowrap; }
+  .btn-add:hover { background: var(--accent-dark); }
+  .overdue-banner { background: #fff5f5; border: 1px solid var(--overdue-border); border-radius: 6px; padding: 6px 12px; font-size: 12px; color: var(--danger); font-weight: 600; display: none; }
+  .overdue-banner.visible { display: block; }
+
+  /* TABLE */
+  .table-wrap { overflow-x: auto; padding: 0 24px 24px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 14px; background: var(--card); border-radius: 10px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  thead tr { background: #1a202c; color: #e2e8f0; }
+  thead th { padding: 11px 12px; text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: #f7f8fa; }
+  tbody tr.overdue-row { background: var(--overdue); }
+  tbody tr.overdue-row:hover { background: #ffe8e8; }
+  td { padding: 10px 12px; vertical-align: top; font-size: 13px; }
+  td.name-cell { font-weight: 600; min-width: 130px; }
+  td.biz-cell { color: var(--text-muted); min-width: 130px; }
+  td.notes-cell { max-width: 180px; color: var(--text-muted); font-size: 12px; word-break: break-word; }
+  .type-badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+  .type-web-designer { background: #ebf8ff; color: #2b6cb0; }
+  .type-digital-marketing-agency { background: #f0fff4; color: #276749; }
+  .type-business-coach { background: #faf5ff; color: #6b46c1; }
+  .type-accountant { background: #fffff0; color: #975a16; }
+  .type-insurance-agent { background: #fff5f5; color: #9b2c2c; }
+
+  .status-badge { display: inline-block; padding: 3px 9px; border-radius: 12px; font-size: 11px; font-weight: 700; }
+  .status-prospect { background: #f7fafc; color: #4a5568; border: 1px solid #cbd5e0; }
+  .status-contacted { background: #ebf8ff; color: #2b6cb0; }
+  .status-in-conversation { background: #fefcbf; color: #975a16; }
+  .status-partnership-active { background: #f0fff4; color: #276749; }
+  .status-declined { background: #fff5f5; color: #9b2c2c; }
+
+  .overdue-tag { display: inline-block; background: var(--danger); color: #fff; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; margin-left: 4px; vertical-align: middle; }
+
+  .referrals-num { display: inline-block; background: var(--accent-light); color: var(--accent-dark); font-weight: 700; padding: 2px 8px; border-radius: 10px; font-size: 12px; }
+  .referrals-num.zero { background: #f7fafc; color: #a0aec0; }
+
+  .action-btn { background: none; border: none; cursor: pointer; padding: 4px 7px; border-radius: 5px; font-size: 13px; transition: background 0.15s; }
+  .action-btn.edit { color: var(--info); }
+  .action-btn.edit:hover { background: #ebf8ff; }
+  .action-btn.delete { color: var(--danger); }
+  .action-btn.delete:hover { background: #fff5f5; }
+  .action-btn.pitch { color: var(--accent); }
+  .action-btn.pitch:hover { background: var(--accent-light); }
+
+  .linkedin-link { color: var(--info); text-decoration: none; font-size: 12px; }
+  .linkedin-link:hover { text-decoration: underline; }
+
+  /* MODAL */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1000; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: #fff; border-radius: 12px; padding: 28px 28px 22px; width: 660px; max-width: 96vw; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.18); }
+  .modal-header { display: flex; align-items: center; margin-bottom: 20px; }
+  .modal-title { font-size: 17px; font-weight: 700; color: var(--text); }
+  .modal-close { margin-left: auto; background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted); line-height: 1; }
+  .modal-close:hover { color: var(--danger); }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 18px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group.full { grid-column: 1 / -1; }
+  label { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; }
+  input[type="text"], input[type="email"], input[type="tel"], input[type="url"], input[type="date"], input[type="number"], select, textarea {
+    padding: 8px 11px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; color: var(--text); outline: none; font-family: inherit; background: #fff;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(255,90,31,0.12); }
+  textarea { resize: vertical; min-height: 70px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 22px; }
+  .btn-cancel { padding: 9px 20px; border: 1px solid var(--border); background: #fff; border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: 600; color: var(--text-muted); }
+  .btn-cancel:hover { background: #f7f8fa; }
+  .btn-save { padding: 9px 22px; background: var(--accent); color: #fff; border: none; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; }
+  .btn-save:hover { background: var(--accent-dark); }
+
+  /* PITCH MODAL */
+  .pitch-modal { width: 520px; }
+  .pitch-type-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--accent); margin-bottom: 6px; }
+  .pitch-text { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; font-size: 13.5px; line-height: 1.7; color: var(--text); margin-bottom: 14px; }
+  .btn-copy { background: #1a202c; color: #fff; border: none; padding: 8px 18px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .btn-copy:hover { background: var(--accent); }
+  .copy-confirm { display: inline-block; margin-left: 10px; color: var(--success); font-size: 12px; font-weight: 600; opacity: 0; transition: opacity 0.3s; }
+  .copy-confirm.show { opacity: 1; }
+
+  /* DELETE CONFIRM */
+  .delete-modal { width: 380px; text-align: center; }
+  .delete-icon { font-size: 36px; margin-bottom: 10px; }
+  .delete-msg { font-size: 15px; color: var(--text); margin-bottom: 6px; font-weight: 600; }
+  .delete-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; }
+  .btn-delete-confirm { padding: 9px 22px; background: var(--danger); color: #fff; border: none; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; }
+  .btn-delete-confirm:hover { background: #c53030; }
+
+  /* ALL PITCH SNIPPETS */
+  .all-pitches-section { padding: 0 24px 24px; }
+  .pitches-toggle { background: none; border: 1px solid var(--border); padding: 8px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; color: var(--text-muted); font-weight: 600; margin-top: 14px; }
+  .pitches-toggle:hover { border-color: var(--accent); color: var(--accent); }
+  .all-pitches { display: none; margin-top: 14px; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+  .pitch-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+  .pitch-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .pitch-card-type { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--accent); }
+  .pitch-card-copy { background: none; border: 1px solid var(--border); padding: 4px 10px; border-radius: 5px; font-size: 11px; cursor: pointer; color: var(--text-muted); font-weight: 600; }
+  .pitch-card-copy:hover { border-color: var(--accent); color: var(--accent); }
+  .pitch-card-text { font-size: 12.5px; line-height: 1.65; color: var(--text-muted); }
+
+  .empty-state { text-align: center; padding: 48px 20px; color: var(--text-muted); }
+  .empty-state .empty-icon { font-size: 40px; margin-bottom: 10px; }
+
+  @media (max-width: 600px) {
+    .pipeline { gap: 8px; }
+    .form-grid { grid-template-columns: 1fr; }
+    .toolbar { gap: 8px; }
+    .table-wrap { padding: 0 10px 16px; }
+    .header { padding: 12px 14px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header-logo">CWI AI</div>
+    <div class="header-title">Partnership &amp; Referral Outreach Tracker</div>
+    <div class="header-sub">B2B Partner Pipeline — Referral Source Management</div>
+  </div>
+  <div class="header-spacer"></div>
+  <button class="btn-export" onclick="exportCSV()">Export CSV</button>
+</div>
+
+<!-- PIPELINE -->
+<div class="pipeline" id="pipeline"></div>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <input type="text" id="searchInput" placeholder="Search name, business, notes..." style="min-width:200px;" oninput="renderTable()">
+  <select id="filterType" onchange="renderTable()">
+    <option value="">All Types</option>
+    <option value="Web Designer">Web Designer</option>
+    <option value="Digital Marketing Agency">Digital Marketing Agency</option>
+    <option value="Business Coach">Business Coach</option>
+    <option value="Accountant">Accountant</option>
+    <option value="Insurance Agent">Insurance Agent</option>
+  </select>
+  <select id="filterStatus" onchange="renderTable()">
+    <option value="">All Statuses</option>
+    <option value="Prospect">Prospect</option>
+    <option value="Contacted">Contacted</option>
+    <option value="In Conversation">In Conversation</option>
+    <option value="Partnership Active">Partnership Active</option>
+    <option value="Declined">Declined</option>
+  </select>
+  <div class="toolbar-spacer"></div>
+  <div class="overdue-banner" id="overdueBanner"></div>
+  <button class="btn-add" onclick="openAddModal()">+ Add Partner</button>
+</div>
+
+<!-- TABLE -->
+<div class="table-wrap">
+  <table id="partnersTable">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Business</th>
+        <th>Type</th>
+        <th>Contact</th>
+        <th>Location</th>
+        <th>Status</th>
+        <th>First Contact</th>
+        <th>Last F/U</th>
+        <th>Next F/U</th>
+        <th>Method</th>
+        <th>Referrals</th>
+        <th>Notes</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+  <div class="empty-state" id="emptyState" style="display:none;">
+    <div class="empty-icon">🤝</div>
+    <div>No partners match your filters.</div>
+  </div>
+</div>
+
+<!-- PITCH SNIPPETS -->
+<div class="all-pitches-section">
+  <div style="font-size:13px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-top:4px;">Partnership Pitch Snippets</div>
+  <div class="all-pitches" id="allPitches"></div>
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal-overlay" id="formModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="formModalTitle">Add Partner</div>
+      <button class="modal-close" onclick="closeModal('formModal')">&times;</button>
+    </div>
+    <form id="partnerForm" onsubmit="savePartner(event)">
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="f_name">Name *</label>
+          <input type="text" id="f_name" required placeholder="First Last">
+        </div>
+        <div class="form-group">
+          <label for="f_biz">Business Name</label>
+          <input type="text" id="f_biz" placeholder="Company / Studio">
+        </div>
+        <div class="form-group">
+          <label for="f_type">Partner Type *</label>
+          <select id="f_type" required>
+            <option value="">Select type...</option>
+            <option>Web Designer</option>
+            <option>Digital Marketing Agency</option>
+            <option>Business Coach</option>
+            <option>Accountant</option>
+            <option>Insurance Agent</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="f_status">Status *</label>
+          <select id="f_status" required>
+            <option value="">Select status...</option>
+            <option>Prospect</option>
+            <option>Contacted</option>
+            <option>In Conversation</option>
+            <option>Partnership Active</option>
+            <option>Declined</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="f_email">Email</label>
+          <input type="email" id="f_email" placeholder="email@example.com">
+        </div>
+        <div class="form-group">
+          <label for="f_phone">Phone</label>
+          <input type="tel" id="f_phone" placeholder="(555) 000-0000">
+        </div>
+        <div class="form-group full">
+          <label for="f_linkedin">LinkedIn URL</label>
+          <input type="url" id="f_linkedin" placeholder="https://linkedin.com/in/...">
+        </div>
+        <div class="form-group">
+          <label for="f_location">Location</label>
+          <input type="text" id="f_location" placeholder="City, State">
+        </div>
+        <div class="form-group">
+          <label for="f_method">Contact Method</label>
+          <select id="f_method">
+            <option value="">Select...</option>
+            <option>LinkedIn DM</option>
+            <option>Email</option>
+            <option>Phone</option>
+            <option>Referral</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="f_first_contact">Date First Contact</label>
+          <input type="date" id="f_first_contact">
+        </div>
+        <div class="form-group">
+          <label for="f_last_followup">Last Follow-up Date</label>
+          <input type="date" id="f_last_followup">
+        </div>
+        <div class="form-group">
+          <label for="f_next_followup">Next Follow-up Date</label>
+          <input type="date" id="f_next_followup">
+        </div>
+        <div class="form-group">
+          <label for="f_referrals">Referrals Received (#)</label>
+          <input type="number" id="f_referrals" min="0" value="0">
+        </div>
+        <div class="form-group full">
+          <label for="f_notes">Notes</label>
+          <textarea id="f_notes" placeholder="Conversation notes, interests, context..."></textarea>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" onclick="closeModal('formModal')">Cancel</button>
+        <button type="submit" class="btn-save">Save Partner</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- PITCH MODAL -->
+<div class="modal-overlay" id="pitchModal">
+  <div class="modal pitch-modal">
+    <div class="modal-header">
+      <div class="modal-title">Partnership Pitch</div>
+      <button class="modal-close" onclick="closeModal('pitchModal')">&times;</button>
+    </div>
+    <div class="pitch-type-label" id="pitchTypeLabel"></div>
+    <div class="pitch-text" id="pitchTextDisplay"></div>
+    <div>
+      <button class="btn-copy" onclick="copyPitch()">Copy to Clipboard</button>
+      <span class="copy-confirm" id="copyConfirm">Copied!</span>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE CONFIRM MODAL -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal delete-modal">
+    <div class="delete-icon">&#9888;&#65039;</div>
+    <div class="delete-msg">Delete this partner?</div>
+    <div class="delete-sub" id="deleteModalSub"></div>
+    <div class="modal-actions" style="justify-content:center;">
+      <button class="btn-cancel" onclick="closeModal('deleteModal')">Cancel</button>
+      <button class="btn-delete-confirm" onclick="confirmDelete()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── DATA ────────────────────────────────────────────────────────────────────
+
+const STORAGE_KEY = 'cwi_partners_v1';
+
+const PITCHES = {
+  'Web Designer': `Hi [Name] — I help small businesses get real ROI from AI, and your clients are exactly who needs it. Many web designers find that referring clients to CWI AI adds a tangible value-add that keeps those clients happy and loyal to them. I'd love to set up a simple referral arrangement where you earn a commission for every client you send our way who signs on — no extra work on your end, just a natural extension of what you already do for them.`,
+  'Digital Marketing Agency': `Hey [Name] — CWI AI works alongside agencies like yours to automate the time-consuming back-end work your clients hate: lead follow-up, appointment setting, review requests, and reporting. Rather than competing, we make your campaigns stickier by handling the conversion layer so your clients see better results and credit you for it. A referral partnership means you earn recurring commissions while we handle everything AI-related — so you can focus on what you do best.`,
+  'Business Coach': `[Name], your clients trust you with their biggest growth decisions, and AI automation is the #1 lever they're not yet using. CWI AI helps small business owners cut admin time by 10+ hours a week and close more leads with less effort — exactly the outcome your clients are paying you to deliver. Let's talk about a referral arrangement that puts money in your pocket every time a client you refer gets started with us.`,
+  'Accountant': `Hi [Name] — your small business clients are leaving efficiency on the table, and AI automation is the fix most of them don't know exists yet. CWI AI helps them automate invoicing follow-ups, client onboarding, and repetitive admin tasks — which also makes your job easier when their books are cleaner and more consistent. A referral partnership is simple: when a client you mention us to signs on, you earn a commission with zero ongoing work required from you.`,
+  'Insurance Agent': `[Name], you're already a trusted advisor to your small business clients, and adding CWI AI to that conversation is a natural fit — it helps them protect their time the same way insurance protects their assets. We automate lead follow-up, scheduling, and client communication so they can grow without adding headcount. Our referral program pays you a commission for every client introduction that converts, with no extra work on your end.`
+};
+
+const MRR_BY_TYPE = {
+  'Web Designer': 500,
+  'Digital Marketing Agency': 800,
+  'Business Coach': 600,
+  'Accountant': 500,
+  'Insurance Agent': 500
+};
+
+const STATUSES = ['Prospect', 'Contacted', 'In Conversation', 'Partnership Active', 'Declined'];
+
+// Default sample data
+const SAMPLE_DATA = [
+  {
+    id: uid(),
+    name: 'Sarah Mitchell',
+    biz: 'Bright Pixel Studio',
+    type: 'Web Designer',
+    email: 'sarah@brightpixel.co',
+    phone: '(512) 555-0147',
+    linkedin: 'https://linkedin.com/in/sarahmitchell-design',
+    location: 'Austin, TX',
+    first_contact: '2026-05-14',
+    method: 'LinkedIn DM',
+    last_followup: '2026-05-28',
+    next_followup: '2026-06-10',
+    status: 'In Conversation',
+    notes: 'Very interested. Has 12 small biz clients. Wants to see our pricing deck before committing.',
+    referrals: 0
+  },
+  {
+    id: uid(),
+    name: 'Derek Okafor',
+    biz: 'Okafor Growth Advisory',
+    type: 'Business Coach',
+    email: 'derek@okaforadvisory.com',
+    phone: '(646) 555-0382',
+    linkedin: 'https://linkedin.com/in/derekokafor',
+    location: 'New York, NY',
+    first_contact: '2026-04-02',
+    method: 'Referral',
+    last_followup: '2026-05-19',
+    next_followup: '2026-05-30',
+    status: 'Partnership Active',
+    notes: 'Signed referral agreement 5/19. Sent 2 warm intros already. Monthly check-in scheduled.',
+    referrals: 2
+  },
+  {
+    id: uid(),
+    name: 'Linda Tran',
+    biz: 'Peak Digital Marketing',
+    type: 'Digital Marketing Agency',
+    email: 'linda@peakdigital.io',
+    phone: '(303) 555-0219',
+    linkedin: 'https://linkedin.com/in/lindatranmarketing',
+    location: 'Denver, CO',
+    first_contact: '2026-06-01',
+    method: 'Email',
+    last_followup: '',
+    next_followup: '2026-06-15',
+    status: 'Contacted',
+    notes: 'Cold email sent 6/1. Manages 20+ SMB clients. Follow up with case study.',
+    referrals: 0
+  }
+];
+
+function uid() {
+  return 'p_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
+}
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return null;
+}
+
+function saveData(data) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+let partners = loadData() || JSON.parse(JSON.stringify(SAMPLE_DATA));
+if (!loadData()) saveData(partners);
+
+let editingId = null;
+let deletingId = null;
+
+// ── PIPELINE ────────────────────────────────────────────────────────────────
+
+function renderPipeline() {
+  const el = document.getElementById('pipeline');
+  el.innerHTML = '';
+  STATUSES.forEach(status => {
+    const group = partners.filter(p => p.status === status);
+    const mrr = group.reduce((sum, p) => sum + (MRR_BY_TYPE[p.type] || 500), 0);
+    const div = document.createElement('div');
+    div.className = 'pipeline-stage' + (group.length > 0 ? ' active' : '');
+    const activeCount = partners.filter(p => p.status === 'Partnership Active').length;
+    const isActive = status === 'Partnership Active';
+    div.innerHTML = `
+      <div class="stage-label">${status}</div>
+      <div class="stage-count">${group.length}</div>
+      <div class="stage-mrr">${isActive ? '$' + mrr.toLocaleString() + '/mo MRR' : '~$' + mrr.toLocaleString() + ' potential'}</div>
+    `;
+    el.appendChild(div);
+  });
+}
+
+// ── TABLE ───────────────────────────────────────────────────────────────────
+
+function typeClass(type) {
+  return 'type-' + type.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+}
+function statusClass(status) {
+  return 'status-' + status.toLowerCase().replace(/\s+/g, '-');
+}
+
+function today() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function isOverdue(dateStr) {
+  if (!dateStr) return false;
+  return dateStr < today();
+}
+
+function fmt(dateStr) {
+  if (!dateStr) return '—';
+  const [y, m, d] = dateStr.split('-');
+  return `${m}/${d}/${y.slice(2)}`;
+}
+
+function renderTable() {
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  const filterType = document.getElementById('filterType').value;
+  const filterStatus = document.getElementById('filterStatus').value;
+
+  let filtered = partners.filter(p => {
+    const matchSearch = !search || [p.name, p.biz, p.notes, p.location, p.email].join(' ').toLowerCase().includes(search);
+    const matchType = !filterType || p.type === filterType;
+    const matchStatus = !filterStatus || p.status === filterStatus;
+    return matchSearch && matchType && matchStatus;
+  });
+
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = '';
+
+  const overdueCount = partners.filter(p => isOverdue(p.next_followup) && p.status !== 'Partnership Active' && p.status !== 'Declined').length;
+  const banner = document.getElementById('overdueBanner');
+  if (overdueCount > 0) {
+    banner.textContent = overdueCount + ' overdue follow-up' + (overdueCount > 1 ? 's' : '');
+    banner.classList.add('visible');
+  } else {
+    banner.classList.remove('visible');
+  }
+
+  if (filtered.length === 0) {
+    document.getElementById('emptyState').style.display = 'block';
+    document.getElementById('partnersTable').style.display = 'none';
+    return;
+  }
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('partnersTable').style.display = '';
+
+  // Sort: overdue first, then by next followup
+  filtered.sort((a, b) => {
+    const aOver = isOverdue(a.next_followup) ? 0 : 1;
+    const bOver = isOverdue(b.next_followup) ? 0 : 1;
+    if (aOver !== bOver) return aOver - bOver;
+    return (a.next_followup || '9999') < (b.next_followup || '9999') ? -1 : 1;
+  });
+
+  filtered.forEach(p => {
+    const overdue = isOverdue(p.next_followup) && p.status !== 'Partnership Active' && p.status !== 'Declined';
+    const tr = document.createElement('tr');
+    if (overdue) tr.className = 'overdue-row';
+
+    const emailHtml = p.email ? `<a href="mailto:${p.email}" style="color:var(--info);font-size:12px;display:block;">${p.email}</a>` : '';
+    const phoneHtml = p.phone ? `<span style="font-size:12px;color:var(--text-muted);display:block;">${p.phone}</span>` : '';
+    const linkedinHtml = p.linkedin ? `<a href="${p.linkedin}" target="_blank" class="linkedin-link">LinkedIn</a>` : '';
+
+    const nextHtml = p.next_followup
+      ? `${fmt(p.next_followup)}${overdue ? '<span class="overdue-tag">OVERDUE</span>' : ''}`
+      : '—';
+
+    const refHtml = `<span class="referrals-num${p.referrals == 0 ? ' zero' : ''}">${p.referrals || 0}</span>`;
+
+    tr.innerHTML = `
+      <td class="name-cell">${escHtml(p.name)}</td>
+      <td class="biz-cell">${escHtml(p.biz || '—')}</td>
+      <td><span class="type-badge ${typeClass(p.type)}">${escHtml(p.type)}</span></td>
+      <td>${emailHtml}${phoneHtml}${linkedinHtml}</td>
+      <td>${escHtml(p.location || '—')}</td>
+      <td><span class="status-badge ${statusClass(p.status)}">${escHtml(p.status)}</span></td>
+      <td>${fmt(p.first_contact)}</td>
+      <td>${fmt(p.last_followup)}</td>
+      <td>${nextHtml}</td>
+      <td>${escHtml(p.method || '—')}</td>
+      <td>${refHtml}</td>
+      <td class="notes-cell">${escHtml(p.notes || '—')}</td>
+      <td style="white-space:nowrap;">
+        <button class="action-btn pitch" title="View Pitch" onclick="openPitchModal('${p.id}')">&#128172;</button>
+        <button class="action-btn edit" title="Edit" onclick="openEditModal('${p.id}')">&#9998;</button>
+        <button class="action-btn delete" title="Delete" onclick="openDeleteModal('${p.id}')">&#128465;</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function escHtml(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── MODALS ──────────────────────────────────────────────────────────────────
+
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+function openAddModal() {
+  editingId = null;
+  document.getElementById('formModalTitle').textContent = 'Add Partner';
+  document.getElementById('partnerForm').reset();
+  document.getElementById('f_referrals').value = '0';
+  openModal('formModal');
+}
+
+function openEditModal(id) {
+  const p = partners.find(x => x.id === id);
+  if (!p) return;
+  editingId = id;
+  document.getElementById('formModalTitle').textContent = 'Edit Partner';
+  document.getElementById('f_name').value = p.name || '';
+  document.getElementById('f_biz').value = p.biz || '';
+  document.getElementById('f_type').value = p.type || '';
+  document.getElementById('f_status').value = p.status || '';
+  document.getElementById('f_email').value = p.email || '';
+  document.getElementById('f_phone').value = p.phone || '';
+  document.getElementById('f_linkedin').value = p.linkedin || '';
+  document.getElementById('f_location').value = p.location || '';
+  document.getElementById('f_method').value = p.method || '';
+  document.getElementById('f_first_contact').value = p.first_contact || '';
+  document.getElementById('f_last_followup').value = p.last_followup || '';
+  document.getElementById('f_next_followup').value = p.next_followup || '';
+  document.getElementById('f_referrals').value = p.referrals || 0;
+  document.getElementById('f_notes').value = p.notes || '';
+  openModal('formModal');
+}
+
+function savePartner(e) {
+  e.preventDefault();
+  const p = {
+    id: editingId || uid(),
+    name: document.getElementById('f_name').value.trim(),
+    biz: document.getElementById('f_biz').value.trim(),
+    type: document.getElementById('f_type').value,
+    status: document.getElementById('f_status').value,
+    email: document.getElementById('f_email').value.trim(),
+    phone: document.getElementById('f_phone').value.trim(),
+    linkedin: document.getElementById('f_linkedin').value.trim(),
+    location: document.getElementById('f_location').value.trim(),
+    method: document.getElementById('f_method').value,
+    first_contact: document.getElementById('f_first_contact').value,
+    last_followup: document.getElementById('f_last_followup').value,
+    next_followup: document.getElementById('f_next_followup').value,
+    referrals: parseInt(document.getElementById('f_referrals').value) || 0,
+    notes: document.getElementById('f_notes').value.trim()
+  };
+  if (editingId) {
+    const idx = partners.findIndex(x => x.id === editingId);
+    if (idx >= 0) partners[idx] = p;
+  } else {
+    partners.push(p);
+  }
+  saveData(partners);
+  closeModal('formModal');
+  renderPipeline();
+  renderTable();
+}
+
+function openDeleteModal(id) {
+  deletingId = id;
+  const p = partners.find(x => x.id === id);
+  document.getElementById('deleteModalSub').textContent = p ? `${p.name} — ${p.biz || p.type}` : '';
+  openModal('deleteModal');
+}
+
+function confirmDelete() {
+  partners = partners.filter(x => x.id !== deletingId);
+  saveData(partners);
+  closeModal('deleteModal');
+  renderPipeline();
+  renderTable();
+}
+
+// ── PITCH MODAL ──────────────────────────────────────────────────────────────
+
+function openPitchModal(id) {
+  const p = partners.find(x => x.id === id);
+  if (!p) return;
+  const pitchText = PITCHES[p.type] || 'Pitch not available for this partner type.';
+  const personalized = pitchText.replace(/\[Name\]/g, p.name.split(' ')[0]);
+  document.getElementById('pitchTypeLabel').textContent = p.type;
+  document.getElementById('pitchTextDisplay').textContent = personalized;
+  document.getElementById('copyConfirm').classList.remove('show');
+  openModal('pitchModal');
+}
+
+function copyPitch() {
+  const text = document.getElementById('pitchTextDisplay').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const el = document.getElementById('copyConfirm');
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 2000);
+  });
+}
+
+// ── ALL PITCH CARDS ──────────────────────────────────────────────────────────
+
+function renderPitchCards() {
+  const container = document.getElementById('allPitches');
+  container.innerHTML = '';
+  Object.entries(PITCHES).forEach(([type, text]) => {
+    const card = document.createElement('div');
+    card.className = 'pitch-card';
+    card.innerHTML = `
+      <div class="pitch-card-header">
+        <div class="pitch-card-type">${escHtml(type)}</div>
+        <button class="pitch-card-copy" onclick="copyText(this, \`${text.replace(/`/g,'\\`')}\`)">Copy</button>
+      </div>
+      <div class="pitch-card-text">${escHtml(text)}</div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function copyText(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Copied!';
+    btn.style.color = 'var(--success)';
+    btn.style.borderColor = 'var(--success)';
+    setTimeout(() => {
+      btn.textContent = 'Copy';
+      btn.style.color = '';
+      btn.style.borderColor = '';
+    }, 2000);
+  });
+}
+
+// ── CSV EXPORT ───────────────────────────────────────────────────────────────
+
+function exportCSV() {
+  const headers = ['Name','Business','Type','Email','Phone','LinkedIn','Location','Status','First Contact','Contact Method','Last Followup','Next Followup','Referrals Received','Notes'];
+  const rows = partners.map(p => [
+    p.name, p.biz, p.type, p.email, p.phone, p.linkedin, p.location,
+    p.status, p.first_contact, p.method, p.last_followup, p.next_followup,
+    p.referrals, p.notes
+  ].map(v => `"${String(v || '').replace(/"/g, '""')}"`));
+
+  const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'cwi-ai-partner-outreach-' + today() + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── CLOSE ON BACKDROP ────────────────────────────────────────────────────────
+
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) overlay.classList.remove('open');
+  });
+});
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+
+renderPipeline();
+renderTable();
+renderPitchCards();
+</script>
+</body>
+</html>

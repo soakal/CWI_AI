@@ -1,0 +1,47 @@
+File written to `C:\Users\Brian\Documents\CWI AI\cwi-automation\scripts\scenario-ah-contact-enrichment.json`.
+
+Here is a summary of every design decision made:
+
+**Trigger (module 1)**
+`builtin:BasicTrigger` with scheduling cron `0 10 * * 3` (Wednesday 10:00 AM), `timezone: America/New_York`.
+
+**Module 2 — thirtyDaysAgoMs**
+Computes `now - 2592000000` (30 days in ms) as a roundtrip variable to feed into the HubSpot search filter's GTE timestamp value.
+
+**Module 3 — enrichedCount seed**
+Initialised to 0; incremented inside the iterator after each successful enrichment (module 15). Used as a running counter — the canonical final count comes from the aggregator length (module 17).
+
+**Module 4 — HubSpot contact search**
+`POST /crm/v3/objects/contacts/search`. Two `filterGroups` (OR logic between them): one requiring `jobtitle NOT_HAS_PROPERTY` + `createdate GTE thirtyDaysAgoMs`, one requiring `company NOT_HAS_PROPERTY` + `createdate GTE thirtyDaysAgoMs`. Requests `limit:25`. Properties fetched: `email, firstname, lastname, jobtitle, company, city, state, numberofemployees, createdate`.
+
+**Module 5 — Iterator**
+Splits `4.data.results` into individual contact bundles.
+
+**Module 6 — Apollo People Match**
+`POST https://api.apollo.io/api/v1/people/match`. API key sent as `X-Api-Key` header (`env.APOLLO_API_KEY`). Body: `{email: 5.value.properties.email}`.
+
+**Module 7 — Filter: Apollo match exists**
+Passes only if `6.data.person.id` is non-empty.
+
+**Modules 8-12 — Extract Apollo fields**
+Five SetVariable modules (roundtrip scope) pull `person.title`, `person.organization_name`, `person.organization.estimated_num_employees`, `person.city`, `person.state`.
+
+**Module 13 — HubSpot PATCH contact**
+`PATCH /crm/v3/objects/contacts/{id}` with `jobtitle, company, city, state, numberofemployees` from the Apollo variables.
+
+**Module 14 — HubSpot note**
+`POST /crm/v3/objects/notes` with body `"Contact enriched via Apollo YYYY-MM-DD — [job_title] at [company]"`. Association type ID `202` links the note to the contact.
+
+**Module 15 — Increment counter**
+Increments `enrichedCount` by 1 after each successful enrichment.
+
+**Module 16 — Aggregator**
+Waits for all iterator bundles (`sourceModule: 5`), collects `contact_id, email, job_title, company` per enriched contact.
+
+**Module 17 — totalEnriched**
+`length(16.array)` gives the final count of enriched contacts.
+
+**Module 18 — Resend summary email**
+`POST https://api.resend.com/emails`. From `env.CWI_ALERT_FROM_ADDRESS`, to `env.ALERT_EMAIL`. Subject: `"Weekly enrichment complete — {{17.totalEnriched}} contacts updated"`. HTML body includes run timestamp, count, and enrichment window description.
+
+**`sequential: true`** is set on the scenario to avoid Apollo rate-limit collisions during per-contact iteration. `handleErrors: true` on all HTTP modules.

@@ -1,0 +1,68 @@
+{
+  "generated": "2026-06-08T19:59:18",
+  "env_file": "not found",
+  "summary": {
+    "total": 8,
+    "passed": 2,
+    "failed": 0,
+    "skipped": 6
+  },
+  "services": [
+    {
+      "service": "OpenRouter",
+      "status": "PASS",
+      "message": "GET /api/v1/models → 200",
+      "http_code": 200,
+      "latency_ms": 524.6
+    },
+    {
+      "service": "Freshchat",
+      "status": "SKIP",
+      "message": "FRESHCHAT_API_KEY not configured",
+      "http_code": 0,
+      "latency_ms": 0.0
+    },
+    {
+      "service": "Apollo",
+      "status": "SKIP",
+      "message": "APOLLO_API_KEY not configured",
+      "http_code": 0,
+      "latency_ms": 0.0
+    },
+    {
+      "service": "HubSpot",
+      "status": "SKIP",
+      "message": "HUBSPOT_API_KEY not configured",
+      "http_code": 0,
+      "latency_ms": 0.0
+    },
+    {
+      "service": "Stripe",
+      "status": "SKIP",
+      "message": "STRIPE_API_KEY not configured",
+      "http_code": 0,
+      "latency_ms": 0.0
+    },
+    {
+      "service": "SMTP (Gmail)",
+      "status": "PASS",
+      "message": "TCP connect to smtp.gmail.com:587 succeeded",
+      "http_code": 0,
+      "latency_ms": 45.9
+    },
+    {
+      "service": "Calendly",
+      "status": "SKIP",
+      "message": "CALENDLY_API_KEY not configured",
+      "http_code": 0,
+      "latency_ms": 0.0
+    },
+    {
+      "service": "Google Calendar",
+      "status": "SKIP",
+      "message": "GOOGLE_CALENDAR_ID not configured — skipping reachability check",
+      "http_code": 0,
+      "latency_ms": 0.0
+    }
+  ]
+}

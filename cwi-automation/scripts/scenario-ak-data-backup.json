@@ -1,0 +1,259 @@
+{
+  "name": "AK — Weekly Data Backup",
+  "flow": [
+    {
+      "id": 1,
+      "module": "builtin:BasicTrigger",
+      "version": 1,
+      "parameters": {},
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 0, "y": 0 },
+        "restore": {}
+      }
+    },
+    {
+      "id": 2,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": true },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/contacts/search",
+        "method": "POST",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\"filterGroups\":[],\"properties\":[\"firstname\",\"lastname\",\"email\",\"phone\",\"company\",\"lifecyclestage\",\"plan_tier\",\"createdate\",\"lastmodifieddate\"],\"limit\":100,\"after\":\"0\"}",
+        "parseResponse": true,
+        "timeout": 40
+      },
+      "metadata": {
+        "designer": { "x": 300, "y": 0 },
+        "restore": {
+          "parameters": { "handleErrors": true },
+          "expect": { "method": { "label": "POST" }, "bodyType": { "label": "Raw" }, "contentType": { "label": "JSON (application/json)" } }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": true },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/deals/search",
+        "method": "POST",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\"filterGroups\":[],\"properties\":[\"dealname\",\"dealstage\",\"amount\",\"closedate\",\"createdate\"],\"limit\":100,\"after\":\"0\"}",
+        "parseResponse": true,
+        "timeout": 40
+      },
+      "metadata": {
+        "designer": { "x": 600, "y": 0 },
+        "restore": {
+          "parameters": { "handleErrors": true },
+          "expect": { "method": { "label": "POST" }, "bodyType": { "label": "Raw" }, "contentType": { "label": "JSON (application/json)" } }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "module": "util:SetVariable2",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "contactCount",
+        "scope": "roundtrip",
+        "type": "number",
+        "value": "{{length(2.body.results)}}"
+      },
+      "metadata": {
+        "designer": { "x": 900, "y": 0 },
+        "restore": { "parameters": { "scope": { "label": "One cycle" } } }
+      }
+    },
+    {
+      "id": 5,
+      "module": "util:SetVariable2",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "dealCount",
+        "scope": "roundtrip",
+        "type": "number",
+        "value": "{{length(3.body.results)}}"
+      },
+      "metadata": {
+        "designer": { "x": 1200, "y": 0 },
+        "restore": { "parameters": { "scope": { "label": "One cycle" } } }
+      }
+    },
+    {
+      "id": 6,
+      "module": "util:SetVariable2",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "contactRows",
+        "scope": "roundtrip",
+        "type": "array",
+        "value": "{{merge(array(array(\"Contact ID\",\"First Name\",\"Last Name\",\"Email\",\"Phone\",\"Company\",\"Lifecycle Stage\",\"Plan Tier\",\"Create Date\",\"Last Modified Date\")); map(2.body.results; array(item.id; ifempty(item.properties.firstname; \"\"); ifempty(item.properties.lastname; \"\"); ifempty(item.properties.email; \"\"); ifempty(item.properties.phone; \"\"); ifempty(item.properties.company; \"\"); ifempty(item.properties.lifecyclestage; \"\"); ifempty(item.properties.plan_tier; \"\"); ifempty(item.properties.createdate; \"\"); ifempty(item.properties.lastmodifieddate; \"\")))))}}"
+      },
+      "metadata": {
+        "designer": { "x": 1500, "y": 0 },
+        "restore": { "parameters": { "scope": { "label": "One cycle" } } }
+      }
+    },
+    {
+      "id": 7,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": true },
+      "mapper": {
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/{{env.ACTIVE_CLIENTS_SHEET_ID}}/values/Contacts%20Backup!A1:M200?valueInputOption=RAW",
+        "method": "PUT",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{oauth2.google.access_token}}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{{toJSON(object(\"range\"; \"Contacts Backup!A1:M200\"; \"majorDimension\"; \"ROWS\"; \"values\"; 6.value))}}",
+        "parseResponse": true,
+        "timeout": 40
+      },
+      "metadata": {
+        "designer": { "x": 1800, "y": 0 },
+        "restore": {
+          "parameters": { "handleErrors": true },
+          "expect": { "method": { "label": "PUT" }, "bodyType": { "label": "Raw" }, "contentType": { "label": "JSON (application/json)" } }
+        }
+      }
+    },
+    {
+      "id": 8,
+      "module": "util:SetVariable2",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "dealRows",
+        "scope": "roundtrip",
+        "type": "array",
+        "value": "{{merge(array(array(\"Deal ID\",\"Deal Name\",\"Deal Stage\",\"Amount\",\"Close Date\",\"Create Date\")); map(3.body.results; array(item.id; ifempty(item.properties.dealname; \"\"); ifempty(item.properties.dealstage; \"\"); ifempty(item.properties.amount; \"\"); ifempty(item.properties.closedate; \"\"); ifempty(item.properties.createdate; \"\")))))}}"
+      },
+      "metadata": {
+        "designer": { "x": 2100, "y": 0 },
+        "restore": { "parameters": { "scope": { "label": "One cycle" } } }
+      }
+    },
+    {
+      "id": 9,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": true },
+      "mapper": {
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/{{env.ACTIVE_CLIENTS_SHEET_ID}}/values/Deals%20Backup!A1:H200?valueInputOption=RAW",
+        "method": "PUT",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{oauth2.google.access_token}}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{{toJSON(object(\"range\"; \"Deals Backup!A1:H200\"; \"majorDimension\"; \"ROWS\"; \"values\"; 8.value))}}",
+        "parseResponse": true,
+        "timeout": 40
+      },
+      "metadata": {
+        "designer": { "x": 2400, "y": 0 },
+        "restore": {
+          "parameters": { "handleErrors": true },
+          "expect": { "method": { "label": "PUT" }, "bodyType": { "label": "Raw" }, "contentType": { "label": "JSON (application/json)" } }
+        }
+      }
+    },
+    {
+      "id": 10,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": true },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "method": "POST",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{{toJSON(object(\"from\"; env.CWI_ALERT_FROM_ADDRESS; \"to\"; array(env.ALERT_EMAIL); \"subject\"; concat(\"Weekly backup complete — \"; 4.value; \" contacts, \"; 5.value; \" deals saved to Google Sheets\"); \"html\"; concat(\"<p>The weekly HubSpot data backup completed successfully on <strong>\"; formatDate(now; \"MMMM D, YYYY\"; \"America/New_York\"); \"</strong> at <strong>\"; formatDate(now; \"h:mm A\"; \"America/New_York\"); \" ET</strong>.</p><ul><li><strong>\"; 4.value; \" contacts</strong> written to <em>Contacts Backup</em> sheet</li><li><strong>\"; 5.value; \" deals</strong> written to <em>Deals Backup</em> sheet</li></ul><p>Sheet ID: \"; env.ACTIVE_CLIENTS_SHEET_ID; \"</p>\")))}}",
+        "parseResponse": true,
+        "timeout": 30
+      },
+      "metadata": {
+        "designer": { "x": 2700, "y": 0 },
+        "restore": {
+          "parameters": { "handleErrors": true },
+          "expect": { "method": { "label": "POST" }, "bodyType": { "label": "Raw" }, "contentType": { "label": "JSON (application/json)" } }
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "instant": false,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "slots": null,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": {
+      "orphans": []
+    },
+    "zone": "us1.make.com"
+  },
+  "scheduling": {
+    "type": "cron",
+    "interval": 1,
+    "cron": {
+      "expression": "0 23 * * 0",
+      "timezone": "America/New_York"
+    }
+  },
+  "connections": {
+    "google_oauth2": {
+      "type": "oauth2",
+      "clientId": "{{env.GOOGLE_CLIENT_ID}}",
+      "clientSecret": "{{env.GOOGLE_CLIENT_SECRET}}",
+      "scopes": [
+        "https://www.googleapis.com/auth/spreadsheets"
+      ],
+      "tokenUrl": "https://oauth2.googleapis.com/token",
+      "authUrl": "https://accounts.google.com/o/oauth2/v2/auth"
+    }
+  },
+  "environment": {
+    "HUBSPOT_PRIVATE_APP_TOKEN": "env.HUBSPOT_PRIVATE_APP_TOKEN",
+    "ACTIVE_CLIENTS_SHEET_ID": "env.ACTIVE_CLIENTS_SHEET_ID",
+    "GOOGLE_CLIENT_ID": "env.GOOGLE_CLIENT_ID",
+    "GOOGLE_CLIENT_SECRET": "env.GOOGLE_CLIENT_SECRET",
+    "RESEND_API_KEY": "env.RESEND_API_KEY",
+    "ALERT_EMAIL": "env.ALERT_EMAIL",
+    "CWI_ALERT_FROM_ADDRESS": "env.CWI_ALERT_FROM_ADDRESS"
+  }
+}

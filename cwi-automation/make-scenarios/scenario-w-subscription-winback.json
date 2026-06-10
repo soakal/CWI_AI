@@ -1,0 +1,508 @@
+{
+  "name": "Subscription Win-Back — customer.subscription.deleted",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": "stripe_subscription_deleted",
+        "maxResults": 1
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 0, "y": 0 },
+        "restore": {},
+        "parameters": [
+          {
+            "name": "hook",
+            "type": "hook:gateway-webhook",
+            "label": "Webhook",
+            "required": true
+          },
+          {
+            "name": "maxResults",
+            "type": "number",
+            "label": "Maximum number of results"
+          }
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "module": "builtin:BasicRouter",
+      "version": 1,
+      "parameters": {},
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 300, "y": 0 }
+      },
+      "routes": [
+        {
+          "flow": [
+            {
+              "id": 3,
+              "module": "json:ParseJSON",
+              "version": 1,
+              "parameters": { "type": "" },
+              "mapper": {
+                "json": "{{1.body}}"
+              },
+              "metadata": {
+                "designer": { "x": 600, "y": 0 },
+                "restore": { "parameters": { "type": { "label": "Choose a data structure" } } }
+              }
+            },
+            {
+              "id": 4,
+              "module": "util:SetVariables",
+              "version": 1,
+              "parameters": {},
+              "mapper": {
+                "variables": [
+                  {
+                    "name": "customer_email",
+                    "value": "{{ifempty(3.data.customer_details.email; 3.data.customer_email; 3.data.data.object.customer_email; \"\")}}"
+                  },
+                  {
+                    "name": "customer_name",
+                    "value": "{{ifempty(3.data.data.object.customer_name; 3.data.customer_details.name; 3.data.data.object.metadata.name; \"Valued Customer\")}}"
+                  },
+                  {
+                    "name": "subscription_id",
+                    "value": "{{ifempty(3.data.data.object.id; \"\")}}"
+                  },
+                  {
+                    "name": "event_type",
+                    "value": "{{ifempty(3.data.type; \"\")}}"
+                  },
+                  {
+                    "name": "cancelled_at",
+                    "value": "{{formatDate(now; \"MMMM D, YYYY\"; \"America/New_York\")}}"
+                  }
+                ],
+                "scope": "scenario"
+              },
+              "metadata": {
+                "designer": { "x": 900, "y": 0 }
+              }
+            },
+            {
+              "id": 5,
+              "module": "builtin:BasicFilter",
+              "version": 1,
+              "parameters": {},
+              "mapper": {},
+              "metadata": {
+                "designer": { "x": 1200, "y": 0 }
+              },
+              "filter": {
+                "name": "Only process customer.subscription.deleted",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{4.customer_email}}",
+                      "o": "text:notempty"
+                    }
+                  ],
+                  [
+                    {
+                      "a": "{{3.data.type}}",
+                      "b": "customer.subscription.deleted",
+                      "o": "text:equal"
+                    }
+                  ]
+                ]
+              }
+            },
+            {
+              "id": 6,
+              "module": "util:Sleep",
+              "version": 1,
+              "parameters": {},
+              "mapper": {
+                "delay": "259200"
+              },
+              "metadata": {
+                "designer": { "x": 1500, "y": 0 },
+                "restore": {}
+              }
+            },
+            {
+              "id": 7,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": { "handleErrors": true },
+              "mapper": {
+                "url": "https://openrouter.ai/api/v1/chat/completions",
+                "method": "POST",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.OPENROUTER_API_KEY}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "name": "HTTP-Referer",
+                    "value": "{{env.APP_URL}}"
+                  },
+                  {
+                    "name": "X-Title",
+                    "value": "CWI Automation Win-Back"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\"model\":\"anthropic/claude-sonnet-4-6\",\"fallback_models\":[\"{{env.OPENROUTER_FALLBACK_MODEL}}\"],\"messages\":[{\"role\":\"system\",\"content\":\"You are a warm, professional customer success specialist. Write concise, genuine win-back emails that feel personal — not salesy. Never use hollow phrases like 'I hope this email finds you well'. Get straight to the point with empathy.\"},{\"role\":\"user\",\"content\":\"Write a win-back email for a customer who recently cancelled their subscription.\\n\\nCustomer name: {{4.customer_name}}\\nCancellation date: {{4.cancelled_at}}\\nOffer: 20% discount for the first 3 months if they return within the next 14 days.\\nBooking link for a call to discuss concerns: {{env.CALENDLY_BOOKING_LINK}}\\n\\nInstructions:\\n- Subject line first (prefix with SUBJECT:)\\n- Then a blank line\\n- Then the email body\\n- Acknowledge the cancellation directly and without blame\\n- Briefly mention the discount offer with a clear call-to-action\\n- Include the booking link as a low-pressure option to talk through concerns\\n- Sign off professionally\\n- Keep total length under 200 words\\n- Plain text only, no HTML\"}],\"max_tokens\":500,\"temperature\":0.7}"
+              },
+              "metadata": {
+                "designer": { "x": 1800, "y": 0 },
+                "restore": {
+                  "parameters": { "handleErrors": { "label": "Yes" } }
+                }
+              }
+            },
+            {
+              "id": 8,
+              "module": "json:ParseJSON",
+              "version": 1,
+              "parameters": { "type": "" },
+              "mapper": {
+                "json": "{{7.data}}"
+              },
+              "metadata": {
+                "designer": { "x": 2100, "y": 0 }
+              }
+            },
+            {
+              "id": 9,
+              "module": "util:SetVariables",
+              "version": 1,
+              "parameters": {},
+              "mapper": {
+                "variables": [
+                  {
+                    "name": "ai_raw_output",
+                    "value": "{{8.choices[].message.content}}"
+                  },
+                  {
+                    "name": "email_subject",
+                    "value": "{{trim(replace(toString(first(split(8.choices[].message.content; \"\\n\"))); \"SUBJECT:\"; \"\"))}}"
+                  },
+                  {
+                    "name": "email_body",
+                    "value": "{{trim(join(rest(split(8.choices[].message.content; \"\\n\")); \"\\n\"))}}"
+                  }
+                ],
+                "scope": "scenario"
+              },
+              "metadata": {
+                "designer": { "x": 2400, "y": 0 }
+              }
+            },
+            {
+              "id": 10,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": { "handleErrors": true },
+              "mapper": {
+                "url": "https://api.resend.com/emails",
+                "method": "POST",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.RESEND_API_KEY}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\"from\":\"{{env.RESEND_FROM_ADDRESS}}\",\"to\":[\"{{4.customer_email}}\"],\"subject\":\"{{9.email_subject}}\",\"text\":\"{{replace(9.email_body; '\"'; '\\\\\"')}}\"}"
+              },
+              "metadata": {
+                "designer": { "x": 2700, "y": 0 },
+                "restore": {
+                  "parameters": { "handleErrors": { "label": "Yes" } }
+                }
+              }
+            },
+            {
+              "id": 11,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": { "handleErrors": true },
+              "mapper": {
+                "url": "https://api.resend.com/emails",
+                "method": "POST",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.RESEND_API_KEY}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\"from\":\"{{env.CWI_ALERT_FROM_ADDRESS}}\",\"to\":[\"{{env.ALERT_EMAIL}}\"],\"subject\":\"Cancelled client win-back sent — {{4.customer_name}}\",\"text\":\"Win-back email dispatched.\\n\\nCustomer: {{4.customer_name}}\\nEmail: {{4.customer_email}}\\nSubscription ID: {{4.subscription_id}}\\nCancellation date: {{4.cancelled_at}}\\nSent at: {{formatDate(now; \\\"MMMM D, YYYY h:mm A\\\"; \\\"America/New_York\\\")}} ET\\n\\nEmail subject sent to customer:\\n{{9.email_subject}}\\n\\nEmail body sent to customer:\\n{{9.email_body}}\"}"
+              },
+              "metadata": {
+                "designer": { "x": 3000, "y": 0 },
+                "restore": {
+                  "parameters": { "handleErrors": { "label": "Yes" } }
+                }
+              }
+            },
+            {
+              "id": 12,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": { "handleErrors": true },
+              "mapper": {
+                "url": "https://api.hubapi.com/crm/v3/objects/contacts/search",
+                "method": "POST",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\"filterGroups\":[{\"filters\":[{\"propertyName\":\"email\",\"operator\":\"EQ\",\"value\":\"{{4.customer_email}}\"}]}],\"properties\":[\"email\",\"firstname\",\"lastname\",\"hs_object_id\"],\"limit\":1}"
+              },
+              "metadata": {
+                "designer": { "x": 3300, "y": 0 },
+                "restore": {
+                  "parameters": { "handleErrors": { "label": "Yes" } }
+                }
+              }
+            },
+            {
+              "id": 13,
+              "module": "json:ParseJSON",
+              "version": 1,
+              "parameters": { "type": "" },
+              "mapper": {
+                "json": "{{12.data}}"
+              },
+              "metadata": {
+                "designer": { "x": 3600, "y": 0 }
+              }
+            },
+            {
+              "id": 14,
+              "module": "util:SetVariables",
+              "version": 1,
+              "parameters": {},
+              "mapper": {
+                "variables": [
+                  {
+                    "name": "hubspot_contact_id",
+                    "value": "{{ifempty(13.results[].id; \"\")}}"
+                  }
+                ],
+                "scope": "scenario"
+              },
+              "metadata": {
+                "designer": { "x": 3900, "y": 0 }
+              }
+            },
+            {
+              "id": 15,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": { "handleErrors": true },
+              "mapper": {
+                "url": "https://api.hubapi.com/crm/v3/objects/notes",
+                "method": "POST",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\"properties\":{\"hs_note_body\":\"Win-back email sent {{4.cancelled_at}}\",\"hs_timestamp\":\"{{formatDate(now; \\\"x\\\")}}000\"},\"associations\":[{\"to\":{\"id\":\"{{14.hubspot_contact_id}}\"},\"types\":[{\"associationCategory\":\"HUBSPOT_DEFINED\",\"associationTypeId\":202}]}]}"
+              },
+              "metadata": {
+                "designer": { "x": 4200, "y": 0 },
+                "restore": {
+                  "parameters": { "handleErrors": { "label": "Yes" } }
+                }
+              },
+              "filter": {
+                "name": "Only if HubSpot contact found",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{14.hubspot_contact_id}}",
+                      "o": "text:notempty"
+                    }
+                  ]
+                ]
+              }
+            },
+            {
+              "id": 16,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": { "handleErrors": true },
+              "mapper": {
+                "url": "https://api.hubapi.com/crm/v3/objects/deals/search",
+                "method": "POST",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\"filterGroups\":[{\"filters\":[{\"propertyName\":\"associations.contact\",\"operator\":\"EQ\",\"value\":\"{{14.hubspot_contact_id}}\"}]}],\"properties\":[\"dealname\",\"dealstage\",\"hs_object_id\"],\"limit\":5}"
+              },
+              "metadata": {
+                "designer": { "x": 4500, "y": 0 },
+                "restore": {
+                  "parameters": { "handleErrors": { "label": "Yes" } }
+                }
+              },
+              "filter": {
+                "name": "Only if HubSpot contact found",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{14.hubspot_contact_id}}",
+                      "o": "text:notempty"
+                    }
+                  ]
+                ]
+              }
+            },
+            {
+              "id": 17,
+              "module": "json:ParseJSON",
+              "version": 1,
+              "parameters": { "type": "" },
+              "mapper": {
+                "json": "{{16.data}}"
+              },
+              "metadata": {
+                "designer": { "x": 4800, "y": 0 }
+              }
+            },
+            {
+              "id": 18,
+              "module": "util:SetVariables",
+              "version": 1,
+              "parameters": {},
+              "mapper": {
+                "variables": [
+                  {
+                    "name": "deal_id",
+                    "value": "{{ifempty(17.results[].id; \"\")}}"
+                  },
+                  {
+                    "name": "current_deal_stage",
+                    "value": "{{ifempty(17.results[].properties.dealstage; \"\")}}"
+                  }
+                ],
+                "scope": "scenario"
+              },
+              "metadata": {
+                "designer": { "x": 5100, "y": 0 }
+              }
+            },
+            {
+              "id": 19,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": { "handleErrors": true },
+              "mapper": {
+                "url": "https://api.hubapi.com/crm/v3/objects/deals/{{18.deal_id}}",
+                "method": "PATCH",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\"properties\":{\"dealstage\":\"{{env.HUBSPOT_STAGE_CLOSED_LOST}}\"}}"
+              },
+              "metadata": {
+                "designer": { "x": 5400, "y": 0 },
+                "restore": {
+                  "parameters": { "handleErrors": { "label": "Yes" } }
+                }
+              },
+              "filter": {
+                "name": "Update deal stage only if deal exists and not already closed-lost",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{18.deal_id}}",
+                      "o": "text:notempty"
+                    }
+                  ],
+                  [
+                    {
+                      "a": "{{18.current_deal_stage}}",
+                      "b": "{{env.HUBSPOT_STAGE_CLOSED_LOST}}",
+                      "o": "text:notequal"
+                    }
+                  ]
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": {
+      "orphans": []
+    },
+    "zone": "us2.make.com"
+  }
+}

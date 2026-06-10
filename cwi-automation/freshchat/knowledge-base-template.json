@@ -1,0 +1,176 @@
+{
+  "business_name": "{{CLIENT_NAME}}",
+  "business_type": "{{CLIENT_BUSINESS_TYPE}}",
+  "version": "1.0.0",
+  "created": "2026-06-08",
+  "description": "Freshchat knowledge base template for local service businesses. Replace all {{CLIENT_*}} placeholders with actual business data before deploying.",
+  "qa_pairs": [
+    {
+      "id": 1,
+      "question": "What services do you offer?",
+      "answer": "{{CLIENT_NAME}} offers a full range of {{CLIENT_BUSINESS_TYPE}} services, including {{CLIENT_SERVICE_LIST}}. Whether you need routine maintenance, repairs, or a full installation, our experienced team is ready to help. Contact us to discuss your specific needs.",
+      "tags": ["services", "offerings", "what we do", "general"]
+    },
+    {
+      "id": 2,
+      "question": "What areas do you serve?",
+      "answer": "We proudly serve {{CLIENT_SERVICE_AREA}} and the surrounding communities, including {{CLIENT_ADDITIONAL_CITIES}}. If you are unsure whether we cover your location, please call us at {{CLIENT_PHONE}} or enter your zip code on our website at {{CLIENT_WEBSITE}}.",
+      "tags": ["service area", "location", "coverage", "cities", "zip code"]
+    },
+    {
+      "id": 3,
+      "question": "What are your hours of operation?",
+      "answer": "Our regular business hours are {{CLIENT_BUSINESS_HOURS}}. Our office is open {{CLIENT_OFFICE_DAYS}} from {{CLIENT_OFFICE_OPEN}} to {{CLIENT_OFFICE_CLOSE}}. For after-hours emergencies, please call {{CLIENT_EMERGENCY_PHONE}} — we have technicians on call {{CLIENT_EMERGENCY_AVAILABILITY}}.",
+      "tags": ["hours", "schedule", "availability", "open", "closed", "business hours"]
+    },
+    {
+      "id": 4,
+      "question": "How do I book an appointment?",
+      "answer": "Booking an appointment with {{CLIENT_NAME}} is easy! You can: (1) Call us at {{CLIENT_PHONE}} to speak with a team member, (2) Book online 24/7 at {{CLIENT_BOOKING_URL}}, or (3) Send us an email at {{CLIENT_EMAIL}}. We will confirm your appointment within {{CLIENT_BOOKING_CONFIRMATION_TIME}} and send a reminder the day before your scheduled visit.",
+      "tags": ["booking", "appointment", "schedule", "reserve", "call", "online booking"]
+    },
+    {
+      "id": 5,
+      "question": "How much do your services cost?",
+      "answer": "Our pricing varies based on the scope of work, materials needed, and your location. Basic {{CLIENT_BUSINESS_TYPE}} services typically start at {{CLIENT_STARTING_PRICE}}. We provide transparent, upfront pricing before any work begins — no hidden fees. For an accurate quote tailored to your project, please request a free estimate at {{CLIENT_WEBSITE}} or call {{CLIENT_PHONE}}.",
+      "tags": ["cost", "pricing", "rates", "fees", "how much", "price", "budget"]
+    },
+    {
+      "id": 6,
+      "question": "Do you offer free estimates?",
+      "answer": "Yes! {{CLIENT_NAME}} offers free, no-obligation estimates for all {{CLIENT_BUSINESS_TYPE}} services. One of our certified technicians will assess your needs and provide a detailed written quote at no charge. To schedule your free estimate, visit {{CLIENT_WEBSITE}} or call us at {{CLIENT_PHONE}} during business hours.",
+      "tags": ["estimate", "free estimate", "quote", "no obligation", "free", "assessment"]
+    },
+    {
+      "id": 7,
+      "question": "What payment methods do you accept?",
+      "answer": "We accept a variety of payment methods for your convenience, including {{CLIENT_PAYMENT_METHODS}}. Payment is due upon completion of service unless other arrangements have been made in advance. For larger projects, we may require a deposit. If you have questions about payment options, please ask our team when scheduling your appointment.",
+      "tags": ["payment", "credit card", "cash", "check", "billing", "pay", "invoice"]
+    },
+    {
+      "id": 8,
+      "question": "How quickly can you respond to a service call?",
+      "answer": "For standard service calls, we typically respond within {{CLIENT_STANDARD_RESPONSE_TIME}}. For urgent or emergency situations, our response time is {{CLIENT_EMERGENCY_RESPONSE_TIME}}. We understand your time is valuable and strive to arrive within the scheduled window. You will receive a call or text when our technician is on the way.",
+      "tags": ["response time", "how fast", "same day", "urgent", "availability", "scheduling"]
+    },
+    {
+      "id": 9,
+      "question": "What should I expect on a first visit?",
+      "answer": "On your first visit with {{CLIENT_NAME}}, a uniformed, background-checked technician will arrive within the scheduled window. They will: (1) Introduce themselves and present their ID, (2) Assess your {{CLIENT_BUSINESS_TYPE}} needs, (3) Explain the recommended work and provide a written quote, and (4) Begin work only after you approve the estimate. We respect your home — technicians use {{CLIENT_PROTECTIVE_MEASURES}} to keep your space clean.",
+      "tags": ["first visit", "what to expect", "technician", "new customer", "process", "consultation"]
+    },
+    {
+      "id": 10,
+      "question": "Do you offer emergency services?",
+      "answer": "Yes, {{CLIENT_NAME}} provides emergency {{CLIENT_BUSINESS_TYPE}} services {{CLIENT_EMERGENCY_AVAILABILITY}}. If you are experiencing an urgent issue, call our emergency line at {{CLIENT_EMERGENCY_PHONE}}. Emergency service rates may apply outside of standard business hours. Do not hesitate to call — our team is here to help when you need it most.",
+      "tags": ["emergency", "urgent", "after hours", "24/7", "same day", "emergency service"]
+    },
+    {
+      "id": 11,
+      "question": "What makes you different from competitors?",
+      "answer": "{{CLIENT_NAME}} stands out because of our {{CLIENT_KEY_DIFFERENTIATORS}}. We have been serving {{CLIENT_SERVICE_AREA}} for {{CLIENT_YEARS_IN_BUSINESS}} years, building our reputation on quality workmanship, honest pricing, and exceptional customer service. We are proud of our {{CLIENT_REVIEW_RATING}}-star average rating across {{CLIENT_REVIEW_PLATFORMS}}. Our team is {{CLIENT_CERTIFICATIONS_SUMMARY}}, ensuring every job meets the highest standards.",
+      "tags": ["difference", "why choose us", "competitive advantage", "reputation", "experience", "quality"]
+    },
+    {
+      "id": 12,
+      "question": "Are you licensed and insured?",
+      "answer": "Absolutely. {{CLIENT_NAME}} is fully licensed in {{CLIENT_STATE_OR_REGION}} (License #{{CLIENT_LICENSE_NUMBER}}) and carries comprehensive general liability insurance (up to {{CLIENT_INSURANCE_COVERAGE}}) as well as workers compensation coverage for all employees. We are happy to provide proof of insurance upon request before any work begins.",
+      "tags": ["licensed", "insured", "liability", "credentials", "bonded", "certification", "trust"]
+    },
+    {
+      "id": 13,
+      "question": "Do you offer warranties or guarantees?",
+      "answer": "Yes! All work performed by {{CLIENT_NAME}} is backed by our {{CLIENT_WORKMANSHIP_WARRANTY}} workmanship guarantee. In addition, parts and equipment we install carry manufacturer warranties of {{CLIENT_PARTS_WARRANTY}}. If you experience any issue related to our work within the warranty period, we will return and make it right at no additional cost.",
+      "tags": ["warranty", "guarantee", "workmanship", "satisfaction", "coverage", "parts warranty"]
+    },
+    {
+      "id": 14,
+      "question": "How do I leave a review?",
+      "answer": "We truly appreciate your feedback! You can leave a review for {{CLIENT_NAME}} on {{CLIENT_REVIEW_PLATFORMS}}. Your review helps other neighbors find trustworthy {{CLIENT_BUSINESS_TYPE}} services and motivates our team to keep delivering great work. If you had an issue with your service, please contact us directly at {{CLIENT_EMAIL}} or {{CLIENT_PHONE}} — we want the opportunity to make it right.",
+      "tags": ["review", "feedback", "Google review", "Yelp", "testimonial", "rating", "leave review"]
+    },
+    {
+      "id": 15,
+      "question": "What is your cancellation policy?",
+      "answer": "We understand that schedules change. To cancel or reschedule your appointment, please notify us at least {{CLIENT_CANCELLATION_NOTICE_HOURS}} hours in advance by calling {{CLIENT_PHONE}} or emailing {{CLIENT_EMAIL}}. Cancellations made with less than {{CLIENT_CANCELLATION_NOTICE_HOURS}} hours notice may be subject to a {{CLIENT_CANCELLATION_FEE}} cancellation fee. Emergency situations are handled on a case-by-case basis.",
+      "tags": ["cancellation", "reschedule", "cancel appointment", "policy", "fee", "notice"]
+    },
+    {
+      "id": 16,
+      "question": "Do you offer financing or payment plans?",
+      "answer": "Yes, {{CLIENT_NAME}} offers flexible financing options through {{CLIENT_FINANCING_PARTNER}} for qualifying customers. Plans include {{CLIENT_FINANCING_TERMS}}. Applying takes only a few minutes and does not affect your credit score initially. Ask your technician about financing during your estimate, or visit {{CLIENT_FINANCING_URL}} to learn more and apply.",
+      "tags": ["financing", "payment plan", "monthly payments", "no interest", "apply", "credit", "affordable"]
+    },
+    {
+      "id": 17,
+      "question": "How do I get a quote?",
+      "answer": "Getting a quote from {{CLIENT_NAME}} is simple and free. You can: (1) Fill out the quote request form at {{CLIENT_QUOTE_URL}}, (2) Call us at {{CLIENT_PHONE}} and describe your project, or (3) Send photos and a description to {{CLIENT_EMAIL}}. For most projects, we provide a ballpark estimate within {{CLIENT_QUOTE_TURNAROUND}} and schedule a free on-site assessment to finalize pricing.",
+      "tags": ["quote", "estimate", "pricing", "how to get", "request", "proposal", "cost estimate"]
+    },
+    {
+      "id": 18,
+      "question": "What brands or products do you use?",
+      "answer": "{{CLIENT_NAME}} works with industry-leading brands including {{CLIENT_PREFERRED_BRANDS}}. We source materials from trusted suppliers to ensure durability, performance, and value. In some cases, we can work with customer-supplied materials — speak with our team about compatibility and warranty implications. We will always recommend the best product for your specific situation and budget.",
+      "tags": ["brands", "products", "materials", "equipment", "manufacturers", "quality", "suppliers"]
+    },
+    {
+      "id": 19,
+      "question": "Do you offer maintenance contracts or service plans?",
+      "answer": "Yes! {{CLIENT_NAME}} offers {{CLIENT_MAINTENANCE_PLAN_NAME}}, our ongoing maintenance plan designed to keep your {{CLIENT_BUSINESS_TYPE}} systems in peak condition. Plan benefits include {{CLIENT_MAINTENANCE_PLAN_BENEFITS}}. Members also receive {{CLIENT_MAINTENANCE_PLAN_DISCOUNT}} off all service calls and priority scheduling. Plans start at {{CLIENT_MAINTENANCE_PLAN_PRICE}} per {{CLIENT_MAINTENANCE_PLAN_PERIOD}}. Contact us at {{CLIENT_PHONE}} to enroll.",
+      "tags": ["maintenance", "service plan", "contract", "annual", "preventive", "recurring", "membership"]
+    },
+    {
+      "id": 20,
+      "question": "How do I contact you?",
+      "answer": "You can reach {{CLIENT_NAME}} through any of the following channels: Phone: {{CLIENT_PHONE}} | Emergency Line: {{CLIENT_EMERGENCY_PHONE}} | Email: {{CLIENT_EMAIL}} | Website: {{CLIENT_WEBSITE}} | Online Chat: Available on our website during business hours | Social Media: {{CLIENT_SOCIAL_MEDIA_HANDLES}}. Our office hours are {{CLIENT_BUSINESS_HOURS}}. For after-hours emergencies, call {{CLIENT_EMERGENCY_PHONE}}.",
+      "tags": ["contact", "phone", "email", "reach us", "get in touch", "support", "help", "connect"]
+    }
+  ],
+  "placeholder_reference": {
+    "CLIENT_NAME": "Business name (e.g., Apex Plumbing & Heating)",
+    "CLIENT_BUSINESS_TYPE": "Type of service (e.g., plumbing, HVAC, electrical)",
+    "CLIENT_SERVICE_LIST": "Comma-separated list of specific services offered",
+    "CLIENT_SERVICE_AREA": "Primary city or region served",
+    "CLIENT_ADDITIONAL_CITIES": "Comma-separated list of additional cities or towns served",
+    "CLIENT_PHONE": "Main business phone number",
+    "CLIENT_EMERGENCY_PHONE": "After-hours or emergency phone number",
+    "CLIENT_EMAIL": "Primary contact email address",
+    "CLIENT_WEBSITE": "Full website URL",
+    "CLIENT_BOOKING_URL": "Online booking page URL",
+    "CLIENT_QUOTE_URL": "Quote request form URL",
+    "CLIENT_FINANCING_URL": "Financing application page URL",
+    "CLIENT_BUSINESS_HOURS": "Full business hours (e.g., Mon-Fri 7am-6pm, Sat 8am-2pm)",
+    "CLIENT_OFFICE_DAYS": "Days office is open (e.g., Monday through Friday)",
+    "CLIENT_OFFICE_OPEN": "Office opening time (e.g., 7:00 AM)",
+    "CLIENT_OFFICE_CLOSE": "Office closing time (e.g., 6:00 PM)",
+    "CLIENT_EMERGENCY_AVAILABILITY": "When emergency service is available (e.g., 24/7, 365 days a year)",
+    "CLIENT_BOOKING_CONFIRMATION_TIME": "How soon booking confirmations are sent (e.g., 1 business hour)",
+    "CLIENT_STARTING_PRICE": "Lowest typical starting price for basic services (e.g., $89)",
+    "CLIENT_PAYMENT_METHODS": "Accepted payment types (e.g., Visa, Mastercard, cash, check, Zelle)",
+    "CLIENT_STANDARD_RESPONSE_TIME": "Standard appointment scheduling window (e.g., 24-48 hours)",
+    "CLIENT_EMERGENCY_RESPONSE_TIME": "Emergency response window (e.g., 1-2 hours)",
+    "CLIENT_PROTECTIVE_MEASURES": "Steps taken to protect home (e.g., shoe covers and drop cloths)",
+    "CLIENT_KEY_DIFFERENTIATORS": "What sets the business apart (e.g., same-day service, flat-rate pricing)",
+    "CLIENT_YEARS_IN_BUSINESS": "Number of years the company has been operating",
+    "CLIENT_REVIEW_RATING": "Average star rating (e.g., 4.9)",
+    "CLIENT_REVIEW_PLATFORMS": "Review sites used (e.g., Google, Yelp, Facebook)",
+    "CLIENT_STATE_OR_REGION": "State or region of license",
+    "CLIENT_LICENSE_NUMBER": "Contractor license number",
+    "CLIENT_INSURANCE_COVERAGE": "Liability coverage amount (e.g., $2,000,000)",
+    "CLIENT_WORKMANSHIP_WARRANTY": "Labor warranty duration (e.g., 1-year)",
+    "CLIENT_PARTS_WARRANTY": "Parts/equipment warranty duration (e.g., up to 10 years)",
+    "CLIENT_CANCELLATION_NOTICE_HOURS": "Required cancellation notice period (e.g., 24)",
+    "CLIENT_CANCELLATION_FEE": "Cancellation fee amount or percentage (e.g., $50)",
+    "CLIENT_FINANCING_PARTNER": "Financing company name (e.g., GreenSky, Service Finance)",
+    "CLIENT_FINANCING_TERMS": "Financing plan details (e.g., 0% interest for 18 months)",
+    "CLIENT_QUOTE_TURNAROUND": "Time to receive initial quote estimate (e.g., same day)",
+    "CLIENT_PREFERRED_BRANDS": "Brands used (e.g., Trane, Rheem, Moen, Kohler)",
+    "CLIENT_MAINTENANCE_PLAN_NAME": "Name of the maintenance plan (e.g., Premier Care Plan)",
+    "CLIENT_MAINTENANCE_PLAN_BENEFITS": "What the plan includes (e.g., annual tune-up, priority scheduling, 10% discount)",
+    "CLIENT_MAINTENANCE_PLAN_DISCOUNT": "Discount offered to plan members (e.g., 15%)",
+    "CLIENT_MAINTENANCE_PLAN_PRICE": "Monthly or annual plan cost (e.g., $19.99)",
+    "CLIENT_MAINTENANCE_PLAN_PERIOD": "Billing period (e.g., month or year)",
+    "CLIENT_CERTIFICATIONS_SUMMARY": "Key certifications or credentials (e.g., NATE-certified and EPA-licensed)",
+    "CLIENT_SOCIAL_MEDIA_HANDLES": "Social media profile links or handles"
+  }
+}

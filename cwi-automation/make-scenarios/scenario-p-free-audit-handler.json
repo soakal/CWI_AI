@@ -1,0 +1,684 @@
+{
+  "name": "Scenario P: Free AI Readiness Audit Handler",
+  "comments": "Triggered by webhook (hook 3040) when a prospect submits the free-audit form on cwiai.net. Extracts 8 form fields, calculates a readiness score (base 50, +10 if monthly_leads >= 50, +15 if after_hours_handling = 'We miss them', +10 if pain_point = 'Missing leads after hours', +10 if industry = Plumbing or HVAC, -10 if monthly_leads < 20, capped at 95). Calls OpenRouter Claude Sonnet 4-6 for a personalized audit report. Sends a branded white-label HTML email to the lead via Resend. Creates a HubSpot contact and deal. Sends an internal alert email to Brian. Error handler sends a Resend alert on failure. All secrets stored as env.VARIABLE_NAME. Timezone: America/New_York.",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": 3040,
+        "maxResults": 1
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0
+        },
+        "restore": {
+          "parameters": {
+            "hook": {
+              "label": "Free Audit Form Hook",
+              "data": {
+                "editable": true
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hook",
+            "type": "hook:gateway-webhook",
+            "label": "Webhook",
+            "required": true
+          },
+          {
+            "name": "maxResults",
+            "type": "number",
+            "label": "Maximum number of results"
+          }
+        ],
+        "expect": [
+          { "name": "business_name", "type": "text", "label": "Business Name" },
+          { "name": "name",          "type": "text", "label": "Contact Name"  },
+          { "name": "email",         "type": "email","label": "Email"         },
+          { "name": "phone",         "type": "text", "label": "Phone"         },
+          { "name": "industry",      "type": "text", "label": "Industry"      },
+          { "name": "monthly_leads", "type": "number","label": "Monthly Leads"},
+          { "name": "after_hours_handling", "type": "text", "label": "After-Hours Handling" },
+          { "name": "pain_point",    "type": "text", "label": "Pain Point"    }
+        ],
+        "notes": "Webhook trigger — receives POST from cwi-site/free-audit.html (hook ID 3040). Extracts all 8 form fields."
+      }
+    },
+    {
+      "id": 2,
+      "module": "util:SetVariables2",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "variables": [
+          {
+            "name": "business_name",
+            "value": "{{1.business_name}}"
+          },
+          {
+            "name": "contact_name",
+            "value": "{{1.name}}"
+          },
+          {
+            "name": "email",
+            "value": "{{1.email}}"
+          },
+          {
+            "name": "phone",
+            "value": "{{1.phone}}"
+          },
+          {
+            "name": "industry",
+            "value": "{{1.industry}}"
+          },
+          {
+            "name": "monthly_leads",
+            "value": "{{toNumber(1.monthly_leads)}}"
+          },
+          {
+            "name": "after_hours_handling",
+            "value": "{{1.after_hours_handling}}"
+          },
+          {
+            "name": "pain_point",
+            "value": "{{1.pain_point}}"
+          },
+          {
+            "name": "firstname",
+            "value": "{{first(split(1.name; ' '))}}"
+          },
+          {
+            "name": "lastname",
+            "value": "{{join(slice(split(1.name; ' '); 1); ' ')}}"
+          },
+          {
+            "name": "score_leads_high",
+            "value": "{{if(toNumber(1.monthly_leads) >= 50; 10; 0)}}"
+          },
+          {
+            "name": "score_after_hours",
+            "value": "{{if(1.after_hours_handling = 'We miss them'; 15; 0)}}"
+          },
+          {
+            "name": "score_pain_point",
+            "value": "{{if(1.pain_point = 'Missing leads after hours'; 10; 0)}}"
+          },
+          {
+            "name": "score_industry",
+            "value": "{{if(or(1.industry = 'Plumbing'; 1.industry = 'HVAC'); 10; 0)}}"
+          },
+          {
+            "name": "score_leads_low",
+            "value": "{{if(toNumber(1.monthly_leads) < 20; -10; 0)}}"
+          },
+          {
+            "name": "readiness_score",
+            "value": "{{min(95; 50 + if(toNumber(1.monthly_leads) >= 50; 10; 0) + if(1.after_hours_handling = 'We miss them'; 15; 0) + if(1.pain_point = 'Missing leads after hours'; 10; 0) + if(or(1.industry = 'Plumbing'; 1.industry = 'HVAC'); 10; 0) + if(toNumber(1.monthly_leads) < 20; -10; 0))}}"
+          }
+        ]
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0
+        },
+        "restore": {},
+        "parameters": [],
+        "expect": [
+          {
+            "name": "variables",
+            "type": "array",
+            "label": "Variables"
+          }
+        ],
+        "notes": "SetVariable — calculates readiness_score: base 50, +10 if monthly_leads >= 50, +15 if after_hours_handling = 'We miss them', +10 if pain_point = 'Missing leads after hours', +10 if industry = Plumbing or HVAC, -10 if monthly_leads < 20. Capped at 95 via min(). Also splits name into firstname/lastname."
+      }
+    },
+    {
+      "id": 3,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDecompression": true
+      },
+      "mapper": {
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "serializeUrl": false,
+        "method": "post",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.OPENROUTER_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "name": "HTTP-Referer",
+            "value": "{{env.OPENROUTER_REFERRER}}"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "authUser": "",
+        "authPass": "",
+        "timeout": 60,
+        "shareCookies": false,
+        "ca": "",
+        "rejectUnauthorized": true,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "gzip": true,
+        "useMtls": false,
+        "contentType": "application/json",
+        "data": "{\n  \"model\": \"anthropic/claude-sonnet-4-6\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Write a personalized AI readiness audit report for {{2.business_name}}, a {{2.industry}} business. Their score is {{2.readiness_score}}/100. They handle {{2.monthly_leads}} leads/month. After-hours handling: {{2.after_hours_handling}}. Biggest pain point: {{2.pain_point}}. Write 3 short paragraphs: (1) Their score and what it means, (2) Their #1 automation opportunity, (3) A specific recommendation. Keep it under 200 words. Warm and actionable. Do not mention any AI company names or vendor names.\"\n    }\n  ],\n  \"max_tokens\": 400,\n  \"temperature\": 0.7\n}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0
+        },
+        "restore": {
+          "expect": {
+            "method": { "label": "POST" },
+            "bodyType": { "label": "Raw" },
+            "contentType": { "label": "JSON (application/json)" }
+          }
+        },
+        "parameters": [
+          {
+            "name": "handleErrors",
+            "type": "boolean",
+            "label": "Evaluate all states as errors (except for 2xx and 3xx)",
+            "required": true
+          },
+          {
+            "name": "useNewZLibDecompression",
+            "type": "boolean",
+            "label": "Use new ZLib decompression library",
+            "required": true
+          }
+        ],
+        "expect": [
+          { "name": "url",           "type": "url",    "label": "URL",            "required": true },
+          { "name": "method",        "type": "select", "label": "Method",         "required": true },
+          { "name": "headers",       "type": "array",  "label": "Headers"                          },
+          { "name": "bodyType",      "type": "select", "label": "Body type"                        },
+          { "name": "contentType",   "type": "select", "label": "Content type"                     },
+          { "name": "data",          "type": "string", "label": "Request content"                  },
+          { "name": "parseResponse", "type": "boolean","label": "Parse response"                   }
+        ],
+        "notes": "OpenRouter HTTP POST — model anthropic/claude-sonnet-4-6 — generates a personalized 3-paragraph audit report (score meaning, top automation opportunity, specific recommendation). Under 200 words. White-label: no vendor names in output."
+      }
+    },
+    {
+      "id": 4,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDecompression": true
+      },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "serializeUrl": false,
+        "method": "post",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.RESEND_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "authUser": "",
+        "authPass": "",
+        "timeout": 30,
+        "shareCookies": false,
+        "ca": "",
+        "rejectUnauthorized": true,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "gzip": true,
+        "useMtls": false,
+        "contentType": "application/json",
+        "data": "{\n  \"from\": \"{{env.RESEND_FROM_NAME}} <{{env.RESEND_FROM_ADDRESS}}>\",\n  \"to\": [\"{{2.email}}\"],\n  \"subject\": \"Your AI Readiness Score: {{2.readiness_score}}/100 — {{2.business_name}}\",\n  \"html\": \"<!DOCTYPE html><html><head><meta charset='UTF-8'><style>body{font-family:Arial,sans-serif;background:#f9f9f9;margin:0;padding:0;}table{border-collapse:collapse;}.wrapper{max-width:600px;margin:0 auto;background:#ffffff;border-radius:8px;overflow:hidden;}.header{background:#1a1a2e;padding:32px 40px;}.header h1{color:#ffffff;margin:0;font-size:22px;font-weight:600;}.score-box{background:#fff7ed;border:2px solid #f97316;border-radius:12px;padding:24px 32px;text-align:center;margin:32px 40px 0 40px;}.score-box .score-label{font-size:14px;color:#92400e;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}.score-box .score-value{font-size:64px;font-weight:800;color:#f97316;line-height:1;}.score-box .score-denom{font-size:24px;color:#f97316;font-weight:600;}.body-content{padding:32px 40px;color:#374151;font-size:15px;line-height:1.7;}.cta-wrapper{text-align:center;padding:8px 40px 40px 40px;}.cta-button{display:inline-block;background:#f97316;color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:8px;font-size:16px;font-weight:700;letter-spacing:0.5px;}.footer{background:#f3f4f6;padding:20px 40px;text-align:center;font-size:12px;color:#9ca3af;}</style></head><body><table width='100%' cellpadding='0' cellspacing='0'><tr><td><div class='wrapper'><div class='header'><h1>Your AI Readiness Audit</h1></div><div class='score-box'><div class='score-label'>Your Score</div><div><span class='score-value'>{{2.readiness_score}}</span><span class='score-denom'>/100</span></div></div><div class='body-content'><p>Hi {{2.firstname}},</p><p>Thank you for completing the AI Readiness Audit for <strong>{{2.business_name}}</strong>. Here is your personalized report:</p><p style='white-space:pre-line;'>{{3.data.choices[0].message.content}}</p></div><div class='cta-wrapper'><a href='{{env.CALENDLY_LINK}}' class='cta-button'>Book Your Free Strategy Call</a></div><div class='footer'><p>You are receiving this because you requested a free audit at our website.<br>If you have questions, simply reply to this email.</p></div></div></td></tr></table></body></html>\"\n}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 0
+        },
+        "restore": {
+          "expect": {
+            "method": { "label": "POST" },
+            "bodyType": { "label": "Raw" },
+            "contentType": { "label": "JSON (application/json)" }
+          }
+        },
+        "parameters": [
+          {
+            "name": "handleErrors",
+            "type": "boolean",
+            "label": "Evaluate all states as errors (except for 2xx and 3xx)",
+            "required": true
+          },
+          {
+            "name": "useNewZLibDecompression",
+            "type": "boolean",
+            "label": "Use new ZLib decompression library",
+            "required": true
+          }
+        ],
+        "expect": [
+          { "name": "url",           "type": "url",    "label": "URL",            "required": true },
+          { "name": "method",        "type": "select", "label": "Method",         "required": true },
+          { "name": "headers",       "type": "array",  "label": "Headers"                          },
+          { "name": "bodyType",      "type": "select", "label": "Body type"                        },
+          { "name": "contentType",   "type": "select", "label": "Content type"                     },
+          { "name": "data",          "type": "string", "label": "Request content"                  },
+          { "name": "parseResponse", "type": "boolean","label": "Parse response"                   }
+        ],
+        "notes": "Resend HTTP POST — sends branded white-label HTML email to lead. From env.RESEND_FROM_ADDRESS / env.RESEND_FROM_NAME. Score displayed in orange (#f97316). Claude report body. CTA button links to env.CALENDLY_LINK. No CWI AI mention in client-facing email."
+      }
+    },
+    {
+      "id": 5,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDecompression": true
+      },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/contacts",
+        "serializeUrl": false,
+        "method": "post",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.HUBSPOT_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "authUser": "",
+        "authPass": "",
+        "timeout": 30,
+        "shareCookies": false,
+        "ca": "",
+        "rejectUnauthorized": true,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "gzip": true,
+        "useMtls": false,
+        "contentType": "application/json",
+        "data": "{\n  \"properties\": {\n    \"email\": \"{{2.email}}\",\n    \"firstname\": \"{{2.firstname}}\",\n    \"lastname\": \"{{2.lastname}}\",\n    \"phone\": \"{{2.phone}}\",\n    \"company\": \"{{2.business_name}}\",\n    \"industry\": \"{{2.industry}}\",\n    \"hs_lead_status\": \"NEW\"\n  }\n}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 1200,
+          "y": 0
+        },
+        "restore": {
+          "expect": {
+            "method": { "label": "POST" },
+            "bodyType": { "label": "Raw" },
+            "contentType": { "label": "JSON (application/json)" }
+          }
+        },
+        "parameters": [
+          {
+            "name": "handleErrors",
+            "type": "boolean",
+            "label": "Evaluate all states as errors (except for 2xx and 3xx)",
+            "required": true
+          },
+          {
+            "name": "useNewZLibDecompression",
+            "type": "boolean",
+            "label": "Use new ZLib decompression library",
+            "required": true
+          }
+        ],
+        "expect": [
+          { "name": "url",           "type": "url",    "label": "URL",            "required": true },
+          { "name": "method",        "type": "select", "label": "Method",         "required": true },
+          { "name": "headers",       "type": "array",  "label": "Headers"                          },
+          { "name": "bodyType",      "type": "select", "label": "Body type"                        },
+          { "name": "contentType",   "type": "select", "label": "Content type"                     },
+          { "name": "data",          "type": "string", "label": "Request content"                  },
+          { "name": "parseResponse", "type": "boolean","label": "Parse response"                   }
+        ],
+        "notes": "HubSpot HTTP POST — creates contact with email, firstname, lastname (split from name), phone, company (business_name), industry, hs_lead_status=NEW. Returns contact id used in module 6 association."
+      }
+    },
+    {
+      "id": 6,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDecompression": true
+      },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/deals",
+        "serializeUrl": false,
+        "method": "post",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.HUBSPOT_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "authUser": "",
+        "authPass": "",
+        "timeout": 30,
+        "shareCookies": false,
+        "ca": "",
+        "rejectUnauthorized": true,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "gzip": true,
+        "useMtls": false,
+        "contentType": "application/json",
+        "data": "{\n  \"properties\": {\n    \"dealname\": \"{{2.business_name}} — Free Audit Lead\",\n    \"pipeline\": \"{{env.HUBSPOT_PIPELINE_ID}}\",\n    \"dealstage\": \"{{env.HUBSPOT_STAGE_NEW_LEAD}}\"\n  },\n  \"associations\": [\n    {\n      \"to\": {\n        \"id\": \"{{5.data.id}}\"\n      },\n      \"types\": [\n        {\n          \"associationCategory\": \"HUBSPOT_DEFINED\",\n          \"associationTypeId\": 3\n        }\n      ]\n    }\n  ]\n}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 1500,
+          "y": 0
+        },
+        "restore": {
+          "expect": {
+            "method": { "label": "POST" },
+            "bodyType": { "label": "Raw" },
+            "contentType": { "label": "JSON (application/json)" }
+          }
+        },
+        "parameters": [
+          {
+            "name": "handleErrors",
+            "type": "boolean",
+            "label": "Evaluate all states as errors (except for 2xx and 3xx)",
+            "required": true
+          },
+          {
+            "name": "useNewZLibDecompression",
+            "type": "boolean",
+            "label": "Use new ZLib decompression library",
+            "required": true
+          }
+        ],
+        "expect": [
+          { "name": "url",           "type": "url",    "label": "URL",            "required": true },
+          { "name": "method",        "type": "select", "label": "Method",         "required": true },
+          { "name": "headers",       "type": "array",  "label": "Headers"                          },
+          { "name": "bodyType",      "type": "select", "label": "Body type"                        },
+          { "name": "contentType",   "type": "select", "label": "Content type"                     },
+          { "name": "data",          "type": "string", "label": "Request content"                  },
+          { "name": "parseResponse", "type": "boolean","label": "Parse response"                   }
+        ],
+        "notes": "HubSpot HTTP POST — creates deal named '[business_name] — Free Audit Lead', pipeline env.HUBSPOT_PIPELINE_ID, stage env.HUBSPOT_STAGE_NEW_LEAD, associated with the contact created in module 5 (associationTypeId 3 = deal-to-contact)."
+      }
+    },
+    {
+      "id": 7,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDecompression": true
+      },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "serializeUrl": false,
+        "method": "post",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.RESEND_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "authUser": "",
+        "authPass": "",
+        "timeout": 30,
+        "shareCookies": false,
+        "ca": "",
+        "rejectUnauthorized": true,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "gzip": true,
+        "useMtls": false,
+        "contentType": "application/json",
+        "data": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"{{env.ADMIN_EMAIL}}\"],\n  \"subject\": \"New Free Audit Lead: {{2.business_name}} scored {{2.readiness_score}}/100\",\n  \"html\": \"<h2>New Free Audit Submission</h2><table style='border-collapse:collapse;font-family:Arial,sans-serif;font-size:14px;'><tr><td style='padding:6px 12px;font-weight:bold;'>Business Name</td><td style='padding:6px 12px;'>{{2.business_name}}</td></tr><tr style='background:#f3f4f6;'><td style='padding:6px 12px;font-weight:bold;'>Contact Name</td><td style='padding:6px 12px;'>{{2.contact_name}}</td></tr><tr><td style='padding:6px 12px;font-weight:bold;'>Email</td><td style='padding:6px 12px;'>{{2.email}}</td></tr><tr style='background:#f3f4f6;'><td style='padding:6px 12px;font-weight:bold;'>Phone</td><td style='padding:6px 12px;'>{{2.phone}}</td></tr><tr><td style='padding:6px 12px;font-weight:bold;'>Industry</td><td style='padding:6px 12px;'>{{2.industry}}</td></tr><tr style='background:#f3f4f6;'><td style='padding:6px 12px;font-weight:bold;'>Monthly Leads</td><td style='padding:6px 12px;'>{{2.monthly_leads}}</td></tr><tr><td style='padding:6px 12px;font-weight:bold;'>After-Hours Handling</td><td style='padding:6px 12px;'>{{2.after_hours_handling}}</td></tr><tr style='background:#f3f4f6;'><td style='padding:6px 12px;font-weight:bold;'>Pain Point</td><td style='padding:6px 12px;'>{{2.pain_point}}</td></tr><tr><td style='padding:6px 12px;font-weight:bold;color:#f97316;'>Readiness Score</td><td style='padding:6px 12px;font-weight:bold;color:#f97316;font-size:18px;'>{{2.readiness_score}}/100</td></tr></table><br><p><a href='https://app.hubspot.com/contacts/{{env.HUBSPOT_PORTAL_ID}}/contact/{{5.data.id}}' style='background:#1a1a2e;color:#ffffff;padding:10px 24px;text-decoration:none;border-radius:6px;font-weight:bold;'>View in HubSpot</a></p>\"\n}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 1800,
+          "y": 0
+        },
+        "restore": {
+          "expect": {
+            "method": { "label": "POST" },
+            "bodyType": { "label": "Raw" },
+            "contentType": { "label": "JSON (application/json)" }
+          }
+        },
+        "parameters": [
+          {
+            "name": "handleErrors",
+            "type": "boolean",
+            "label": "Evaluate all states as errors (except for 2xx and 3xx)",
+            "required": true
+          },
+          {
+            "name": "useNewZLibDecompression",
+            "type": "boolean",
+            "label": "Use new ZLib decompression library",
+            "required": true
+          }
+        ],
+        "expect": [
+          { "name": "url",           "type": "url",    "label": "URL",            "required": true },
+          { "name": "method",        "type": "select", "label": "Method",         "required": true },
+          { "name": "headers",       "type": "array",  "label": "Headers"                          },
+          { "name": "bodyType",      "type": "select", "label": "Body type"                        },
+          { "name": "contentType",   "type": "select", "label": "Content type"                     },
+          { "name": "data",          "type": "string", "label": "Request content"                  },
+          { "name": "parseResponse", "type": "boolean","label": "Parse response"                   }
+        ],
+        "notes": "Resend HTTP POST — internal alert from env.CWI_ALERT_FROM_ADDRESS to env.ADMIN_EMAIL. Subject includes business_name and score. Body: full table of all 8 form fields + readiness score + direct HubSpot contact link (uses env.HUBSPOT_PORTAL_ID + contact id from module 5)."
+      }
+    },
+    {
+      "id": 8,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": false,
+        "useNewZLibDecompression": true
+      },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "serializeUrl": false,
+        "method": "post",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.RESEND_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "authUser": "",
+        "authPass": "",
+        "timeout": 30,
+        "shareCookies": false,
+        "ca": "",
+        "rejectUnauthorized": true,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "gzip": true,
+        "useMtls": false,
+        "contentType": "application/json",
+        "data": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"{{env.ADMIN_EMAIL}}\"],\n  \"subject\": \"[ERROR] Scenario P Free Audit Handler Failed\",\n  \"html\": \"<h2 style='color:#dc2626;'>Scenario P Error</h2><p>The Free AI Readiness Audit Handler (Scenario P) encountered an error and did not complete successfully.</p><table style='border-collapse:collapse;font-family:Arial,sans-serif;font-size:14px;'><tr><td style='padding:6px 12px;font-weight:bold;'>Error Message</td><td style='padding:6px 12px;'>{{error.message}}</td></tr><tr style='background:#f3f4f6;'><td style='padding:6px 12px;font-weight:bold;'>Failed Module</td><td style='padding:6px 12px;'>{{error.module}}</td></tr><tr><td style='padding:6px 12px;font-weight:bold;'>Time</td><td style='padding:6px 12px;'>{{formatDate(now; 'MMMM D, YYYY h:mm A'; 'America/New_York')}} ET</td></tr><tr style='background:#f3f4f6;'><td style='padding:6px 12px;font-weight:bold;'>Business Name</td><td style='padding:6px 12px;'>{{1.business_name}}</td></tr><tr><td style='padding:6px 12px;font-weight:bold;'>Lead Email</td><td style='padding:6px 12px;'>{{1.email}}</td></tr></table><p>Please check the Make.com execution log and follow up with this lead manually if needed.</p>\"\n}"
+      },
+      "error_handler": true,
+      "linked_to_module": null,
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 300
+        },
+        "restore": {
+          "expect": {
+            "method": { "label": "POST" },
+            "bodyType": { "label": "Raw" },
+            "contentType": { "label": "JSON (application/json)" }
+          }
+        },
+        "parameters": [
+          {
+            "name": "handleErrors",
+            "type": "boolean",
+            "label": "Evaluate all states as errors (except for 2xx and 3xx)",
+            "required": true
+          },
+          {
+            "name": "useNewZLibDecompression",
+            "type": "boolean",
+            "label": "Use new ZLib decompression library",
+            "required": true
+          }
+        ],
+        "expect": [
+          { "name": "url",           "type": "url",    "label": "URL",            "required": true },
+          { "name": "method",        "type": "select", "label": "Method",         "required": true },
+          { "name": "headers",       "type": "array",  "label": "Headers"                          },
+          { "name": "bodyType",      "type": "select", "label": "Body type"                        },
+          { "name": "contentType",   "type": "select", "label": "Content type"                     },
+          { "name": "data",          "type": "string", "label": "Request content"                  },
+          { "name": "parseResponse", "type": "boolean","label": "Parse response"                   }
+        ],
+        "notes": "Error Handler — Resend alert to env.ADMIN_EMAIL on any scenario failure. Includes error message, failed module, timestamp (America/New_York), and lead details from module 1 for manual follow-up."
+      }
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": true,
+      "slots": null,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": {
+      "orphans": []
+    },
+    "zone": "us1.make.com",
+    "notes": [
+      {
+        "id": 1,
+        "content": "Module 1: Webhook trigger — gateway:CustomWebHook hook 3040 — receives POST from cwi-site/free-audit.html. 8 fields: business_name, name, email, phone, industry, monthly_leads, after_hours_handling, pain_point.",
+        "position": { "x": 0, "y": -80 }
+      },
+      {
+        "id": 2,
+        "content": "Module 2: SetVariable — readiness_score: base 50, +10 if monthly_leads >= 50, +15 if after_hours = 'We miss them', +10 if pain_point = 'Missing leads after hours', +10 if industry = Plumbing or HVAC, -10 if monthly_leads < 20. Capped at 95. Also splits name -> firstname/lastname.",
+        "position": { "x": 300, "y": -80 }
+      },
+      {
+        "id": 3,
+        "content": "Module 3: OpenRouter HTTP POST — anthropic/claude-sonnet-4-6 — 3-paragraph personalized audit report: score meaning, #1 automation opportunity, specific recommendation. Under 200 words. White-label (no vendor names).",
+        "position": { "x": 600, "y": -80 }
+      },
+      {
+        "id": 4,
+        "content": "Module 4: Resend HTTP POST — branded white-label HTML email to lead. From env.RESEND_FROM_ADDRESS / env.RESEND_FROM_NAME. Score in orange. Claude report body. CTA -> env.CALENDLY_LINK. No CWI AI mention.",
+        "position": { "x": 900, "y": -80 }
+      },
+      {
+        "id": 5,
+        "content": "Module 5: HubSpot HTTP POST — create contact: email, firstname, lastname, phone, company, industry, hs_lead_status=NEW.",
+        "position": { "x": 1200, "y": -80 }
+      },
+      {
+        "id": 6,
+        "content": "Module 6: HubSpot HTTP POST — create deal: '[business_name] — Free Audit Lead', pipeline env.HUBSPOT_PIPELINE_ID, stage env.HUBSPOT_STAGE_NEW_LEAD, associated to contact from module 5.",
+        "position": { "x": 1500, "y": -80 }
+      },
+      {
+        "id": 7,
+        "content": "Module 7: Resend HTTP POST — internal alert from env.CWI_ALERT_FROM_ADDRESS to env.ADMIN_EMAIL. All 8 form fields + score + HubSpot contact link.",
+        "position": { "x": 1800, "y": -80 }
+      },
+      {
+        "id": 8,
+        "content": "Module 8: Error Handler — Resend alert to admin on any failure. Includes error message, module, timestamp (ET), business_name, lead email for manual follow-up.",
+        "position": { "x": 900, "y": 220 }
+      }
+    ]
+  },
+  "environment_variables": {
+    "RESEND_API_KEY": "Resend API key for sending emails",
+    "RESEND_FROM_ADDRESS": "Verified sender address for client-facing emails (e.g. hello@yourdomain.com)",
+    "RESEND_FROM_NAME": "Display name for client-facing emails (e.g. Your Company Name)",
+    "OPENROUTER_API_KEY": "OpenRouter API key for Claude access",
+    "OPENROUTER_REFERRER": "HTTP-Referer header value for OpenRouter requests (e.g. https://cwiai.net)",
+    "CALENDLY_LINK": "Full URL for booking a demo/strategy call",
+    "HUBSPOT_API_KEY": "HubSpot private app bearer token",
+    "HUBSPOT_PIPELINE_ID": "HubSpot deal pipeline ID",
+    "HUBSPOT_STAGE_NEW_LEAD": "HubSpot deal stage ID for the New Lead stage",
+    "HUBSPOT_PORTAL_ID": "HubSpot portal/account ID for building contact deep-link URLs",
+    "CWI_ALERT_FROM_ADDRESS": "Verified sender address for internal alert emails (e.g. alerts@cwiai.net)",
+    "ADMIN_EMAIL": "Brian's email address for internal alerts and error notifications"
+  }
+}

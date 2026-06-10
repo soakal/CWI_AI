@@ -1,0 +1,649 @@
+{
+  "name": "Scenario R: Starter-to-Growth Upsell Campaign",
+  "comments": "Runs on the 20th of every month at 11:00 AM America/New_York (cron: 0 11 20 * *). Fetches all rows from the ActiveClients Google Sheet (env.ACTIVE_CLIENTS_SHEET_ID) and filters to tier=Starter clients. Iterates over each Starter client, calculates days_active from go_live_date, and flags upsell_ready = days_active >= 60. A router passes only upsell-ready clients downstream. For each eligible client, calls OpenRouter Claude Sonnet 4-6 to generate a personalized 3-paragraph upgrade email body, then sends that email to the client via Resend (white-labeled as 'Brian at [ClientName]'). A second Resend call sends Brian an internal upsell opportunity alert. Error handler sends a Resend alert to env.ADMIN_EMAIL on any failure. All secrets stored as env.VARIABLE_NAME. Timezone: America/New_York.",
+  "flow": [
+    {
+      "id": 1,
+      "module": "clock:Sleep",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "scheduleType": "cron",
+        "cronExpression": "0 11 20 * *",
+        "timezone": "America/New_York"
+      },
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0
+        },
+        "restore": {
+          "parameters": {
+            "scheduleType": { "label": "Cron expression" }
+          }
+        },
+        "parameters": [
+          {
+            "name": "scheduleType",
+            "type": "select",
+            "label": "Run scenario",
+            "required": true
+          },
+          {
+            "name": "cronExpression",
+            "type": "text",
+            "label": "Cron expression"
+          },
+          {
+            "name": "timezone",
+            "type": "timezone",
+            "label": "Timezone"
+          }
+        ],
+        "notes": "Schedule trigger — runs on the 20th of every month at 11:00 AM America/New_York. Cron: 0 11 20 * *. No input data — fires the scenario to kick off the monthly Starter-to-Growth upsell sweep."
+      }
+    },
+    {
+      "id": 2,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDecompression": true
+      },
+      "mapper": {
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/{{env.ACTIVE_CLIENTS_SHEET_ID}}/values/ActiveClients",
+        "serializeUrl": false,
+        "method": "get",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.GOOGLE_SHEETS_ACCESS_TOKEN}}"
+          }
+        ],
+        "qs": [
+          {
+            "name": "valueRenderOption",
+            "value": "FORMATTED_VALUE"
+          },
+          {
+            "name": "dateTimeRenderOption",
+            "value": "FORMATTED_STRING"
+          }
+        ],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "authUser": "",
+        "authPass": "",
+        "timeout": 30,
+        "shareCookies": false,
+        "ca": "",
+        "rejectUnauthorized": true,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "gzip": true,
+        "useMtls": false,
+        "contentType": "application/json",
+        "data": ""
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0
+        },
+        "restore": {
+          "expect": {
+            "method": { "label": "GET" },
+            "bodyType": { "label": "Raw" },
+            "contentType": { "label": "JSON (application/json)" }
+          }
+        },
+        "parameters": [
+          {
+            "name": "handleErrors",
+            "type": "boolean",
+            "label": "Evaluate all states as errors (except for 2xx and 3xx)",
+            "required": true
+          },
+          {
+            "name": "useNewZLibDecompression",
+            "type": "boolean",
+            "label": "Use new ZLib decompression library",
+            "required": true
+          }
+        ],
+        "expect": [
+          { "name": "url",           "type": "url",     "label": "URL",            "required": true },
+          { "name": "method",        "type": "select",  "label": "Method",         "required": true },
+          { "name": "headers",       "type": "array",   "label": "Headers"                          },
+          { "name": "qs",            "type": "array",   "label": "Query string"                     },
+          { "name": "bodyType",      "type": "select",  "label": "Body type"                        },
+          { "name": "parseResponse", "type": "boolean", "label": "Parse response"                   }
+        ],
+        "notes": "Google Sheets HTTP GET — GET /v4/spreadsheets/{ACTIVE_CLIENTS_SHEET_ID}/values/ActiveClients. Returns all rows from the ActiveClients tab as a 2D array in response.data.values. Row 0 is the header row (client_name, email, tier, go_live_date, ...). Auth via Bearer env.GOOGLE_SHEETS_ACCESS_TOKEN. valueRenderOption=FORMATTED_VALUE so dates are returned as human-readable strings."
+      }
+    },
+    {
+      "id": 3,
+      "module": "util:Iterator",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "array": "{{slice(2.data.values; 1)}}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0
+        },
+        "restore": {},
+        "parameters": [],
+        "expect": [
+          {
+            "name": "array",
+            "type": "array",
+            "label": "Array",
+            "required": true
+          }
+        ],
+        "notes": "Iterator — loops over each data row in 2.data.values, skipping the header (row index 0) via slice(...; 1). Emits one bundle per client row. Expected column order: [0] client_name, [1] email, [2] tier, [3] go_live_date. Downstream modules (4–8) run once per client row."
+      }
+    },
+    {
+      "id": 4,
+      "module": "util:SetVariables2",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "variables": [
+          {
+            "name": "client_name",
+            "value": "{{3.value[0]}}"
+          },
+          {
+            "name": "client_email",
+            "value": "{{3.value[1]}}"
+          },
+          {
+            "name": "tier",
+            "value": "{{3.value[2]}}"
+          },
+          {
+            "name": "go_live_date",
+            "value": "{{3.value[3]}}"
+          },
+          {
+            "name": "days_active",
+            "value": "{{ceil(dateDifference(now; parseDate(3.value[3]; 'MM/DD/YYYY'; 'America/New_York'); 'days'))}}"
+          },
+          {
+            "name": "upsell_ready",
+            "value": "{{if(ceil(dateDifference(now; parseDate(3.value[3]; 'MM/DD/YYYY'; 'America/New_York'); 'days')) >= 60; true; false)}}"
+          },
+          {
+            "name": "run_date",
+            "value": "{{formatDate(now; 'MMMM D, YYYY'; 'America/New_York')}}"
+          }
+        ]
+      },
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 0
+        },
+        "restore": {},
+        "parameters": [],
+        "expect": [
+          {
+            "name": "variables",
+            "type": "array",
+            "label": "Variables"
+          }
+        ],
+        "notes": "SetVariable — extracts fields from the iterator bundle (module 3) and computes derived values. Sets: client_name (col 0), client_email (col 1), tier (col 2), go_live_date (col 3, raw string). Calculates days_active as ceiling of dateDifference(now, parseDate(go_live_date), 'days'). Sets upsell_ready = true when days_active >= 60, else false. Sets run_date (today formatted ET). The Router in module 5 reads 4.upsell_ready and 4.tier to decide whether to proceed."
+      }
+    },
+    {
+      "id": 5,
+      "module": "flow:Router",
+      "version": 1,
+      "parameters": {},
+      "mapper": {},
+      "routes": [
+        {
+          "id": "route_upsell",
+          "label": "Upsell Ready",
+          "filter": {
+            "name": "Starter AND upsell_ready",
+            "conditions": [
+              [
+                {
+                  "a": "{{4.tier}}",
+                  "b": "Starter",
+                  "o": "text:equal"
+                },
+                {
+                  "a": "{{4.upsell_ready}}",
+                  "b": true,
+                  "o": "boolean:equal"
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "id": "route_skip",
+          "label": "Skip (not ready)",
+          "filter": {
+            "name": "Not upsell ready",
+            "conditions": [
+              [
+                {
+                  "a": "{{4.upsell_ready}}",
+                  "b": false,
+                  "o": "boolean:equal"
+                }
+              ]
+            ]
+          }
+        }
+      ],
+      "metadata": {
+        "designer": {
+          "x": 1200,
+          "y": 0
+        },
+        "restore": {},
+        "parameters": [],
+        "notes": "Router — two routes. Route 1 (Upsell Ready): passes through when 4.tier == 'Starter' AND 4.upsell_ready == true. Proceeds to modules 6, 7, 8. Route 2 (Skip): matches when 4.upsell_ready == false; this branch terminates and the iterator advances to the next client. Only clients on the Starter plan with 60+ days active reach the email and alert modules."
+      }
+    },
+    {
+      "id": 6,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDecompression": true
+      },
+      "mapper": {
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "serializeUrl": false,
+        "method": "post",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.OPENROUTER_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "name": "HTTP-Referer",
+            "value": "{{env.OPENROUTER_REFERRER}}"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "authUser": "",
+        "authPass": "",
+        "timeout": 60,
+        "shareCookies": false,
+        "ca": "",
+        "rejectUnauthorized": true,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "gzip": true,
+        "useMtls": false,
+        "contentType": "application/json",
+        "data": "{\n  \"model\": \"anthropic/claude-sonnet-4-6\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Write a friendly 3-paragraph email to {{4.client_name}} who has been using AI chat automation for {{4.days_active}} days on the Starter plan at $197/mo. Mention their results are great and suggest upgrading to Growth at $397/mo which adds weekly digest, lead scoring, and client health monitoring. Be genuine and never pushy. Return only the email body.\"\n    }\n  ],\n  \"max_tokens\": 500,\n  \"temperature\": 0.7\n}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 1500,
+          "y": 0
+        },
+        "restore": {
+          "expect": {
+            "method": { "label": "POST" },
+            "bodyType": { "label": "Raw" },
+            "contentType": { "label": "JSON (application/json)" }
+          }
+        },
+        "parameters": [
+          {
+            "name": "handleErrors",
+            "type": "boolean",
+            "label": "Evaluate all states as errors (except for 2xx and 3xx)",
+            "required": true
+          },
+          {
+            "name": "useNewZLibDecompression",
+            "type": "boolean",
+            "label": "Use new ZLib decompression library",
+            "required": true
+          }
+        ],
+        "expect": [
+          { "name": "url",           "type": "url",     "label": "URL",            "required": true },
+          { "name": "method",        "type": "select",  "label": "Method",         "required": true },
+          { "name": "headers",       "type": "array",   "label": "Headers"                          },
+          { "name": "bodyType",      "type": "select",  "label": "Body type"                        },
+          { "name": "contentType",   "type": "select",  "label": "Content type"                     },
+          { "name": "data",          "type": "string",  "label": "Request content"                  },
+          { "name": "parseResponse", "type": "boolean", "label": "Parse response"                   }
+        ],
+        "notes": "OpenRouter HTTP POST — model anthropic/claude-sonnet-4-6. Prompt: write a friendly 3-paragraph email to [client_name] who has been using AI chat automation for [days_active] days on Starter at $197/mo. Acknowledge great results. Suggest Growth at $397/mo (adds weekly digest, lead scoring, client health monitoring). Be genuine and never pushy. Return only the email body. max_tokens 500, temperature 0.7. Claude response is at 6.data.choices[0].message.content."
+      }
+    },
+    {
+      "id": 7,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDecompression": true
+      },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "serializeUrl": false,
+        "method": "post",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.RESEND_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "authUser": "",
+        "authPass": "",
+        "timeout": 30,
+        "shareCookies": false,
+        "ca": "",
+        "rejectUnauthorized": true,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "gzip": true,
+        "useMtls": false,
+        "contentType": "application/json",
+        "data": "{\n  \"from\": \"Brian at {{4.client_name}} <{{env.RESEND_FROM_ADDRESS}}>\",\n  \"to\": [\"{{4.client_email}}\"],\n  \"subject\": \"You have outgrown Starter — here is what is next\",\n  \"text\": \"{{6.data.choices[0].message.content}}\"\n}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 1800,
+          "y": 0
+        },
+        "restore": {
+          "expect": {
+            "method": { "label": "POST" },
+            "bodyType": { "label": "Raw" },
+            "contentType": { "label": "JSON (application/json)" }
+          }
+        },
+        "parameters": [
+          {
+            "name": "handleErrors",
+            "type": "boolean",
+            "label": "Evaluate all states as errors (except for 2xx and 3xx)",
+            "required": true
+          },
+          {
+            "name": "useNewZLibDecompression",
+            "type": "boolean",
+            "label": "Use new ZLib decompression library",
+            "required": true
+          }
+        ],
+        "expect": [
+          { "name": "url",           "type": "url",     "label": "URL",            "required": true },
+          { "name": "method",        "type": "select",  "label": "Method",         "required": true },
+          { "name": "headers",       "type": "array",   "label": "Headers"                          },
+          { "name": "bodyType",      "type": "select",  "label": "Body type"                        },
+          { "name": "contentType",   "type": "select",  "label": "Content type"                     },
+          { "name": "data",          "type": "string",  "label": "Request content"                  },
+          { "name": "parseResponse", "type": "boolean", "label": "Parse response"                   }
+        ],
+        "notes": "Resend HTTP POST — sends personalized upgrade offer email to the client. White-labeled FROM 'Brian at [client_name] <env.RESEND_FROM_ADDRESS>'. TO: 4.client_email. Subject: 'You have outgrown Starter — here is what is next'. Body: Claude-generated 3-paragraph email (module 6). Plain text format keeps the email personal and avoids promotional spam filters."
+      }
+    },
+    {
+      "id": 8,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDecompression": true
+      },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "serializeUrl": false,
+        "method": "post",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.RESEND_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "authUser": "",
+        "authPass": "",
+        "timeout": 30,
+        "shareCookies": false,
+        "ca": "",
+        "rejectUnauthorized": true,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "gzip": true,
+        "useMtls": false,
+        "contentType": "application/json",
+        "data": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"{{env.ADMIN_EMAIL}}\"],\n  \"subject\": \"Upsell email sent to {{4.client_name}} — {{4.days_active}} days active on Starter\",\n  \"html\": \"<h2 style='color:#16a34a;'>Upsell Opportunity Alert</h2><p>An upgrade email was just sent to a Starter client who has been live for {{4.days_active}} days.</p><table style='border-collapse:collapse;font-family:Arial,sans-serif;font-size:14px;'><tr><td style='padding:6px 12px;font-weight:bold;'>Client</td><td style='padding:6px 12px;'>{{4.client_name}}</td></tr><tr style='background:#f3f4f6;'><td style='padding:6px 12px;font-weight:bold;'>Email</td><td style='padding:6px 12px;'>{{4.client_email}}</td></tr><tr><td style='padding:6px 12px;font-weight:bold;'>Current Plan</td><td style='padding:6px 12px;'>Starter — $197/mo</td></tr><tr style='background:#f3f4f6;'><td style='padding:6px 12px;font-weight:bold;'>Days Active</td><td style='padding:6px 12px;'>{{4.days_active}} days (since {{4.go_live_date}})</td></tr><tr><td style='padding:6px 12px;font-weight:bold;'>Upgrade Target</td><td style='padding:6px 12px;'>Growth — $397/mo</td></tr><tr style='background:#f3f4f6;'><td style='padding:6px 12px;font-weight:bold;'>Email Sent</td><td style='padding:6px 12px;'>{{4.run_date}} at 11:00 AM ET</td></tr></table><p>Follow up if you do not hear back within 5 business days.</p>\"\n}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 2100,
+          "y": 0
+        },
+        "restore": {
+          "expect": {
+            "method": { "label": "POST" },
+            "bodyType": { "label": "Raw" },
+            "contentType": { "label": "JSON (application/json)" }
+          }
+        },
+        "parameters": [
+          {
+            "name": "handleErrors",
+            "type": "boolean",
+            "label": "Evaluate all states as errors (except for 2xx and 3xx)",
+            "required": true
+          },
+          {
+            "name": "useNewZLibDecompression",
+            "type": "boolean",
+            "label": "Use new ZLib decompression library",
+            "required": true
+          }
+        ],
+        "expect": [
+          { "name": "url",           "type": "url",     "label": "URL",            "required": true },
+          { "name": "method",        "type": "select",  "label": "Method",         "required": true },
+          { "name": "headers",       "type": "array",   "label": "Headers"                          },
+          { "name": "bodyType",      "type": "select",  "label": "Body type"                        },
+          { "name": "contentType",   "type": "select",  "label": "Content type"                     },
+          { "name": "data",          "type": "string",  "label": "Request content"                  },
+          { "name": "parseResponse", "type": "boolean", "label": "Parse response"                   }
+        ],
+        "notes": "Resend HTTP POST — internal upsell alert to Brian. FROM env.CWI_ALERT_FROM_ADDRESS. TO env.ADMIN_EMAIL. Subject: 'Upsell email sent to [client_name] — [N] days active on Starter'. HTML body includes a styled table with client name, email, current plan (Starter $197/mo), days active, go-live date, upgrade target (Growth $397/mo), and the date the email was sent. Prompts Brian to follow up within 5 business days if no reply."
+      }
+    },
+    {
+      "id": 9,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": false,
+        "useNewZLibDecompression": true
+      },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "serializeUrl": false,
+        "method": "post",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.RESEND_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "authUser": "",
+        "authPass": "",
+        "timeout": 30,
+        "shareCookies": false,
+        "ca": "",
+        "rejectUnauthorized": true,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "gzip": true,
+        "useMtls": false,
+        "contentType": "application/json",
+        "data": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"{{env.ADMIN_EMAIL}}\"],\n  \"subject\": \"[ERROR] Scenario R Upsell Campaign Failed — {{4.client_name}}\",\n  \"html\": \"<h2 style='color:#dc2626;'>Scenario R Error</h2><p>The Starter-to-Growth Upsell Campaign (Scenario R) encountered an error and did not complete successfully for one or more clients.</p><table style='border-collapse:collapse;font-family:Arial,sans-serif;font-size:14px;'><tr><td style='padding:6px 12px;font-weight:bold;'>Error Message</td><td style='padding:6px 12px;'>{{error.message}}</td></tr><tr style='background:#f3f4f6;'><td style='padding:6px 12px;font-weight:bold;'>Failed Module</td><td style='padding:6px 12px;'>{{error.module}}</td></tr><tr><td style='padding:6px 12px;font-weight:bold;'>Time</td><td style='padding:6px 12px;'>{{formatDate(now; 'MMMM D, YYYY h:mm A'; 'America/New_York')}} ET</td></tr><tr style='background:#f3f4f6;'><td style='padding:6px 12px;font-weight:bold;'>Client Name</td><td style='padding:6px 12px;'>{{4.client_name}}</td></tr><tr><td style='padding:6px 12px;font-weight:bold;'>Client Email</td><td style='padding:6px 12px;'>{{4.client_email}}</td></tr><tr style='background:#f3f4f6;'><td style='padding:6px 12px;font-weight:bold;'>Days Active</td><td style='padding:6px 12px;'>{{4.days_active}}</td></tr><tr><td style='padding:6px 12px;font-weight:bold;'>Go-Live Date</td><td style='padding:6px 12px;'>{{4.go_live_date}}</td></tr></table><p>Please check the Make.com execution log and send the upsell email to this client manually if needed.</p>\"\n}"
+      },
+      "error_handler": true,
+      "linked_to_module": null,
+      "metadata": {
+        "designer": {
+          "x": 1500,
+          "y": 300
+        },
+        "restore": {
+          "expect": {
+            "method": { "label": "POST" },
+            "bodyType": { "label": "Raw" },
+            "contentType": { "label": "JSON (application/json)" }
+          }
+        },
+        "parameters": [
+          {
+            "name": "handleErrors",
+            "type": "boolean",
+            "label": "Evaluate all states as errors (except for 2xx and 3xx)",
+            "required": true
+          },
+          {
+            "name": "useNewZLibDecompression",
+            "type": "boolean",
+            "label": "Use new ZLib decompression library",
+            "required": true
+          }
+        ],
+        "expect": [
+          { "name": "url",           "type": "url",     "label": "URL",            "required": true },
+          { "name": "method",        "type": "select",  "label": "Method",         "required": true },
+          { "name": "headers",       "type": "array",   "label": "Headers"                          },
+          { "name": "bodyType",      "type": "select",  "label": "Body type"                        },
+          { "name": "contentType",   "type": "select",  "label": "Content type"                     },
+          { "name": "data",          "type": "string",  "label": "Request content"                  },
+          { "name": "parseResponse", "type": "boolean", "label": "Parse response"                   }
+        ],
+        "notes": "Error Handler — Resend alert to env.ADMIN_EMAIL on any scenario failure. FROM env.CWI_ALERT_FROM_ADDRESS. Subject: '[ERROR] Scenario R Upsell Campaign Failed — [client_name]'. HTML body includes error message, failed module, timestamp (ET), client name, client email, days_active, go_live_date from module 4 to allow manual follow-up. handleErrors: false so this module itself does not recurse on error."
+      }
+    }
+  ],
+  "metadata": {
+    "instant": false,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": true,
+      "slots": null,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": {
+      "orphans": []
+    },
+    "zone": "us1.make.com",
+    "notes": [
+      {
+        "id": 1,
+        "content": "Module 1: Schedule trigger — cron 0 11 20 * * — fires on the 20th of every month at 11:00 AM America/New_York.",
+        "position": { "x": 0, "y": -80 }
+      },
+      {
+        "id": 2,
+        "content": "Module 2: Google Sheets HTTP GET — /v4/spreadsheets/{ACTIVE_CLIENTS_SHEET_ID}/values/ActiveClients — returns all rows from the ActiveClients tab. Auth: Bearer env.GOOGLE_SHEETS_ACCESS_TOKEN.",
+        "position": { "x": 300, "y": -80 }
+      },
+      {
+        "id": 3,
+        "content": "Module 3: Iterator — loops over each data row in 2.data.values (skipping header row via slice). One bundle per client. Expected cols: [0] client_name, [1] email, [2] tier, [3] go_live_date.",
+        "position": { "x": 600, "y": -80 }
+      },
+      {
+        "id": 4,
+        "content": "Module 4: SetVariable — extracts client_name, client_email, tier, go_live_date. Calculates days_active (ceiling of dateDifference). Sets upsell_ready = true when days_active >= 60. Sets run_date (today ET).",
+        "position": { "x": 900, "y": -80 }
+      },
+      {
+        "id": 5,
+        "content": "Module 5: Router — Route 1 (Upsell Ready): tier == Starter AND upsell_ready == true → proceeds to modules 6, 7, 8. Route 2 (Skip): upsell_ready == false → terminates for that client.",
+        "position": { "x": 1200, "y": -80 }
+      },
+      {
+        "id": 6,
+        "content": "Module 6: OpenRouter HTTP POST — anthropic/claude-sonnet-4-6 — generates a friendly 3-paragraph upgrade email body for client_name with days_active. Suggests Growth at $397/mo (weekly digest, lead scoring, client health monitoring). Returns only the email body.",
+        "position": { "x": 1500, "y": -80 }
+      },
+      {
+        "id": 7,
+        "content": "Module 7: Resend HTTP POST — white-labeled client email. FROM 'Brian at [client_name] <env.RESEND_FROM_ADDRESS>'. TO: client email. Subject: 'You have outgrown Starter — here is what is next'. Body: Claude-generated email (module 6). Plain text.",
+        "position": { "x": 1800, "y": -80 }
+      },
+      {
+        "id": 8,
+        "content": "Module 8: Resend HTTP POST — internal upsell alert to Brian. FROM env.CWI_ALERT_FROM_ADDRESS. TO env.ADMIN_EMAIL. Subject: 'Upsell email sent to [client_name] — [N] days active on Starter'. HTML table with client details and upgrade context.",
+        "position": { "x": 2100, "y": -80 }
+      },
+      {
+        "id": 9,
+        "content": "Module 9: Error Handler — Resend alert to env.ADMIN_EMAIL on any failure. Includes error message, failed module, timestamp ET, client name, client email, days_active, go_live_date for manual follow-up.",
+        "position": { "x": 1500, "y": 220 }
+      }
+    ]
+  },
+  "environment_variables": {
+    "ACTIVE_CLIENTS_SHEET_ID": "Google Sheets spreadsheet ID for the ActiveClients workbook",
+    "GOOGLE_SHEETS_ACCESS_TOKEN": "OAuth 2.0 access token (or service account token) with read access to the ActiveClients Google Sheet",
+    "OPENROUTER_API_KEY": "OpenRouter API key for Claude access",
+    "OPENROUTER_REFERRER": "HTTP-Referer header value for OpenRouter requests (e.g. https://cwiai.net)",
+    "RESEND_API_KEY": "Resend API key for sending emails",
+    "RESEND_FROM_ADDRESS": "Verified sender address for white-labeled client emails (e.g. brian@cwiai.net)",
+    "CWI_ALERT_FROM_ADDRESS": "Verified sender address for internal CWI alerts (e.g. alerts@cwiai.net)",
+    "ADMIN_EMAIL": "Brian's email address for internal upsell alerts and error notifications"
+  }
+}

@@ -1,0 +1,316 @@
+{
+  "name": "Scenario F: Payment Logging",
+  "description": "Logs Stripe payments to HubSpot, routes setup vs recurring payments, and emails errors to {{env.ADMIN_EMAIL}} via Resend.",
+  "comments": "STRIPE WEBHOOK VERIFICATION NOTE: Make.com's Stripe webhook module automatically validates the Stripe-Signature header using your configured Stripe webhook secret. Ensure the webhook secret from your Stripe Dashboard (Developers > Webhooks > your endpoint > Signing secret) is entered in the Stripe module connection settings. Do NOT expose this secret in code or logs. Stripe signs each event with HMAC-SHA256; Make verifies this before passing data downstream. If verification fails, the scenario will not process the event.",
+  "flow": [
+    {
+      "id": 1,
+      "module": "stripe:TriggerWebhook",
+      "version": 1,
+      "parameters": {
+        "hookName": "Stripe — payment_intent.succeeded",
+        "event": "payment_intent.succeeded"
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 0, "y": 0 },
+        "restore": {
+          "parameters": {
+            "hookName": {
+              "label": "CWI Stripe Webhook — payment_intent.succeeded"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "module": "builtin:BasicFeeder",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "amount": "{{formatNumber(1.data.amount / 100; 2)}}",
+        "currency": "{{upper(1.data.currency)}}",
+        "customer_email": "{{1.data.receipt_email}}",
+        "payment_date": "{{formatDate(toDate(1.data.created * 1000); 'YYYY-MM-DD'; 'America/New_York')}}",
+        "description": "{{ifempty(1.data.description; 'No description provided')}}"
+      },
+      "metadata": {
+        "designer": { "x": 300, "y": 0 },
+        "note": "Extracts and normalizes payment fields from Stripe event. Amount is converted from cents to dollars. Payment date formatted in America/New_York (Eastern Time)."
+      }
+    },
+    {
+      "id": 3,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDecompress": true
+      },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/companies/search",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.HUBSPOT_ACCESS_TOKEN}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"filterGroups\": [\n    {\n      \"filters\": [\n        {\n          \"propertyName\": \"domain\",\n          \"operator\": \"EQ\",\n          \"value\": \"{{split(2.customer_email; '@')[2]}}\"\n        }\n      ]\n    }\n  ],\n  \"properties\": [\"name\", \"domain\", \"hs_object_id\"],\n  \"limit\": 1\n}",
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": { "x": 600, "y": 0 },
+        "note": "HTTP POST to HubSpot CRM v3 Companies Search API. Searches for a company whose domain matches the email domain extracted from customer_email."
+      }
+    },
+    {
+      "id": 4,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDecompress": true
+      },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/notes",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.HUBSPOT_ACCESS_TOKEN}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"properties\": {\n    \"hs_note_body\": \"Payment received: ${{2.amount}} {{2.currency}} on {{2.payment_date}} \\u2014 {{2.description}}\",\n    \"hs_timestamp\": \"{{formatDate(now; 'X') * 1000}}\",\n    \"hubspot_owner_id\": \"\"\n  },\n  \"associations\": [\n    {\n      \"to\": {\n        \"id\": \"{{3.body.results[0].id}}\"\n      },\n      \"types\": [\n        {\n          \"associationCategory\": \"HUBSPOT_DEFINED\",\n          \"associationTypeId\": 279\n        }\n      ]\n    }\n  ]\n}",
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": { "x": 900, "y": 0 },
+        "note": "HTTP POST to HubSpot CRM v3 Notes API. Creates an engagement note of type payment_received associated with the matched company. associationTypeId 279 = Company-to-Note."
+      }
+    },
+    {
+      "id": 5,
+      "module": "builtin:RouterModule",
+      "version": 1,
+      "parameters": {},
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 1200, "y": 0 },
+        "note": "Routes payment based on description content. Branch A handles setup payments; Branch B handles monthly/recurring payments."
+      },
+      "routes": [
+        {
+          "id": "branch-a-setup",
+          "label": "Branch A — Setup Payment",
+          "filter": {
+            "name": "Description contains 'setup'",
+            "conditions": [
+              [
+                {
+                  "a": "{{lower(2.description)}}",
+                  "b": "setup",
+                  "o": "text:contain"
+                }
+              ]
+            ]
+          },
+          "flow": [
+            {
+              "id": 6,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": true,
+                "useNewZLibDecompress": true
+              },
+              "mapper": {
+                "url": "https://api.hubapi.com/crm/v3/objects/deals/search",
+                "method": "POST",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.HUBSPOT_ACCESS_TOKEN}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\n  \"filterGroups\": [\n    {\n      \"filters\": [\n        {\n          \"propertyName\": \"dealstage\",\n          \"operator\": \"EQ\",\n          \"value\": \"{{env.HUBSPOT_STAGE_PROPOSAL_SENT}}\"\n        },\n        {\n          \"propertyName\": \"associations.company\",\n          \"operator\": \"EQ\",\n          \"value\": \"{{3.body.results[0].id}}\"\n        }\n      ]\n    }\n  ],\n  \"properties\": [\"dealname\", \"dealstage\", \"hs_object_id\"],\n  \"limit\": 1\n}",
+                "parseResponse": true
+              },
+              "metadata": {
+                "designer": { "x": 1500, "y": -200 },
+                "note": "Searches HubSpot for deals in 'Proposal Sent' stage (dealstage = env.HUBSPOT_STAGE_PROPOSAL_SENT) associated with the matched company."
+              }
+            },
+            {
+              "id": 7,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": true,
+                "useNewZLibDecompress": true
+              },
+              "mapper": {
+                "url": "https://api.hubapi.com/crm/v3/objects/deals/{{6.body.results[0].id}}",
+                "method": "PATCH",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.HUBSPOT_ACCESS_TOKEN}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\n  \"properties\": {\n    \"dealstage\": \"{{env.HUBSPOT_STAGE_CLOSED_WON}}\"\n  }\n}",
+                "parseResponse": true
+              },
+              "metadata": {
+                "designer": { "x": 1800, "y": -200 },
+                "note": "Branch A: Moves the matched deal from 'Proposal Sent' (env.HUBSPOT_STAGE_PROPOSAL_SENT) to 'Closed Won' (env.HUBSPOT_STAGE_CLOSED_WON) in HubSpot pipeline."
+              }
+            }
+          ]
+        },
+        {
+          "id": "branch-b-monthly",
+          "label": "Branch B — Monthly Recurring Payment",
+          "filter": {
+            "name": "Description contains 'monthly'",
+            "conditions": [
+              [
+                {
+                  "a": "{{lower(2.description)}}",
+                  "b": "monthly",
+                  "o": "text:contain"
+                }
+              ]
+            ]
+          },
+          "flow": [
+            {
+              "id": 8,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": true,
+                "useNewZLibDecompress": true
+              },
+              "mapper": {
+                "url": "https://api.hubapi.com/crm/v3/objects/notes",
+                "method": "POST",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.HUBSPOT_ACCESS_TOKEN}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\n  \"properties\": {\n    \"hs_note_body\": \"[RECURRING] Monthly payment logged: ${{2.amount}} {{2.currency}} on {{2.payment_date}}. Description: {{2.description}}. Customer: {{2.customer_email}}\",\n    \"hs_timestamp\": \"{{formatDate(now; 'X') * 1000}}\"\n  },\n  \"associations\": [\n    {\n      \"to\": {\n        \"id\": \"{{3.body.results[0].id}}\"\n      },\n      \"types\": [\n        {\n          \"associationCategory\": \"HUBSPOT_DEFINED\",\n          \"associationTypeId\": 279\n        }\n      ]\n    }\n  ]\n}",
+                "parseResponse": true
+              },
+              "metadata": {
+                "designer": { "x": 1500, "y": 200 },
+                "note": "Branch B: Logs a recurring monthly payment activity note in HubSpot associated with the matched company. Prefixed with [RECURRING] for easy filtering."
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errorHandlers": [
+    {
+      "id": 9,
+      "label": "Error Handler — Failed Payment Logger (Resend)",
+      "type": "error",
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": false,
+        "useNewZLibDecompress": true
+      },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.RESEND_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"{{env.ADMIN_EMAIL}}\"],\n  \"subject\": \"[ERROR] Make.com — Scenario F Payment Logging Failed\",\n  \"html\": \"<h2>Payment Logging Error — Scenario F</h2><p>A payment event failed to process. Please review and manually log this payment in HubSpot.</p><hr><h3>Payment Details</h3><ul><li><strong>Amount:</strong> ${{2.amount}} {{2.currency}}</li><li><strong>Customer Email:</strong> {{2.customer_email}}</li><li><strong>Payment Date:</strong> {{2.payment_date}}</li><li><strong>Description:</strong> {{2.description}}</li><li><strong>Stripe Payment Intent ID:</strong> {{1.data.id}}</li><li><strong>Stripe Customer ID:</strong> {{1.data.customer}}</li><li><strong>Stripe Status:</strong> {{1.data.status}}</li></ul><hr><h3>Error Details</h3><ul><li><strong>Error Message:</strong> {{error.message}}</li><li><strong>Failed Module:</strong> {{error.module}}</li><li><strong>Scenario Run ID:</strong> {{scenario.runId}}</li><li><strong>Timestamp:</strong> {{formatDate(now; 'YYYY-MM-DD HH:mm:ss'; 'America/New_York')}} ET</li></ul><hr><p><em>This is an automated alert from Make.com CWI Automation — Scenario F: Payment Logging.</em></p>\"\n}",
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": { "x": 900, "y": 400 },
+        "note": "Catches any error from modules 2-8 and sends a detailed failure email to env.ADMIN_EMAIL via the Resend API (POST https://api.resend.com/emails) with full payment details, Stripe IDs, error message, and the failed module name for fast manual remediation. Timestamp shown in America/New_York (Eastern Time)."
+      }
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false,
+      "timezone": "America/New_York"
+    },
+    "designer": {
+      "orphans": []
+    },
+    "zone": "us1.make.com"
+  },
+  "connections": {
+    "stripe": {
+      "label": "CWI Stripe Connection",
+      "note": "Requires Stripe API key (restricted key with webhook read access) and the webhook signing secret for HMAC-SHA256 signature verification."
+    }
+  },
+  "setupInstructions": {
+    "step1_stripe_webhook": "In Stripe Dashboard: Developers > Webhooks > Add endpoint. Set endpoint URL to your Make.com webhook URL. Select event type: payment_intent.succeeded. Copy the Signing Secret and paste it into the Stripe module connection in Make.com.",
+    "step2_hubspot_scopes": "Create a HubSpot Private App with these scopes: crm.objects.companies.read, crm.objects.deals.read, crm.objects.deals.write, crm.objects.notes.write, crm.objects.contacts.read. Store the generated access token in the env.HUBSPOT_ACCESS_TOKEN environment variable referenced by the HTTP module Authorization headers.",
+    "step3_deal_stages": "Verify your HubSpot pipeline stage IDs. This blueprint references env.HUBSPOT_STAGE_PROPOSAL_SENT for Proposal Sent and env.HUBSPOT_STAGE_CLOSED_WON for Closed Won. Run GET https://api.hubapi.com/crm/v3/pipelines/deals to confirm your pipeline stage IDs and set the env vars accordingly. Also define env.HUBSPOT_STAGE_CLOSED_LOST for downstream scenarios.",
+    "step4_error_email": "The error handler sends to env.ADMIN_EMAIL via the Resend API. Set env.RESEND_API_KEY, env.CWI_ALERT_FROM_ADDRESS (a verified Resend sender domain address), and env.ADMIN_EMAIL. No SMTP/Gmail connection is required.",
+    "step5_testing": "Test with Stripe CLI: stripe trigger payment_intent.succeeded. Then test Branch A by setting description to include 'setup', and Branch B by setting description to include 'monthly'. Verify HubSpot notes and deal stage changes."
+  }
+}

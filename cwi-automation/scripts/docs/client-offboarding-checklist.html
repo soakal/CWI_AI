@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CWI AI — Client Offboarding Checklist</title>
+<style>
+  :root {
+    --accent: #FF5A1F;
+    --accent-dark: #d44a15;
+    --accent-light: #fff3ee;
+    --bg: #f8f9fa;
+    --card: #ffffff;
+    --border: #e2e8f0;
+    --text: #1a202c;
+    --muted: #718096;
+    --green: #38a169;
+    --green-light: #f0fff4;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.04);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 24px 16px 48px;
+  }
+
+  .page-header {
+    max-width: 760px;
+    margin: 0 auto 28px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .logo-mark {
+    width: 42px;
+    height: 42px;
+    background: var(--accent);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .logo-mark svg { width: 24px; height: 24px; fill: #fff; }
+
+  .page-title h1 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.2;
+  }
+
+  .page-title p {
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    box-shadow: var(--shadow);
+    max-width: 760px;
+    margin: 0 auto 20px;
+  }
+
+  .card-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+
+  .fields-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .field-group { display: flex; flex-direction: column; gap: 5px; }
+  .field-group.full { grid-column: 1 / -1; }
+
+  label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  input[type="text"],
+  input[type="date"],
+  select,
+  textarea {
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-size: 0.92rem;
+    color: var(--text);
+    background: var(--bg);
+    transition: border-color 0.15s;
+    width: 100%;
+    font-family: inherit;
+  }
+
+  input[type="text"]:focus,
+  input[type="date"]:focus,
+  select:focus,
+  textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: #fff;
+  }
+
+  textarea { resize: vertical; min-height: 70px; }
+
+  /* Progress bar */
+  .progress-wrapper {
+    max-width: 760px;
+    margin: 0 auto 20px;
+  }
+
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
+  }
+
+  .progress-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--muted);
+  }
+
+  .progress-pct {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .progress-track {
+    height: 10px;
+    background: var(--border);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), #ff8c5a);
+    border-radius: 99px;
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 0%;
+  }
+
+  .progress-fill.complete {
+    background: linear-gradient(90deg, var(--green), #68d391);
+  }
+
+  /* Section */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .section-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--accent-light);
+    color: var(--accent);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    padding: 4px 10px;
+    border-radius: 99px;
+    border: 1px solid rgba(255,90,31,0.2);
+  }
+
+  .section-badge.green {
+    background: var(--green-light);
+    color: var(--green);
+    border-color: rgba(56,161,105,0.2);
+  }
+
+  .section-badge.blue {
+    background: #ebf8ff;
+    color: #2b6cb0;
+    border-color: rgba(43,108,176,0.2);
+  }
+
+  .section-count {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-left: auto;
+  }
+
+  .checklist { display: flex; flex-direction: column; gap: 2px; }
+
+  .check-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.1s;
+    user-select: none;
+  }
+
+  .check-item:hover { background: var(--bg); }
+
+  .check-item.done { background: #f0fff4; }
+
+  .check-item input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    flex-shrink: 0;
+    margin-top: 1px;
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+    background: #fff;
+  }
+
+  .check-item input[type="checkbox"]:checked {
+    background: var(--green);
+    border-color: var(--green);
+  }
+
+  .check-item input[type="checkbox"]:checked::after {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 2px;
+    width: 6px;
+    height: 10px;
+    border: 2px solid #fff;
+    border-top: none;
+    border-left: none;
+    transform: rotate(45deg);
+  }
+
+  .check-label {
+    font-size: 0.92rem;
+    line-height: 1.45;
+    color: var(--text);
+    flex: 1;
+  }
+
+  .check-item.done .check-label {
+    color: var(--muted);
+    text-decoration: line-through;
+  }
+
+  /* Client selector */
+  .client-toolbar {
+    max-width: 760px;
+    margin: 0 auto 16px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .client-toolbar select {
+    flex: 1;
+    min-width: 180px;
+    max-width: 300px;
+  }
+
+  .btn {
+    padding: 9px 18px;
+    border-radius: 8px;
+    border: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .btn-primary:hover { background: var(--accent-dark); }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--muted);
+    border: 1.5px solid var(--border);
+  }
+
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+  .btn-danger {
+    background: transparent;
+    color: #e53e3e;
+    border: 1.5px solid #fed7d7;
+  }
+
+  .btn-danger:hover { background: #fff5f5; }
+
+  /* Analytics */
+  .analytics-card { margin-top: 8px; }
+
+  .analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .stat-pill {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    text-align: center;
+  }
+
+  .stat-pill .stat-num {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .stat-pill .stat-label {
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin-top: 4px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .chart-title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 12px;
+  }
+
+  .bar-chart { display: flex; flex-direction: column; gap: 10px; }
+
+  .bar-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .bar-reason-label {
+    font-size: 0.82rem;
+    color: var(--text);
+    width: 160px;
+    flex-shrink: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .bar-track {
+    flex: 1;
+    height: 22px;
+    background: var(--bg);
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), #ff8c5a);
+    border-radius: 6px;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    padding-left: 8px;
+    min-width: 2px;
+  }
+
+  .bar-count {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-left: 8px;
+    width: 30px;
+    flex-shrink: 0;
+  }
+
+  .empty-analytics {
+    text-align: center;
+    padding: 32px;
+    color: var(--muted);
+    font-size: 0.88rem;
+  }
+
+  /* Save indicator */
+  .save-toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--green);
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+    z-index: 999;
+    pointer-events: none;
+  }
+
+  .save-toast.show {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 20px 0;
+  }
+
+  @media (max-width: 560px) {
+    .fields-grid { grid-template-columns: 1fr; }
+    .bar-reason-label { width: 100px; font-size: 0.75rem; }
+  }
+
+  @media print {
+    body { background: #fff; padding: 0; }
+    .btn, .client-toolbar, .save-toast { display: none !important; }
+    .card { box-shadow: none; border: 1px solid #ccc; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="logo-mark">
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+  </div>
+  <div class="page-title">
+    <h1>Client Offboarding Checklist</h1>
+    <p>CWI AI — Track every step when a client cancels</p>
+  </div>
+</div>
+
+<!-- Client Toolbar -->
+<div class="client-toolbar">
+  <label style="font-size:0.78rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;align-self:center;">Load Client:</label>
+  <select id="clientSelector" onchange="loadClient()">
+    <option value="">-- New Offboarding --</option>
+  </select>
+  <button class="btn btn-ghost" onclick="newOffboarding()">+ New</button>
+  <button class="btn btn-danger" onclick="deleteCurrentClient()" id="deleteBtn" style="display:none;">Delete</button>
+  <button class="btn btn-primary" onclick="exportPDF()" style="margin-left:auto;">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    Export PDF
+  </button>
+</div>
+
+<!-- Client Fields -->
+<div class="card">
+  <div class="card-title">Client Information</div>
+  <div class="fields-grid">
+    <div class="field-group">
+      <label for="clientName">Client Name</label>
+      <input type="text" id="clientName" placeholder="Acme Corp" oninput="autoSave()">
+    </div>
+    <div class="field-group">
+      <label for="cancelDate">Cancellation Date</label>
+      <input type="date" id="cancelDate" oninput="autoSave()">
+    </div>
+    <div class="field-group">
+      <label for="cancelReason">Cancellation Reason</label>
+      <select id="cancelReason" onchange="autoSave()">
+        <option value="">-- Select Reason --</option>
+        <option value="Price">Price</option>
+        <option value="Results">Results</option>
+        <option value="No longer needed">No longer needed</option>
+        <option value="Switching tools">Switching tools</option>
+        <option value="Business closed">Business closed</option>
+        <option value="Other">Other</option>
+      </select>
+    </div>
+    <div class="field-group">
+      <label for="notes">Notes</label>
+      <textarea id="notes" placeholder="Additional context about this offboarding..." oninput="autoSave()"></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- Progress Bar -->
+<div class="progress-wrapper">
+  <div class="progress-header">
+    <span class="progress-label">Overall Completion</span>
+    <span class="progress-pct" id="progressPct">0%</span>
+  </div>
+  <div class="progress-track">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
+</div>
+
+<!-- Section 1: Immediate -->
+<div class="card">
+  <div class="section-header">
+    <div class="section-badge">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Immediate — Day 1
+    </div>
+    <span class="section-count" id="count-1"></span>
+  </div>
+  <div class="checklist" id="section-1">
+    <label class="check-item" onclick="toggleItem(this)">
+      <input type="checkbox" data-key="ack-email">
+      <span class="check-label">Acknowledge cancellation email sent to client</span>
+    </label>
+    <label class="check-item" onclick="toggleItem(this)">
+      <input type="checkbox" data-key="stripe-cancel">
+      <span class="check-label">Stripe subscription cancelled</span>
+    </label>
+    <label class="check-item" onclick="toggleItem(this)">
+      <input type="checkbox" data-key="make-paused">
+      <span class="check-label">Make scenarios paused</span>
+    </label>
+    <label class="check-item" onclick="toggleItem(this)">
+      <input type="checkbox" data-key="brian-notified">
+      <span class="check-label">Brian notified of cancellation</span>
+    </label>
+    <label class="check-item" onclick="toggleItem(this)">
+      <input type="checkbox" data-key="hubspot-closed">
+      <span class="check-label">HubSpot deal moved to Closed Lost</span>
+    </label>
+  </div>
+</div>
+
+<!-- Section 2: Within 3 Days -->
+<div class="card">
+  <div class="section-header">
+    <div class="section-badge green">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Within 3 Days
+    </div>
+    <span class="section-count" id="count-2"></span>
+  </div>
+  <div class="checklist" id="section-2">
+    <label class="check-item" onclick="toggleItem(this)">
+      <input type="checkbox" data-key="winback-email">
+      <span class="check-label">Win-back email sent (auto via scenario-w)</span>
+    </label>
+    <label class="check-item" onclick="toggleItem(this)">
+      <input type="checkbox" data-key="final-report">
+      <span class="check-label">Final monthly report sent to client</span>
+    </label>
+    <label class="check-item" onclick="toggleItem(this)">
+      <input type="checkbox" data-key="creds-revoked">
+      <span class="check-label">Access credentials revoked</span>
+    </label>
+    <label class="check-item" onclick="toggleItem(this)">
+      <input type="checkbox" data-key="dns-removal">
+      <span class="check-label">DNS records removal instructions sent</span>
+    </label>
+    <label class="check-item" onclick="toggleItem(this)">
+      <input type="checkbox" data-key="freshchat-removed">
+      <span class="check-label">Freshchat bot removed from client site</span>
+    </label>
+  </div>
+</div>
+
+<!-- Section 3: Within 7 Days -->
+<div class="card">
+  <div class="section-header">
+    <div class="section-badge blue">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      Within 7 Days
+    </div>
+    <span class="section-count" id="count-3"></span>
+  </div>
+  <div class="checklist" id="section-3">
+    <label class="check-item" onclick="toggleItem(this)">
+      <input type="checkbox" data-key="folder-archived">
+      <span class="check-label">Client folder archived in file system</span>
+    </label>
+    <label class="check-item" onclick="toggleItem(this)">
+      <input type="checkbox" data-key="survey-sent">
+      <span class="check-label">Offboarding survey sent</span>
+    </label>
+    <label class="check-item" onclick="toggleItem(this)">
+      <input type="checkbox" data-key="case-study">
+      <span class="check-label">Case study opportunity evaluated</span>
+    </label>
+    <label class="check-item" onclick="toggleItem(this)">
+      <input type="checkbox" data-key="testimonial">
+      <span class="check-label">Testimonial requested (if ended positively)</span>
+    </label>
+    <label class="check-item" onclick="toggleItem(this)">
+      <input type="checkbox" data-key="linkedin">
+      <span class="check-label">LinkedIn connection sent to stay in touch</span>
+    </label>
+  </div>
+</div>
+
+<!-- Analytics -->
+<div class="card analytics-card">
+  <div class="card-title">Reason Analytics — All Offboardings</div>
+  <div class="analytics-grid" id="analyticsStats"></div>
+  <div class="divider"></div>
+  <div class="chart-title">Cancellation Reason Distribution</div>
+  <div class="bar-chart" id="reasonChart"></div>
+</div>
+
+<div class="save-toast" id="saveToast">Saved</div>
+
+<script>
+  const STORAGE_KEY = 'cwi_offboardings';
+  const ALL_KEYS = [
+    'ack-email','stripe-cancel','make-paused','brian-notified','hubspot-closed',
+    'winback-email','final-report','creds-revoked','dns-removal','freshchat-removed',
+    'folder-archived','survey-sent','case-study','testimonial','linkedin'
+  ];
+  const REASONS = ['Price','Results','No longer needed','Switching tools','Business closed','Other'];
+
+  let currentId = null;
+  let saveTimer = null;
+
+  function getData() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch { return {}; }
+  }
+
+  function saveData(data) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }
+
+  function genId() {
+    return 'ob_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+  }
+
+  function populateSelector() {
+    const data = getData();
+    const sel = document.getElementById('clientSelector');
+    const prev = sel.value;
+    while (sel.options.length > 1) sel.remove(1);
+    const entries = Object.entries(data).sort((a,b) => (b[1].updatedAt||0) - (a[1].updatedAt||0));
+    entries.forEach(([id, record]) => {
+      const opt = document.createElement('option');
+      opt.value = id;
+      opt.textContent = record.clientName || '(Unnamed)';
+      if (record.cancelDate) opt.textContent += ' — ' + record.cancelDate;
+      sel.appendChild(opt);
+    });
+    if (prev && data[prev]) sel.value = prev;
+  }
+
+  function newOffboarding() {
+    currentId = genId();
+    document.getElementById('clientSelector').value = '';
+    document.getElementById('deleteBtn').style.display = 'none';
+    clearForm();
+    document.getElementById('cancelDate').value = new Date().toISOString().slice(0,10);
+    updateProgress();
+    updateSectionCounts();
+  }
+
+  function clearForm() {
+    document.getElementById('clientName').value = '';
+    document.getElementById('cancelDate').value = '';
+    document.getElementById('cancelReason').value = '';
+    document.getElementById('notes').value = '';
+    ALL_KEYS.forEach(k => {
+      const cb = document.querySelector(`[data-key="${k}"]`);
+      if (cb) {
+        cb.checked = false;
+        cb.closest('.check-item').classList.remove('done');
+      }
+    });
+  }
+
+  function loadClient() {
+    const sel = document.getElementById('clientSelector');
+    const id = sel.value;
+    if (!id) { newOffboarding(); return; }
+    currentId = id;
+    document.getElementById('deleteBtn').style.display = '';
+    const data = getData();
+    const record = data[id] || {};
+    document.getElementById('clientName').value = record.clientName || '';
+    document.getElementById('cancelDate').value = record.cancelDate || '';
+    document.getElementById('cancelReason').value = record.cancelReason || '';
+    document.getElementById('notes').value = record.notes || '';
+    ALL_KEYS.forEach(k => {
+      const cb = document.querySelector(`[data-key="${k}"]`);
+      if (cb) {
+        cb.checked = !!(record.checks && record.checks[k]);
+        cb.closest('.check-item').classList.toggle('done', cb.checked);
+      }
+    });
+    updateProgress();
+    updateSectionCounts();
+  }
+
+  function getCurrentRecord() {
+    return {
+      clientName: document.getElementById('clientName').value.trim(),
+      cancelDate: document.getElementById('cancelDate').value,
+      cancelReason: document.getElementById('cancelReason').value,
+      notes: document.getElementById('notes').value.trim(),
+      checks: Object.fromEntries(ALL_KEYS.map(k => {
+        const cb = document.querySelector(`[data-key="${k}"]`);
+        return [k, cb ? cb.checked : false];
+      })),
+      updatedAt: Date.now()
+    };
+  }
+
+  function save() {
+    if (!currentId) currentId = genId();
+    const data = getData();
+    data[currentId] = getCurrentRecord();
+    saveData(data);
+    populateSelector();
+    document.getElementById('clientSelector').value = currentId;
+    document.getElementById('deleteBtn').style.display = '';
+    showToast();
+    renderAnalytics();
+  }
+
+  function autoSave() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(save, 600);
+    updateProgress();
+    updateSectionCounts();
+  }
+
+  function toggleItem(label) {
+    setTimeout(() => {
+      const cb = label.querySelector('input[type="checkbox"]');
+      if (cb) label.classList.toggle('done', cb.checked);
+      autoSave();
+    }, 0);
+  }
+
+  function updateProgress() {
+    const total = ALL_KEYS.length;
+    const done = ALL_KEYS.filter(k => {
+      const cb = document.querySelector(`[data-key="${k}"]`);
+      return cb && cb.checked;
+    }).length;
+    const pct = Math.round((done / total) * 100);
+    document.getElementById('progressPct').textContent = pct + '%';
+    const fill = document.getElementById('progressFill');
+    fill.style.width = pct + '%';
+    fill.classList.toggle('complete', pct === 100);
+  }
+
+  function updateSectionCounts() {
+    const sections = {
+      '1': ['ack-email','stripe-cancel','make-paused','brian-notified','hubspot-closed'],
+      '2': ['winback-email','final-report','creds-revoked','dns-removal','freshchat-removed'],
+      '3': ['folder-archived','survey-sent','case-study','testimonial','linkedin']
+    };
+    Object.entries(sections).forEach(([sec, keys]) => {
+      const done = keys.filter(k => {
+        const cb = document.querySelector(`[data-key="${k}"]`);
+        return cb && cb.checked;
+      }).length;
+      const el = document.getElementById('count-' + sec);
+      if (el) el.textContent = done + ' / ' + keys.length + ' done';
+    });
+  }
+
+  function showToast() {
+    const t = document.getElementById('saveToast');
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 1800);
+  }
+
+  function deleteCurrentClient() {
+    if (!currentId) return;
+    const name = document.getElementById('clientName').value || 'this record';
+    if (!confirm(`Delete offboarding for "${name}"? This cannot be undone.`)) return;
+    const data = getData();
+    delete data[currentId];
+    saveData(data);
+    currentId = null;
+    populateSelector();
+    newOffboarding();
+    renderAnalytics();
+  }
+
+  function renderAnalytics() {
+    const data = getData();
+    const records = Object.values(data);
+    const total = records.length;
+
+    const statsEl = document.getElementById('analyticsStats');
+    const chartEl = document.getElementById('reasonChart');
+
+    if (total === 0) {
+      statsEl.innerHTML = '';
+      chartEl.innerHTML = '<div class="empty-analytics">No offboarding records saved yet. Complete your first offboarding to see analytics.</div>';
+      return;
+    }
+
+    // Count reasons
+    const counts = {};
+    REASONS.forEach(r => counts[r] = 0);
+    records.forEach(r => { if (r.cancelReason && counts[r.cancelReason] !== undefined) counts[r.cancelReason]++; });
+
+    const completed = records.filter(r => {
+      if (!r.checks) return false;
+      return ALL_KEYS.every(k => r.checks[k]);
+    }).length;
+
+    // Stats pills
+    statsEl.innerHTML = `
+      <div class="stat-pill"><div class="stat-num">${total}</div><div class="stat-label">Total</div></div>
+      <div class="stat-pill"><div class="stat-num">${completed}</div><div class="stat-label">Fully Done</div></div>
+      <div class="stat-pill"><div class="stat-num">${total - completed}</div><div class="stat-label">In Progress</div></div>
+    `;
+
+    const maxCount = Math.max(...Object.values(counts), 1);
+    chartEl.innerHTML = REASONS.map(reason => {
+      const cnt = counts[reason];
+      const pct = Math.round((cnt / maxCount) * 100);
+      return `
+        <div class="bar-row">
+          <span class="bar-reason-label">${reason}</span>
+          <div class="bar-track">
+            <div class="bar-fill" style="width:${pct}%"></div>
+          </div>
+          <span class="bar-count">${cnt}</span>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function exportPDF() {
+    const clientName = document.getElementById('clientName').value || 'Client';
+    const cancelDate = document.getElementById('cancelDate').value || '';
+    document.title = `CWI AI Offboarding — ${clientName}${cancelDate ? ' ' + cancelDate : ''}`;
+    window.print();
+    document.title = 'CWI AI — Client Offboarding Checklist';
+  }
+
+  // Init
+  (function init() {
+    newOffboarding();
+    populateSelector();
+    renderAnalytics();
+    updateSectionCounts();
+
+    // Clicking label should not double-toggle since toggleItem uses setTimeout
+    document.querySelectorAll('.check-item').forEach(item => {
+      item.addEventListener('click', function(e) {
+        if (e.target.tagName === 'INPUT') {
+          // checkbox click is handled natively, just call toggleItem manually
+          const label = e.target.closest('.check-item');
+          setTimeout(() => {
+            label.classList.toggle('done', e.target.checked);
+            autoSave();
+          }, 0);
+          e.stopPropagation();
+        }
+      });
+    });
+  })();
+</script>
+</body>
+</html>

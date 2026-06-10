@@ -1,0 +1,604 @@
+{
+  "name": "scenario-ag-deal-won-celebration",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": "{{env.HUBSPOT_DEAL_WON_WEBHOOK_ID}}",
+        "maxResults": 1
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 0, "y": 0 },
+        "restore": {
+          "parameters": {
+            "hook": {
+              "label": "HubSpot Deal Property Change — dealstage = CLOSED_WON"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hook",
+            "type": "hook:gateway-webhook",
+            "label": "Webhook",
+            "required": true
+          },
+          {
+            "name": "maxResults",
+            "type": "number",
+            "label": "Maximum number of results"
+          }
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "module": "builtin:BasicFilter",
+      "version": 1,
+      "parameters": {},
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 300, "y": 0 }
+      },
+      "filter": {
+        "name": "Only Closed Won deals",
+        "conditions": [
+          [
+            {
+              "a": "{{1.body.propertyValue}}",
+              "b": "{{env.HUBSPOT_STAGE_CLOSED_WON}}",
+              "o": "text:equal"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/deals/{{1.body.objectId}}?properties=dealname,amount,createdate,closedate,dealstage,hubspot_owner_id",
+        "method": "GET",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "",
+        "timeout": 30,
+        "followRedirects": true,
+        "compress": true,
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": { "x": 600, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "GET" }
+          }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/deals/{{1.body.objectId}}/associations/contacts",
+        "method": "GET",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "",
+        "timeout": 30,
+        "followRedirects": true,
+        "compress": true,
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": { "x": 900, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "GET" }
+          }
+        }
+      }
+    },
+    {
+      "id": 5,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/contacts/{{4.data.results[].id}}?properties=email,firstname,lastname",
+        "method": "GET",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "",
+        "timeout": 30,
+        "followRedirects": true,
+        "compress": true,
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": { "x": 1200, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "GET" }
+          }
+        }
+      }
+    },
+    {
+      "id": 6,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/deals/search",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\"filterGroups\":[{\"filters\":[{\"propertyName\":\"dealstage\",\"operator\":\"EQ\",\"value\":\"{{env.HUBSPOT_STAGE_CLOSED_WON}}\"}]}],\"properties\":[\"dealname\",\"dealstage\"],\"limit\":1}",
+        "timeout": 30,
+        "followRedirects": true,
+        "compress": true,
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": { "x": 1500, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "POST" }
+          }
+        }
+      }
+    },
+    {
+      "id": 7,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "url": "https://api.stripe.com/v1/subscriptions?status=active&limit=100",
+        "method": "GET",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.STRIPE_SECRET_KEY}}"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/x-www-form-urlencoded",
+        "body": "",
+        "timeout": 30,
+        "followRedirects": true,
+        "compress": true,
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": { "x": 1800, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "GET" }
+          }
+        }
+      }
+    },
+    {
+      "id": 8,
+      "module": "builtin:SetVariable",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "dealName",
+        "scope": "roundtrip",
+        "type": "text",
+        "value": "{{ifempty(3.data.properties.dealname; \"New Client\")}}"
+      },
+      "metadata": {
+        "designer": { "x": 2100, "y": 0 }
+      }
+    },
+    {
+      "id": 9,
+      "module": "builtin:SetVariable",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "dealAmount",
+        "scope": "roundtrip",
+        "type": "text",
+        "value": "{{ifempty(3.data.properties.amount; \"0\")}}"
+      },
+      "metadata": {
+        "designer": { "x": 2100, "y": 150 }
+      }
+    },
+    {
+      "id": 10,
+      "module": "builtin:SetVariable",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "contactEmail",
+        "scope": "roundtrip",
+        "type": "text",
+        "value": "{{ifempty(5.data.properties.email; \"\")}}"
+      },
+      "metadata": {
+        "designer": { "x": 2100, "y": 300 }
+      }
+    },
+    {
+      "id": 11,
+      "module": "builtin:SetVariable",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "contactName",
+        "scope": "roundtrip",
+        "type": "text",
+        "value": "{{ifempty(trim(concat(ifempty(5.data.properties.firstname; \"\"); \" \"; ifempty(5.data.properties.lastname; \"\"))); ifempty(5.data.properties.email; \"the new client\"))}}"
+      },
+      "metadata": {
+        "designer": { "x": 2100, "y": 450 }
+      }
+    },
+    {
+      "id": 12,
+      "module": "builtin:SetVariable",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "createDate",
+        "scope": "roundtrip",
+        "type": "text",
+        "value": "{{formatDate(3.data.properties.createdate; \"MMMM D, YYYY\"; \"America/New_York\")}}"
+      },
+      "metadata": {
+        "designer": { "x": 2100, "y": 600 }
+      }
+    },
+    {
+      "id": 13,
+      "module": "builtin:SetVariable",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "closeDate",
+        "scope": "roundtrip",
+        "type": "text",
+        "value": "{{formatDate(ifempty(3.data.properties.closedate; now); \"MMMM D, YYYY\"; \"America/New_York\")}}"
+      },
+      "metadata": {
+        "designer": { "x": 2100, "y": 750 }
+      }
+    },
+    {
+      "id": 14,
+      "module": "builtin:SetVariable",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "totalClients",
+        "scope": "roundtrip",
+        "type": "number",
+        "value": "{{6.data.total}}"
+      },
+      "metadata": {
+        "designer": { "x": 2100, "y": 900 }
+      }
+    },
+    {
+      "id": 15,
+      "module": "builtin:SetVariable",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "totalMRR",
+        "scope": "roundtrip",
+        "type": "number",
+        "value": "{{divide(sum(map(7.data.data; item.plan.amount)); 100)}}"
+      },
+      "metadata": {
+        "designer": { "x": 2100, "y": 1050 }
+      }
+    },
+    {
+      "id": 16,
+      "module": "builtin:SetVariable",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "dealTier",
+        "scope": "roundtrip",
+        "type": "text",
+        "value": "{{if(parseNumber(9.dealAmount) >= 5000; \"Enterprise\"; if(parseNumber(9.dealAmount) >= 2000; \"Growth\"; if(parseNumber(9.dealAmount) >= 500; \"Starter\"; \"Basic\")))}}"
+      },
+      "metadata": {
+        "designer": { "x": 2100, "y": 1200 }
+      }
+    },
+    {
+      "id": 17,
+      "module": "builtin:SetVariable",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "todayDate",
+        "scope": "roundtrip",
+        "type": "text",
+        "value": "{{formatDate(now; \"MMMM D, YYYY\"; \"America/New_York\")}}"
+      },
+      "metadata": {
+        "designer": { "x": 2100, "y": 1350 }
+      }
+    },
+    {
+      "id": 18,
+      "module": "builtin:SetVariable",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "todayISO",
+        "scope": "roundtrip",
+        "type": "text",
+        "value": "{{formatDate(now; \"YYYY-MM-DD\"; \"America/New_York\")}}"
+      },
+      "metadata": {
+        "designer": { "x": 2100, "y": 1500 }
+      }
+    },
+    {
+      "id": 19,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.OPENROUTER_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "name": "HTTP-Referer",
+            "value": "{{env.APP_URL}}"
+          },
+          {
+            "name": "X-Title",
+            "value": "CWI Automation"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\"models\":[\"anthropic/claude-sonnet-4-6\",\"{{env.OPENROUTER_FALLBACK_MODEL}}\"],\"route\":\"fallback\",\"messages\":[{\"role\":\"system\",\"content\":\"You are writing a personal internal celebration email to Brian, the founder of CWI (Consultants With Integrity), a managed IT services and consulting company. Brian wins every client through hard work. Your emails are genuine, energetic, and brief. Output ONLY the email body — no subject line, no markdown, no bullet symbols. Use plain numbered lists only where needed. Sign off from CWI AI.\"},{\"role\":\"user\",\"content\":\"Write a personalized celebration email to Brian about closing a new deal. Here are the details:\\n\\nClient Name: {{8.dealName}}\\nContact: {{11.contactName}} ({{10.contactEmail}})\\nDeal Value: ${{9.dealAmount}}/mo\\nDeal Tier: {{16.dealTier}}\\nDeal Created: {{12.createDate}}\\nDeal Closed: {{13.closeDate}}\\nTotal Closed Won Clients (including this one): {{14.totalClients}}\\nCurrent Total MRR: ${{15.totalMRR}}/mo\\nToday: {{17.todayDate}}\\n\\nInstructions:\\n1. Open with a genuine, energetic congratulations on winning {{8.dealName}}.\\n2. Highlight the deal value (${{9.dealAmount}}/mo) and what tier this is ({{16.dealTier}}).\\n3. Show the current milestone: this is client number {{14.totalClients}}, and total MRR is now ${{15.totalMRR}}/mo.\\n4. If {{14.totalClients}} equals 1, 5, 10, or 25, include a special motivational milestone message celebrating that specific number (e.g., first client ever, 5th client, 10th client, 25th client). Make it feel historic and personal.\\n5. List exactly 3 most important next steps for onboarding {{8.dealName}} as a new client. Number them 1, 2, 3 — plain text, no bullet symbols.\\n6. Close with a brief motivating sign-off.\\n7. Keep the entire email under 300 words.\"}],\"max_tokens\":600,\"temperature\":0.7}",
+        "timeout": 60,
+        "followRedirects": true,
+        "compress": true,
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": { "x": 2400, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "POST" }
+          }
+        }
+      }
+    },
+    {
+      "id": 20,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.RESEND_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\"from\":\"{{env.CWI_ALERT_FROM_ADDRESS}}\",\"to\":[\"{{env.ALERT_EMAIL}}\"],\"subject\":\"New client won! {{8.dealName}} — {{16.dealTier}} — ${{9.dealAmount}}/mo\",\"text\":\"{{19.data.choices[].message.content}}\"}",
+        "timeout": 30,
+        "followRedirects": true,
+        "compress": true,
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": { "x": 2700, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "POST" }
+          }
+        }
+      }
+    },
+    {
+      "id": 21,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/deals/{{1.body.objectId}}",
+        "method": "PATCH",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\"properties\":{\"closedate\":\"{{ifempty(3.data.properties.closedate; formatDate(now; 'x'; 'America/New_York'))}}\"}}",
+        "timeout": 30,
+        "followRedirects": true,
+        "compress": true,
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": { "x": 3000, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "PATCH" }
+          }
+        }
+      }
+    },
+    {
+      "id": 22,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/notes",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\"properties\":{\"hs_note_body\":\"Deal won — onboarding initiated {{18.todayISO}}. Client: {{8.dealName}} | Contact: {{11.contactName}} ({{10.contactEmail}}) | Amount: ${{9.dealAmount}}/mo | Tier: {{16.dealTier}} | Total clients: {{14.totalClients}} | MRR: ${{15.totalMRR}}/mo. Celebration email sent to Brian.\",\"hs_timestamp\":\"{{formatDate(now; 'x')}}\"},\"associations\":[{\"to\":{\"id\":\"{{1.body.objectId}}\"},\"types\":[{\"associationCategory\":\"HUBSPOT_DEFINED\",\"associationTypeId\":214}]}]}",
+        "timeout": 30,
+        "followRedirects": true,
+        "compress": true,
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": { "x": 3300, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "POST" }
+          }
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "slots": null,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": {
+      "orphans": []
+    },
+    "zone": "us1.make.com",
+    "notes": "Fires on HubSpot deal property change webhook when dealstage equals env.HUBSPOT_STAGE_CLOSED_WON. Fetches full deal details (dealname, amount, createdate, closedate) and associated contact (email, name) from HubSpot. Counts total Closed Won deals via HubSpot search to determine client number. Fetches active Stripe subscriptions to calculate current MRR. Uses OpenRouter (anthropic/claude-sonnet-4-6 with fallback) to generate a personalized celebration email to Brian including deal value, total client count, current MRR, special milestone messages for clients #1/#5/#10/#25, and 3 onboarding next steps. Sends celebration email to env.ALERT_EMAIL via Resend from env.CWI_ALERT_FROM_ADDRESS. Updates HubSpot deal to set closedate if not already set. Adds a timestamped note on the deal: 'Deal won — onboarding initiated [date]'. Timezone: America/New_York."
+  },
+  "environment": {
+    "HUBSPOT_DEAL_WON_WEBHOOK_ID": "env.HUBSPOT_DEAL_WON_WEBHOOK_ID",
+    "HUBSPOT_STAGE_CLOSED_WON": "env.HUBSPOT_STAGE_CLOSED_WON",
+    "HUBSPOT_PRIVATE_APP_TOKEN": "env.HUBSPOT_PRIVATE_APP_TOKEN",
+    "STRIPE_SECRET_KEY": "env.STRIPE_SECRET_KEY",
+    "OPENROUTER_API_KEY": "env.OPENROUTER_API_KEY",
+    "OPENROUTER_FALLBACK_MODEL": "env.OPENROUTER_FALLBACK_MODEL",
+    "APP_URL": "env.APP_URL",
+    "RESEND_API_KEY": "env.RESEND_API_KEY",
+    "CWI_ALERT_FROM_ADDRESS": "env.CWI_ALERT_FROM_ADDRESS",
+    "ALERT_EMAIL": "env.ALERT_EMAIL"
+  }
+}

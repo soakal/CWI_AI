@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Video Script Templates — CWI AI Marketing</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --accent: #FF5A1F;
+    --accent-dark: #D94A10;
+    --accent-light: #FFF0EB;
+    --bg: #F9FAFB;
+    --surface: #FFFFFF;
+    --border: #E5E7EB;
+    --text: #111827;
+    --text-muted: #6B7280;
+    --text-light: #9CA3AF;
+    --success: #10B981;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+    --shadow: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.06);
+    --shadow-lg: 0 10px 25px rgba(0,0,0,0.1), 0 4px 10px rgba(0,0,0,0.06);
+    --radius: 10px;
+    --radius-sm: 6px;
+    --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    --font-mono: 'Consolas', 'Courier New', monospace;
+  }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  .site-header {
+    background: var(--text);
+    padding: 18px 32px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .site-header .logo-icon {
+    width: 36px; height: 36px;
+    background: var(--accent);
+    border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .site-header .logo-icon svg { width: 20px; height: 20px; fill: #fff; }
+  .site-header .brand { color: #fff; font-weight: 700; font-size: 1.1rem; letter-spacing: .01em; }
+  .site-header .brand span { color: var(--accent); }
+  .site-header .tagline { margin-left: auto; color: #9CA3AF; font-size: .82rem; }
+
+  /* ── Page Layout ── */
+  .page-wrap {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 32px 24px 60px;
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 28px;
+    align-items: start;
+  }
+
+  .main-col { min-width: 0; }
+
+  /* ── Page Title ── */
+  .page-title-block { margin-bottom: 28px; }
+  .page-title-block h1 { font-size: 1.75rem; font-weight: 800; color: var(--text); line-height: 1.25; }
+  .page-title-block h1 span { color: var(--accent); }
+  .page-title-block p { margin-top: 6px; color: var(--text-muted); font-size: .95rem; }
+
+  /* ── Tabs ── */
+  .tab-bar {
+    display: flex;
+    gap: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 5px;
+    margin-bottom: 24px;
+    overflow-x: auto;
+    box-shadow: var(--shadow-sm);
+  }
+  .tab-btn {
+    flex: 1;
+    min-width: 120px;
+    padding: 9px 16px;
+    border: none;
+    background: transparent;
+    border-radius: var(--radius-sm);
+    font-family: var(--font);
+    font-size: .82rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all .18s ease;
+    white-space: nowrap;
+    text-align: center;
+    line-height: 1.3;
+  }
+  .tab-btn:hover { background: var(--accent-light); color: var(--accent); }
+  .tab-btn.active { background: var(--accent); color: #fff; box-shadow: 0 2px 8px rgba(255,90,31,.35); }
+  .tab-btn .tab-duration {
+    display: block;
+    font-size: .72rem;
+    font-weight: 400;
+    opacity: .8;
+    margin-top: 1px;
+  }
+
+  /* ── Script Panel ── */
+  .script-panel { display: none; }
+  .script-panel.active { display: block; }
+
+  .script-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+
+  .script-card-header {
+    padding: 20px 24px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .script-card-header .info h2 { font-size: 1.2rem; font-weight: 800; }
+  .script-card-header .info p { color: var(--text-muted); font-size: .875rem; margin-top: 3px; }
+
+  .meta-pills {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .pill {
+    padding: 4px 11px;
+    border-radius: 999px;
+    font-size: .78rem;
+    font-weight: 600;
+  }
+  .pill-orange { background: var(--accent-light); color: var(--accent); border: 1px solid #FFD5C2; }
+  .pill-gray   { background: #F3F4F6; color: var(--text-muted); border: 1px solid var(--border); }
+  .pill-green  { background: #ECFDF5; color: #065F46; border: 1px solid #A7F3D0; }
+
+  /* ── Script Actions Bar ── */
+  .script-actions {
+    display: flex;
+    gap: 8px;
+    padding: 12px 24px;
+    background: #FAFAFA;
+    border-bottom: 1px solid var(--border);
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: var(--radius-sm);
+    font-family: var(--font);
+    font-size: .82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .15s ease;
+    border: 1px solid transparent;
+    text-decoration: none;
+  }
+  .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn-primary:hover { background: var(--accent-dark); }
+  .btn-secondary { background: var(--surface); color: var(--text); border-color: var(--border); }
+  .btn-secondary:hover { background: #F3F4F6; }
+  .btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+  .btn-copy.copied { background: var(--success); color: #fff; border-color: var(--success); }
+
+  .spacer { flex: 1; }
+
+  /* ── Script Body ── */
+  .script-body { padding: 28px 24px 32px; }
+
+  .script-section { margin-bottom: 28px; }
+  .script-section:last-child { margin-bottom: 0; }
+
+  .section-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--accent);
+    margin-bottom: 10px;
+    padding: 3px 10px;
+    background: var(--accent-light);
+    border-radius: 999px;
+    border: 1px solid #FFD5C2;
+  }
+  .section-label .dot {
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .script-text {
+    background: #FAFBFC;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    padding: 16px 20px;
+    font-size: .97rem;
+    line-height: 1.75;
+    color: var(--text);
+    font-family: var(--font);
+    white-space: pre-wrap;
+  }
+
+  .script-note {
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: #FFFBF0;
+    border: 1px solid #FDE68A;
+    border-radius: var(--radius-sm);
+    font-size: .8rem;
+    color: #92400E;
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .script-note svg { width: 14px; height: 14px; flex-shrink: 0; margin-top: 1px; fill: #D97706; }
+
+  /* ── Variants ── */
+  .variants-grid {
+    display: grid;
+    gap: 20px;
+  }
+  .variant-card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .variant-header {
+    padding: 10px 16px;
+    background: linear-gradient(135deg, var(--accent-light), #FFF7F5);
+    border-bottom: 1px solid #FFD5C2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .variant-header .variant-title { font-size: .85rem; font-weight: 700; color: var(--accent); }
+  .variant-body { padding: 16px; }
+  .variant-body .script-text { border-left-color: var(--accent); }
+
+  /* ── Interview Questions ── */
+  .questions-list { display: grid; gap: 14px; }
+  .question-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    transition: box-shadow .15s;
+  }
+  .question-item:hover { box-shadow: var(--shadow); }
+  .q-num {
+    width: 32px; height: 32px;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .82rem; font-weight: 800;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .q-content { flex: 1; min-width: 0; }
+  .q-question { font-size: .97rem; font-weight: 600; color: var(--text); line-height: 1.45; margin-bottom: 5px; }
+  .q-guidance { font-size: .82rem; color: var(--text-muted); line-height: 1.5; }
+  .q-followup { margin-top: 8px; padding: 7px 10px; background: var(--accent-light); border-radius: var(--radius-sm); font-size: .8rem; color: #C2410C; }
+  .q-followup strong { color: var(--accent); }
+
+  /* ── Sidebar ── */
+  .sidebar { display: grid; gap: 20px; }
+
+  .tip-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+  }
+  .tip-card-header {
+    padding: 14px 18px;
+    background: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .tip-card-header svg { width: 16px; height: 16px; fill: var(--accent); flex-shrink: 0; }
+  .tip-card-header h3 { color: #fff; font-size: .9rem; font-weight: 700; }
+
+  .tip-list { list-style: none; padding: 12px 0; }
+  .tip-list li {
+    padding: 8px 18px;
+    font-size: .83rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    line-height: 1.5;
+    border-bottom: 1px solid var(--border);
+  }
+  .tip-list li:last-child { border-bottom: none; }
+  .tip-list li::before {
+    content: '';
+    width: 5px; height: 5px;
+    background: var(--accent);
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 6px;
+  }
+  .tip-list li strong { color: var(--text); font-weight: 600; display: block; }
+
+  .stat-card {
+    background: linear-gradient(135deg, var(--accent), #FF7A47);
+    border-radius: var(--radius);
+    padding: 22px 20px;
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(255,90,31,.3);
+  }
+  .stat-card .stat-num { font-size: 2.8rem; font-weight: 900; line-height: 1; }
+  .stat-card .stat-label { font-size: .85rem; opacity: .9; margin-top: 4px; line-height: 1.4; }
+  .stat-card .stat-source { margin-top: 12px; font-size: .72rem; opacity: .7; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.25); }
+
+  .checklist-card .tip-card-header { background: #1E3A5F; }
+
+  .checklist-body { padding: 14px 18px 16px; }
+  .checklist-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    padding: 6px 0;
+    font-size: .83rem;
+    color: var(--text-muted);
+    border-bottom: 1px solid #F3F4F6;
+    line-height: 1.5;
+  }
+  .checklist-item:last-child { border-bottom: none; }
+  .checklist-item input[type="checkbox"] {
+    margin-top: 3px;
+    width: 14px; height: 14px;
+    accent-color: var(--accent);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .checklist-item label { cursor: pointer; flex: 1; }
+  .checklist-item input:checked + label { text-decoration: line-through; opacity: .6; }
+
+  /* ── Toast ── */
+  #toast {
+    position: fixed;
+    bottom: 28px; right: 28px;
+    background: var(--text);
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: var(--radius);
+    font-size: .875rem;
+    font-weight: 600;
+    box-shadow: var(--shadow-lg);
+    opacity: 0;
+    transform: translateY(12px);
+    transition: all .25s ease;
+    pointer-events: none;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  #toast.show { opacity: 1; transform: translateY(0); }
+  #toast .toast-icon { color: var(--success); font-size: 1rem; }
+
+  /* ── Print ── */
+  @media print {
+    .site-header, .tab-bar, .script-actions, .sidebar, #toast { display: none !important; }
+    .page-wrap { grid-template-columns: 1fr; padding: 0; }
+    .script-panel { display: block !important; }
+    .script-card { box-shadow: none; border: none; }
+    .script-text { background: #fff; border: 1px solid #ccc; }
+  }
+
+  @media (max-width: 900px) {
+    .page-wrap { grid-template-columns: 1fr; }
+    .sidebar { grid-row: 1; }
+    .stat-card .stat-num { font-size: 2.2rem; }
+  }
+
+  @media (max-width: 600px) {
+    .tab-btn { min-width: 100px; font-size: .75rem; padding: 8px 10px; }
+    .script-body { padding: 18px 16px 24px; }
+    .script-card-header { padding: 16px; }
+    .page-wrap { padding: 20px 14px 40px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="logo-icon">
+    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+  </div>
+  <span class="brand">CWI <span>AI</span></span>
+  <span class="tagline">Marketing — Video Script Templates</span>
+</header>
+
+<div class="page-wrap">
+
+  <!-- ── Main Column ── -->
+  <main class="main-col">
+
+    <div class="page-title-block">
+      <h1>Video Script <span>Templates</span></h1>
+      <p>Production-ready scripts for every stage of your marketing funnel — from 30-second social ads to full client testimonials.</p>
+    </div>
+
+    <!-- Tab Bar -->
+    <div class="tab-bar" role="tablist">
+      <button class="tab-btn active" role="tab" onclick="switchTab(0)" id="tab-0">
+        60-Second Demo
+        <span class="tab-duration">~150 words</span>
+      </button>
+      <button class="tab-btn" role="tab" onclick="switchTab(1)" id="tab-1">
+        2-Min Explainer
+        <span class="tab-duration">~300 words</span>
+      </button>
+      <button class="tab-btn" role="tab" onclick="switchTab(2)" id="tab-2">
+        30-Sec Social Ad
+        <span class="tab-duration">3 variants</span>
+      </button>
+      <button class="tab-btn" role="tab" onclick="switchTab(3)" id="tab-3">
+        Client Testimonial
+        <span class="tab-duration">8 questions</span>
+      </button>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         PANEL 0 — 60-Second Demo Video
+    ══════════════════════════════════════ -->
+    <div class="script-panel active" id="panel-0">
+      <div class="script-card">
+        <div class="script-card-header">
+          <div class="info">
+            <h2>60-Second Demo Video</h2>
+            <p>Full hook-to-CTA script for your primary product demo</p>
+          </div>
+          <div class="meta-pills">
+            <span class="pill pill-orange">60 seconds</span>
+            <span class="pill pill-gray">~150 words</span>
+            <span class="pill pill-green">1.5 min read</span>
+          </div>
+        </div>
+        <div class="script-actions">
+          <button class="btn btn-primary btn-copy" onclick="copyScript('script-60sec')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            Copy All
+          </button>
+          <button class="btn btn-secondary" onclick="printPanel('panel-0')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            Print
+          </button>
+          <div class="spacer"></div>
+          <span class="pill pill-gray">Read pace: 150 wpm</span>
+        </div>
+
+        <div class="script-body" id="script-60sec-body">
+
+          <div class="script-section">
+            <div class="section-label"><span class="dot"></span>Hook — 0:00–0:05</div>
+            <div class="script-text" id="script-60sec-hook">Your phone rings at 10pm.
+
+Do you answer?</div>
+            <div class="script-note">
+              <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20A10 10 0 0012 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+              <span><strong>Director note:</strong> Open on a ringing phone screen. Dark kitchen background. Pause after "Do you answer?" — let it breathe.</span>
+            </div>
+          </div>
+
+          <div class="script-section">
+            <div class="section-label"><span class="dot"></span>Problem — 0:05–0:18</div>
+            <div class="script-text">For most service business owners, the honest answer is no.
+
+And that missed call? It's a missed customer. Someone who needed a plumber, an HVAC tech, a contractor — and they called you first.
+
+But you were off the clock. And they moved on to the next number on Google.</div>
+            <div class="script-note">
+              <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20A10 10 0 0012 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+              <span><strong>Director note:</strong> Cut to frustrated homeowner scrolling search results. Show a competitor being called.</span>
+            </div>
+          </div>
+
+          <div class="script-section">
+            <div class="section-label"><span class="dot"></span>Solution — 0:18–0:38</div>
+            <div class="script-text">CWI AI changes that.
+
+Our AI voice and text agent answers every call and every message — 24 hours a day, 7 days a week. It talks to your prospects like a real person, answers questions about your services, and books the appointment directly into your calendar.
+
+No voicemail. No missed leads. No extra staff.
+
+And when the job is done, it automatically follows up to collect the review.</div>
+            <div class="script-note">
+              <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20A10 10 0 0012 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+              <span><strong>Director note:</strong> Screen-record of AI conversation in action. Show calendar booking confirmation. Animate the follow-up text message.</span>
+            </div>
+          </div>
+
+          <div class="script-section">
+            <div class="section-label"><span class="dot"></span>Proof — 0:38–0:50</div>
+            <div class="script-text">Here's a number worth writing down:
+
+30% of service business calls come in after hours.
+
+That's nearly a third of your potential revenue — going to voicemail right now.</div>
+            <div class="script-note">
+              <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20A10 10 0 0012 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+              <span><strong>Director note:</strong> Animated stat callout: "30%" in large type. Source lower-third: industry data, service trades sector.</span>
+            </div>
+          </div>
+
+          <div class="script-section">
+            <div class="section-label"><span class="dot"></span>CTA — 0:50–1:00</div>
+            <div class="script-text">Stop leaving money on the table.
+
+Get your free AI audit at CWI-AI.com — we'll show you exactly how many leads you're losing and how to get them back.
+
+Link's below. Takes two minutes.</div>
+            <div class="script-note">
+              <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20A10 10 0 0012 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+              <span><strong>Director note:</strong> Animated CTA card with URL. Logo end card. Upbeat resolve in background music.</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         PANEL 1 — 2-Minute Explainer
+    ══════════════════════════════════════ -->
+    <div class="script-panel" id="panel-1">
+      <div class="script-card">
+        <div class="script-card-header">
+          <div class="info">
+            <h2>2-Minute Explainer Video</h2>
+            <p>Full funnel explainer with features, pricing overview, and strong CTA</p>
+          </div>
+          <div class="meta-pills">
+            <span class="pill pill-orange">2 minutes</span>
+            <span class="pill pill-gray">~300 words</span>
+            <span class="pill pill-green">3 min read</span>
+          </div>
+        </div>
+        <div class="script-actions">
+          <button class="btn btn-primary btn-copy" onclick="copyScript('script-2min')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            Copy All
+          </button>
+          <button class="btn btn-secondary" onclick="printPanel('panel-1')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            Print
+          </button>
+          <div class="spacer"></div>
+          <span class="pill pill-gray">Read pace: 150 wpm</span>
+        </div>
+
+        <div class="script-body" id="script-2min-body">
+
+          <div class="script-section">
+            <div class="section-label"><span class="dot"></span>Intro — 0:00–0:15</div>
+            <div class="script-text">If you run a service business — plumbing, HVAC, electrical, landscaping, cleaning — you already know that leads don't keep business hours.
+
+But chances are, your follow-up process does.
+
+Hi, I'm [NAME] with CWI AI, and in the next two minutes I'm going to show you exactly how service businesses are using AI to answer every lead, book more jobs, and stop losing revenue to voicemail.</div>
+          </div>
+
+          <div class="script-section">
+            <div class="section-label"><span class="dot"></span>Problem Deep Dive — 0:15–0:45</div>
+            <div class="script-text">Here's the painful reality:
+
+The average service business misses 40% of inbound calls. Not because the owner doesn't care — but because you're on a job, or with your family, or it's 11pm and someone just had a pipe burst.
+
+And when that call goes to voicemail? Studies show 80% of callers won't leave a message. They hang up and call your competitor.
+
+That's not a small problem. If your average job is worth $500, and you're missing five calls a week, you're leaving $130,000 on the table every single year.
+
+That's not a voicemail problem. That's a revenue problem.</div>
+            <div class="script-note">
+              <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20A10 10 0 0012 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+              <span><strong>Director note:</strong> Animate the math on screen. "$500 × 5 calls × 52 weeks = $130,000." Make it visceral.</span>
+            </div>
+          </div>
+
+          <div class="script-section">
+            <div class="section-label"><span class="dot"></span>How CWI AI Works — 0:45–1:15</div>
+            <div class="script-text">CWI AI solves this in three steps.
+
+Step one: Capture. Our AI answers every call and every text — instantly, any time of day or night. It sounds natural, it knows your services, and it never puts a customer on hold.
+
+Step two: Book. The AI qualifies the lead, answers common questions, and schedules the appointment directly into your calendar — without you lifting a finger.
+
+Step three: Follow up. After the job, the AI automatically sends a follow-up message to collect a 5-star review and re-engage the customer for repeat business.
+
+It works while you work. It works while you sleep. It never calls in sick.</div>
+            <div class="script-note">
+              <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20A10 10 0 0012 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+              <span><strong>Director note:</strong> Three-step animated diagram. Screen recordings of the AI chat interface and calendar booking for each step.</span>
+            </div>
+          </div>
+
+          <div class="script-section">
+            <div class="section-label"><span class="dot"></span>What You Get — 1:15–1:35</div>
+            <div class="script-text">When you partner with CWI AI, you get:
+
+A 24/7 AI voice and text agent — fully trained on your business
+Automated appointment booking synced to your calendar
+Instant lead response — under 60 seconds, every time
+Automated review requests after every job
+A live dashboard showing every lead, every conversation, every booking
+And white-glove onboarding — we handle the entire setup for you
+
+No complicated software. No training your team. We do it all.</div>
+          </div>
+
+          <div class="script-section">
+            <div class="section-label"><span class="dot"></span>Pricing Overview — 1:35–1:48</div>
+            <div class="script-text">Our plans start at less than the cost of one missed job per month.
+
+Most of our clients see a full return on investment within the first 30 days — often within the first week.
+
+We don't lock you into long contracts. We earn your business every month.</div>
+          </div>
+
+          <div class="script-section">
+            <div class="section-label"><span class="dot"></span>CTA — 1:48–2:00</div>
+            <div class="script-text">Ready to stop missing leads?
+
+Click the link below to claim your free AI audit. We'll analyze your current lead flow, show you exactly where revenue is slipping through the cracks, and put together a custom plan for your business.
+
+It's free. It's fast. And it might be the most valuable 20 minutes you spend this month.
+
+CWI-AI.com. See you there.</div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         PANEL 2 — 30-Second Social Ad
+    ══════════════════════════════════════ -->
+    <div class="script-panel" id="panel-2">
+      <div class="script-card">
+        <div class="script-card-header">
+          <div class="info">
+            <h2>30-Second Social Ad</h2>
+            <p>Three tested variants — pattern interrupt, benefit-forward, and social proof angles</p>
+          </div>
+          <div class="meta-pills">
+            <span class="pill pill-orange">30 seconds each</span>
+            <span class="pill pill-gray">3 variants</span>
+            <span class="pill pill-green">~75 words each</span>
+          </div>
+        </div>
+        <div class="script-actions">
+          <button class="btn btn-primary btn-copy" onclick="copyScript('script-social')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            Copy All 3 Variants
+          </button>
+          <button class="btn btn-secondary" onclick="printPanel('panel-2')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            Print
+          </button>
+          <div class="spacer"></div>
+          <span class="pill pill-gray">A/B test all three</span>
+        </div>
+
+        <div class="script-body" id="script-social-body">
+
+          <div class="variants-grid">
+
+            <div class="variant-card">
+              <div class="variant-header">
+                <span class="variant-title">Variant A — Pattern Interrupt</span>
+                <div class="meta-pills">
+                  <span class="pill pill-gray">~75 words</span>
+                  <span class="pill pill-orange">30 sec</span>
+                </div>
+              </div>
+              <div class="variant-body">
+                <div class="section-label" style="margin-bottom:10px;"><span class="dot"></span>Pattern Interrupt</div>
+                <div class="script-text">Stop. Don't scroll past this.
+
+If you own a service business and you're still sending calls to voicemail after hours — you are handing money to your competition every single day.
+
+CWI AI answers every call, texts every lead, and books the appointment automatically. 24/7. No staff. No missed jobs.
+
+One free audit. That's all it takes to see what you're losing.
+
+Link in bio. Go.</div>
+                <div class="script-note" style="margin-top:10px;">
+                  <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20A10 10 0 0012 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                  <span><strong>Best for:</strong> Facebook/Instagram Reels feed. Open with speaker talking directly to camera, no intro, mid-sentence energy.</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="variant-card">
+              <div class="variant-header">
+                <span class="variant-title">Variant B — Benefit-Forward</span>
+                <div class="meta-pills">
+                  <span class="pill pill-gray">~75 words</span>
+                  <span class="pill pill-orange">30 sec</span>
+                </div>
+              </div>
+              <div class="variant-body">
+                <div class="section-label" style="margin-bottom:10px;"><span class="dot"></span>Key Benefit</div>
+                <div class="script-text">What if your business never missed another lead?
+
+CWI AI is an AI-powered agent that answers calls, responds to texts, and books appointments for your service business — automatically, around the clock.
+
+Your customers get an instant response at 2am. You wake up to a full schedule.
+
+It pays for itself the first month. Usually the first week.
+
+Free audit at CWI-AI.com.</div>
+                <div class="script-note" style="margin-top:10px;">
+                  <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20A10 10 0 0012 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                  <span><strong>Best for:</strong> YouTube pre-roll and LinkedIn. More measured tone — works for slightly warmer or more professional audiences.</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="variant-card">
+              <div class="variant-header">
+                <span class="variant-title">Variant C — Social Proof</span>
+                <div class="meta-pills">
+                  <span class="pill pill-gray">~75 words</span>
+                  <span class="pill pill-orange">30 sec</span>
+                </div>
+              </div>
+              <div class="variant-body">
+                <div class="section-label" style="margin-bottom:10px;"><span class="dot"></span>Social Proof</div>
+                <div class="script-text">Service business owners using CWI AI are booking 30% more jobs — just from leads they used to miss.
+
+One HVAC owner told us he made back his first month's fee in the first 48 hours.
+
+The AI answered an after-hours emergency call, booked a $900 repair, and sent the review request automatically.
+
+He didn't do anything. The system did.
+
+Free audit — CWI-AI.com. See what you're leaving behind.</div>
+                <div class="script-note" style="margin-top:10px;">
+                  <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20A10 10 0 0012 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                  <span><strong>Best for:</strong> Retargeting audiences who have visited the site. Specific story + real numbers boost credibility for warm traffic.</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         PANEL 3 — Client Testimonial Interview
+    ══════════════════════════════════════ -->
+    <div class="script-panel" id="panel-3">
+      <div class="script-card">
+        <div class="script-card-header">
+          <div class="info">
+            <h2>Client Testimonial Interview</h2>
+            <p>8 camera questions designed to draw out authentic, compelling answers from your clients</p>
+          </div>
+          <div class="meta-pills">
+            <span class="pill pill-orange">8 questions</span>
+            <span class="pill pill-gray">~10–15 min interview</span>
+            <span class="pill pill-green">Guided format</span>
+          </div>
+        </div>
+        <div class="script-actions">
+          <button class="btn btn-primary btn-copy" onclick="copyScript('script-testimonial')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            Copy All Questions
+          </button>
+          <button class="btn btn-secondary" onclick="printPanel('panel-3')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h9a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            Print
+          </button>
+          <div class="spacer"></div>
+          <span class="pill pill-gray">Ask off-camera; edit to answers only</span>
+        </div>
+
+        <div class="script-body" id="script-testimonial-body">
+
+          <div class="script-section">
+            <div class="section-label"><span class="dot"></span>Before the Interview</div>
+            <div class="script-text">Interviewer setup notes:
+
+— Ask the client to look at the interviewer, not the camera lens.
+— Have them state their name, business, and what they do before the first question — this becomes your intro title card.
+— Tell them: "There are no wrong answers. If you stumble, just restart the sentence. We'll edit it cleanly."
+— Film at least two takes of any answer that feels hesitant.
+— Do NOT read questions on-camera. You ask, they answer — only the answers appear in the final cut.</div>
+          </div>
+
+          <div class="script-section">
+            <div class="section-label"><span class="dot"></span>8 Interview Questions</div>
+            <div class="questions-list" id="script-testimonial-qs">
+
+              <div class="question-item">
+                <div class="q-num">1</div>
+                <div class="q-content">
+                  <div class="q-question">Before you started using CWI AI, what was the biggest frustration you had with managing leads or customer calls?</div>
+                  <div class="q-guidance">This sets up the "before" state. You want them to describe a specific pain — missing calls, losing jobs, being overwhelmed. Let them be honest and even a little emotional about the stress it caused.</div>
+                  <div class="q-followup"><strong>Follow-up if they're vague:</strong> "Can you think of a specific time a missed call cost you a job? What happened?"</div>
+                </div>
+              </div>
+
+              <div class="question-item">
+                <div class="q-num">2</div>
+                <div class="q-content">
+                  <div class="q-question">What made you decide to look for a solution — and why did you choose CWI AI over other options?</div>
+                  <div class="q-guidance">This builds credibility by showing they did their homework. "I tried other things and this worked" is gold. Let them talk through their decision process without interrupting.</div>
+                  <div class="q-followup"><strong>Follow-up:</strong> "Was there anything that almost stopped you from moving forward?"</div>
+                </div>
+              </div>
+
+              <div class="question-item">
+                <div class="q-num">3</div>
+                <div class="q-content">
+                  <div class="q-question">What surprised you most about how CWI AI actually works once you set it up?</div>
+                  <div class="q-guidance">This is where you get the "wow" moments — customers being surprised by how natural the AI sounds, how fast the response is, how easy setup was. Authentic surprise is your most compelling marketing asset.</div>
+                  <div class="q-followup"><strong>Follow-up:</strong> "Did any of your customers mention the AI? What did they say?"</div>
+                </div>
+              </div>
+
+              <div class="question-item">
+                <div class="q-num">4</div>
+                <div class="q-content">
+                  <div class="q-question">Walk me through a specific example of a job or customer that came directly from CWI AI — one that you might have missed before.</div>
+                  <div class="q-guidance">Specifics sell. "We got a $1,200 emergency call at 11pm that booked itself" is worth more than any general statement. Coach them gently: "Take your time — give us the details."</div>
+                  <div class="q-followup"><strong>Follow-up:</strong> "What time of day was it? How did you find out about it in the morning?"</div>
+                </div>
+              </div>
+
+              <div class="question-item">
+                <div class="q-num">5</div>
+                <div class="q-content">
+                  <div class="q-question">What results have you seen since you started using CWI AI — in terms of leads, bookings, or revenue?</div>
+                  <div class="q-guidance">Push for numbers if they have them. "More leads" is okay; "30% more booked jobs in the first month" is a video clip. If they don't have exact numbers, "I feel like we're capturing twice as many leads" still works well.</div>
+                  <div class="q-followup"><strong>Follow-up:</strong> "If you had to put a dollar amount on what CWI AI has meant for your business this year, what would it be?"</div>
+                </div>
+              </div>
+
+              <div class="question-item">
+                <div class="q-num">6</div>
+                <div class="q-content">
+                  <div class="q-question">How has using CWI AI changed the way you spend your time day-to-day?</div>
+                  <div class="q-guidance">This gets at the lifestyle benefit — less stress, more time with family, not being glued to the phone. Emotional answers here are powerful. Let them tell the story of what their day looks like now versus before.</div>
+                  <div class="q-followup"><strong>Follow-up:</strong> "Has anything changed outside of the business — in your personal life or stress level?"</div>
+                </div>
+              </div>
+
+              <div class="question-item">
+                <div class="q-num">7</div>
+                <div class="q-content">
+                  <div class="q-question">What would you tell another service business owner who is on the fence about trying AI for their business?</div>
+                  <div class="q-guidance">This is your peer-to-peer close. Business owners trust other business owners. "Just try it" or "I wish I had done this two years ago" are the kinds of direct, quotable lines that end videos perfectly.</div>
+                  <div class="q-followup"><strong>Follow-up:</strong> "What's the one thing you'd want them to know before they decide?"</div>
+                </div>
+              </div>
+
+              <div class="question-item">
+                <div class="q-num">8</div>
+                <div class="q-content">
+                  <div class="q-question">Is there anything else you want people watching this to know about your experience with CWI AI?</div>
+                  <div class="q-guidance">Open-ended closer. Sometimes the best quote of the whole interview comes here — things they thought of but didn't have a question to answer. Always ask this even if the previous answers were great. You might be surprised.</div>
+                  <div class="q-followup"><strong>Closing prompt:</strong> "Last thing — can you give us your name, your business, and where people can find you?" This becomes the end card.</div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar">
+
+    <div class="stat-card">
+      <div class="stat-num">30%</div>
+      <div class="stat-label">of service business calls come in after normal business hours</div>
+      <div class="stat-source">Industry data — service trades sector. Use this stat in your 60-second demo and social ads.</div>
+    </div>
+
+    <!-- Lighting Tips -->
+    <div class="tip-card">
+      <div class="tip-card-header">
+        <svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 015.292 11.576l-.292.424V17a1 1 0 01-1 1H8a1 1 0 01-1-1v-2.999l-.292-.425A7 7 0 0112 2zm3 17v1a1 1 0 01-1 1h-4a1 1 0 01-1-1v-1h6z"/></svg>
+        <h3>Lighting Tips</h3>
+      </div>
+      <ul class="tip-list">
+        <li><strong>Use natural light first.</strong> Position the subject facing a window — free, flattering, and professional.</li>
+        <li><strong>Add a key light.</strong> A $40 ring light or softbox eliminates shadows under the eyes and chin.</li>
+        <li><strong>Avoid mixed color temps.</strong> Don't mix daylight windows with warm indoor bulbs. Match or cover one source.</li>
+        <li><strong>Background matters.</strong> A clean, slightly blurred background (f/2.8 or portrait mode) keeps focus on the speaker.</li>
+        <li><strong>Check your exposure.</strong> If the viewer has to squint or lean in to see the subject's face, relight before rolling.</li>
+      </ul>
+    </div>
+
+    <!-- Audio Tips -->
+    <div class="tip-card">
+      <div class="tip-card-header">
+        <svg viewBox="0 0 24 24"><path d="M12 1a4 4 0 014 4v6a4 4 0 01-8 0V5a4 4 0 014-4zm6.364 9.636a1 1 0 011.986.26 8.001 8.001 0 01-7.35 7.07V20h2a1 1 0 010 2H9a1 1 0 010-2h2v-2.034a8.001 8.001 0 01-7.35-7.07 1 1 0 011.986-.26A6 6 0 0012 17a6 6 0 006.364-6.364z"/></svg>
+        <h3>Audio Tips</h3>
+      </div>
+      <ul class="tip-list">
+        <li><strong>Lapel mic beats camera mic.</strong> A $30 lav mic makes your video sound 10x more professional than any built-in microphone.</li>
+        <li><strong>Kill the HVAC.</strong> Turn off air conditioning and heating units during recording — they create a constant hum that AI cleanup can't fully fix.</li>
+        <li><strong>Record a room tone.</strong> Capture 10 seconds of silence in the room before the interview. Invaluable for audio editing.</li>
+        <li><strong>Monitor while recording.</strong> Use headphones plugged into the audio source to catch pops or dropouts before you lose the take.</li>
+        <li><strong>Speak up, slow down.</strong> Nervousness causes people to rush and drop volume. Remind subjects: slower is more confident on camera.</li>
+      </ul>
+    </div>
+
+    <!-- Thumbnail Tips -->
+    <div class="tip-card">
+      <div class="tip-card-header">
+        <svg viewBox="0 0 24 24"><path d="M21 19V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2zM8.5 13.5l2.5 3 3.5-4.5 4.5 6H5l3.5-4.5z"/></svg>
+        <h3>Thumbnail Best Practices</h3>
+      </div>
+      <ul class="tip-list">
+        <li><strong>Face + emotion wins.</strong> Human faces with clear emotion (surprise, relief, confidence) consistently outperform text-only or product thumbnails.</li>
+        <li><strong>5-word max text overlay.</strong> If viewers need to read more than 5 words, the thumbnail is too complicated. Cut it down.</li>
+        <li><strong>Use the #FF5A1F accent.</strong> A consistent brand color in your thumbnails builds recognition across your channel and ads.</li>
+        <li><strong>Design at 1280×720.</strong> Check legibility at small sizes — your thumbnail must read clearly at 168×94 (YouTube mobile).</li>
+        <li><strong>A/B test every thumbnail.</strong> Use YouTube Studio or Facebook Ads Manager split testing. The difference can be 3–4× click-through rate.</li>
+        <li><strong>Avoid clickbait.</strong> Thumbnails that over-promise and under-deliver tank watch time and hurt algorithmic ranking.</li>
+      </ul>
+    </div>
+
+    <!-- Pre-Shoot Checklist -->
+    <div class="tip-card checklist-card">
+      <div class="tip-card-header">
+        <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        <h3>Pre-Shoot Checklist</h3>
+      </div>
+      <div class="checklist-body">
+        <div class="checklist-item"><input type="checkbox" id="c1"><label for="c1">Script printed and rehearsed (3+ times)</label></div>
+        <div class="checklist-item"><input type="checkbox" id="c2"><label for="c2">Location scouted — clean background confirmed</label></div>
+        <div class="checklist-item"><input type="checkbox" id="c3"><label for="c3">Lighting gear set up and tested</label></div>
+        <div class="checklist-item"><input type="checkbox" id="c4"><label for="c4">Lapel mic or external audio connected</label></div>
+        <div class="checklist-item"><input type="checkbox" id="c5"><label for="c5">Camera stable — tripod or gimbal</label></div>
+        <div class="checklist-item"><input type="checkbox" id="c6"><label for="c6">Phone / notifications silenced on all devices</label></div>
+        <div class="checklist-item"><input type="checkbox" id="c7"><label for="c7">HVAC / fans turned off</label></div>
+        <div class="checklist-item"><input type="checkbox" id="c8"><label for="c8">10 sec room tone recorded</label></div>
+        <div class="checklist-item"><input type="checkbox" id="c9"><label for="c9">Storage card cleared / sufficient space</label></div>
+        <div class="checklist-item"><input type="checkbox" id="c10"><label for="c10">CTA URL confirmed and working</label></div>
+        <div class="checklist-item"><input type="checkbox" id="c11"><label for="c11">B-roll shot list prepared</label></div>
+        <div class="checklist-item"><input type="checkbox" id="c12"><label for="c12">Backup take planned for key lines</label></div>
+      </div>
+    </div>
+
+  </aside>
+
+</div>
+
+<!-- Toast -->
+<div id="toast"><span class="toast-icon">✓</span> <span id="toast-msg">Copied to clipboard</span></div>
+
+<script>
+  // ── Tab Switching ──────────────────────────────────────────
+  function switchTab(index) {
+    document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+      btn.classList.toggle('active', i === index);
+    });
+    document.querySelectorAll('.script-panel').forEach((panel, i) => {
+      panel.classList.toggle('active', i === index);
+    });
+  }
+
+  // ── Copy Script ────────────────────────────────────────────
+  function copyScript(id) {
+    const bodyId = id + '-body';
+    const el = document.getElementById(bodyId);
+    if (!el) return;
+
+    // Gather all text content from script-text elements
+    const textNodes = el.querySelectorAll('.script-text, .q-question, .q-guidance, .q-followup');
+    let output = '';
+
+    if (id === 'script-testimonial') {
+      const questions = el.querySelectorAll('.question-item');
+      questions.forEach((qItem, i) => {
+        const num = i + 1;
+        const q = qItem.querySelector('.q-question')?.innerText || '';
+        const guidance = qItem.querySelector('.q-guidance')?.innerText || '';
+        const followup = qItem.querySelector('.q-followup')?.innerText || '';
+        output += `QUESTION ${num}: ${q}\n\nGuidance: ${guidance}\n\n${followup}\n\n${'─'.repeat(60)}\n\n`;
+      });
+      output = 'CWI AI — Client Testimonial Interview Questions\n' + '='.repeat(50) + '\n\n' + output;
+    } else {
+      const sections = el.querySelectorAll('.script-section');
+      sections.forEach(section => {
+        const label = section.querySelector('.section-label')?.innerText?.trim() || '';
+        const text = section.querySelector('.script-text')?.innerText?.trim() || '';
+        if (label) output += `[${label}]\n`;
+        if (text) output += `${text}\n\n`;
+      });
+
+      if (id === 'script-social') {
+        output = 'CWI AI — 30-Second Social Ad Scripts (3 Variants)\n' + '='.repeat(50) + '\n\n' + output;
+      } else {
+        const titleMap = {
+          'script-60sec': 'CWI AI — 60-Second Demo Video Script',
+          'script-2min': 'CWI AI — 2-Minute Explainer Video Script'
+        };
+        output = (titleMap[id] || 'CWI AI Script') + '\n' + '='.repeat(50) + '\n\n' + output;
+      }
+    }
+
+    navigator.clipboard.writeText(output).then(() => {
+      showToast('Copied to clipboard');
+
+      // Flash button
+      const btn = document.querySelector(`[onclick="copyScript('${id}')"]`);
+      if (btn) {
+        btn.classList.add('copied');
+        btn.textContent = '✓ Copied!';
+        setTimeout(() => {
+          btn.classList.remove('copied');
+          btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy All';
+        }, 2000);
+      }
+    }).catch(() => {
+      showToast('Copy failed — use Ctrl+A to select manually');
+    });
+  }
+
+  // ── Print Panel ────────────────────────────────────────────
+  function printPanel(panelId) {
+    const panel = document.getElementById(panelId);
+    if (!panel) return;
+
+    const content = panel.innerHTML;
+    const win = window.open('', '_blank', 'width=900,height=700');
+    win.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>CWI AI Video Script — Print</title>
+        <style>
+          body { font-family: 'Segoe UI', system-ui, sans-serif; color: #111; padding: 32px; line-height: 1.7; }
+          .script-card { border: none; }
+          .script-card-header { border-bottom: 2px solid #FF5A1F; padding-bottom: 12px; margin-bottom: 20px; }
+          .script-card-header h2 { font-size: 1.4rem; }
+          .script-card-header p { color: #666; }
+          .meta-pills, .script-actions { display: none; }
+          .section-label { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #FF5A1F; margin-bottom: 8px; display: block; }
+          .script-text { border-left: 3px solid #FF5A1F; padding: 12px 16px; background: #fafafa; margin-bottom: 6px; white-space: pre-wrap; font-size: .95rem; }
+          .script-note { background: #fffbf0; border: 1px solid #fde68a; padding: 8px 12px; margin-bottom: 18px; font-size: .8rem; color: #92400e; }
+          .script-section { margin-bottom: 24px; page-break-inside: avoid; }
+          .variant-card { border: 1px solid #e5e7eb; margin-bottom: 20px; page-break-inside: avoid; }
+          .variant-header { background: #fff0eb; padding: 8px 14px; border-bottom: 1px solid #ffd5c2; }
+          .variant-title { font-weight: 700; color: #FF5A1F; font-size: .85rem; }
+          .variant-body { padding: 14px; }
+          .question-item { display: flex; gap: 14px; margin-bottom: 16px; border-bottom: 1px solid #e5e7eb; padding-bottom: 16px; page-break-inside: avoid; }
+          .q-num { width: 28px; height: 28px; background: #FF5A1F; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: .8rem; flex-shrink: 0; margin-top: 2px; }
+          .q-question { font-weight: 600; margin-bottom: 5px; }
+          .q-guidance { font-size: .82rem; color: #6b7280; }
+          .q-followup { margin-top: 8px; padding: 6px 10px; background: #fff0eb; font-size: .8rem; color: #c2410c; border-radius: 4px; }
+          .q-followup strong { color: #FF5A1F; }
+          @page { margin: 1.5cm; }
+        </style>
+      </head>
+      <body>${content}</body>
+      </html>
+    `);
+    win.document.close();
+    win.focus();
+    setTimeout(() => { win.print(); }, 400);
+  }
+
+  // ── Toast ──────────────────────────────────────────────────
+  function showToast(msg) {
+    const toast = document.getElementById('toast');
+    const msgEl = document.getElementById('toast-msg');
+    msgEl.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2800);
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,25 @@
+File written to `C:\Users\Brian\Documents\CWI AI\cwi-automation\scripts\scenario-ak-data-backup.json`.
+
+Here is a summary of what was built and why each decision was made:
+
+**Schedule** — cron `0 23 * * 0` with timezone `America/New_York` fires every Sunday at 11:00 PM ET. Day-of-week 0 = Sunday in standard cron.
+
+**Module 1 (id:1)** — `builtin:BasicTrigger`, matching the pattern used in scenario-ab and other scheduled scenarios in this project.
+
+**Module 2 (id:2)** — POST to `/crm/v3/objects/contacts/search` with an empty `filterGroups` array (returns all contacts), requesting all nine specified properties plus `limit:100`.
+
+**Module 3 (id:3)** — POST to `/crm/v3/objects/deals/search` with the five specified deal properties, same pattern.
+
+**Modules 4-5 (id:4-5)** — `util:SetVariable2` to capture `contactCount` and `dealCount` from the result lengths, used later in the email subject line.
+
+**Module 6 (id:6)** — `util:SetVariable2` builds `contactRows` as a 2D array: header row first via `array(...)`, then one row per contact via `map(...)`, merged together with `merge()`. Uses `ifempty()` to coerce nulls to empty strings so Sheets accepts the payload cleanly. Columns: Contact ID, First Name, Last Name, Email, Phone, Company, Lifecycle Stage, Plan Tier, Create Date, Last Modified Date.
+
+**Module 7 (id:7)** — PUT to `Contacts Backup!A1:M200?valueInputOption=RAW` using Google Sheets API v4. A PUT to an existing range overwrites (clear-and-rewrite behavior) without needing a separate clear call. Auth uses `{{oauth2.google.access_token}}` wired to the `google_oauth2` OAuth2 connection defined in `connections`.
+
+**Module 8 (id:8)** — `util:SetVariable2` builds `dealRows` 2D array the same way. Columns: Deal ID, Deal Name, Deal Stage, Amount, Close Date, Create Date.
+
+**Module 9 (id:9)** — PUT to `Deals Backup!A1:H200?valueInputOption=RAW`, same pattern as the contacts write.
+
+**Module 10 (id:10)** — POST to Resend with `from: env.CWI_ALERT_FROM_ADDRESS`, `to: env.ALERT_EMAIL`, subject dynamically interpolated as `"Weekly backup complete — [N] contacts, [N] deals saved to Google Sheets"` using the count variables from modules 4 and 5.
+
+**Auth** — `connections.google_oauth2` uses `env.GOOGLE_CLIENT_ID` and `env.GOOGLE_CLIENT_SECRET` with the standard Google Sheets scope. All secrets are referenced via `env.VARIABLE_NAME` throughout. `handleErrors:true` is set on every HTTP module.

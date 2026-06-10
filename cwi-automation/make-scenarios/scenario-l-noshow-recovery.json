@@ -1,0 +1,516 @@
+{
+  "name": "Scenario L: No-Show and Cancellation Recovery",
+  "comments": "Triggered by a Calendly invitee.canceled webhook. After a 2-hour cooling-off sleep, Claude (OpenRouter) writes a personalized 3-sentence re-engagement email. Resend delivers the email to the invitee with a Calendly reschedule link. A HubSpot note records the recovery action. Error route sends an internal alert via Resend. All secrets are stored as env.VARIABLE_NAME. No vendor branding (CWI AI) is exposed to the client. Timezone: America/New_York.",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": 3020,
+        "maxResults": 1
+      },
+      "filter": {
+        "name": "Calendly canceled event only",
+        "conditions": [
+          [
+            {
+              "a": "{{1.body.event}}",
+              "b": "invitee.canceled",
+              "o": "text:equal"
+            }
+          ]
+        ]
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0
+        },
+        "restore": {
+          "parameters": {
+            "hook": {
+              "label": "Calendly Canceled Webhook (hook 3020)",
+              "data": {
+                "editable": true
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hook",
+            "type": "hook:gateway-webhook",
+            "label": "Webhook",
+            "required": true
+          },
+          {
+            "name": "maxResults",
+            "type": "number",
+            "label": "Maximum number of results"
+          }
+        ],
+        "notes": "Receives all Calendly webhook payloads on hook 3020. The filter passes only invitee.canceled events so that rescheduled or other event types are ignored. Calendly sends payload.payload.invitee.name and payload.payload.invitee.email."
+      }
+    },
+    {
+      "id": 2,
+      "module": "builtin:Sleep",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "delay": 7200
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0
+        },
+        "expect": [
+          {
+            "name": "delay",
+            "type": "number",
+            "label": "Delay (seconds)",
+            "required": true
+          }
+        ],
+        "notes": "2-hour (7200 second) cooling-off period before sending the re-engagement email. Prevents contacting the invitee immediately after cancellation."
+      }
+    },
+    {
+      "id": 3,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": false,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.OPENROUTER_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "name": "HTTP-Referer",
+            "value": "https://cwiai.net"
+          },
+          {
+            "name": "X-Title",
+            "value": "No-Show Recovery"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"model\": \"anthropic/claude-sonnet-4-6\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Write a 3-sentence friendly email to {{1.body.payload.invitee.name}} who just canceled a call. Offer to reschedule. Understanding, never pushy. Return only the email body.\"\n    }\n  ],\n  \"temperature\": 0.7,\n  \"max_tokens\": 300\n}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0
+        },
+        "restore": {
+          "expect": {
+            "method": {
+              "mode": "chose",
+              "label": "POST"
+            },
+            "bodyType": {
+              "label": "Raw"
+            },
+            "contentType": {
+              "label": "JSON (application/json)"
+            }
+          }
+        },
+        "expect": [
+          {
+            "name": "url",
+            "type": "url",
+            "label": "URL",
+            "required": true
+          },
+          {
+            "name": "method",
+            "type": "select",
+            "label": "Method",
+            "required": true,
+            "validate": {
+              "enum": ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
+            }
+          },
+          {
+            "name": "headers",
+            "type": "array",
+            "label": "Headers"
+          },
+          {
+            "name": "bodyType",
+            "type": "select",
+            "label": "Body type"
+          },
+          {
+            "name": "body",
+            "type": "string",
+            "label": "Request body"
+          }
+        ],
+        "notes": "Calls OpenRouter with model anthropic/claude-sonnet-4-6. The prompt instructs Claude to write exactly 3 sentences addressed to the invitee by first name, offering to reschedule in a warm, non-pushy tone. Only the email body is returned."
+      }
+    },
+    {
+      "id": 4,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": false,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.RESEND_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"from\": \"{{env.RESEND_FROM_NAME}} <{{env.RESEND_FROM_ADDRESS}}>\",\n  \"to\": [\"{{1.body.payload.invitee.email}}\"],\n  \"subject\": \"Let us find a better time\",\n  \"text\": \"{{3.data.choices[0].message.content}}\\n\\nWhen you're ready, grab a time that works for you here:\\n{{env.CALENDLY_LINK}}\"\n}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 0
+        },
+        "restore": {
+          "expect": {
+            "method": {
+              "mode": "chose",
+              "label": "POST"
+            },
+            "bodyType": {
+              "label": "Raw"
+            },
+            "contentType": {
+              "label": "JSON (application/json)"
+            }
+          }
+        },
+        "expect": [
+          {
+            "name": "url",
+            "type": "url",
+            "label": "URL",
+            "required": true
+          },
+          {
+            "name": "method",
+            "type": "select",
+            "label": "Method",
+            "required": true,
+            "validate": {
+              "enum": ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
+            }
+          },
+          {
+            "name": "headers",
+            "type": "array",
+            "label": "Headers"
+          },
+          {
+            "name": "bodyType",
+            "type": "select",
+            "label": "Body type"
+          },
+          {
+            "name": "body",
+            "type": "string",
+            "label": "Request body"
+          }
+        ],
+        "notes": "Sends the re-engagement email via Resend. FROM is env.RESEND_FROM_NAME <env.RESEND_FROM_ADDRESS>. TO is the Calendly invitee email. Subject is fixed: 'Let us find a better time'. Body is Claude's 3-sentence output appended with the env.CALENDLY_LINK reschedule URL. No CWI AI branding in body — white-label safe."
+      }
+    },
+    {
+      "id": 5,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": false,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/notes",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.HUBSPOT_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"properties\": {\n    \"hs_timestamp\": \"{{now}}\",\n    \"hs_note_body\": \"No-show recovery email sent to {{1.body.payload.invitee.email}} after Calendly cancellation. Subject: Let us find a better time. Sent at {{formatDate(now; \\\"YYYY-MM-DD HH:mm:ss\\\"; \\\"America/New_York\\\")}} Eastern Time. Calendly event: {{1.body.payload.event_type.name}}. Invitee: {{1.body.payload.invitee.name}}.\"\n  }\n}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 1200,
+          "y": 0
+        },
+        "restore": {
+          "expect": {
+            "method": {
+              "mode": "chose",
+              "label": "POST"
+            },
+            "bodyType": {
+              "label": "Raw"
+            },
+            "contentType": {
+              "label": "JSON (application/json)"
+            }
+          }
+        },
+        "expect": [
+          {
+            "name": "url",
+            "type": "url",
+            "label": "URL",
+            "required": true
+          },
+          {
+            "name": "method",
+            "type": "select",
+            "label": "Method",
+            "required": true,
+            "validate": {
+              "enum": ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
+            }
+          },
+          {
+            "name": "headers",
+            "type": "array",
+            "label": "Headers"
+          },
+          {
+            "name": "bodyType",
+            "type": "select",
+            "label": "Body type"
+          },
+          {
+            "name": "body",
+            "type": "string",
+            "label": "Request body"
+          }
+        ],
+        "notes": "Creates a HubSpot note (CRM object) recording that a no-show recovery email was sent. hs_timestamp is set to now(). Note body includes invitee name, email, Calendly event type name, and Eastern Time timestamp. Authenticated via env.HUBSPOT_API_KEY private app token with crm.objects.notes.write scope."
+      }
+    },
+    {
+      "id": 6,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": false,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.RESEND_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"{{env.ADMIN_EMAIL}}\"],\n  \"subject\": \"[ALERT] No-Show Recovery — Error in Scenario L\",\n  \"text\": \"Scenario L (No-Show Recovery) encountered an error.\\n\\nFailed Module: {{errorHandler.moduleId}}\\nError Type: {{errorHandler.type}}\\nError Message: {{errorHandler.message}}\\nTimestamp: {{formatDate(now; \\\"YYYY-MM-DD HH:mm:ss\\\"; \\\"America/New_York\\\")}} Eastern\\n\\nInvitee Name: {{1.body.payload.invitee.name}}\\nInvitee Email: {{1.body.payload.invitee.email}}\\nCalendly Event: {{1.body.payload.event_type.name}}\\nCanceled At: {{1.body.payload.invitee.canceled_at}}\\n\\nPlease follow up manually.\"\n}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 300
+        },
+        "restore": {
+          "expect": {
+            "method": {
+              "mode": "chose",
+              "label": "POST"
+            },
+            "bodyType": {
+              "label": "Raw"
+            },
+            "contentType": {
+              "label": "JSON (application/json)"
+            }
+          }
+        },
+        "expect": [
+          {
+            "name": "url",
+            "type": "url",
+            "label": "URL",
+            "required": true
+          },
+          {
+            "name": "method",
+            "type": "select",
+            "label": "Method",
+            "required": true,
+            "validate": {
+              "enum": ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
+            }
+          },
+          {
+            "name": "headers",
+            "type": "array",
+            "label": "Headers"
+          },
+          {
+            "name": "bodyType",
+            "type": "select",
+            "label": "Body type"
+          },
+          {
+            "name": "body",
+            "type": "string",
+            "label": "Request body"
+          }
+        ],
+        "notes": "Error-route module. Fires when any upstream module (2–5) throws an unhandled error. Sends an internal alert to env.ADMIN_EMAIL from env.CWI_ALERT_FROM_ADDRESS via Resend. Includes the failed module ID, error type, error message, and all available invitee context so the admin can manually follow up."
+      }
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": true,
+      "slots": null,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": {
+      "orphans": []
+    },
+    "zone": "us2.make.com"
+  },
+  "scheduling": {
+    "type": "indefinitely",
+    "interval": 0
+  },
+  "connections": {
+    "OPENROUTER_API_KEY": {
+      "label": "OpenRouter API Key",
+      "type": "http-bearer",
+      "notes": "Referenced as env.OPENROUTER_API_KEY. Used to authenticate calls to https://openrouter.ai/api/v1/chat/completions."
+    },
+    "RESEND_API_KEY": {
+      "label": "Resend API Key",
+      "type": "http-bearer",
+      "notes": "Referenced as env.RESEND_API_KEY. Used for all outbound email sends via https://api.resend.com/emails."
+    },
+    "RESEND_FROM_ADDRESS": {
+      "label": "Resend From Address",
+      "type": "string",
+      "notes": "Referenced as env.RESEND_FROM_ADDRESS. Verified sender email used in the FROM field on re-engagement emails to invitees. Must be a Resend-verified domain address."
+    },
+    "RESEND_FROM_NAME": {
+      "label": "Resend From Display Name",
+      "type": "string",
+      "notes": "Referenced as env.RESEND_FROM_NAME. Display name shown alongside env.RESEND_FROM_ADDRESS in the FROM field, e.g. 'Your Scheduling Team'. Must be white-label safe — no CWI AI mention."
+    },
+    "CWI_ALERT_FROM_ADDRESS": {
+      "label": "Internal Alert From Address",
+      "type": "string",
+      "notes": "Referenced as env.CWI_ALERT_FROM_ADDRESS. Verified Resend sender address used as FROM on internal error-alert emails. Never exposed to clients."
+    },
+    "ADMIN_EMAIL": {
+      "label": "Admin Email Address",
+      "type": "string",
+      "notes": "Referenced as env.ADMIN_EMAIL. Destination address for error alerts and operational notifications."
+    },
+    "HUBSPOT_API_KEY": {
+      "label": "HubSpot Private App Token",
+      "type": "http-bearer",
+      "notes": "Referenced as env.HUBSPOT_API_KEY. HubSpot private app access token with crm.objects.notes.write scope."
+    },
+    "CALENDLY_LINK": {
+      "label": "Calendly Reschedule Link",
+      "type": "string",
+      "notes": "Referenced as env.CALENDLY_LINK. Self-service booking/reschedule URL appended to the re-engagement email body."
+    }
+  },
+  "notes": [
+    {
+      "label": "Module 1 — Calendly Canceled Webhook Trigger",
+      "note": "Uses CustomWebHook hook 3020. Fires on every Calendly webhook POST. The filter passes only payloads where body.event == 'invitee.canceled', dropping rescheduled and other event types. Invitee name is at payload.payload.invitee.name; email is at payload.payload.invitee.email.",
+      "metadata": {
+        "designer": { "x": 0, "y": -180 }
+      }
+    },
+    {
+      "label": "Module 2 — Sleep 2 Hours",
+      "note": "builtin:Sleep for 7200 seconds (2 hours). Provides a cooling-off period so the re-engagement email arrives well after the cancellation, avoiding an overly reactive impression.",
+      "metadata": {
+        "designer": { "x": 300, "y": -180 }
+      }
+    },
+    {
+      "label": "Module 3 — OpenRouter / Claude: Write Re-Engagement Email",
+      "note": "Calls anthropic/claude-sonnet-4-6 via OpenRouter. The prompt asks for exactly 3 sentences addressed to the invitee by name, offering to reschedule in a warm, understanding, never-pushy tone. Only the email body text is returned (no subject, no greeting boilerplate). temperature 0.7 for natural tone variety.",
+      "metadata": {
+        "designer": { "x": 600, "y": -180 }
+      }
+    },
+    {
+      "label": "Module 4 — Resend: Send Re-Engagement Email",
+      "note": "Sends the Claude-written body to the Calendly invitee email. FROM is constructed as 'env.RESEND_FROM_NAME <env.RESEND_FROM_ADDRESS>' for a professional display. Subject is fixed: 'Let us find a better time'. Body appends env.CALENDLY_LINK on a new line after Claude's text. White-label: no CWI AI branding in any user-visible field.",
+      "metadata": {
+        "designer": { "x": 900, "y": -180 }
+      }
+    },
+    {
+      "label": "Module 5 — HubSpot: Create Note",
+      "note": "POSTs a new note to HubSpot CRM (crm/v3/objects/notes). Records the recovery action with invitee name, email, Calendly event type, and an Eastern Time timestamp. In production, associate this note to the matching HubSpot contact using the associations endpoint after creation.",
+      "metadata": {
+        "designer": { "x": 1200, "y": -180 }
+      }
+    },
+    {
+      "label": "Module 6 — Error Route: Resend Alert",
+      "note": "Attached as the error handler for the scenario. On any unhandled error in modules 2–5, sends a plain-text alert to env.ADMIN_EMAIL from env.CWI_ALERT_FROM_ADDRESS. Alert includes the failed module ID, error type, error message, invitee details, and timestamp so the admin can follow up manually.",
+      "metadata": {
+        "designer": { "x": 600, "y": 480 }
+      }
+    }
+  ]
+}

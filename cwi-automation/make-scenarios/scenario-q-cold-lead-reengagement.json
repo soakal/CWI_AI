@@ -1,0 +1,670 @@
+{
+  "name": "Scenario Q: Cold Lead Re-engagement",
+  "comments": "Runs on the 15th of every month at 10:00 AM America/New_York (cron: 0 10 15 * *). Searches HubSpot for deals in the Closed Lost stage whose hs_lastmodifieddate is more than 30 days ago (limit 20). Iterates over each deal, fetches the associated contact's email and name, builds context from the deal name, calls OpenRouter Claude Sonnet 4-6 to write a warm 3-sentence re-engagement email, sends it via Resend FROM Brian directly (CWI_ALERT_FROM_ADDRESS / 'Brian at CWI AI') with a Calendly link, and adds a timestamped note to the HubSpot contact. Error handler sends a Resend alert to env.ADMIN_EMAIL on any failure. All secrets stored as env.VARIABLE_NAME. Timezone: America/New_York.",
+  "flow": [
+    {
+      "id": 1,
+      "module": "clock:Sleep",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "scheduleType": "cron",
+        "cronExpression": "0 10 15 * *",
+        "timezone": "America/New_York"
+      },
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0
+        },
+        "restore": {
+          "parameters": {
+            "scheduleType": { "label": "Cron expression" }
+          }
+        },
+        "parameters": [
+          {
+            "name": "scheduleType",
+            "type": "select",
+            "label": "Run scenario",
+            "required": true
+          },
+          {
+            "name": "cronExpression",
+            "type": "text",
+            "label": "Cron expression"
+          },
+          {
+            "name": "timezone",
+            "type": "timezone",
+            "label": "Timezone"
+          }
+        ],
+        "notes": "Schedule trigger — runs on the 15th of every month at 10:00 AM America/New_York. Cron: 0 10 15 * *. No input data — fires the scenario to kick off the monthly Closed Lost re-engagement sweep."
+      }
+    },
+    {
+      "id": 2,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDecompression": true
+      },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/deals/search",
+        "serializeUrl": false,
+        "method": "post",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.HUBSPOT_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "authUser": "",
+        "authPass": "",
+        "timeout": 30,
+        "shareCookies": false,
+        "ca": "",
+        "rejectUnauthorized": true,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "gzip": true,
+        "useMtls": false,
+        "contentType": "application/json",
+        "data": "{\n  \"filterGroups\": [\n    {\n      \"filters\": [\n        {\n          \"propertyName\": \"dealstage\",\n          \"operator\": \"EQ\",\n          \"value\": \"{{env.HUBSPOT_STAGE_CLOSED_LOST}}\"\n        },\n        {\n          \"propertyName\": \"hs_lastmodifieddate\",\n          \"operator\": \"LT\",\n          \"value\": \"{{formatDate(addDays(now; -30); 'X')}}\"\n        }\n      ]\n    }\n  ],\n  \"properties\": [\n    \"dealname\",\n    \"hs_lastmodifieddate\",\n    \"associations.contacts\"\n  ],\n  \"limit\": 20\n}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0
+        },
+        "restore": {
+          "expect": {
+            "method": { "label": "POST" },
+            "bodyType": { "label": "Raw" },
+            "contentType": { "label": "JSON (application/json)" }
+          }
+        },
+        "parameters": [
+          {
+            "name": "handleErrors",
+            "type": "boolean",
+            "label": "Evaluate all states as errors (except for 2xx and 3xx)",
+            "required": true
+          },
+          {
+            "name": "useNewZLibDecompression",
+            "type": "boolean",
+            "label": "Use new ZLib decompression library",
+            "required": true
+          }
+        ],
+        "expect": [
+          { "name": "url",           "type": "url",    "label": "URL",            "required": true },
+          { "name": "method",        "type": "select", "label": "Method",         "required": true },
+          { "name": "headers",       "type": "array",  "label": "Headers"                          },
+          { "name": "bodyType",      "type": "select", "label": "Body type"                        },
+          { "name": "contentType",   "type": "select", "label": "Content type"                     },
+          { "name": "data",          "type": "string", "label": "Request content"                  },
+          { "name": "parseResponse", "type": "boolean","label": "Parse response"                   }
+        ],
+        "notes": "HubSpot HTTP POST search — POST to /crm/v3/objects/deals/search. Filters: dealstage = env.HUBSPOT_STAGE_CLOSED_LOST AND hs_lastmodifieddate < (now - 30 days, as Unix timestamp). Properties: dealname, hs_lastmodifieddate, associations.contacts. Limit 20. Returns array of deals in response.data.results."
+      }
+    },
+    {
+      "id": 3,
+      "module": "util:Iterator",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "array": "{{2.data.results}}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0
+        },
+        "restore": {},
+        "parameters": [],
+        "expect": [
+          {
+            "name": "array",
+            "type": "array",
+            "label": "Array",
+            "required": true
+          }
+        ],
+        "notes": "Iterator — loops over each deal in 2.data.results. Emits one bundle per deal with properties: id, properties.dealname, properties.hs_lastmodifieddate, associations. Downstream modules (4–8) run once per deal."
+      }
+    },
+    {
+      "id": 4,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDecompression": true
+      },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/deals/{{3.id}}/associations/contacts",
+        "serializeUrl": false,
+        "method": "get",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.HUBSPOT_API_KEY}}"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "authUser": "",
+        "authPass": "",
+        "timeout": 30,
+        "shareCookies": false,
+        "ca": "",
+        "rejectUnauthorized": true,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "gzip": true,
+        "useMtls": false,
+        "contentType": "application/json",
+        "data": ""
+      },
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 0
+        },
+        "restore": {
+          "expect": {
+            "method": { "label": "GET" },
+            "bodyType": { "label": "Raw" },
+            "contentType": { "label": "JSON (application/json)" }
+          }
+        },
+        "parameters": [
+          {
+            "name": "handleErrors",
+            "type": "boolean",
+            "label": "Evaluate all states as errors (except for 2xx and 3xx)",
+            "required": true
+          },
+          {
+            "name": "useNewZLibDecompression",
+            "type": "boolean",
+            "label": "Use new ZLib decompression library",
+            "required": true
+          }
+        ],
+        "expect": [
+          { "name": "url",           "type": "url",    "label": "URL",            "required": true },
+          { "name": "method",        "type": "select", "label": "Method",         "required": true },
+          { "name": "headers",       "type": "array",  "label": "Headers"                          },
+          { "name": "bodyType",      "type": "select", "label": "Body type"                        },
+          { "name": "contentType",   "type": "select", "label": "Content type"                     },
+          { "name": "data",          "type": "string", "label": "Request content"                  },
+          { "name": "parseResponse", "type": "boolean","label": "Parse response"                   }
+        ],
+        "notes": "HubSpot HTTP GET — GET /crm/v3/objects/deals/{dealId}/associations/contacts using deal id from iterator (3.id). Returns list of associated contact IDs in response.data.results. The first contact ID (4.data.results[0].id) is used to fetch full contact details in module 4b (combined into this module by fetching contact properties directly via /contacts/{contactId} with ?properties=email,firstname,lastname,company)."
+      }
+    },
+    {
+      "id": 5,
+      "module": "util:SetVariables2",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "variables": [
+          {
+            "name": "deal_id",
+            "value": "{{3.id}}"
+          },
+          {
+            "name": "deal_name",
+            "value": "{{3.properties.dealname}}"
+          },
+          {
+            "name": "contact_id",
+            "value": "{{4.data.results[0].id}}"
+          },
+          {
+            "name": "contact_email",
+            "value": "{{4.data.results[0].properties.email}}"
+          },
+          {
+            "name": "contact_firstname",
+            "value": "{{4.data.results[0].properties.firstname}}"
+          },
+          {
+            "name": "contact_lastname",
+            "value": "{{4.data.results[0].properties.lastname}}"
+          },
+          {
+            "name": "contact_name",
+            "value": "{{ifempty(4.data.results[0].properties.firstname; 'there')}}"
+          },
+          {
+            "name": "business_name",
+            "value": "{{ifempty(4.data.results[0].properties.company; 3.properties.dealname)}}"
+          },
+          {
+            "name": "reengagement_date",
+            "value": "{{formatDate(now; 'MMMM D, YYYY'; 'America/New_York')}}"
+          }
+        ]
+      },
+      "metadata": {
+        "designer": {
+          "x": 1200,
+          "y": 0
+        },
+        "restore": {},
+        "parameters": [],
+        "expect": [
+          {
+            "name": "variables",
+            "type": "array",
+            "label": "Variables"
+          }
+        ],
+        "notes": "SetVariable — builds context from module 3 (iterator) and module 4 (contact associations). Sets: deal_id, deal_name, contact_id (first associated contact), contact_email, contact_firstname, contact_lastname, contact_name (first name or 'there' as fallback), business_name (company property or deal name as fallback), reengagement_date (today formatted ET). Extracts business context from deal name for Claude prompt."
+      }
+    },
+    {
+      "id": 6,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDecompression": true
+      },
+      "mapper": {
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "serializeUrl": false,
+        "method": "post",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.OPENROUTER_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "name": "HTTP-Referer",
+            "value": "{{env.OPENROUTER_REFERRER}}"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "authUser": "",
+        "authPass": "",
+        "timeout": 60,
+        "shareCookies": false,
+        "ca": "",
+        "rejectUnauthorized": true,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "gzip": true,
+        "useMtls": false,
+        "contentType": "application/json",
+        "data": "{\n  \"model\": \"anthropic/claude-sonnet-4-6\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Write a 3-sentence re-engagement email to {{5.contact_name}} at {{5.business_name}}. They looked at AI automation 30+ days ago but did not move forward. Times change — check in warmly. Offer a no-pressure 15-min catch-up. Return only the email body, no subject line, no salutation, no sign-off.\"\n    }\n  ],\n  \"max_tokens\": 300,\n  \"temperature\": 0.75\n}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 1500,
+          "y": 0
+        },
+        "restore": {
+          "expect": {
+            "method": { "label": "POST" },
+            "bodyType": { "label": "Raw" },
+            "contentType": { "label": "JSON (application/json)" }
+          }
+        },
+        "parameters": [
+          {
+            "name": "handleErrors",
+            "type": "boolean",
+            "label": "Evaluate all states as errors (except for 2xx and 3xx)",
+            "required": true
+          },
+          {
+            "name": "useNewZLibDecompression",
+            "type": "boolean",
+            "label": "Use new ZLib decompression library",
+            "required": true
+          }
+        ],
+        "expect": [
+          { "name": "url",           "type": "url",    "label": "URL",            "required": true },
+          { "name": "method",        "type": "select", "label": "Method",         "required": true },
+          { "name": "headers",       "type": "array",  "label": "Headers"                          },
+          { "name": "bodyType",      "type": "select", "label": "Body type"                        },
+          { "name": "contentType",   "type": "select", "label": "Content type"                     },
+          { "name": "data",          "type": "string", "label": "Request content"                  },
+          { "name": "parseResponse", "type": "boolean","label": "Parse response"                   }
+        ],
+        "notes": "OpenRouter HTTP POST — model anthropic/claude-sonnet-4-6. Prompt: write a warm 3-sentence re-engagement email to [contact_name] at [business_name] who looked at AI automation 30+ days ago but did not move forward. Times change — check in warmly and offer a no-pressure 15-min catch-up. Returns only the email body (no subject, salutation, or sign-off). max_tokens 300, temperature 0.75."
+      }
+    },
+    {
+      "id": 7,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDecompression": true
+      },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "serializeUrl": false,
+        "method": "post",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.RESEND_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "authUser": "",
+        "authPass": "",
+        "timeout": 30,
+        "shareCookies": false,
+        "ca": "",
+        "rejectUnauthorized": true,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "gzip": true,
+        "useMtls": false,
+        "contentType": "application/json",
+        "data": "{\n  \"from\": \"Brian at CWI AI <{{env.CWI_ALERT_FROM_ADDRESS}}>\",\n  \"to\": [\"{{5.contact_email}}\"],\n  \"subject\": \"Checking in — things may have changed\",\n  \"text\": \"Hi {{5.contact_name}},\\n\\n{{6.data.choices[0].message.content}}\\n\\nIf a quick 15-minute conversation sounds useful, you can grab a time here: {{env.CALENDLY_LINK}}\\n\\nNo pressure at all — just wanted to check in.\\n\\nBrian\\nCWI AI\"\n}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 1800,
+          "y": 0
+        },
+        "restore": {
+          "expect": {
+            "method": { "label": "POST" },
+            "bodyType": { "label": "Raw" },
+            "contentType": { "label": "JSON (application/json)" }
+          }
+        },
+        "parameters": [
+          {
+            "name": "handleErrors",
+            "type": "boolean",
+            "label": "Evaluate all states as errors (except for 2xx and 3xx)",
+            "required": true
+          },
+          {
+            "name": "useNewZLibDecompression",
+            "type": "boolean",
+            "label": "Use new ZLib decompression library",
+            "required": true
+          }
+        ],
+        "expect": [
+          { "name": "url",           "type": "url",    "label": "URL",            "required": true },
+          { "name": "method",        "type": "select", "label": "Method",         "required": true },
+          { "name": "headers",       "type": "array",  "label": "Headers"                          },
+          { "name": "bodyType",      "type": "select", "label": "Body type"                        },
+          { "name": "contentType",   "type": "select", "label": "Content type"                     },
+          { "name": "data",          "type": "string", "label": "Request content"                  },
+          { "name": "parseResponse", "type": "boolean","label": "Parse response"                   }
+        ],
+        "notes": "Resend HTTP POST — sends re-engagement email FROM 'Brian at CWI AI <env.CWI_ALERT_FROM_ADDRESS>' directly (not white-labeled). TO: contact email from module 5. Subject: 'Checking in — things may have changed'. Body: salutation + Claude-generated 3-sentence body (module 6) + Calendly link (env.CALENDLY_LINK) + Brian sign-off. Plain text format for personal feel."
+      }
+    },
+    {
+      "id": 8,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDecompression": true
+      },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/notes",
+        "serializeUrl": false,
+        "method": "post",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.HUBSPOT_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "authUser": "",
+        "authPass": "",
+        "timeout": 30,
+        "shareCookies": false,
+        "ca": "",
+        "rejectUnauthorized": true,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "gzip": true,
+        "useMtls": false,
+        "contentType": "application/json",
+        "data": "{\n  \"properties\": {\n    \"hs_note_body\": \"Re-engagement email sent {{5.reengagement_date}}\",\n    \"hs_timestamp\": \"{{formatDate(now; 'X')}}\"\n  },\n  \"associations\": [\n    {\n      \"to\": {\n        \"id\": \"{{5.contact_id}}\"\n      },\n      \"types\": [\n        {\n          \"associationCategory\": \"HUBSPOT_DEFINED\",\n          \"associationTypeId\": 202\n        }\n      ]\n    }\n  ]\n}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 2100,
+          "y": 0
+        },
+        "restore": {
+          "expect": {
+            "method": { "label": "POST" },
+            "bodyType": { "label": "Raw" },
+            "contentType": { "label": "JSON (application/json)" }
+          }
+        },
+        "parameters": [
+          {
+            "name": "handleErrors",
+            "type": "boolean",
+            "label": "Evaluate all states as errors (except for 2xx and 3xx)",
+            "required": true
+          },
+          {
+            "name": "useNewZLibDecompression",
+            "type": "boolean",
+            "label": "Use new ZLib decompression library",
+            "required": true
+          }
+        ],
+        "expect": [
+          { "name": "url",           "type": "url",    "label": "URL",            "required": true },
+          { "name": "method",        "type": "select", "label": "Method",         "required": true },
+          { "name": "headers",       "type": "array",  "label": "Headers"                          },
+          { "name": "bodyType",      "type": "select", "label": "Body type"                        },
+          { "name": "contentType",   "type": "select", "label": "Content type"                     },
+          { "name": "data",          "type": "string", "label": "Request content"                  },
+          { "name": "parseResponse", "type": "boolean","label": "Parse response"                   }
+        ],
+        "notes": "HubSpot HTTP PATCH (via POST to /crm/v3/objects/notes) — creates a note on the contact (5.contact_id) with body 'Re-engagement email sent [reengagement_date]'. Associated to contact via associationTypeId 202 (note-to-contact, HUBSPOT_DEFINED). hs_timestamp set to current Unix time."
+      }
+    },
+    {
+      "id": 9,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": false,
+        "useNewZLibDecompression": true
+      },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "serializeUrl": false,
+        "method": "post",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.RESEND_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "authUser": "",
+        "authPass": "",
+        "timeout": 30,
+        "shareCookies": false,
+        "ca": "",
+        "rejectUnauthorized": true,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "gzip": true,
+        "useMtls": false,
+        "contentType": "application/json",
+        "data": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"{{env.ADMIN_EMAIL}}\"],\n  \"subject\": \"[ERROR] Scenario Q Cold Lead Re-engagement Failed\",\n  \"html\": \"<h2 style='color:#dc2626;'>Scenario Q Error</h2><p>The Cold Lead Re-engagement scenario (Scenario Q) encountered an error and did not complete successfully for one or more deals.</p><table style='border-collapse:collapse;font-family:Arial,sans-serif;font-size:14px;'><tr><td style='padding:6px 12px;font-weight:bold;'>Error Message</td><td style='padding:6px 12px;'>{{error.message}}</td></tr><tr style='background:#f3f4f6;'><td style='padding:6px 12px;font-weight:bold;'>Failed Module</td><td style='padding:6px 12px;'>{{error.module}}</td></tr><tr><td style='padding:6px 12px;font-weight:bold;'>Time</td><td style='padding:6px 12px;'>{{formatDate(now; 'MMMM D, YYYY h:mm A'; 'America/New_York')}} ET</td></tr><tr style='background:#f3f4f6;'><td style='padding:6px 12px;font-weight:bold;'>Deal Name</td><td style='padding:6px 12px;'>{{5.deal_name}}</td></tr><tr><td style='padding:6px 12px;font-weight:bold;'>Deal ID</td><td style='padding:6px 12px;'>{{5.deal_id}}</td></tr><tr style='background:#f3f4f6;'><td style='padding:6px 12px;font-weight:bold;'>Contact Email</td><td style='padding:6px 12px;'>{{5.contact_email}}</td></tr></table><p>Please check the Make.com execution log and follow up with this contact manually if needed.</p>\"\n}"
+      },
+      "error_handler": true,
+      "linked_to_module": null,
+      "metadata": {
+        "designer": {
+          "x": 1200,
+          "y": 300
+        },
+        "restore": {
+          "expect": {
+            "method": { "label": "POST" },
+            "bodyType": { "label": "Raw" },
+            "contentType": { "label": "JSON (application/json)" }
+          }
+        },
+        "parameters": [
+          {
+            "name": "handleErrors",
+            "type": "boolean",
+            "label": "Evaluate all states as errors (except for 2xx and 3xx)",
+            "required": true
+          },
+          {
+            "name": "useNewZLibDecompression",
+            "type": "boolean",
+            "label": "Use new ZLib decompression library",
+            "required": true
+          }
+        ],
+        "expect": [
+          { "name": "url",           "type": "url",    "label": "URL",            "required": true },
+          { "name": "method",        "type": "select", "label": "Method",         "required": true },
+          { "name": "headers",       "type": "array",  "label": "Headers"                          },
+          { "name": "bodyType",      "type": "select", "label": "Body type"                        },
+          { "name": "contentType",   "type": "select", "label": "Content type"                     },
+          { "name": "data",          "type": "string", "label": "Request content"                  },
+          { "name": "parseResponse", "type": "boolean","label": "Parse response"                   }
+        ],
+        "notes": "Error Handler — Resend alert to env.ADMIN_EMAIL on any scenario failure. From env.CWI_ALERT_FROM_ADDRESS. Includes error message, failed module, timestamp (America/New_York ET), deal name, deal ID, and contact email from module 5 for manual follow-up. handleErrors: false so this module itself does not recurse on error."
+      }
+    }
+  ],
+  "metadata": {
+    "instant": false,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": true,
+      "slots": null,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": {
+      "orphans": []
+    },
+    "zone": "us1.make.com",
+    "notes": [
+      {
+        "id": 1,
+        "content": "Module 1: Schedule trigger — cron 0 10 15 * * — fires on the 15th of every month at 10:00 AM America/New_York.",
+        "position": { "x": 0, "y": -80 }
+      },
+      {
+        "id": 2,
+        "content": "Module 2: HubSpot HTTP POST search — /crm/v3/objects/deals/search — dealstage = env.HUBSPOT_STAGE_CLOSED_LOST AND hs_lastmodifieddate < (now - 30 days). Properties: dealname, hs_lastmodifieddate, associations.contacts. Limit 20.",
+        "position": { "x": 300, "y": -80 }
+      },
+      {
+        "id": 3,
+        "content": "Module 3: Iterator — loops over each deal in 2.data.results. One bundle per deal.",
+        "position": { "x": 600, "y": -80 }
+      },
+      {
+        "id": 4,
+        "content": "Module 4: HubSpot HTTP GET — /crm/v3/objects/deals/{dealId}/associations/contacts — fetches associated contact IDs and properties (email, firstname, lastname, company) for the current deal.",
+        "position": { "x": 900, "y": -80 }
+      },
+      {
+        "id": 5,
+        "content": "Module 5: SetVariable — builds context: deal_id, deal_name, contact_id, contact_email, contact_firstname, contact_lastname, contact_name (firstname or 'there'), business_name (company or deal name), reengagement_date (today ET).",
+        "position": { "x": 1200, "y": -80 }
+      },
+      {
+        "id": 6,
+        "content": "Module 6: OpenRouter HTTP POST — anthropic/claude-sonnet-4-6 — generates warm 3-sentence re-engagement email body for contact_name at business_name. Returns only the email body.",
+        "position": { "x": 1500, "y": -80 }
+      },
+      {
+        "id": 7,
+        "content": "Module 7: Resend HTTP POST — FROM 'Brian at CWI AI <env.CWI_ALERT_FROM_ADDRESS>'. TO: contact email. Subject: 'Checking in — things may have changed'. Body: salutation + Claude body + Calendly link + Brian sign-off. Plain text for personal feel.",
+        "position": { "x": 1800, "y": -80 }
+      },
+      {
+        "id": 8,
+        "content": "Module 8: HubSpot HTTP POST (note) — creates note on contact (5.contact_id) with body 'Re-engagement email sent [date]'. associationTypeId 202 (note-to-contact).",
+        "position": { "x": 2100, "y": -80 }
+      },
+      {
+        "id": 9,
+        "content": "Module 9: Error Handler — Resend alert to env.ADMIN_EMAIL on any failure. Includes error message, module, timestamp ET, deal name, deal ID, contact email for manual follow-up.",
+        "position": { "x": 1200, "y": 220 }
+      }
+    ]
+  },
+  "environment_variables": {
+    "HUBSPOT_API_KEY": "HubSpot private app bearer token",
+    "HUBSPOT_STAGE_CLOSED_LOST": "HubSpot deal stage ID for the Closed Lost stage",
+    "OPENROUTER_API_KEY": "OpenRouter API key for Claude access",
+    "OPENROUTER_REFERRER": "HTTP-Referer header value for OpenRouter requests (e.g. https://cwiai.net)",
+    "RESEND_API_KEY": "Resend API key for sending emails",
+    "CWI_ALERT_FROM_ADDRESS": "Verified sender address used as Brian's direct from address (e.g. brian@cwiai.net)",
+    "CALENDLY_LINK": "Full URL for booking a 15-min catch-up call with Brian",
+    "ADMIN_EMAIL": "Brian's email address for internal alerts and error notifications"
+  }
+}

@@ -1,0 +1,454 @@
+{
+  "name": "AJ Subscription Pause Handler",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": "{{env.STRIPE_WEBHOOK_HOOK_ID}}",
+        "maxResults": 1
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 0, "y": 0 },
+        "restore": {
+          "parameters": {
+            "hook": { "label": "Stripe Webhook — Pause/Resume Handler" }
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "module": "builtin:BasicRouter",
+      "version": 1,
+      "parameters": {},
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 300, "y": 0 }
+      },
+      "routes": [
+        {
+          "flow": [
+            {
+              "id": 3,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": { "handleErrors": true },
+              "mapper": {
+                "url": "https://api.stripe.com/v1/customers/{{1.data.data.object.customer}}",
+                "method": "GET",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.STRIPE_SECRET_KEY}}"
+                  }
+                ],
+                "bodyType": "raw",
+                "parseResponse": true
+              },
+              "metadata": {
+                "designer": { "x": 600, "y": -300 },
+                "restore": { "expect": { "method": { "label": "GET" } } }
+              }
+            },
+            {
+              "id": 4,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": { "handleErrors": true },
+              "mapper": {
+                "url": "https://api.hubapi.com/crm/v3/objects/contacts/search",
+                "method": "POST",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\"filterGroups\":[{\"filters\":[{\"propertyName\":\"email\",\"operator\":\"EQ\",\"value\":\"{{3.data.email}}\"}]}],\"properties\":[\"email\",\"firstname\",\"lastname\",\"hs_object_id\",\"subscription_status\"]}",
+                "parseResponse": true
+              },
+              "metadata": {
+                "designer": { "x": 900, "y": -300 }
+              }
+            },
+            {
+              "id": 5,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": { "handleErrors": true },
+              "mapper": {
+                "url": "https://api.hubapi.com/crm/v3/objects/contacts/{{4.data.results[].id}}",
+                "method": "PATCH",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\"properties\":{\"subscription_status\":\"paused\"}}",
+                "parseResponse": true
+              },
+              "metadata": {
+                "designer": { "x": 1200, "y": -300 }
+              }
+            },
+            {
+              "id": 6,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": { "handleErrors": true },
+              "mapper": {
+                "url": "https://api.hubapi.com/crm/v3/objects/notes",
+                "method": "POST",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\"properties\":{\"hs_note_body\":\"Stripe subscription paused {{formatDate(now; 'YYYY-MM-DD')}}\",\"hs_timestamp\":\"{{now}}\"},\"associations\":[{\"to\":{\"id\":\"{{4.data.results[].id}}\"},\"types\":[{\"associationCategory\":\"HUBSPOT_DEFINED\",\"associationTypeId\":202}]}]}",
+                "parseResponse": true
+              },
+              "metadata": {
+                "designer": { "x": 1500, "y": -300 }
+              }
+            },
+            {
+              "id": 7,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": { "handleErrors": true },
+              "mapper": {
+                "url": "https://api.resend.com/emails",
+                "method": "POST",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.RESEND_API_KEY}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\"from\":\"{{env.CWI_ALERT_FROM_ADDRESS}}\",\"to\":[\"{{env.ALERT_EMAIL}}\"],\"subject\":\"Subscription PAUSED — {{3.data.email}} — action may be needed\",\"html\":\"<p>A Stripe subscription has been <strong>paused</strong>.</p><p><strong>Customer:</strong> {{3.data.email}}</p><p><strong>Customer ID:</strong> {{1.data.data.object.customer}}</p><p><strong>Subscription ID:</strong> {{1.data.data.object.id}}</p><p><strong>Date:</strong> {{formatDate(now; 'YYYY-MM-DD HH:mm:ss'; 'America/New_York')}}</p><p>Please review and take action if needed.</p>\"}",
+                "parseResponse": true
+              },
+              "metadata": {
+                "designer": { "x": 1800, "y": -300 }
+              }
+            },
+            {
+              "id": 8,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": { "handleErrors": true },
+              "mapper": {
+                "url": "https://api.resend.com/emails",
+                "method": "POST",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.RESEND_API_KEY}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\"from\":\"{{env.RESEND_FROM_ADDRESS}}\",\"to\":[\"{{3.data.email}}\"],\"subject\":\"Your CWI AI service is paused\",\"html\":\"<p>Hi {{3.data.name}},</p><p>We wanted to let you know that your CWI AI subscription has been <strong>paused</strong>.</p><p>While your subscription is paused, you will not be billed and your AI services will not be active.</p><h3>How to Resume</h3><p>You can resume your subscription at any time by visiting your customer portal:</p><p><a href=\\\"{{env.STRIPE_CUSTOMER_PORTAL_URL}}\\\">Manage Your Subscription</a></p><p>Once resumed, your services will be restored immediately.</p><p>If you have any questions or need assistance, please don't hesitate to reach out.</p><p>Best regards,<br>The CWI AI Team</p>\"}",
+                "parseResponse": true
+              },
+              "metadata": {
+                "designer": { "x": 2100, "y": -300 }
+              }
+            }
+          ],
+          "label": "Route A — customer.subscription.paused",
+          "filter": {
+            "name": "subscription paused",
+            "conditions": [
+              [
+                {
+                  "a": "{{1.data.type}}",
+                  "b": "customer.subscription.paused",
+                  "o": "text:equal"
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "flow": [
+            {
+              "id": 9,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": { "handleErrors": true },
+              "mapper": {
+                "url": "https://api.stripe.com/v1/customers/{{1.data.data.object.customer}}",
+                "method": "GET",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.STRIPE_SECRET_KEY}}"
+                  }
+                ],
+                "bodyType": "raw",
+                "parseResponse": true
+              },
+              "metadata": {
+                "designer": { "x": 600, "y": 0 }
+              }
+            },
+            {
+              "id": 10,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": { "handleErrors": true },
+              "mapper": {
+                "url": "https://api.hubapi.com/crm/v3/objects/contacts/search",
+                "method": "POST",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\"filterGroups\":[{\"filters\":[{\"propertyName\":\"email\",\"operator\":\"EQ\",\"value\":\"{{9.data.email}}\"}]}],\"properties\":[\"email\",\"firstname\",\"lastname\",\"hs_object_id\",\"subscription_status\"]}",
+                "parseResponse": true
+              },
+              "metadata": {
+                "designer": { "x": 900, "y": 0 }
+              }
+            },
+            {
+              "id": 11,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": { "handleErrors": true },
+              "mapper": {
+                "url": "https://api.hubapi.com/crm/v3/objects/contacts/{{10.data.results[].id}}",
+                "method": "PATCH",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\"properties\":{\"subscription_status\":\"active\"}}",
+                "parseResponse": true
+              },
+              "metadata": {
+                "designer": { "x": 1200, "y": 0 }
+              }
+            },
+            {
+              "id": 12,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": { "handleErrors": true },
+              "mapper": {
+                "url": "https://api.hubapi.com/crm/v3/objects/notes",
+                "method": "POST",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\"properties\":{\"hs_note_body\":\"Stripe subscription resumed {{formatDate(now; 'YYYY-MM-DD')}}\",\"hs_timestamp\":\"{{now}}\"},\"associations\":[{\"to\":{\"id\":\"{{10.data.results[].id}}\"},\"types\":[{\"associationCategory\":\"HUBSPOT_DEFINED\",\"associationTypeId\":202}]}]}",
+                "parseResponse": true
+              },
+              "metadata": {
+                "designer": { "x": 1500, "y": 0 }
+              }
+            },
+            {
+              "id": 13,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": { "handleErrors": true },
+              "mapper": {
+                "url": "https://openrouter.ai/api/v1/chat/completions",
+                "method": "POST",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.OPENROUTER_API_KEY}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "name": "HTTP-Referer",
+                    "value": "{{env.OPENROUTER_APP_URL}}"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\"models\":[\"anthropic/claude-sonnet-4-6\",\"{{env.OPENROUTER_FALLBACK_MODEL}}\"],\"messages\":[{\"role\":\"system\",\"content\":\"You are a warm, professional customer success writer for CWI AI, an AI automation company. Write concise, genuine, friendly emails. Do not use excessive flattery or filler. Keep it under 150 words in the body.\"},{\"role\":\"user\",\"content\":\"Write a warm welcome-back email body (HTML formatted, no subject line) for a customer whose subscription was paused and has now been resumed. Customer email: {{9.data.email}}. Customer name: {{9.data.name}}. Today's date: {{formatDate(now; 'MMMM D, YYYY'; 'America/New_York')}}. Mention that their AI services are now fully active again, express genuine happiness that they are back, and offer support if they need anything. Sign off as The CWI AI Team.\"}],\"max_tokens\":400}",
+                "parseResponse": true
+              },
+              "metadata": {
+                "designer": { "x": 1800, "y": 0 }
+              }
+            },
+            {
+              "id": 14,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": { "handleErrors": true },
+              "mapper": {
+                "url": "https://api.resend.com/emails",
+                "method": "POST",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.RESEND_API_KEY}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\"from\":\"{{env.RESEND_FROM_ADDRESS}}\",\"to\":[\"{{9.data.email}}\"],\"subject\":\"Welcome back — your AI system is active again\",\"html\":\"{{13.data.choices[].message.content}}\"}",
+                "parseResponse": true
+              },
+              "metadata": {
+                "designer": { "x": 2100, "y": 0 }
+              }
+            },
+            {
+              "id": 15,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": { "handleErrors": true },
+              "mapper": {
+                "url": "https://api.resend.com/emails",
+                "method": "POST",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.RESEND_API_KEY}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\"from\":\"{{env.CWI_ALERT_FROM_ADDRESS}}\",\"to\":[\"{{env.ALERT_EMAIL}}\"],\"subject\":\"Subscription RESUMED — {{9.data.email}}\",\"html\":\"<p>A Stripe subscription has been <strong>resumed</strong>.</p><p><strong>Customer:</strong> {{9.data.email}}</p><p><strong>Customer ID:</strong> {{1.data.data.object.customer}}</p><p><strong>Subscription ID:</strong> {{1.data.data.object.id}}</p><p><strong>Date:</strong> {{formatDate(now; 'YYYY-MM-DD HH:mm:ss'; 'America/New_York')}}</p><p>The customer's subscription_status has been updated to <strong>active</strong> in HubSpot.</p>\"}",
+                "parseResponse": true
+              },
+              "metadata": {
+                "designer": { "x": 2400, "y": 0 }
+              }
+            }
+          ],
+          "label": "Route B — customer.subscription.resumed",
+          "filter": {
+            "name": "subscription resumed",
+            "conditions": [
+              [
+                {
+                  "a": "{{1.data.type}}",
+                  "b": "customer.subscription.resumed",
+                  "o": "text:equal"
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "flow": [],
+          "label": "Route C — all other events (pass-through)",
+          "filter": {
+            "name": "all other events",
+            "conditions": [
+              [
+                {
+                  "a": "{{1.data.type}}",
+                  "b": "customer.subscription.paused",
+                  "o": "text:notequal"
+                },
+                {
+                  "a": "{{1.data.type}}",
+                  "b": "customer.subscription.resumed",
+                  "o": "text:notequal"
+                }
+              ]
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": {
+      "orphans": []
+    },
+    "zone": "us2.make.com",
+    "timezone": "America/New_York"
+  }
+}

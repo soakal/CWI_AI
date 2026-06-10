@@ -1,0 +1,793 @@
+{
+  "name": "Scenario B: Missed Inquiry Follow-Up",
+  "flow": [
+    {
+      "id": 1,
+      "module": "builtin:BasicTrigger",
+      "version": 1,
+      "parameters": {
+        "interval": 1800
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0
+        },
+        "restore": {}
+      },
+      "scheduling": {
+        "type": "interval",
+        "interval": 1800
+      },
+      "trigger": {
+        "type": "schedule"
+      },
+      "label": "Every 30 Minutes"
+    },
+    {
+      "id": 2,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "url": "https://api.freshchat.com/v2/conversations?status=open&assigned_agent_type=bot&page_size=50",
+        "method": "GET",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.FRESHCHAT_API_TOKEN}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "qs": [
+          {
+            "name": "status",
+            "value": "open"
+          },
+          {
+            "name": "assigned_agent_type",
+            "value": "bot"
+          },
+          {
+            "name": "created_before",
+            "value": "{{formatDate(addSeconds(now; -7200); 'YYYY-MM-DDTHH:mm:ssZ'; 'America/New_York')}}"
+          }
+        ],
+        "bodyType": "",
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0
+        },
+        "restore": {
+          "expect": {
+            "method": {
+              "label": "GET"
+            },
+            "bodyType": {
+              "label": "Empty"
+            }
+          }
+        },
+        "expect": [
+          {
+            "name": "url",
+            "type": "url",
+            "label": "URL",
+            "required": true
+          },
+          {
+            "name": "method",
+            "type": "select",
+            "label": "Method",
+            "required": true,
+            "options": ["GET", "POST", "PUT", "PATCH", "DELETE"]
+          }
+        ]
+      },
+      "onerror": [
+        {
+          "id": 20,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": {
+            "handleErrors": true,
+            "useNewZLibDeCompress": true
+          },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              {
+                "name": "Authorization",
+                "value": "Bearer {{env.RESEND_API_KEY}}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"brian@cwiai.net\",\n  \"subject\": \"Scenario B Error — Freshchat List Conversations\",\n  \"text\": \"An error occurred while listing bot-assigned open conversations in Scenario B: Missed Inquiry Follow-Up.\\n\\nTimestamp: {{formatDate(now; 'YYYY-MM-DD HH:mm:ss'; 'America/New_York')}} America/New_York\\nError Message: {{2.error.message}}\\nError Code: {{2.error.code}}\\nScenario: Scenario B: Missed Inquiry Follow-Up\\nOwner: brian@cwiai.net / (734) 812-9971\"\n}",
+            "parseResponse": true
+          },
+          "metadata": {
+            "designer": {
+              "x": 300,
+              "y": 300
+            },
+            "restore": {
+              "expect": {
+                "method": {
+                  "label": "POST"
+                },
+                "bodyType": {
+                  "label": "Raw"
+                },
+                "contentType": {
+                  "label": "JSON (application/json)"
+                }
+              }
+            }
+          },
+          "label": "Resend: Alert — Freshchat List Failed"
+        },
+        {
+          "id": 21,
+          "module": "builtin:Commit",
+          "version": 1,
+          "parameters": {},
+          "mapper": {},
+          "metadata": {
+            "designer": {
+              "x": 450,
+              "y": 300
+            },
+            "restore": {}
+          },
+          "label": "Commit (stop run on list failure)"
+        }
+      ],
+      "label": "Freshchat: List Bot-Assigned Open Conversations (>2h old)"
+    },
+    {
+      "id": 3,
+      "module": "builtin:BasicIterator",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "array": "{{2.body.conversations}}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0
+        },
+        "restore": {}
+      },
+      "label": "Iterate Unanswered Conversations"
+    },
+    {
+      "id": 10,
+      "module": "builtin:BasicFilter",
+      "version": 1,
+      "parameters": {},
+      "filter": {
+        "name": "Exclude Already-Followed-Up Conversations",
+        "conditions": [
+          [
+            {
+              "a": "{{join(map(3.value.labels; 'name'); ',')}}",
+              "b": "follow-up-sent",
+              "o": "text:notcontain"
+            }
+          ]
+        ]
+      },
+      "metadata": {
+        "designer": {
+          "x": 750,
+          "y": 0
+        },
+        "restore": {}
+      },
+      "label": "Filter: Skip if 'follow-up-sent' Label Present (Dedup at Start)"
+    },
+    {
+      "id": 4,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "url": "https://api.freshchat.com/v2/contacts/{{3.value.user_id}}",
+        "method": "GET",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.FRESHCHAT_API_TOKEN}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 0
+        },
+        "restore": {
+          "expect": {
+            "method": {
+              "label": "GET"
+            },
+            "bodyType": {
+              "label": "Empty"
+            }
+          }
+        }
+      },
+      "onerror": [
+        {
+          "id": 22,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": {
+            "handleErrors": true,
+            "useNewZLibDeCompress": true
+          },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              {
+                "name": "Authorization",
+                "value": "Bearer {{env.RESEND_API_KEY}}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"brian@cwiai.net\",\n  \"subject\": \"Scenario B Error — Freshchat Get Contact\",\n  \"text\": \"An error occurred while fetching contact details in Scenario B: Missed Inquiry Follow-Up.\\n\\nConversation ID: {{3.value.id}}\\nUser ID: {{3.value.user_id}}\\nTimestamp: {{formatDate(now; 'YYYY-MM-DD HH:mm:ss'; 'America/New_York')}} America/New_York\\nError Message: {{4.error.message}}\\nError Code: {{4.error.code}}\\nScenario: Scenario B: Missed Inquiry Follow-Up\\nOwner: brian@cwiai.net / (734) 812-9971\"\n}",
+            "parseResponse": true
+          },
+          "metadata": {
+            "designer": {
+              "x": 900,
+              "y": 300
+            },
+            "restore": {
+              "expect": {
+                "method": {
+                  "label": "POST"
+                },
+                "bodyType": {
+                  "label": "Raw"
+                },
+                "contentType": {
+                  "label": "JSON (application/json)"
+                }
+              }
+            }
+          },
+          "label": "Resend: Alert — Get Contact Failed"
+        },
+        {
+          "id": 23,
+          "module": "builtin:Resume",
+          "version": 1,
+          "parameters": {},
+          "mapper": {},
+          "metadata": {
+            "designer": {
+              "x": 1050,
+              "y": 300
+            },
+            "restore": {}
+          },
+          "label": "Resume (skip this contact, continue iterating)"
+        }
+      ],
+      "label": "Freshchat: Get Contact Details"
+    },
+    {
+      "id": 5,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.OPENROUTER_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "name": "HTTP-Referer",
+            "value": "https://cwi-automation.internal"
+          },
+          {
+            "name": "X-Title",
+            "value": "CWI Missed Inquiry Follow-Up"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"model\": \"anthropic/claude-sonnet-4-6\",\n  \"models\": [\"anthropic/claude-sonnet-4-6\", \"anthropic/claude-3-5-sonnet\", \"openai/gpt-4o-mini\"],\n  \"route\": \"fallback\",\n  \"provider\": {\n    \"allow_fallbacks\": true\n  },\n  \"max_tokens\": 150,\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a friendly customer support assistant for CWI. Write concise, warm follow-up emails. Keep responses under 50 words. Be professional yet approachable.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Write a brief 50-word follow-up email to {{4.body.first_name}} {{4.body.last_name}} who reached out but hasn't received a human response yet. Reference their inquiry and offer to help. Subject line not needed — body only.\"\n    }\n  ]\n}",
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": {
+          "x": 1200,
+          "y": 0
+        },
+        "restore": {
+          "expect": {
+            "method": {
+              "label": "POST"
+            },
+            "bodyType": {
+              "label": "Raw"
+            },
+            "contentType": {
+              "label": "JSON (application/json)"
+            }
+          }
+        }
+      },
+      "onerror": [
+        {
+          "id": 24,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": {
+            "handleErrors": true,
+            "useNewZLibDeCompress": true
+          },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              {
+                "name": "Authorization",
+                "value": "Bearer {{env.RESEND_API_KEY}}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"brian@cwiai.net\",\n  \"subject\": \"Scenario B Error — OpenRouter Draft Failed\",\n  \"text\": \"OpenRouter failed to draft the follow-up email (all model fallbacks exhausted) in Scenario B: Missed Inquiry Follow-Up.\\n\\nConversation ID: {{3.value.id}}\\nClient: {{4.body.first_name}} {{4.body.last_name}}\\nContact Email: {{4.body.email}}\\nTimestamp: {{formatDate(now; 'YYYY-MM-DD HH:mm:ss'; 'America/New_York')}} America/New_York\\nError Message: {{5.error.message}}\\nError Code: {{5.error.code}}\\nScenario: Scenario B: Missed Inquiry Follow-Up\\nOwner: brian@cwiai.net / (734) 812-9971\"\n}",
+            "parseResponse": true
+          },
+          "metadata": {
+            "designer": {
+              "x": 1200,
+              "y": 300
+            },
+            "restore": {
+              "expect": {
+                "method": {
+                  "label": "POST"
+                },
+                "bodyType": {
+                  "label": "Raw"
+                },
+                "contentType": {
+                  "label": "JSON (application/json)"
+                }
+              }
+            }
+          },
+          "label": "Resend: Alert — OpenRouter Draft Failed"
+        },
+        {
+          "id": 25,
+          "module": "builtin:Resume",
+          "version": 1,
+          "parameters": {},
+          "mapper": {},
+          "metadata": {
+            "designer": {
+              "x": 1350,
+              "y": 300
+            },
+            "restore": {}
+          },
+          "label": "Resume (skip this contact, continue iterating)"
+        }
+      ],
+      "label": "OpenRouter: Draft Follow-Up Email via Claude (with fallback)"
+    },
+    {
+      "id": 6,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.RESEND_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"from\": \"{{env.RESEND_FROM_ADDRESS}}\",\n  \"to\": [\"{{4.body.email}}\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"Following up on your inquiry — CWI Support\",\n  \"text\": \"{{5.body.choices[0].message.content}}\\n\\nClick here to book a time that works for you: {{env.CALENDLY_LINK}}\"\n}",
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": {
+          "x": 1500,
+          "y": 0
+        },
+        "restore": {
+          "expect": {
+            "method": {
+              "label": "POST"
+            },
+            "bodyType": {
+              "label": "Raw"
+            },
+            "contentType": {
+              "label": "JSON (application/json)"
+            }
+          }
+        }
+      },
+      "onerror": [
+        {
+          "id": 9,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": {
+            "handleErrors": true,
+            "useNewZLibDeCompress": true
+          },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              {
+                "name": "Authorization",
+                "value": "Bearer {{env.RESEND_API_KEY}}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"brian@cwiai.net\",\n  \"subject\": \"Scenario B Error — Follow-Up Email Send Failed\",\n  \"text\": \"The follow-up email failed to send in Scenario B: Missed Inquiry Follow-Up. The 'follow-up-sent' label was NOT applied, so this conversation will be retried on the next run.\\n\\nConversation ID: {{3.value.id}}\\nTimestamp: {{formatDate(now; 'YYYY-MM-DD HH:mm:ss'; 'America/New_York')}} America/New_York\\nClient: {{4.body.first_name}} {{4.body.last_name}}\\nContact Email: {{4.body.email}}\\nContact Phone: {{4.body.phone}}\\nError Message: {{6.error.message}}\\nError Code: {{6.error.code}}\\nScenario: Scenario B: Missed Inquiry Follow-Up\\nOwner: brian@cwiai.net / (734) 812-9971\"\n}",
+            "parseResponse": true
+          },
+          "metadata": {
+            "designer": {
+              "x": 1500,
+              "y": 300
+            },
+            "restore": {
+              "expect": {
+                "method": {
+                  "label": "POST"
+                },
+                "bodyType": {
+                  "label": "Raw"
+                },
+                "contentType": {
+                  "label": "JSON (application/json)"
+                }
+              }
+            }
+          },
+          "label": "Resend: Alert — Follow-Up Send Failed (to Owner)"
+        },
+        {
+          "id": 26,
+          "module": "builtin:Resume",
+          "version": 1,
+          "parameters": {},
+          "mapper": {},
+          "metadata": {
+            "designer": {
+              "x": 1650,
+              "y": 300
+            },
+            "restore": {}
+          },
+          "label": "Resume (skip labeling on send failure, continue iterating)"
+        }
+      ],
+      "label": "Resend: Send Follow-Up Email to Contact"
+    },
+    {
+      "id": 11,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "url": "https://api.freshchat.com/v2/conversations/{{3.value.id}}",
+        "method": "PUT",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.FRESHCHAT_API_TOKEN}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"labels\": [\"follow-up-sent\"]\n}",
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": {
+          "x": 1650,
+          "y": 0
+        },
+        "restore": {
+          "expect": {
+            "method": {
+              "label": "PUT"
+            },
+            "bodyType": {
+              "label": "Raw"
+            },
+            "contentType": {
+              "label": "JSON (application/json)"
+            }
+          }
+        }
+      },
+      "onerror": [
+        {
+          "id": 27,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": {
+            "handleErrors": true,
+            "useNewZLibDeCompress": true
+          },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              {
+                "name": "Authorization",
+                "value": "Bearer {{env.RESEND_API_KEY}}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"brian@cwiai.net\",\n  \"subject\": \"Scenario B WARNING — Dedup Label Failed (possible duplicate follow-up)\",\n  \"text\": \"The follow-up email WAS sent, but applying the 'follow-up-sent' label FAILED in Scenario B: Missed Inquiry Follow-Up. This conversation may receive a duplicate follow-up on the next run — manually apply the 'follow-up-sent' label.\\n\\nConversation ID: {{3.value.id}}\\nTimestamp: {{formatDate(now; 'YYYY-MM-DD HH:mm:ss'; 'America/New_York')}} America/New_York\\nClient: {{4.body.first_name}} {{4.body.last_name}}\\nContact Email: {{4.body.email}}\\nError Message: {{11.error.message}}\\nError Code: {{11.error.code}}\\nScenario: Scenario B: Missed Inquiry Follow-Up\\nOwner: brian@cwiai.net / (734) 812-9971\"\n}",
+            "parseResponse": true
+          },
+          "metadata": {
+            "designer": {
+              "x": 1650,
+              "y": 300
+            },
+            "restore": {
+              "expect": {
+                "method": {
+                  "label": "POST"
+                },
+                "bodyType": {
+                  "label": "Raw"
+                },
+                "contentType": {
+                  "label": "JSON (application/json)"
+                }
+              }
+            }
+          },
+          "label": "Resend: Alert — Dedup Label Failed (to Owner)"
+        },
+        {
+          "id": 28,
+          "module": "builtin:Resume",
+          "version": 1,
+          "parameters": {},
+          "mapper": {},
+          "metadata": {
+            "designer": {
+              "x": 1800,
+              "y": 300
+            },
+            "restore": {}
+          },
+          "label": "Resume (continue iterating)"
+        }
+      ],
+      "label": "Freshchat: Apply 'follow-up-sent' Label (Dedup AFTER Send)"
+    },
+    {
+      "id": 7,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "url": "https://api.freshchat.com/v2/conversations/{{3.value.id}}/messages",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.FRESHCHAT_API_TOKEN}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"message_type\": \"private\",\n  \"actor_type\": \"agent\",\n  \"actor_id\": \"{{env.FRESHCHAT_BOT_AGENT_ID}}\",\n  \"message_parts\": [\n    {\n      \"text\": {\n        \"content\": \"Follow-up email sent at {{formatDate(now; 'YYYY-MM-DD HH:mm:ss'; 'America/New_York')}} America/New_York to {{4.body.email}} for contact {{4.body.first_name}} {{4.body.last_name}}.\"\n      }\n    }\n  ]\n}",
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": {
+          "x": 1800,
+          "y": 0
+        },
+        "restore": {
+          "expect": {
+            "method": {
+              "label": "POST"
+            },
+            "bodyType": {
+              "label": "Raw"
+            },
+            "contentType": {
+              "label": "JSON (application/json)"
+            }
+          }
+        }
+      },
+      "onerror": [
+        {
+          "id": 29,
+          "module": "builtin:Resume",
+          "version": 1,
+          "parameters": {},
+          "mapper": {},
+          "metadata": {
+            "designer": {
+              "x": 1950,
+              "y": 300
+            },
+            "restore": {}
+          },
+          "label": "Resume (internal note is non-critical; continue iterating)"
+        }
+      ],
+      "label": "Freshchat: Add Internal Note — Follow-Up Sent"
+    }
+  ],
+  "metadata": {
+    "instant": false,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "slots": null,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": {
+      "orphans": []
+    },
+    "zone": "us1.make.com"
+  },
+  "connections": {
+    "freshchat": {
+      "label": "Freshchat API Connection",
+      "type": "http",
+      "apiToken": "{{env.FRESHCHAT_API_TOKEN}}",
+      "botAgentId": "{{env.FRESHCHAT_BOT_AGENT_ID}}",
+      "baseUrl": "https://api.freshchat.com/v2"
+    },
+    "openrouter": {
+      "label": "OpenRouter API Connection",
+      "type": "http",
+      "apiKey": "{{env.OPENROUTER_API_KEY}}"
+    },
+    "resend": {
+      "label": "Resend API Connection",
+      "type": "http",
+      "apiKey": "{{env.RESEND_API_KEY}}",
+      "fromAddress": "{{env.RESEND_FROM_ADDRESS}}",
+      "replyTo": "{{env.RESEND_REPLY_TO}}",
+      "alertFromAddress": "{{env.CWI_ALERT_FROM_ADDRESS}}"
+    }
+  },
+  "variables": {
+    "FRESHCHAT_API_TOKEN": {
+      "description": "Freshchat API bearer token",
+      "required": true
+    },
+    "FRESHCHAT_BOT_AGENT_ID": {
+      "description": "Agent ID used by Freshchat bot for internal notes",
+      "required": true
+    },
+    "OPENROUTER_API_KEY": {
+      "description": "OpenRouter API key for Claude access",
+      "required": true
+    },
+    "RESEND_API_KEY": {
+      "description": "Resend API key for sending transactional emails",
+      "required": true
+    },
+    "RESEND_FROM_ADDRESS": {
+      "description": "Verified Resend sender address used in the client-facing email 'from' field",
+      "required": true
+    },
+    "CWI_ALERT_FROM_ADDRESS": {
+      "description": "Verified Resend sender address used as 'from' for internal error/alert emails to the owner",
+      "required": true
+    },
+    "RESEND_REPLY_TO": {
+      "description": "Reply-to address applied to client-facing Resend emails so replies route to CWI",
+      "required": true
+    },
+    "CALENDLY_LINK": {
+      "description": "Calendly booking URL appended to follow-up emails so customers can self-schedule",
+      "required": true
+    }
+  }
+}

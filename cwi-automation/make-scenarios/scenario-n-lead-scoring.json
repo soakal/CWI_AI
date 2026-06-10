@@ -1,0 +1,702 @@
+{
+  "name": "Scenario N: Lead Scoring & Hot Lead Alert",
+  "comments": "Runs every night at 9PM ET. Fetches deals in the New Lead stage from HubSpot (up to 50). Iterates over each deal and calculates a lead score: base 50, +10 if contacted in last 24 hours, +10 if num_contacted_notes > 2, +10 if deal age < 3 days, -20 if deal age > 7 days. A Router passes only leads scoring 70 or above to the next steps. Claude (OpenRouter, claude-sonnet-4-6) writes a 2-sentence hot lead alert message. Resend delivers the alert to the admin. An error handler sends a Resend alert on any failure. All secrets are stored as env.VARIABLE_NAME. Timezone: America/New_York.",
+  "flow": [
+    {
+      "id": 1,
+      "module": "util:SetVariables2",
+      "version": 1,
+      "parameters": {},
+      "scheduler": {
+        "type": "cron",
+        "cron": "0 21 * * *",
+        "timezone": "America/New_York"
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0
+        },
+        "restore": {},
+        "parameters": [],
+        "expect": []
+      },
+      "module": "builtin:BasicTrigger",
+      "version": 1,
+      "parameters": {
+        "type": "schedule",
+        "interval": "day",
+        "time": "21:00",
+        "timezone": "America/New_York"
+      }
+    },
+    {
+      "id": 2,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDecompression": true
+      },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/deals/search",
+        "serializeUrl": false,
+        "method": "post",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.HUBSPOT_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "authUser": "",
+        "authPass": "",
+        "timeout": 30,
+        "shareCookies": false,
+        "ca": "",
+        "rejectUnauthorized": true,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "gzip": true,
+        "useMtls": false,
+        "contentType": "application/json",
+        "data": "{\n  \"filterGroups\": [\n    {\n      \"filters\": [\n        {\n          \"propertyName\": \"dealstage\",\n          \"operator\": \"EQ\",\n          \"value\": \"{{env.HUBSPOT_STAGE_NEW_LEAD}}\"\n        }\n      ]\n    }\n  ],\n  \"properties\": [\n    \"dealname\",\n    \"createdate\",\n    \"num_contacted_notes\",\n    \"hs_lastmodifieddate\"\n  ],\n  \"limit\": 50\n}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0
+        },
+        "restore": {
+          "expect": {
+            "method": {
+              "label": "POST"
+            },
+            "bodyType": {
+              "label": "Raw"
+            },
+            "contentType": {
+              "label": "JSON (application/json)"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "handleErrors",
+            "type": "boolean",
+            "label": "Evaluate all states as errors (except for 2xx and 3xx)",
+            "required": true
+          },
+          {
+            "name": "useNewZLibDecompression",
+            "type": "boolean",
+            "label": "Use new ZLib decompression library",
+            "required": true
+          }
+        ],
+        "expect": [
+          {
+            "name": "url",
+            "type": "url",
+            "label": "URL",
+            "required": true
+          },
+          {
+            "name": "method",
+            "type": "select",
+            "label": "Method",
+            "required": true
+          },
+          {
+            "name": "headers",
+            "type": "array",
+            "label": "Headers"
+          },
+          {
+            "name": "bodyType",
+            "type": "select",
+            "label": "Body type"
+          },
+          {
+            "name": "contentType",
+            "type": "select",
+            "label": "Content type"
+          },
+          {
+            "name": "data",
+            "type": "string",
+            "label": "Request content"
+          },
+          {
+            "name": "parseResponse",
+            "type": "boolean",
+            "label": "Parse response"
+          }
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "module": "util:Iterator",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "array": "{{2.data.results}}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0
+        },
+        "restore": {},
+        "parameters": [],
+        "expect": [
+          {
+            "name": "array",
+            "type": "array",
+            "label": "Array",
+            "required": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 4,
+      "module": "util:SetVariables2",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "variables": [
+          {
+            "name": "deal_id",
+            "value": "{{3.id}}"
+          },
+          {
+            "name": "dealname",
+            "value": "{{3.properties.dealname}}"
+          },
+          {
+            "name": "createdate",
+            "value": "{{3.properties.createdate}}"
+          },
+          {
+            "name": "num_contacted_notes",
+            "value": "{{3.properties.num_contacted_notes}}"
+          },
+          {
+            "name": "hs_lastmodifieddate",
+            "value": "{{3.properties.hs_lastmodifieddate}}"
+          },
+          {
+            "name": "deal_age_days",
+            "value": "{{round(dateDifference(now; parseDate(3.properties.createdate; 'YYYY-MM-DDTHH:mm:ss.SSSZ'); 'days'))}}"
+          },
+          {
+            "name": "hours_since_modified",
+            "value": "{{round(dateDifference(now; parseDate(3.properties.hs_lastmodifieddate; 'YYYY-MM-DDTHH:mm:ss.SSSZ'); 'hours'))}}"
+          },
+          {
+            "name": "score_contacted_24hr",
+            "value": "{{if(round(dateDifference(now; parseDate(3.properties.hs_lastmodifieddate; 'YYYY-MM-DDTHH:mm:ss.SSSZ'); 'hours')) <= 24; 10; 0)}}"
+          },
+          {
+            "name": "score_interactions",
+            "value": "{{if(3.properties.num_contacted_notes > 2; 10; 0)}}"
+          },
+          {
+            "name": "score_age_young",
+            "value": "{{if(round(dateDifference(now; parseDate(3.properties.createdate; 'YYYY-MM-DDTHH:mm:ss.SSSZ'); 'days')) < 3; 10; 0)}}"
+          },
+          {
+            "name": "score_age_old",
+            "value": "{{if(round(dateDifference(now; parseDate(3.properties.createdate; 'YYYY-MM-DDTHH:mm:ss.SSSZ'); 'days')) > 7; -20; 0)}}"
+          },
+          {
+            "name": "lead_score",
+            "value": "{{50 + if(round(dateDifference(now; parseDate(3.properties.hs_lastmodifieddate; 'YYYY-MM-DDTHH:mm:ss.SSSZ'); 'hours')) <= 24; 10; 0) + if(3.properties.num_contacted_notes > 2; 10; 0) + if(round(dateDifference(now; parseDate(3.properties.createdate; 'YYYY-MM-DDTHH:mm:ss.SSSZ'); 'days')) < 3; 10; 0) + if(round(dateDifference(now; parseDate(3.properties.createdate; 'YYYY-MM-DDTHH:mm:ss.SSSZ'); 'days')) > 7; -20; 0)}}"
+          }
+        ]
+      },
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 0
+        },
+        "restore": {},
+        "parameters": [],
+        "expect": [
+          {
+            "name": "variables",
+            "type": "array",
+            "label": "Variables"
+          }
+        ]
+      }
+    },
+    {
+      "id": 5,
+      "module": "builtin:BasicRouter",
+      "version": 1,
+      "parameters": {},
+      "mapper": {},
+      "routes": [
+        {
+          "name": "Hot Lead (score >= 70)",
+          "flow": [6, 7],
+          "filter": {
+            "name": "lead_score >= 70",
+            "conditions": [
+              [
+                {
+                  "a": "{{4.lead_score}}",
+                  "b": "70",
+                  "o": "number:greaterThanOrEqual"
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "name": "Skip (score < 70)",
+          "flow": [],
+          "filter": {
+            "name": "lead_score < 70",
+            "conditions": [
+              [
+                {
+                  "a": "{{4.lead_score}}",
+                  "b": "70",
+                  "o": "number:lessThan"
+                }
+              ]
+            ]
+          }
+        }
+      ],
+      "metadata": {
+        "designer": {
+          "x": 1200,
+          "y": 0
+        },
+        "restore": {}
+      }
+    },
+    {
+      "id": 6,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDecompression": true
+      },
+      "mapper": {
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "serializeUrl": false,
+        "method": "post",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.OPENROUTER_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "name": "HTTP-Referer",
+            "value": "{{env.OPENROUTER_REFERRER}}"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "authUser": "",
+        "authPass": "",
+        "timeout": 30,
+        "shareCookies": false,
+        "ca": "",
+        "rejectUnauthorized": true,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "gzip": true,
+        "useMtls": false,
+        "contentType": "application/json",
+        "data": "{\n  \"model\": \"anthropic/claude-sonnet-4-6\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Write a 2-sentence internal alert for Brian about a hot lead named {{4.dealname}} with score {{4.lead_score}}. Mention why they look ready and suggest a follow-up action. Return only the message.\"\n    }\n  ],\n  \"max_tokens\": 200,\n  \"temperature\": 0.7\n}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 1500,
+          "y": -150
+        },
+        "restore": {
+          "expect": {
+            "method": {
+              "label": "POST"
+            },
+            "bodyType": {
+              "label": "Raw"
+            },
+            "contentType": {
+              "label": "JSON (application/json)"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "handleErrors",
+            "type": "boolean",
+            "label": "Evaluate all states as errors (except for 2xx and 3xx)",
+            "required": true
+          },
+          {
+            "name": "useNewZLibDecompression",
+            "type": "boolean",
+            "label": "Use new ZLib decompression library",
+            "required": true
+          }
+        ],
+        "expect": [
+          {
+            "name": "url",
+            "type": "url",
+            "label": "URL",
+            "required": true
+          },
+          {
+            "name": "method",
+            "type": "select",
+            "label": "Method",
+            "required": true
+          },
+          {
+            "name": "headers",
+            "type": "array",
+            "label": "Headers"
+          },
+          {
+            "name": "bodyType",
+            "type": "select",
+            "label": "Body type"
+          },
+          {
+            "name": "contentType",
+            "type": "select",
+            "label": "Content type"
+          },
+          {
+            "name": "data",
+            "type": "string",
+            "label": "Request content"
+          },
+          {
+            "name": "parseResponse",
+            "type": "boolean",
+            "label": "Parse response"
+          }
+        ]
+      }
+    },
+    {
+      "id": 7,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDecompression": true
+      },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "serializeUrl": false,
+        "method": "post",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.RESEND_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "authUser": "",
+        "authPass": "",
+        "timeout": 30,
+        "shareCookies": false,
+        "ca": "",
+        "rejectUnauthorized": true,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "gzip": true,
+        "useMtls": false,
+        "contentType": "application/json",
+        "data": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"{{env.ADMIN_EMAIL}}\"],\n  \"subject\": \"Hot Lead Alert: {{4.dealname}} scored {{4.lead_score}}/100\",\n  \"html\": \"<p>{{6.data.choices[0].message.content}}</p><hr><p><strong>Lead:</strong> {{4.dealname}}</p><p><strong>Score:</strong> {{4.lead_score}}/100</p><p><strong>Deal Age:</strong> {{4.deal_age_days}} days</p><p><strong>Interactions:</strong> {{4.num_contacted_notes}}</p><p><strong>Last Modified:</strong> {{4.hs_lastmodifieddate}}</p>\"\n}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 1800,
+          "y": -150
+        },
+        "restore": {
+          "expect": {
+            "method": {
+              "label": "POST"
+            },
+            "bodyType": {
+              "label": "Raw"
+            },
+            "contentType": {
+              "label": "JSON (application/json)"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "handleErrors",
+            "type": "boolean",
+            "label": "Evaluate all states as errors (except for 2xx and 3xx)",
+            "required": true
+          },
+          {
+            "name": "useNewZLibDecompression",
+            "type": "boolean",
+            "label": "Use new ZLib decompression library",
+            "required": true
+          }
+        ],
+        "expect": [
+          {
+            "name": "url",
+            "type": "url",
+            "label": "URL",
+            "required": true
+          },
+          {
+            "name": "method",
+            "type": "select",
+            "label": "Method",
+            "required": true
+          },
+          {
+            "name": "headers",
+            "type": "array",
+            "label": "Headers"
+          },
+          {
+            "name": "bodyType",
+            "type": "select",
+            "label": "Body type"
+          },
+          {
+            "name": "contentType",
+            "type": "select",
+            "label": "Content type"
+          },
+          {
+            "name": "data",
+            "type": "string",
+            "label": "Request content"
+          },
+          {
+            "name": "parseResponse",
+            "type": "boolean",
+            "label": "Parse response"
+          }
+        ]
+      }
+    },
+    {
+      "id": 8,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": false,
+        "useNewZLibDecompression": true
+      },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "serializeUrl": false,
+        "method": "post",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.RESEND_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "authUser": "",
+        "authPass": "",
+        "timeout": 30,
+        "shareCookies": false,
+        "ca": "",
+        "rejectUnauthorized": true,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "gzip": true,
+        "useMtls": false,
+        "contentType": "application/json",
+        "data": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"{{env.ADMIN_EMAIL}}\"],\n  \"subject\": \"[ERROR] Scenario N Lead Scoring Failed\",\n  \"html\": \"<p>The Lead Scoring & Hot Lead Alert scenario (Scenario N) encountered an error.</p><p><strong>Error:</strong> {{error.message}}</p><p><strong>Module:</strong> {{error.module}}</p><p><strong>Time:</strong> {{now}}</p><p>Please check the Make.com execution log for details.</p>\"\n}"
+      },
+      "error_handler": true,
+      "linked_to_module": null,
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 300
+        },
+        "restore": {
+          "expect": {
+            "method": {
+              "label": "POST"
+            },
+            "bodyType": {
+              "label": "Raw"
+            },
+            "contentType": {
+              "label": "JSON (application/json)"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "handleErrors",
+            "type": "boolean",
+            "label": "Evaluate all states as errors (except for 2xx and 3xx)",
+            "required": true
+          },
+          {
+            "name": "useNewZLibDecompression",
+            "type": "boolean",
+            "label": "Use new ZLib decompression library",
+            "required": true
+          }
+        ],
+        "expect": [
+          {
+            "name": "url",
+            "type": "url",
+            "label": "URL",
+            "required": true
+          },
+          {
+            "name": "method",
+            "type": "select",
+            "label": "Method",
+            "required": true
+          },
+          {
+            "name": "headers",
+            "type": "array",
+            "label": "Headers"
+          },
+          {
+            "name": "bodyType",
+            "type": "select",
+            "label": "Body type"
+          },
+          {
+            "name": "contentType",
+            "type": "select",
+            "label": "Content type"
+          },
+          {
+            "name": "data",
+            "type": "string",
+            "label": "Request content"
+          },
+          {
+            "name": "parseResponse",
+            "type": "boolean",
+            "label": "Parse response"
+          }
+        ]
+      }
+    }
+  ],
+  "metadata": {
+    "instant": false,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "slots": null,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": {
+      "orphans": []
+    },
+    "zone": "us1.make.com",
+    "notes": [
+      {
+        "id": 1,
+        "content": "Module 1: Schedule trigger — daily 9PM ET (America/New_York)",
+        "position": { "x": 0, "y": -80 }
+      },
+      {
+        "id": 2,
+        "content": "Module 2: HubSpot HTTP POST search — New Lead stage, limit 50, properties: dealname, createdate, num_contacted_notes, hs_lastmodifieddate",
+        "position": { "x": 300, "y": -80 }
+      },
+      {
+        "id": 3,
+        "content": "Module 3: Iterator — loops over each deal returned by HubSpot",
+        "position": { "x": 600, "y": -80 }
+      },
+      {
+        "id": 4,
+        "content": "Module 4: SetVariable — calculates lead_score: base 50, +10 contacted last 24hr, +10 if notes > 2, +10 if age < 3 days, -20 if age > 7 days",
+        "position": { "x": 900, "y": -80 }
+      },
+      {
+        "id": 5,
+        "content": "Module 5: Router — passes score >= 70 to alert path; score < 70 is discarded",
+        "position": { "x": 1200, "y": -80 }
+      },
+      {
+        "id": 6,
+        "content": "Module 6: OpenRouter POST — model anthropic/claude-sonnet-4-6 — generates 2-sentence hot lead alert for Brian",
+        "position": { "x": 1500, "y": -230 }
+      },
+      {
+        "id": 7,
+        "content": "Module 7: Resend POST — sends hot lead alert email from env.CWI_ALERT_FROM_ADDRESS to env.ADMIN_EMAIL",
+        "position": { "x": 1800, "y": -230 }
+      },
+      {
+        "id": 8,
+        "content": "Module 8: Error Handler — Resend alert to admin on any scenario failure",
+        "position": { "x": 900, "y": 220 }
+      }
+    ]
+  },
+  "environment_variables": {
+    "HUBSPOT_API_KEY": "HubSpot private app bearer token",
+    "HUBSPOT_STAGE_NEW_LEAD": "HubSpot deal stage ID for New Lead stage",
+    "OPENROUTER_API_KEY": "OpenRouter API key for Claude access",
+    "OPENROUTER_REFERRER": "HTTP-Referer header value for OpenRouter requests",
+    "RESEND_API_KEY": "Resend API key for sending emails",
+    "CWI_ALERT_FROM_ADDRESS": "Verified sender address for alert emails (e.g. alerts@yourdomain.com)",
+    "ADMIN_EMAIL": "Brian's email address for hot lead and error alerts"
+  }
+}

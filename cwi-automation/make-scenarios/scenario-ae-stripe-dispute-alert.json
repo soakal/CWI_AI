@@ -1,0 +1,356 @@
+{
+  "name": "Stripe Dispute Alert — charge.dispute.created",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": "stripe_charge_dispute_created",
+        "maxResults": 1
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 0, "y": 0 },
+        "restore": {
+          "parameters": {
+            "hook": {
+              "label": "Stripe — charge.dispute.created"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hook",
+            "type": "hook",
+            "label": "Webhook",
+            "required": true
+          },
+          {
+            "name": "maxResults",
+            "type": "number",
+            "label": "Maximum number of results"
+          }
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "module": "builtin:SetVariable",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "disputeAmountCents",
+        "scope": "roundtrip",
+        "type": "number",
+        "value": "{{1.data.object.amount}}"
+      },
+      "metadata": {
+        "designer": { "x": 300, "y": 0 }
+      }
+    },
+    {
+      "id": 3,
+      "module": "builtin:SetVariable",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "disputeAmountDollars",
+        "scope": "roundtrip",
+        "type": "text",
+        "value": "{{divide(2.disputeAmountCents; 100)}}"
+      },
+      "metadata": {
+        "designer": { "x": 300, "y": 150 }
+      }
+    },
+    {
+      "id": 4,
+      "module": "builtin:SetVariable",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "disputeReason",
+        "scope": "roundtrip",
+        "type": "text",
+        "value": "{{1.data.object.reason}}"
+      },
+      "metadata": {
+        "designer": { "x": 300, "y": 300 }
+      }
+    },
+    {
+      "id": 5,
+      "module": "builtin:SetVariable",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "disputeStatus",
+        "scope": "roundtrip",
+        "type": "text",
+        "value": "{{1.data.object.status}}"
+      },
+      "metadata": {
+        "designer": { "x": 300, "y": 450 }
+      }
+    },
+    {
+      "id": 6,
+      "module": "builtin:SetVariable",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "chargeId",
+        "scope": "roundtrip",
+        "type": "text",
+        "value": "{{1.data.object.charge}}"
+      },
+      "metadata": {
+        "designer": { "x": 300, "y": 600 }
+      }
+    },
+    {
+      "id": 7,
+      "module": "builtin:SetVariable",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "disputeDate",
+        "scope": "roundtrip",
+        "type": "text",
+        "value": "{{formatDate(now; \"YYYY-MM-DD\"; \"America/New_York\")}}"
+      },
+      "metadata": {
+        "designer": { "x": 300, "y": 750 }
+      }
+    },
+    {
+      "id": 8,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": true, "useNewZLibDeCompress": true },
+      "mapper": {
+        "url": "https://api.stripe.com/v1/charges/{{6.chargeId}}",
+        "method": "GET",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.STRIPE_SECRET_KEY}}" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/x-www-form-urlencoded",
+        "body": "",
+        "timeout": 30,
+        "followRedirects": true,
+        "compress": true,
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": { "x": 600, "y": 0 },
+        "restore": { "expect": { "method": { "label": "GET" } } }
+      }
+    },
+    {
+      "id": 9,
+      "module": "builtin:SetVariable",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "customerEmail",
+        "scope": "roundtrip",
+        "type": "text",
+        "value": "{{ifempty(8.data.receipt_email; ifempty(8.data.billing_details.email; 1.data.object.evidence.customer_email_address))}}"
+      },
+      "metadata": {
+        "designer": { "x": 900, "y": 0 }
+      }
+    },
+    {
+      "id": 10,
+      "module": "builtin:SetVariable",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "customerName",
+        "scope": "roundtrip",
+        "type": "text",
+        "value": "{{ifempty(8.data.billing_details.name; \"Valued Customer\")}}"
+      },
+      "metadata": {
+        "designer": { "x": 900, "y": 150 }
+      }
+    },
+    {
+      "id": 11,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": true, "useNewZLibDeCompress": true },
+      "mapper": {
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "method": "POST",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.OPENROUTER_API_KEY}}" },
+          { "name": "Content-Type", "value": "application/json" },
+          { "name": "HTTP-Referer", "value": "{{env.APP_URL}}" },
+          { "name": "X-Title", "value": "CWI Automation" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\"models\":[\"anthropic/claude-sonnet-4-6\",\"{{env.OPENROUTER_FALLBACK_MODEL}}\"],\"route\":\"fallback\",\"messages\":[{\"role\":\"system\",\"content\":\"You are a professional, empathetic customer support specialist for CWI (Consultants With Integrity), a digital services consulting company. Write clear, calm, and reassuring emails that de-escalate billing concerns and maintain the client relationship.\"},{\"role\":\"user\",\"content\":\"Write a professional email to a customer regarding a billing dispute we have received notification of. Customer name: {{10.customerName}}. Their email will be used as the recipient — do not include it in the body. Dispute amount: ${{3.disputeAmountDollars}}. Dispute reason code: {{4.disputeReason}}. The email should: (1) Acknowledge that we received notice of the dispute in a neutral, non-accusatory tone. (2) Reassure them that their service remains fully active while the dispute is under review. (3) Invite them to reply directly with any questions or if they believe there has been an error. (4) Provide Brian's contact information: email brian@cwiconsulting.io and note he is available to resolve any billing questions quickly. (5) Keep it concise, warm, and professional — 3 to 4 short paragraphs. Do not include a subject line. Sign off from Brian at CWI.\"}]}",
+        "timeout": 60,
+        "followRedirects": true,
+        "compress": true,
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": { "x": 1200, "y": 0 },
+        "restore": { "expect": { "method": { "label": "POST" } } }
+      }
+    },
+    {
+      "id": 12,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": true, "useNewZLibDeCompress": true },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "method": "POST",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\"from\":\"{{env.RESEND_FROM_ADDRESS}}\",\"to\":[\"{{9.customerEmail}}\"],\"subject\":\"Regarding your recent billing dispute\",\"text\":\"{{11.data.choices[].message.content}}\"}",
+        "timeout": 30,
+        "followRedirects": true,
+        "compress": true,
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": { "x": 1500, "y": 0 },
+        "restore": { "expect": { "method": { "label": "POST" } } }
+      }
+    },
+    {
+      "id": 13,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": true, "useNewZLibDeCompress": true },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "method": "POST",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\"from\":\"{{env.CWI_ALERT_FROM_ADDRESS}}\",\"to\":[\"{{env.ALERT_EMAIL}}\"],\"subject\":\"URGENT: Stripe dispute filed — ${{3.disputeAmountDollars}} — {{9.customerEmail}}\",\"text\":\"A new Stripe dispute has been filed and requires your attention within 7 days.\\n\\n--- DISPUTE DETAILS ---\\nAmount: ${{3.disputeAmountDollars}}\\nReason: {{4.disputeReason}}\\nStatus: {{5.disputeStatus}}\\nCharge ID: {{6.chargeId}}\\nDate Filed: {{7.disputeDate}}\\n\\n--- CUSTOMER DETAILS ---\\nName: {{10.customerName}}\\nEmail: {{9.customerEmail}}\\n\\n--- ACTION REQUIRED ---\\nYou must respond to this dispute in the Stripe Dashboard within 7 days to avoid an automatic ruling in the customer's favor.\\nStripe Dashboard: https://dashboard.stripe.com/disputes\\n\\nA professional acknowledgment email has been sent to the customer automatically.\"}",
+        "timeout": 30,
+        "followRedirects": true,
+        "compress": true,
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": { "x": 1800, "y": 0 },
+        "restore": { "expect": { "method": { "label": "POST" } } }
+      }
+    },
+    {
+      "id": 14,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": true, "useNewZLibDeCompress": true },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/contacts/search",
+        "method": "POST",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\"filterGroups\":[{\"filters\":[{\"propertyName\":\"email\",\"operator\":\"EQ\",\"value\":\"{{9.customerEmail}}\"}]}],\"properties\":[\"email\",\"firstname\",\"lastname\",\"hs_object_id\"]}",
+        "timeout": 30,
+        "followRedirects": true,
+        "compress": true,
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": { "x": 2100, "y": 0 },
+        "restore": { "expect": { "method": { "label": "POST" } } }
+      }
+    },
+    {
+      "id": 15,
+      "module": "builtin:Filter",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "condition": "{{14.data.total}}",
+        "operator": "greater",
+        "value": "0"
+      },
+      "metadata": {
+        "designer": { "x": 2400, "y": 0 },
+        "restore": { "parameters": { "label": "HubSpot contact found — add note" } }
+      }
+    },
+    {
+      "id": 16,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": true, "useNewZLibDeCompress": true },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/notes",
+        "method": "POST",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\"properties\":{\"hs_note_body\":\"Stripe dispute filed {{7.disputeDate}} — ${{3.disputeAmountDollars}} — reason: {{4.disputeReason}} — charge ID: {{6.chargeId}} — status: {{5.disputeStatus}}. Customer acknowledgment email sent automatically. Respond in Stripe Dashboard within 7 days.\",\"hs_timestamp\":\"{{now}}\"},\"associations\":[{\"to\":{\"id\":\"{{14.data.results[].id}}\"},\"types\":[{\"associationCategory\":\"HUBSPOT_DEFINED\",\"associationTypeId\":202}]}]}",
+        "timeout": 30,
+        "followRedirects": true,
+        "compress": true,
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": { "x": 2700, "y": 0 },
+        "restore": { "expect": { "method": { "label": "POST" } } }
+      }
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "slots": null,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": {
+      "orphans": []
+    },
+    "zone": "us1.make.com",
+    "notes": "Handles Stripe charge.dispute.created webhook events. Extracts dispute details, fetches full charge from Stripe API, uses OpenRouter (anthropic/claude-sonnet-4-6 with fallback) to draft a professional customer acknowledgment email, sends it via Resend, fires an urgent internal alert to ALERT_EMAIL, and adds a timestamped note on the HubSpot contact. Timezone: America/New_York. Dispute response deadline: 7 days."
+  },
+  "environment": {
+    "STRIPE_SECRET_KEY": "env.STRIPE_SECRET_KEY",
+    "OPENROUTER_API_KEY": "env.OPENROUTER_API_KEY",
+    "OPENROUTER_FALLBACK_MODEL": "env.OPENROUTER_FALLBACK_MODEL",
+    "APP_URL": "env.APP_URL",
+    "RESEND_API_KEY": "env.RESEND_API_KEY",
+    "RESEND_FROM_ADDRESS": "env.RESEND_FROM_ADDRESS",
+    "CWI_ALERT_FROM_ADDRESS": "env.CWI_ALERT_FROM_ADDRESS",
+    "ALERT_EMAIL": "env.ALERT_EMAIL",
+    "HUBSPOT_PRIVATE_APP_TOKEN": "env.HUBSPOT_PRIVATE_APP_TOKEN"
+  }
+}

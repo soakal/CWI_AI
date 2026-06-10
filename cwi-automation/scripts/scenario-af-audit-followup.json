@@ -1,0 +1,380 @@
+{
+  "name": "scenario-af-audit-followup",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": "{{env.WEBHOOK_AF_AUDIT_FOLLOWUP}}",
+        "maxResults": 1
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0
+        },
+        "restore": {
+          "parameters": {
+            "hook": {
+              "label": "AF Audit Followup Webhook"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hook",
+            "type": "hook:gateway-webhook",
+            "label": "Webhook",
+            "required": true
+          },
+          {
+            "name": "maxResults",
+            "type": "number",
+            "label": "Maximum number of results"
+          }
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "module": "util:Sleep",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "duration": "172800"
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0
+        },
+        "parameters": [
+          {
+            "name": "duration",
+            "type": "number",
+            "label": "Duration (seconds)",
+            "required": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/contacts/{{1.hubspot_contact_id}}?properties=email,firstname,lastname,lifecyclestage,demo_booked",
+        "serializeUrl": false,
+        "method": "get",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "authUser": "",
+        "authPass": "",
+        "timeout": "",
+        "shareCookies": false,
+        "ca": "",
+        "rejectUnauthorized": true,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "gzip": true,
+        "useMtls": false
+      },
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0
+        },
+        "parameters": [
+          {
+            "name": "handleErrors",
+            "type": "boolean",
+            "label": "Evaluate all states as errors (except for 2xx and 3xx)"
+          },
+          {
+            "name": "useNewZLibDeCompress",
+            "type": "boolean",
+            "label": "Use new ZLib decompression"
+          }
+        ]
+      }
+    },
+    {
+      "id": 4,
+      "module": "builtin:BasicRouter",
+      "version": 1,
+      "parameters": {},
+      "mapper": {},
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 0
+        }
+      },
+      "routes": [
+        {
+          "flow": [
+            {
+              "id": 5,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": true,
+                "useNewZLibDeCompress": true
+              },
+              "mapper": {
+                "url": "https://openrouter.ai/api/v1/chat/completions",
+                "serializeUrl": false,
+                "method": "post",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.OPENROUTER_API_KEY}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "name": "HTTP-Referer",
+                    "value": "{{env.APP_BASE_URL}}"
+                  },
+                  {
+                    "name": "X-Title",
+                    "value": "CWI Automation - Audit Followup"
+                  }
+                ],
+                "qs": [],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\"models\":[\"anthropic/claude-sonnet-4-6\",\"{{env.OPENROUTER_FALLBACK_MODEL}}\"],\"messages\":[{\"role\":\"system\",\"content\":\"You are a helpful AI automation consultant writing a personalized follow-up email after a free AI readiness audit. Write in a warm, professional tone. Be specific and actionable. Do not use excessive filler language.\"},{\"role\":\"user\",\"content\":\"Write a follow-up email body (plain text, no subject line) for {{1.contact_name}} at {{1.company_name}}. Their AI readiness audit score was {{1.audit_score}} out of 100.\\n\\nGuidelines:\\n- Open by referencing their audit score and what it means at a high level.\\n- Identify 1-2 specific, concrete improvement areas based on their score (if score 0-40: focus on foundational data infrastructure and process documentation; if score 41-70: focus on workflow automation opportunities and AI tool integration; if score 71-100: focus on scaling existing AI initiatives and advanced optimization).\\n- Offer a free 20-minute call to walk through their results in detail.\\n- Include this booking link naturally in the email: {{env.CALENDLY_BOOKING_LINK}}\\n- Close warmly.\\n- Keep the email under 250 words.\\n- Do not include a subject line, greeting salutation name, or sign-off — just the body paragraphs.\"}],\"max_tokens\":600,\"temperature\":0.7}",
+                "parseResponse": true,
+                "authUser": "",
+                "authPass": "",
+                "timeout": "",
+                "shareCookies": false,
+                "ca": "",
+                "rejectUnauthorized": true,
+                "followRedirect": true,
+                "useQuerystring": false,
+                "gzip": true,
+                "useMtls": false
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1200,
+                  "y": -150
+                },
+                "parameters": [
+                  {
+                    "name": "handleErrors",
+                    "type": "boolean",
+                    "label": "Evaluate all states as errors (except for 2xx and 3xx)"
+                  },
+                  {
+                    "name": "useNewZLibDeCompress",
+                    "type": "boolean",
+                    "label": "Use new ZLib decompression"
+                  }
+                ]
+              }
+            },
+            {
+              "id": 6,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": true,
+                "useNewZLibDeCompress": true
+              },
+              "mapper": {
+                "url": "https://api.resend.com/emails",
+                "serializeUrl": false,
+                "method": "post",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.RESEND_API_KEY}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "qs": [],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\"from\":\"{{env.RESEND_FROM_ADDRESS}}\",\"to\":[\"{{1.contact_email}}\"],\"subject\":\"Your AI audit results — here is what I found\",\"text\":\"Hi {{1.contact_name}},\\n\\n{{5.data.choices[].message.content}}\\n\\nBest regards\"}",
+                "parseResponse": true,
+                "authUser": "",
+                "authPass": "",
+                "timeout": "",
+                "shareCookies": false,
+                "ca": "",
+                "rejectUnauthorized": true,
+                "followRedirect": true,
+                "useQuerystring": false,
+                "gzip": true,
+                "useMtls": false
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1500,
+                  "y": -150
+                },
+                "parameters": [
+                  {
+                    "name": "handleErrors",
+                    "type": "boolean",
+                    "label": "Evaluate all states as errors (except for 2xx and 3xx)"
+                  },
+                  {
+                    "name": "useNewZLibDeCompress",
+                    "type": "boolean",
+                    "label": "Use new ZLib decompression"
+                  }
+                ]
+              }
+            },
+            {
+              "id": 7,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": true,
+                "useNewZLibDeCompress": true
+              },
+              "mapper": {
+                "url": "https://api.hubapi.com/crm/v3/objects/notes",
+                "serializeUrl": false,
+                "method": "post",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "qs": [],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\"properties\":{\"hs_note_body\":\"48hr audit follow-up sent {{formatDate(now; 'YYYY-MM-DD'; 'America/New_York')}}\",\"hs_timestamp\":\"{{formatDate(now; 'x')}}\"},\"associations\":[{\"to\":{\"id\":\"{{1.hubspot_contact_id}}\"},\"types\":[{\"associationCategory\":\"HUBSPOT_DEFINED\",\"associationTypeId\":202}]}]}",
+                "parseResponse": true,
+                "authUser": "",
+                "authPass": "",
+                "timeout": "",
+                "shareCookies": false,
+                "ca": "",
+                "rejectUnauthorized": true,
+                "followRedirect": true,
+                "useQuerystring": false,
+                "gzip": true,
+                "useMtls": false
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1800,
+                  "y": -150
+                },
+                "parameters": [
+                  {
+                    "name": "handleErrors",
+                    "type": "boolean",
+                    "label": "Evaluate all states as errors (except for 2xx and 3xx)"
+                  },
+                  {
+                    "name": "useNewZLibDeCompress",
+                    "type": "boolean",
+                    "label": "Use new ZLib decompression"
+                  }
+                ]
+              }
+            }
+          ],
+          "label": "Route A — Demo Not Booked",
+          "filter": {
+            "name": "Demo not booked and still lead",
+            "conditions": [
+              [
+                {
+                  "a": "{{3.data.properties.demo_booked}}",
+                  "b": "true",
+                  "o": "text:notequal"
+                }
+              ],
+              [
+                {
+                  "a": "{{3.data.properties.lifecyclestage}}",
+                  "b": "lead",
+                  "o": "text:equal"
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "flow": [],
+          "label": "Route B — Demo Already Booked (skip)",
+          "filter": {
+            "name": "Demo already booked or past lead",
+            "conditions": [
+              [
+                {
+                  "a": "{{3.data.properties.demo_booked}}",
+                  "b": "true",
+                  "o": "text:equal"
+                }
+              ],
+              [
+                {
+                  "a": "{{3.data.properties.lifecyclestage}}",
+                  "b": "lead",
+                  "o": "text:notequal"
+                }
+              ]
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "slots": null,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": {
+      "orphans": []
+    },
+    "zone": "us2.make.com"
+  }
+}

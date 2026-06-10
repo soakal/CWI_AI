@@ -1,0 +1,461 @@
+{
+  "name": "Scenario H: Client Onboarding Automation",
+  "description": "Triggered when a HubSpot deal moves to Closed Won (env.HUBSPOT_STAGE_CLOSED_WON). Fetches deal + associated contact, marks the company as Active Client, appends the client to the Google Sheets ActiveClients tab (env.ACTIVE_CLIENTS_SHEET_ID), sends a branded welcome email to the client via Resend, and posts an internal onboarding alert to Brian. A global error handler logs failures and alerts Brian via Resend. Timezone America/New_York.",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": 3001,
+        "maxResults": 1
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 0, "y": 0 },
+        "restore": {
+          "parameters": {
+            "hook": {
+              "label": "HubSpot Deal Stage Changed - Closed Won",
+              "data": { "editable": true }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hook",
+            "type": "hook:gateway-webhook",
+            "label": "Webhook",
+            "required": true
+          },
+          {
+            "name": "maxResults",
+            "type": "number",
+            "label": "Maximum number of results"
+          }
+        ],
+        "label": "HubSpot Webhook: deal.propertyChange -> Closed Won",
+        "note": "Fires when a HubSpot deal's stage changes. Configure a HubSpot Workflow (or webhook subscription) to POST to this URL only when dealstage = env.HUBSPOT_STAGE_CLOSED_WON. Expected payload contains dealId. The downstream filter re-confirms the Closed Won stage from the authoritative deal fetch in module 2."
+      }
+    },
+    {
+      "id": 2,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/deals/{{1.body.dealId}}?properties=dealname,amount,hs_deal_stage,pipeline",
+        "method": "GET",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.HUBSPOT_ACCESS_TOKEN}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "qs": [],
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": { "x": 300, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "GET" }
+          }
+        },
+        "note": "Step 1: GET full deal details from HubSpot. Returns dealname, amount, hs_deal_stage, pipeline."
+      }
+    },
+    {
+      "id": 3,
+      "module": "builtin:BasicFeeder",
+      "version": 1,
+      "parameters": {},
+      "filter": {
+        "name": "Stage is Closed Won",
+        "conditions": [
+          [
+            {
+              "a": "{{2.body.properties.hs_deal_stage}}",
+              "b": "{{env.HUBSPOT_STAGE_CLOSED_WON}}",
+              "o": "text:equal"
+            }
+          ]
+        ]
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 600, "y": 0 },
+        "note": "Guard: only proceed if the authoritative deal stage equals env.HUBSPOT_STAGE_CLOSED_WON. Prevents processing of out-of-band or stale webhook payloads."
+      }
+    },
+    {
+      "id": 4,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/deals/{{1.body.dealId}}/associations/contacts",
+        "method": "GET",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.HUBSPOT_ACCESS_TOKEN}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "qs": [],
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": { "x": 900, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "GET" }
+          }
+        },
+        "note": "Step 2: GET contacts associated with the deal. The first associated contact id is used as the primary client contact."
+      }
+    },
+    {
+      "id": 5,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/contacts/{{4.body.results[0].id}}?properties=email,firstname,lastname,phone,company",
+        "method": "GET",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.HUBSPOT_ACCESS_TOKEN}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "qs": [],
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": { "x": 1200, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "GET" }
+          }
+        },
+        "note": "Step 3: GET full contact details (email, firstname, lastname, phone, company) for the associated contact."
+      }
+    },
+    {
+      "id": 6,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/deals/{{1.body.dealId}}/associations/companies",
+        "method": "GET",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.HUBSPOT_ACCESS_TOKEN}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "qs": [],
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": { "x": 1500, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "GET" }
+          }
+        },
+        "note": "Resolves the associated company id (companyId) for the deal so it can be marked as an Active Client in the next step."
+      }
+    },
+    {
+      "id": 7,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/companies/{{6.body.results[0].id}}",
+        "method": "PATCH",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.HUBSPOT_ACCESS_TOKEN}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"properties\": {\n    \"hs_lead_status\": \"{{env.HUBSPOT_STAGE_ACTIVE_CLIENT}}\"\n  }\n}",
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": { "x": 1800, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "PATCH" },
+            "bodyType": { "label": "Raw" },
+            "contentType": { "label": "JSON (application/json)" }
+          }
+        },
+        "note": "Step 4: PATCH the associated HubSpot company, setting hs_lead_status to env.HUBSPOT_STAGE_ACTIVE_CLIENT (Active Client)."
+      }
+    },
+    {
+      "id": 8,
+      "module": "google-sheets:addRow",
+      "version": 3,
+      "parameters": {
+        "__IMTCONN__": "{{connection.google_sheets}}"
+      },
+      "mapper": {
+        "mode": "select",
+        "spreadsheetId": "{{env.ACTIVE_CLIENTS_SHEET_ID}}",
+        "sheetName": "ActiveClients",
+        "includeColumnNamesInOutput": true,
+        "insertUnformatted": false,
+        "valueInputOption": "USER_ENTERED",
+        "insertDataOption": "INSERT_ROWS",
+        "values": {
+          "client_name": "{{trim(5.body.properties.firstname + ' ' + 5.body.properties.lastname)}}",
+          "email": "{{5.body.properties.email}}",
+          "phone": "{{5.body.properties.phone}}",
+          "hubspot_company_id": "{{6.body.results[0].id}}",
+          "monthly_fee": "{{2.body.properties.amount}}",
+          "start_date": "{{formatDate(now, 'YYYY-MM-DD', 'America/New_York')}}",
+          "status": "Active"
+        }
+      },
+      "metadata": {
+        "designer": { "x": 2100, "y": 0 },
+        "restore": {
+          "parameters": {
+            "__IMTCONN__": { "label": "Google Sheets Connection" }
+          }
+        },
+        "note": "Step 5: Append a row to the ActiveClients tab in env.ACTIVE_CLIENTS_SHEET_ID. Columns: client_name, email, phone, hubspot_company_id, monthly_fee, start_date (America/New_York), status=Active."
+      }
+    },
+    {
+      "id": 9,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.RESEND_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"{{5.body.properties.email}}\"],\n  \"subject\": \"Welcome to CWI AI \\u2014 you're all set\",\n  \"html\": \"<!DOCTYPE html><html><body style=\\\"margin:0;padding:0;background-color:#f4f6f8;font-family:Arial,Helvetica,sans-serif;color:#1a1a1a;\\\"><table role=\\\"presentation\\\" width=\\\"100%\\\" cellpadding=\\\"0\\\" cellspacing=\\\"0\\\" style=\\\"background-color:#f4f6f8;padding:24px 0;\\\"><tr><td align=\\\"center\\\"><table role=\\\"presentation\\\" width=\\\"600\\\" cellpadding=\\\"0\\\" cellspacing=\\\"0\\\" style=\\\"background-color:#ffffff;border-radius:8px;overflow:hidden;\\\"><tr><td style=\\\"background-color:#0b2545;padding:28px 32px;\\\"><h1 style=\\\"margin:0;color:#ffffff;font-size:22px;\\\">CWI AI</h1></td></tr><tr><td style=\\\"padding:32px;\\\"><h2 style=\\\"margin:0 0 16px;font-size:20px;color:#0b2545;\\\">Welcome aboard, {{5.body.properties.firstname}}!</h2><p style=\\\"margin:0 0 16px;font-size:15px;line-height:1.6;\\\">We're thrilled to have {{ifempty(5.body.properties.company, 'your team')}} as a CWI AI client. Everything is set up on our end and we're ready to get your automation working for you.</p><h3 style=\\\"margin:24px 0 8px;font-size:16px;color:#0b2545;\\\">Your next steps</h3><ol style=\\\"margin:0 0 16px;padding-left:20px;font-size:15px;line-height:1.7;\\\"><li>Book your kickoff call so we can align on goals and timeline.</li><li>We'll gather access and details during that call \\u2014 no prep required.</li><li>Your build begins immediately after kickoff.</li></ol><table role=\\\"presentation\\\" cellpadding=\\\"0\\\" cellspacing=\\\"0\\\" style=\\\"margin:24px 0;\\\"><tr><td style=\\\"background-color:#1b9aaa;border-radius:6px;\\\"><a href=\\\"{{env.CALENDLY_LINK}}\\\" style=\\\"display:inline-block;padding:14px 28px;color:#ffffff;font-size:15px;font-weight:bold;text-decoration:none;\\\">Schedule Your Kickoff Call</a></td></tr></table><p style=\\\"margin:0 0 8px;font-size:15px;line-height:1.6;\\\">Questions before then? Just reply to this email or reach us during business hours (9 AM\\u20136 PM ET, Monday\\u2013Friday).</p><p style=\\\"margin:24px 0 0;font-size:15px;line-height:1.6;\\\">Talk soon,<br/><strong>Brian</strong><br/>CWI AI<br/>brian@cwiai.net<br/>(734) 812-9971</p></td></tr><tr><td style=\\\"background-color:#f0f2f5;padding:16px 32px;font-size:12px;color:#6b7280;\\\">CWI AI \\u2014 Business hours: 9 AM\\u20136 PM ET, Monday\\u2013Friday.</td></tr></table></td></tr></table></body></html>\"\n}",
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": { "x": 2400, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "POST" },
+            "bodyType": { "label": "Raw" },
+            "contentType": { "label": "JSON (application/json)" }
+          }
+        },
+        "note": "Step 6: Send the branded welcome email to the client via Resend. FROM env.CWI_ALERT_FROM_ADDRESS (B2B email to the client, CWI branding is acceptable). Includes next steps and the Calendly kickoff link (env.CALENDLY_LINK)."
+      }
+    },
+    {
+      "id": 10,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.RESEND_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"subject\": \"New client onboarded: {{trim(5.body.properties.firstname + ' ' + 5.body.properties.lastname)}}, {{2.body.properties.dealname}}, ${{2.body.properties.amount}}/mo\",\n  \"html\": \"<h2>New Client Onboarded \\ud83c\\udf89</h2><p>A deal just closed and the onboarding automation completed.</p><hr><h3>Client</h3><ul><li><strong>Name:</strong> {{trim(5.body.properties.firstname + ' ' + 5.body.properties.lastname)}}</li><li><strong>Company:</strong> {{ifempty(5.body.properties.company, 'N/A')}}</li><li><strong>Email:</strong> {{5.body.properties.email}}</li><li><strong>Phone:</strong> {{ifempty(5.body.properties.phone, 'N/A')}}</li></ul><h3>Deal</h3><ul><li><strong>Deal Name (Tier):</strong> {{2.body.properties.dealname}}</li><li><strong>Monthly Amount:</strong> ${{2.body.properties.amount}}/mo</li><li><strong>HubSpot Deal ID:</strong> {{1.body.dealId}}</li><li><strong>HubSpot Company ID:</strong> {{6.body.results[0].id}}</li><li><strong>Pipeline:</strong> {{2.body.properties.pipeline}}</li></ul><h3>Automation</h3><ul><li>Company marked Active Client: yes</li><li>Added to ActiveClients sheet: yes</li><li>Welcome email sent to client: yes</li><li><strong>Start Date:</strong> {{formatDate(now, 'YYYY-MM-DD', 'America/New_York')}} ET</li></ul><hr><p><em>Automated alert from Make.com CWI Automation \\u2014 Scenario H: Client Onboarding.</em></p>\"\n}",
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": { "x": 2700, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "POST" },
+            "bodyType": { "label": "Raw" },
+            "contentType": { "label": "JSON (application/json)" }
+          }
+        },
+        "note": "Step 7: Send internal onboarding alert to brian@cwiai.net via Resend. FROM env.CWI_ALERT_FROM_ADDRESS (internal alert). Subject summarizes name, tier (deal name), and monthly amount."
+      }
+    }
+  ],
+  "errorHandlers": [
+    {
+      "id": 99,
+      "label": "Error Handler — Client Onboarding Failed (Resend)",
+      "type": "error",
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": false,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.RESEND_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"subject\": \"[ERROR] Make.com \\u2014 Scenario H Client Onboarding Failed\",\n  \"html\": \"<h2>Client Onboarding Error \\u2014 Scenario H</h2><p>The onboarding automation failed. Please review and complete onboarding manually in HubSpot, Google Sheets, and email.</p><hr><h3>Context</h3><ul><li><strong>HubSpot Deal ID:</strong> {{1.body.dealId}}</li><li><strong>Deal Name:</strong> {{2.body.properties.dealname}}</li><li><strong>Amount:</strong> ${{2.body.properties.amount}}/mo</li><li><strong>Contact Email:</strong> {{5.body.properties.email}}</li><li><strong>Contact Name:</strong> {{5.body.properties.firstname}} {{5.body.properties.lastname}}</li><li><strong>Company ID:</strong> {{6.body.results[0].id}}</li></ul><hr><h3>Error Details</h3><ul><li><strong>Error Message:</strong> {{error.message}}</li><li><strong>Failed Module:</strong> {{error.module}}</li><li><strong>Scenario Run ID:</strong> {{scenario.runId}}</li><li><strong>Timestamp:</strong> {{formatDate(now, 'YYYY-MM-DD HH:mm:ss', 'America/New_York')}} ET</li></ul><hr><p><em>Automated alert from Make.com CWI Automation \\u2014 Scenario H: Client Onboarding.</em></p>\"\n}",
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": { "x": 1350, "y": 400 },
+        "note": "Step 8: Global error handler attached to all modules. On any failure it emails brian@cwiai.net via Resend (FROM env.CWI_ALERT_FROM_ADDRESS) with the deal/contact context, the failing module, the error message, the scenario run id, and an America/New_York timestamp for fast manual remediation."
+      }
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "slots": null,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false,
+      "timezone": "America/New_York"
+    },
+    "designer": {
+      "orphans": []
+    },
+    "zone": "us1.make.com"
+  },
+  "connections": {
+    "hubspot": {
+      "label": "HubSpot CWI Account",
+      "note": "HubSpot Private App access token stored in env.HUBSPOT_ACCESS_TOKEN.",
+      "scopes": [
+        "crm.objects.deals.read",
+        "crm.objects.contacts.read",
+        "crm.objects.companies.read",
+        "crm.objects.companies.write"
+      ]
+    },
+    "google_sheets": {
+      "label": "Google Sheets Connection",
+      "note": "Service account or OAuth with write access to the ActiveClients spreadsheet (env.ACTIVE_CLIENTS_SHEET_ID)."
+    }
+  },
+  "environment_variables": {
+    "HUBSPOT_ACCESS_TOKEN": "REPLACE_WITH_HUBSPOT_PRIVATE_APP_TOKEN",
+    "HUBSPOT_STAGE_CLOSED_WON": "REPLACE_WITH_HUBSPOT_CLOSED_WON_STAGE_ID",
+    "HUBSPOT_STAGE_ACTIVE_CLIENT": "REPLACE_WITH_HUBSPOT_ACTIVE_CLIENT_LEAD_STATUS_VALUE",
+    "ACTIVE_CLIENTS_SHEET_ID": "REPLACE_WITH_GOOGLE_SHEETS_SPREADSHEET_ID",
+    "RESEND_API_KEY": "REPLACE_WITH_RESEND_API_KEY",
+    "RESEND_FROM_ADDRESS": "REPLACE_WITH_VERIFIED_CLIENT_FACING_RESEND_SENDER",
+    "CWI_ALERT_FROM_ADDRESS": "REPLACE_WITH_VERIFIED_CWI_ALERT_RESEND_SENDER",
+    "CALENDLY_LINK": "REPLACE_WITH_CALENDLY_KICKOFF_LINK"
+  },
+  "webhooks": [
+    {
+      "id": 3001,
+      "name": "HubSpot Deal Closed Won Webhook",
+      "url": "GENERATED_BY_MAKE_ON_IMPORT",
+      "method": "POST",
+      "headers": [],
+      "stringify": false,
+      "retrieval": "lastdup",
+      "type": "gateway",
+      "json": true,
+      "typedConfig": null,
+      "rawConfig": null,
+      "note": "Create a HubSpot Workflow (deal-based) enrolled on dealstage = env.HUBSPOT_STAGE_CLOSED_WON, with a 'Send a webhook' action POSTing { \"dealId\": {{deal.hs_object_id}} } to this URL. Alternatively use a deal.propertyChange webhook subscription filtered to the Closed Won stage."
+    }
+  ],
+  "setupInstructions": {
+    "step1_hubspot_webhook": "Create a HubSpot deal-based Workflow that enrolls deals when Deal Stage becomes Closed Won (env.HUBSPOT_STAGE_CLOSED_WON). Add a 'Send a webhook' action (POST) to the Make webhook URL with a body containing dealId = {{deal.hs_object_id}}.",
+    "step2_hubspot_scopes": "Create a HubSpot Private App with scopes: crm.objects.deals.read, crm.objects.contacts.read, crm.objects.companies.read, crm.objects.companies.write. Store the token in env.HUBSPOT_ACCESS_TOKEN.",
+    "step3_stage_ids": "Run GET https://api.hubapi.com/crm/v3/pipelines/deals to confirm the Closed Won stage id and set env.HUBSPOT_STAGE_CLOSED_WON. Set env.HUBSPOT_STAGE_ACTIVE_CLIENT to the internal value of the company hs_lead_status option representing 'Active Client'.",
+    "step4_google_sheets": "Connect a Google Sheets account with write access. The spreadsheet (env.ACTIVE_CLIENTS_SHEET_ID) must have an 'ActiveClients' tab with header row: client_name, email, phone, hubspot_company_id, monthly_fee, start_date, status.",
+    "step5_resend": "Set env.RESEND_API_KEY, env.RESEND_FROM_ADDRESS (client-facing verified sender for other scenarios), and env.CWI_ALERT_FROM_ADDRESS (verified sender used for the B2B welcome email and internal/error alerts). No SMTP connection required.",
+    "step6_calendly": "Set env.CALENDLY_LINK to the kickoff call scheduling link embedded in the welcome email.",
+    "step7_testing": "Move a test deal (with an associated contact and company) to Closed Won. Verify: company hs_lead_status updated, a new ActiveClients row appended, the client received the welcome email, and brian@cwiai.net received the onboarding alert."
+  }
+}

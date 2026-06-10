@@ -1,0 +1,267 @@
+{
+  "name": "Scenario I: Payment Failure & Dunning",
+  "description": "Triggers on Stripe payment_intent.payment_failed (and invoice.payment_failed). Parses the failure, fetches the customer from Stripe, finds the HubSpot contact, logs a note, alerts Brian internally via Resend (from env.CWI_ALERT_FROM_ADDRESS to env.ADMIN_EMAIL), and sends a friendly white-labeled card-update email to the client via Resend (from env.RESEND_FROM_ADDRESS) linking to the Stripe customer portal. CWI AI is never mentioned in the client-facing email.",
+  "comments": "STRIPE WEBHOOK VERIFICATION NOTE: Make.com's Stripe webhook module automatically validates the Stripe-Signature header using your configured Stripe webhook signing secret (HMAC-SHA256). Enter the signing secret from Stripe Dashboard (Developers > Webhooks > your endpoint > Signing secret) in the Stripe module connection. Do NOT expose this secret in code or logs. DUNNING NOTE: This scenario handles both payment_intent.payment_failed and invoice.payment_failed. The BasicFeeder (module 2) normalizes both event shapes into a single set of fields so all downstream modules are object-agnostic. To handle both event types in production, create two webhook endpoints (one per event type) pointing at the same scenario, or use a single endpoint subscribed to both events. WHITE-LABEL NOTE: The client-facing email (module 9) MUST send from env.RESEND_FROM_ADDRESS (the client's own verified domain) and MUST NOT reference CWI AI, brian@cwiai.net, or any CWI branding. All secrets are referenced via env.VARIABLE_NAME and never hardcoded.",
+  "flow": [
+    {
+      "id": 1,
+      "module": "stripe:TriggerWebhook",
+      "version": 1,
+      "parameters": {
+        "hookName": "Stripe — payment_failed (payment_intent + invoice)",
+        "event": "payment_intent.payment_failed"
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 0, "y": 0 },
+        "restore": {
+          "parameters": {
+            "hookName": {
+              "label": "CWI Stripe Webhook — payment_intent.payment_failed OR invoice.payment_failed"
+            }
+          }
+        },
+        "note": "Instant trigger. Fires on Stripe payment_intent.payment_failed. For invoice.payment_failed, subscribe the same endpoint to both events in the Stripe Dashboard — module 2 normalizes both payload shapes. Signature verification is handled automatically by Make using the configured webhook signing secret."
+      }
+    },
+    {
+      "id": 2,
+      "module": "builtin:BasicFeeder",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "event_type": "{{1.type}}",
+        "customer_id": "{{ifempty(1.data.object.customer, 1.data.customer)}}",
+        "amount": "{{formatNumber(ifempty(1.data.object.amount_due, ifempty(1.data.object.amount, 1.data.amount)) / 100, 2)}}",
+        "currency": "{{upper(ifempty(1.data.object.currency, 1.data.currency))}}",
+        "failure_reason": "{{ifempty(1.data.object.last_payment_error.message, ifempty(1.data.object.failure_message, 'Payment was declined. No failure reason provided by Stripe.'))}}",
+        "failure_code": "{{ifempty(1.data.object.last_payment_error.code, ifempty(1.data.object.failure_code, 'unknown'))}}",
+        "invoice_id": "{{ifempty(1.data.object.invoice, ifempty(1.data.object.id, ''))}}",
+        "payment_intent_id": "{{ifempty(1.data.object.payment_intent, 1.data.object.id)}}",
+        "failure_date": "{{formatDate(now, 'YYYY-MM-DD', 'America/New_York')}}",
+        "failure_datetime": "{{formatDate(now, 'YYYY-MM-DD HH:mm:ss', 'America/New_York')}}"
+      },
+      "metadata": {
+        "designer": { "x": 300, "y": 0 },
+        "note": "Step 1: Parse Stripe webhook payload. Normalizes payment_intent.payment_failed and invoice.payment_failed into one shape: customer_id, amount (cents->dollars), currency, failure_reason, failure_code, invoice_id, payment_intent_id. Dates formatted in America/New_York (Eastern Time)."
+      }
+    },
+    {
+      "id": 3,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDecompress": true
+      },
+      "mapper": {
+        "url": "https://api.stripe.com/v1/customers/{{2.customer_id}}",
+        "method": "GET",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.STRIPE_SECRET_KEY}}"
+          }
+        ],
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": { "x": 600, "y": 0 },
+        "note": "Step 2: GET https://api.stripe.com/v1/customers/{{customer_id}} to retrieve the customer's name and email for the HubSpot lookup and both emails. Uses env.STRIPE_SECRET_KEY (restricted read key)."
+      }
+    },
+    {
+      "id": 4,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDecompress": true
+      },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/contacts/search",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.HUBSPOT_ACCESS_TOKEN}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"filterGroups\": [\n    {\n      \"filters\": [\n        {\n          \"propertyName\": \"email\",\n          \"operator\": \"EQ\",\n          \"value\": \"{{3.body.email}}\"\n        }\n      ]\n    }\n  ],\n  \"properties\": [\"email\", \"firstname\", \"lastname\", \"company\", \"hs_object_id\"],\n  \"limit\": 1\n}",
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": { "x": 900, "y": 0 },
+        "note": "Step 3: POST https://api.hubapi.com/crm/v3/objects/contacts/search to find the HubSpot contact by the email returned from Stripe (module 3). Returns the contact id used to associate the note in step 4."
+      }
+    },
+    {
+      "id": 5,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDecompress": true
+      },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/notes",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.HUBSPOT_ACCESS_TOKEN}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"properties\": {\n    \"hs_note_body\": \"Payment failed \\u2014 {{2.failure_date}} \\u2014 ${{2.amount}} {{2.currency}} \\u2014 Reason: {{2.failure_reason}} (code: {{2.failure_code}}). Stripe customer: {{2.customer_id}}. Invoice/PI: {{ifempty(2.invoice_id, 2.payment_intent_id)}}.\",\n    \"hs_timestamp\": \"{{formatDate(now, 'X') * 1000}}\"\n  },\n  \"associations\": [\n    {\n      \"to\": {\n        \"id\": \"{{4.body.results[0].id}}\"\n      },\n      \"types\": [\n        {\n          \"associationCategory\": \"HUBSPOT_DEFINED\",\n          \"associationTypeId\": 202\n        }\n      ]\n    }\n  ]\n}",
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": { "x": 1200, "y": 0 },
+        "note": "Step 4: POST https://api.hubapi.com/crm/v3/objects/notes. Logs note 'Payment failed — {date} — {amount} — Reason: {failure_reason}' associated with the contact found in step 3. associationTypeId 202 = Contact-to-Note."
+      }
+    },
+    {
+      "id": 6,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDecompress": true
+      },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.RESEND_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"{{env.ADMIN_EMAIL}}\"],\n  \"subject\": \"PAYMENT FAILED \\u2014 {{ifempty(3.body.name, 3.body.email)}} \\u2014 ${{2.amount}}\",\n  \"html\": \"<h2 style=\\\"color:#b00020;\\\">\\ud83d\\udea8 Payment Failed</h2><p>A client payment just failed in Stripe. The client has been sent a friendly card-update email automatically. Review below and follow up if needed.</p><hr><h3>Client</h3><ul><li><strong>Name:</strong> {{ifempty(3.body.name, 'N/A')}}</li><li><strong>Email:</strong> {{3.body.email}}</li><li><strong>HubSpot Contact:</strong> {{ifempty(4.body.results[0].id, 'No matching contact found')}}</li></ul><h3>Payment</h3><ul><li><strong>Amount:</strong> ${{2.amount}} {{2.currency}}</li><li><strong>Event Type:</strong> {{2.event_type}}</li><li><strong>Failure Reason:</strong> {{2.failure_reason}}</li><li><strong>Failure Code:</strong> {{2.failure_code}}</li><li><strong>Invoice ID:</strong> {{ifempty(2.invoice_id, 'N/A')}}</li><li><strong>Payment Intent ID:</strong> {{ifempty(2.payment_intent_id, 'N/A')}}</li><li><strong>Stripe Customer ID:</strong> {{2.customer_id}}</li><li><strong>When:</strong> {{2.failure_datetime}} ET</li></ul><hr><p><strong>Open in Stripe Dashboard:</strong><br><a href=\\\"https://dashboard.stripe.com/customers/{{2.customer_id}}\\\">https://dashboard.stripe.com/customers/{{2.customer_id}}</a></p><p><strong>Failed payment:</strong><br><a href=\\\"https://dashboard.stripe.com/payments/{{2.payment_intent_id}}\\\">https://dashboard.stripe.com/payments/{{2.payment_intent_id}}</a></p><hr><p style=\\\"color:#888;font-size:12px;\\\">Automated alert from Make.com CWI Automation \\u2014 Scenario I: Payment Failure &amp; Dunning. Owner: brian@cwiai.net / (734) 812-9971.</p>\"\n}",
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": { "x": 1500, "y": 0 },
+        "note": "Step 5: Internal alert to Brian. POST https://api.resend.com/emails. FROM env.CWI_ALERT_FROM_ADDRESS, TO env.ADMIN_EMAIL. Subject 'PAYMENT FAILED — [client name] — $[amount]'. Body includes full details and Stripe dashboard links."
+      }
+    },
+    {
+      "id": 7,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDecompress": true
+      },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.RESEND_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"from\": \"{{env.RESEND_FROM_ADDRESS}}\",\n  \"to\": [\"{{3.body.email}}\"],\n  \"subject\": \"Action needed \\u2014 update your payment method\",\n  \"html\": \"<div style=\\\"font-family:Arial,Helvetica,sans-serif;max-width:560px;margin:0 auto;color:#222;line-height:1.6;\\\"><p>Hi{{if(length(ifempty(3.body.name, '')) > 0, ' ' + first(split(3.body.name, ' ')), '')}},</p><p>We tried to process your recent payment of <strong>${{2.amount}} {{2.currency}}</strong>, but it didn't go through. This usually happens when a card has expired, was replaced, or hit a temporary hold from the bank \\u2014 nothing to worry about.</p><p>To keep everything running smoothly, please take a moment to update your payment details:</p><p style=\\\"text-align:center;margin:28px 0;\\\"><a href=\\\"{{env.STRIPE_CUSTOMER_PORTAL_URL}}\\\" style=\\\"background:#2b6cb0;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:6px;font-weight:bold;display:inline-block;\\\">Update Payment Method</a></p><p style=\\\"font-size:13px;color:#666;\\\">Or copy and paste this link into your browser:<br><a href=\\\"{{env.STRIPE_CUSTOMER_PORTAL_URL}}\\\">{{env.STRIPE_CUSTOMER_PORTAL_URL}}</a></p><p>Once your details are updated, we'll automatically retry the payment \\u2014 there's nothing else you need to do.</p><p>If you have any questions, just reply to this email and we'll be happy to help.</p><p>Thank you!</p></div>\"\n}",
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": { "x": 1800, "y": 0 },
+        "note": "Step 6: Friendly client-facing card-update email. POST https://api.resend.com/emails. FROM env.RESEND_FROM_ADDRESS (client's own verified domain). TO the client's email from Stripe. White-labeled: does NOT mention CWI AI or any CWI branding. Links to env.STRIPE_CUSTOMER_PORTAL_URL."
+      }
+    }
+  ],
+  "errorHandlers": [
+    {
+      "id": 8,
+      "label": "Error Handler — Payment Failure & Dunning (Resend)",
+      "type": "error",
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": false,
+        "useNewZLibDecompress": true
+      },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.RESEND_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"{{env.ADMIN_EMAIL}}\"],\n  \"subject\": \"[ERROR] Make.com \\u2014 Scenario I Payment Failure & Dunning Failed\",\n  \"html\": \"<h2>Scenario I Error \\u2014 Payment Failure &amp; Dunning</h2><p>A payment-failure event could not be fully processed. The client may NOT have received the card-update email \\u2014 please verify in Stripe and follow up manually.</p><hr><h3>Known Payment Details</h3><ul><li><strong>Amount:</strong> ${{2.amount}} {{2.currency}}</li><li><strong>Event Type:</strong> {{2.event_type}}</li><li><strong>Failure Reason:</strong> {{2.failure_reason}}</li><li><strong>Stripe Customer ID:</strong> {{2.customer_id}}</li><li><strong>Invoice ID:</strong> {{ifempty(2.invoice_id, 'N/A')}}</li><li><strong>Payment Intent ID:</strong> {{ifempty(2.payment_intent_id, 'N/A')}}</li><li><strong>Stripe Dashboard:</strong> <a href=\\\"https://dashboard.stripe.com/customers/{{2.customer_id}}\\\">https://dashboard.stripe.com/customers/{{2.customer_id}}</a></li></ul><hr><h3>Error Details</h3><ul><li><strong>Error Message:</strong> {{error.message}}</li><li><strong>Failed Module:</strong> {{error.module}}</li><li><strong>Scenario Run ID:</strong> {{scenario.runId}}</li><li><strong>Timestamp:</strong> {{formatDate(now, 'YYYY-MM-DD HH:mm:ss', 'America/New_York')}} ET</li></ul><hr><p style=\\\"color:#888;font-size:12px;\\\"><em>Automated alert from Make.com CWI Automation \\u2014 Scenario I. Owner: brian@cwiai.net / (734) 812-9971.</em></p>\"\n}",
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": { "x": 900, "y": 400 },
+        "note": "Step 7: Error handler covering modules 2-7. Catches any failure (Stripe fetch, HubSpot search/note, internal alert, or client email) and notifies env.ADMIN_EMAIL via Resend from env.CWI_ALERT_FROM_ADDRESS with all known details, Stripe link, the error message, and the failed module for fast manual remediation. Timestamp in America/New_York."
+      }
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false,
+      "timezone": "America/New_York"
+    },
+    "designer": {
+      "orphans": []
+    },
+    "zone": "us1.make.com"
+  },
+  "connections": {
+    "stripe": {
+      "label": "CWI Stripe Connection",
+      "note": "Requires Stripe API key (restricted key with customer read + webhook read access) and the webhook signing secret for HMAC-SHA256 signature verification."
+    }
+  },
+  "setupInstructions": {
+    "step1_stripe_webhook": "In Stripe Dashboard: Developers > Webhooks > Add endpoint. Point it at your Make.com webhook URL. Subscribe to BOTH event types: payment_intent.payment_failed AND invoice.payment_failed. Copy the Signing Secret into the Stripe module connection in Make.com. Module 2 (BasicFeeder) normalizes both payload shapes so all downstream modules are object-agnostic.",
+    "step2_stripe_api_key": "Set env.STRIPE_SECRET_KEY to a restricted Stripe key with read access to Customers (used by GET /v1/customers/{id} in module 3).",
+    "step3_hubspot_scopes": "Create a HubSpot Private App with scopes: crm.objects.contacts.read and crm.objects.notes.write. Store the access token in env.HUBSPOT_ACCESS_TOKEN. Modules 4-5 search the contact by email and log a payment-failure note (associationTypeId 202 = Contact-to-Note).",
+    "step4_resend": "Set env.RESEND_API_KEY. Set env.CWI_ALERT_FROM_ADDRESS (verified CWI sender) for internal alerts and the error handler. Set env.RESEND_FROM_ADDRESS to the CLIENT's own verified Resend domain for the white-labeled client email. Set env.ADMIN_EMAIL to brian@cwiai.net (or the owner inbox). The client-facing email MUST NOT mention CWI AI.",
+    "step5_customer_portal": "Set env.STRIPE_CUSTOMER_PORTAL_URL to your Stripe Customer Portal login URL (Stripe Dashboard > Settings > Billing > Customer portal). The client email links here so customers can self-serve a card update; Stripe auto-retries the payment afterward.",
+    "step6_testing": "Test with Stripe CLI: stripe trigger payment_intent.payment_failed and stripe trigger invoice.payment_failed. Confirm: (1) Stripe customer fetched, (2) HubSpot contact found + note logged, (3) internal alert reaches env.ADMIN_EMAIL from env.CWI_ALERT_FROM_ADDRESS, (4) client email sends from env.RESEND_FROM_ADDRESS with no CWI branding and a working portal link."
+  }
+}

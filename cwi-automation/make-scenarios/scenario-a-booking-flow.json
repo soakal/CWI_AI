@@ -1,0 +1,1284 @@
+{
+  "name": "Scenario A: Customer Booking Flow",
+  "description": "Handles inbound Freshchat messages containing booking keywords. Uses Claude (OpenRouter) to extract booking intent, checks Google Calendar availability for the specific requested time slot, creates events or suggests alternatives, and sends confirmation via Freshchat and Resend. Error handling sends alerts to brian@cwiai.net. Timezone: America/New_York (Eastern Time).",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": 1001,
+        "maxResults": 1
+      },
+      "filter": {
+        "name": "Booking keyword filter",
+        "conditions": [
+          [
+            {
+              "a": "{{1.body.messages[0].text}}",
+              "b": "book|schedule|appointment|available|availability|come out",
+              "o": "text:match"
+            }
+          ]
+        ]
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0
+        },
+        "restore": {
+          "parameters": {
+            "hook": {
+              "label": "Freshchat Booking Webhook",
+              "data": {
+                "editable": true
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hook",
+            "type": "hook:gateway-webhook",
+            "label": "Webhook",
+            "required": true
+          },
+          {
+            "name": "maxResults",
+            "type": "number",
+            "label": "Maximum number of results"
+          }
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": false,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.OPENROUTER_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "name": "HTTP-Referer",
+            "value": "https://cwiai.net"
+          },
+          {
+            "name": "X-Title",
+            "value": "CWI AI Booking Flow"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"model\": \"anthropic/claude-sonnet-4-6\",\n  \"models\": [\"anthropic/claude-sonnet-4-6\", \"{{env.OPENROUTER_FALLBACK_MODEL}}\"],\n  \"route\": \"fallback\",\n  \"provider\": {\n    \"allow_fallbacks\": true\n  },\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a booking assistant. Extract booking details from the customer message and return ONLY a valid JSON object with these fields: preferred_date (YYYY-MM-DD or null), preferred_time (HH:MM in 24h format or null), service_type (string describing what service they want or null). Do not include any explanation or markdown, only the JSON object.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"{{1.body.messages[0].text}}\"\n    }\n  ],\n  \"temperature\": 0.1,\n  \"max_tokens\": 256\n}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0
+        },
+        "restore": {
+          "expect": {
+            "method": {
+              "mode": "chose",
+              "label": "POST"
+            },
+            "bodyType": {
+              "label": "Raw"
+            },
+            "contentType": {
+              "label": "JSON (application/json)"
+            }
+          }
+        },
+        "expect": [
+          {
+            "name": "url",
+            "type": "url",
+            "label": "URL",
+            "required": true
+          },
+          {
+            "name": "method",
+            "type": "select",
+            "label": "Method",
+            "required": true,
+            "validate": {
+              "enum": ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
+            }
+          },
+          {
+            "name": "headers",
+            "type": "array",
+            "label": "Headers"
+          },
+          {
+            "name": "bodyType",
+            "type": "select",
+            "label": "Body type"
+          },
+          {
+            "name": "body",
+            "type": "string",
+            "label": "Request body"
+          }
+        ]
+      },
+      "onerror": [
+        {
+          "id": 101,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": {
+            "handleErrors": false,
+            "useNewZLibDeCompress": true
+          },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              {
+                "name": "Authorization",
+                "value": "Bearer {{env.RESEND_API_KEY}}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Booking Flow Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Booking Flow Error Alert</h2><p><strong>Scenario:</strong> Scenario A — Customer Booking Flow</p><p><strong>Failed Module ID:</strong> {{errorHandler.moduleId}}</p><p><strong>Error Message:</strong> {{errorHandler.message}}</p><p><strong>Error Type:</strong> {{errorHandler.type}}</p><p><strong>Timestamp:</strong> {{now}}</p><hr><h3>Trigger Data</h3><p><strong>Conversation ID:</strong> {{1.body.id}}</p><p><strong>Customer:</strong> {{1.body.actors[0].first_name}} {{1.body.actors[0].last_name}}</p><p><strong>Customer Email:</strong> {{1.body.actors[0].email}}</p><p><strong>Message:</strong> {{1.body.messages[0].text}}</p><p><strong>Extracted Date:</strong> {{3.preferred_date}}</p><p><strong>Extracted Time:</strong> {{3.preferred_time}}</p><p><strong>Service Type:</strong> {{3.service_type}}</p><hr><p style=\\\"color: #888; font-size: 12px;\\\">This is an automated alert from Make.com — CWI AI Booking Flow</p></body></html>\"\n}"
+          },
+          "metadata": {
+            "designer": {
+              "x": 900,
+              "y": 400
+            },
+            "notes": "Resend native HTTP email alert (replaces Gmail/SMTP)."
+          }
+        },
+        {
+          "id": 102,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": {
+            "handleErrors": false,
+            "useNewZLibDeCompress": true
+          },
+          "mapper": {
+            "url": "https://api.freshchat.com/v2/conversations/{{1.body.id}}/messages",
+            "method": "POST",
+            "headers": [
+              {
+                "name": "Authorization",
+                "value": "Bearer {{env.FRESHCHAT_API_KEY}}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"actor_type\": \"agent\",\n  \"actor_id\": \"{{env.FRESHCHAT_BOT_ID}}\",\n  \"message_type\": \"normal\",\n  \"message_parts\": [\n    {\n      \"text\": {\n        \"content\": \"I'm sorry, {{1.body.actors[0].first_name}}! We encountered a technical issue while processing your booking request. Our team has been notified and will reach out to you shortly to complete your appointment. In the meantime, you can grab any open time instantly here: {{env.CALENDLY_BOOKING_LINK}}\"\n      }\n    }\n  ]\n}"
+          },
+          "metadata": {
+            "designer": {
+              "x": 1200,
+              "y": 400
+            }
+          }
+        },
+        {
+          "id": 103,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": {
+            "handleErrors": false,
+            "useNewZLibDeCompress": true
+          },
+          "mapper": {
+            "url": "https://api.freshchat.com/v2/conversations/{{1.body.id}}",
+            "method": "PATCH",
+            "headers": [
+              {
+                "name": "Authorization",
+                "value": "Bearer {{env.FRESHCHAT_API_KEY}}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"assigned_agent_type\": \"agent\"\n}"
+          },
+          "metadata": {
+            "designer": {
+              "x": 1500,
+              "y": 400
+            },
+            "notes": "Assigns the conversation to a human agent after the error apology message is sent, so a live agent can follow up with the customer."
+          }
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "module": "json:ParseJSON",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "string": "{{2.data.choices[0].message.content}}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0
+        },
+        "expect": [
+          {
+            "name": "string",
+            "type": "text",
+            "label": "JSON string",
+            "required": true
+          }
+        ]
+      },
+      "onerror": [
+        {
+          "id": 101,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": {
+            "handleErrors": false,
+            "useNewZLibDeCompress": true
+          },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              {
+                "name": "Authorization",
+                "value": "Bearer {{env.RESEND_API_KEY}}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Booking Flow Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Booking Flow Error Alert</h2><p><strong>Scenario:</strong> Scenario A — Customer Booking Flow</p><p><strong>Failed Module ID:</strong> {{errorHandler.moduleId}}</p><p><strong>Error Message:</strong> {{errorHandler.message}}</p><p><strong>Error Type:</strong> {{errorHandler.type}}</p><p><strong>Timestamp:</strong> {{now}}</p><hr><h3>Trigger Data</h3><p><strong>Conversation ID:</strong> {{1.body.id}}</p><p><strong>Customer:</strong> {{1.body.actors[0].first_name}} {{1.body.actors[0].last_name}}</p><p><strong>Customer Email:</strong> {{1.body.actors[0].email}}</p><p><strong>Message:</strong> {{1.body.messages[0].text}}</p><p><strong>Extracted Date:</strong> {{3.preferred_date}}</p><p><strong>Extracted Time:</strong> {{3.preferred_time}}</p><p><strong>Service Type:</strong> {{3.service_type}}</p><hr><p style=\\\"color: #888; font-size: 12px;\\\">This is an automated alert from Make.com — CWI AI Booking Flow</p></body></html>\"\n}"
+          },
+          "metadata": {
+            "designer": { "x": 900, "y": 400 },
+            "notes": "Resend native HTTP email alert (replaces Gmail/SMTP)."
+          }
+        },
+        {
+          "id": 102,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": {
+            "handleErrors": false,
+            "useNewZLibDeCompress": true
+          },
+          "mapper": {
+            "url": "https://api.freshchat.com/v2/conversations/{{1.body.id}}/messages",
+            "method": "POST",
+            "headers": [
+              {
+                "name": "Authorization",
+                "value": "Bearer {{env.FRESHCHAT_API_KEY}}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"actor_type\": \"agent\",\n  \"actor_id\": \"{{env.FRESHCHAT_BOT_ID}}\",\n  \"message_type\": \"normal\",\n  \"message_parts\": [\n    {\n      \"text\": {\n        \"content\": \"I'm sorry, {{1.body.actors[0].first_name}}! We encountered a technical issue while processing your booking request. Our team has been notified and will reach out to you shortly to complete your appointment. In the meantime, you can grab any open time instantly here: {{env.CALENDLY_BOOKING_LINK}}\"\n      }\n    }\n  ]\n}"
+          },
+          "metadata": {
+            "designer": { "x": 1200, "y": 400 }
+          }
+        },
+        {
+          "id": 103,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": {
+            "handleErrors": false,
+            "useNewZLibDeCompress": true
+          },
+          "mapper": {
+            "url": "https://api.freshchat.com/v2/conversations/{{1.body.id}}",
+            "method": "PATCH",
+            "headers": [
+              {
+                "name": "Authorization",
+                "value": "Bearer {{env.FRESHCHAT_API_KEY}}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"assigned_agent_type\": \"agent\"\n}"
+          },
+          "metadata": {
+            "designer": { "x": 1500, "y": 400 },
+            "notes": "Assigns the conversation to a human agent after the error apology message is sent, so a live agent can follow up with the customer."
+          }
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "module": "google-calendar:listEvents",
+      "version": 4,
+      "parameters": {
+        "calendarId": "{{env.GOOGLE_CALENDAR_ID}}"
+      },
+      "mapper": {
+        "timeMin": "{{3.preferred_date}}T{{3.preferred_time}}:00",
+        "timeMax": "{{addMinutes(parseDate(3.preferred_date + \"T\" + 3.preferred_time + \":00\"; \"YYYY-MM-DDTHH:mm:ss\"); 60)}}",
+        "timeZone": "America/New_York",
+        "singleEvents": true,
+        "orderBy": "startTime",
+        "maxResults": 20
+      },
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 0
+        },
+        "restore": {
+          "parameters": {
+            "calendarId": {
+              "label": "CWI AI Primary Calendar"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "calendarId",
+            "type": "select",
+            "label": "Calendar ID",
+            "required": true
+          }
+        ],
+        "expect": [
+          {
+            "name": "timeMin",
+            "type": "date",
+            "label": "Start date/time"
+          },
+          {
+            "name": "timeMax",
+            "type": "date",
+            "label": "End date/time"
+          },
+          {
+            "name": "timeZone",
+            "type": "text",
+            "label": "Time zone"
+          },
+          {
+            "name": "singleEvents",
+            "type": "boolean",
+            "label": "Single events"
+          },
+          {
+            "name": "orderBy",
+            "type": "select",
+            "label": "Order by"
+          },
+          {
+            "name": "maxResults",
+            "type": "number",
+            "label": "Maximum number of results"
+          }
+        ],
+        "notes": "Queries ONLY the specific requested time window (preferred_time to preferred_time + 60 min) on the preferred date. listEvents returns only events that overlap this window, so length(items)==0 means the exact requested slot is free. timeZone America/New_York ensures the window is interpreted in Eastern Time."
+      },
+      "onerror": [
+        {
+          "id": 101,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": {
+            "handleErrors": false,
+            "useNewZLibDeCompress": true
+          },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              {
+                "name": "Authorization",
+                "value": "Bearer {{env.RESEND_API_KEY}}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Booking Flow Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Booking Flow Error Alert</h2><p><strong>Scenario:</strong> Scenario A — Customer Booking Flow</p><p><strong>Failed Module ID:</strong> {{errorHandler.moduleId}}</p><p><strong>Error Message:</strong> {{errorHandler.message}}</p><p><strong>Error Type:</strong> {{errorHandler.type}}</p><p><strong>Timestamp:</strong> {{now}}</p><hr><h3>Trigger Data</h3><p><strong>Conversation ID:</strong> {{1.body.id}}</p><p><strong>Customer:</strong> {{1.body.actors[0].first_name}} {{1.body.actors[0].last_name}}</p><p><strong>Customer Email:</strong> {{1.body.actors[0].email}}</p><p><strong>Message:</strong> {{1.body.messages[0].text}}</p><p><strong>Extracted Date:</strong> {{3.preferred_date}}</p><p><strong>Extracted Time:</strong> {{3.preferred_time}}</p><p><strong>Service Type:</strong> {{3.service_type}}</p><hr><p style=\\\"color: #888; font-size: 12px;\\\">This is an automated alert from Make.com — CWI AI Booking Flow</p></body></html>\"\n}"
+          },
+          "metadata": {
+            "designer": { "x": 900, "y": 400 },
+            "notes": "Resend native HTTP email alert (replaces Gmail/SMTP)."
+          }
+        },
+        {
+          "id": 102,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": {
+            "handleErrors": false,
+            "useNewZLibDeCompress": true
+          },
+          "mapper": {
+            "url": "https://api.freshchat.com/v2/conversations/{{1.body.id}}/messages",
+            "method": "POST",
+            "headers": [
+              {
+                "name": "Authorization",
+                "value": "Bearer {{env.FRESHCHAT_API_KEY}}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"actor_type\": \"agent\",\n  \"actor_id\": \"{{env.FRESHCHAT_BOT_ID}}\",\n  \"message_type\": \"normal\",\n  \"message_parts\": [\n    {\n      \"text\": {\n        \"content\": \"I'm sorry, {{1.body.actors[0].first_name}}! We encountered a technical issue while processing your booking request. Our team has been notified and will reach out to you shortly to complete your appointment. In the meantime, you can grab any open time instantly here: {{env.CALENDLY_BOOKING_LINK}}\"\n      }\n    }\n  ]\n}"
+          },
+          "metadata": {
+            "designer": { "x": 1200, "y": 400 }
+          }
+        },
+        {
+          "id": 103,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": {
+            "handleErrors": false,
+            "useNewZLibDeCompress": true
+          },
+          "mapper": {
+            "url": "https://api.freshchat.com/v2/conversations/{{1.body.id}}",
+            "method": "PATCH",
+            "headers": [
+              {
+                "name": "Authorization",
+                "value": "Bearer {{env.FRESHCHAT_API_KEY}}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"assigned_agent_type\": \"agent\"\n}"
+          },
+          "metadata": {
+            "designer": { "x": 1500, "y": 400 },
+            "notes": "Assigns the conversation to a human agent after the error apology message is sent, so a live agent can follow up with the customer."
+          }
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "module": "builtin:RouterModule",
+      "version": 1,
+      "parameters": {},
+      "mapper": {},
+      "metadata": {
+        "designer": {
+          "x": 1200,
+          "y": 0
+        }
+      },
+      "routes": [
+        {
+          "flow": [
+            {
+              "id": 6,
+              "module": "google-calendar:createEvent",
+              "version": 5,
+              "parameters": {
+                "calendarId": "{{env.GOOGLE_CALENDAR_ID}}"
+              },
+              "filter": {
+                "name": "Branch A: Slot Available",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{length(4.items)}}",
+                      "b": "0",
+                      "o": "number:equal"
+                    },
+                    {
+                      "a": "{{3.preferred_time}}",
+                      "b": "",
+                      "o": "text:notequal"
+                    }
+                  ]
+                ]
+              },
+              "mapper": {
+                "summary": "{{3.service_type}} — {{1.body.actors[0].first_name}} {{1.body.actors[0].last_name}}",
+                "start": {
+                  "dateTime": "{{3.preferred_date}}T{{3.preferred_time}}:00",
+                  "timeZone": "America/New_York"
+                },
+                "end": {
+                  "dateTime": "{{addMinutes(parseDate(3.preferred_date + \"T\" + 3.preferred_time + \":00\"; \"YYYY-MM-DDTHH:mm:ss\"); 60)}}",
+                  "timeZone": "America/New_York"
+                },
+                "description": "Service: {{3.service_type}}\nCustomer: {{1.body.actors[0].first_name}} {{1.body.actors[0].last_name}}\nEmail: {{1.body.actors[0].email}}\nPhone: {{1.body.actors[0].phone}}\nConversation ID: {{1.body.id}}\nBooked via: Freshchat Chat Bot",
+                "attendees": [
+                  {
+                    "email": "{{1.body.actors[0].email}}",
+                    "displayName": "{{1.body.actors[0].first_name}} {{1.body.actors[0].last_name}}"
+                  },
+                  {
+                    "email": "brian@cwiai.net",
+                    "displayName": "Brian - CWI AI"
+                  }
+                ],
+                "sendUpdates": "all",
+                "reminders": {
+                  "useDefault": false,
+                  "overrides": [
+                    {
+                      "method": "email",
+                      "minutes": 1440
+                    },
+                    {
+                      "method": "popup",
+                      "minutes": 60
+                    }
+                  ]
+                }
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1500,
+                  "y": -200
+                },
+                "restore": {
+                  "parameters": {
+                    "calendarId": {
+                      "label": "CWI AI Primary Calendar"
+                    }
+                  }
+                },
+                "parameters": [
+                  {
+                    "name": "calendarId",
+                    "type": "select",
+                    "label": "Calendar ID",
+                    "required": true
+                  }
+                ]
+              },
+              "onerror": [
+                {
+                  "id": 101,
+                  "module": "http:ActionSendData",
+                  "version": 3,
+                  "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+                  "mapper": {
+                    "url": "https://api.resend.com/emails",
+                    "method": "POST",
+                    "headers": [
+                      { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+                      { "name": "Content-Type", "value": "application/json" }
+                    ],
+                    "bodyType": "raw",
+                    "contentType": "application/json",
+                    "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Booking Flow Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Booking Flow Error Alert</h2><p><strong>Scenario:</strong> Scenario A — Customer Booking Flow</p><p><strong>Failed Module ID:</strong> {{errorHandler.moduleId}}</p><p><strong>Error Message:</strong> {{errorHandler.message}}</p><p><strong>Error Type:</strong> {{errorHandler.type}}</p><p><strong>Timestamp:</strong> {{now}}</p><hr><h3>Trigger Data</h3><p><strong>Conversation ID:</strong> {{1.body.id}}</p><p><strong>Customer:</strong> {{1.body.actors[0].first_name}} {{1.body.actors[0].last_name}}</p><p><strong>Customer Email:</strong> {{1.body.actors[0].email}}</p><p><strong>Message:</strong> {{1.body.messages[0].text}}</p><p><strong>Extracted Date:</strong> {{3.preferred_date}}</p><p><strong>Extracted Time:</strong> {{3.preferred_time}}</p><p><strong>Service Type:</strong> {{3.service_type}}</p><hr><p style=\\\"color: #888; font-size: 12px;\\\">This is an automated alert from Make.com — CWI AI Booking Flow</p></body></html>\"\n}"
+                  },
+                  "metadata": { "designer": { "x": 900, "y": 400 }, "notes": "Resend native HTTP email alert (replaces Gmail/SMTP)." }
+                },
+                {
+                  "id": 102,
+                  "module": "http:ActionSendData",
+                  "version": 3,
+                  "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+                  "mapper": {
+                    "url": "https://api.freshchat.com/v2/conversations/{{1.body.id}}/messages",
+                    "method": "POST",
+                    "headers": [
+                      { "name": "Authorization", "value": "Bearer {{env.FRESHCHAT_API_KEY}}" },
+                      { "name": "Content-Type", "value": "application/json" }
+                    ],
+                    "bodyType": "raw",
+                    "contentType": "application/json",
+                    "body": "{\n  \"actor_type\": \"agent\",\n  \"actor_id\": \"{{env.FRESHCHAT_BOT_ID}}\",\n  \"message_type\": \"normal\",\n  \"message_parts\": [\n    {\n      \"text\": {\n        \"content\": \"I'm sorry, {{1.body.actors[0].first_name}}! We encountered a technical issue while processing your booking request. Our team has been notified and will reach out to you shortly to complete your appointment. In the meantime, you can grab any open time instantly here: {{env.CALENDLY_BOOKING_LINK}}\"\n      }\n    }\n  ]\n}"
+                  },
+                  "metadata": { "designer": { "x": 1200, "y": 400 } }
+                },
+                {
+                  "id": 103,
+                  "module": "http:ActionSendData",
+                  "version": 3,
+                  "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+                  "mapper": {
+                    "url": "https://api.freshchat.com/v2/conversations/{{1.body.id}}",
+                    "method": "PATCH",
+                    "headers": [
+                      { "name": "Authorization", "value": "Bearer {{env.FRESHCHAT_API_KEY}}" },
+                      { "name": "Content-Type", "value": "application/json" }
+                    ],
+                    "bodyType": "raw",
+                    "contentType": "application/json",
+                    "body": "{\n  \"assigned_agent_type\": \"agent\"\n}"
+                  },
+                  "metadata": { "designer": { "x": 1500, "y": 400 }, "notes": "Assigns the conversation to a human agent after the error apology message is sent, so a live agent can follow up with the customer." }
+                }
+              ]
+            },
+            {
+              "id": 7,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": false,
+                "useNewZLibDeCompress": true
+              },
+              "mapper": {
+                "url": "https://api.freshchat.com/v2/conversations/{{1.body.id}}/messages",
+                "method": "POST",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.FRESHCHAT_API_KEY}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\n  \"actor_type\": \"agent\",\n  \"actor_id\": \"{{env.FRESHCHAT_BOT_ID}}\",\n  \"message_type\": \"normal\",\n  \"message_parts\": [\n    {\n      \"text\": {\n        \"content\": \"Great news, {{1.body.actors[0].first_name}}! Your appointment has been confirmed. Here are the details:\\n\\nService: {{3.service_type}}\\nDate: {{formatDate(6.start.dateTime; \\\"MMMM D, YYYY\\\")}}\\nTime: {{formatDate(6.start.dateTime; \\\"h:mm A\\\")}} (Eastern Time)\\n\\nYou will receive a calendar invite and confirmation email at {{1.body.actors[0].email}} shortly. If you need to reschedule or have questions, just reply to this chat or call us. We look forward to seeing you!\"\n      }\n    }\n  ]\n}"
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1800,
+                  "y": -200
+                }
+              },
+              "onerror": [
+                {
+                  "id": 101,
+                  "module": "http:ActionSendData",
+                  "version": 3,
+                  "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+                  "mapper": {
+                    "url": "https://api.resend.com/emails",
+                    "method": "POST",
+                    "headers": [
+                      { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+                      { "name": "Content-Type", "value": "application/json" }
+                    ],
+                    "bodyType": "raw",
+                    "contentType": "application/json",
+                    "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Booking Flow Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Booking Flow Error Alert</h2><p><strong>Scenario:</strong> Scenario A — Customer Booking Flow</p><p><strong>Failed Module ID:</strong> {{errorHandler.moduleId}}</p><p><strong>Error Message:</strong> {{errorHandler.message}}</p><p><strong>Error Type:</strong> {{errorHandler.type}}</p><p><strong>Timestamp:</strong> {{now}}</p><hr><h3>Trigger Data</h3><p><strong>Conversation ID:</strong> {{1.body.id}}</p><p><strong>Customer:</strong> {{1.body.actors[0].first_name}} {{1.body.actors[0].last_name}}</p><p><strong>Customer Email:</strong> {{1.body.actors[0].email}}</p><p><strong>Message:</strong> {{1.body.messages[0].text}}</p><p><strong>Extracted Date:</strong> {{3.preferred_date}}</p><p><strong>Extracted Time:</strong> {{3.preferred_time}}</p><p><strong>Service Type:</strong> {{3.service_type}}</p><hr><p style=\\\"color: #888; font-size: 12px;\\\">This is an automated alert from Make.com — CWI AI Booking Flow</p></body></html>\"\n}"
+                  },
+                  "metadata": { "designer": { "x": 900, "y": 400 }, "notes": "Resend native HTTP email alert (replaces Gmail/SMTP)." }
+                },
+                {
+                  "id": 102,
+                  "module": "http:ActionSendData",
+                  "version": 3,
+                  "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+                  "mapper": {
+                    "url": "https://api.freshchat.com/v2/conversations/{{1.body.id}}/messages",
+                    "method": "POST",
+                    "headers": [
+                      { "name": "Authorization", "value": "Bearer {{env.FRESHCHAT_API_KEY}}" },
+                      { "name": "Content-Type", "value": "application/json" }
+                    ],
+                    "bodyType": "raw",
+                    "contentType": "application/json",
+                    "body": "{\n  \"actor_type\": \"agent\",\n  \"actor_id\": \"{{env.FRESHCHAT_BOT_ID}}\",\n  \"message_type\": \"normal\",\n  \"message_parts\": [\n    {\n      \"text\": {\n        \"content\": \"I'm sorry, {{1.body.actors[0].first_name}}! We encountered a technical issue while processing your booking request. Our team has been notified and will reach out to you shortly to complete your appointment. In the meantime, you can grab any open time instantly here: {{env.CALENDLY_BOOKING_LINK}}\"\n      }\n    }\n  ]\n}"
+                  },
+                  "metadata": { "designer": { "x": 1200, "y": 400 } }
+                },
+                {
+                  "id": 103,
+                  "module": "http:ActionSendData",
+                  "version": 3,
+                  "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+                  "mapper": {
+                    "url": "https://api.freshchat.com/v2/conversations/{{1.body.id}}",
+                    "method": "PATCH",
+                    "headers": [
+                      { "name": "Authorization", "value": "Bearer {{env.FRESHCHAT_API_KEY}}" },
+                      { "name": "Content-Type", "value": "application/json" }
+                    ],
+                    "bodyType": "raw",
+                    "contentType": "application/json",
+                    "body": "{\n  \"assigned_agent_type\": \"agent\"\n}"
+                  },
+                  "metadata": { "designer": { "x": 1500, "y": 400 }, "notes": "Assigns the conversation to a human agent after the error apology message is sent, so a live agent can follow up with the customer." }
+                }
+              ]
+            },
+            {
+              "id": 8,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": false,
+                "useNewZLibDeCompress": true
+              },
+              "mapper": {
+                "url": "https://api.resend.com/emails",
+                "method": "POST",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.RESEND_API_KEY}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\n  \"from\": \"{{env.RESEND_FROM_ADDRESS}}\",\n  \"to\": [\"{{1.body.actors[0].email}}\"],\n  \"cc\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"Your Appointment is Confirmed — {{3.service_type}} on {{formatDate(6.start.dateTime; \\\"MMMM D, YYYY\\\")}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto;\\\"><div style=\\\"background: #1a73e8; padding: 20px; text-align: center;\\\"><h1 style=\\\"color: white; margin: 0;\\\">Appointment Confirmed</h1></div><div style=\\\"padding: 30px;\\\"><p>Dear {{1.body.actors[0].first_name}} {{1.body.actors[0].last_name}},</p><p>Thank you for booking with CWI AI. Your appointment has been confirmed with the following details:</p><table style=\\\"width: 100%; border-collapse: collapse; margin: 20px 0;\\\"><tr style=\\\"background: #f5f5f5;\\\"><td style=\\\"padding: 12px; border: 1px solid #ddd; font-weight: bold;\\\">Service</td><td style=\\\"padding: 12px; border: 1px solid #ddd;\\\">{{3.service_type}}</td></tr><tr><td style=\\\"padding: 12px; border: 1px solid #ddd; font-weight: bold;\\\">Date</td><td style=\\\"padding: 12px; border: 1px solid #ddd;\\\">{{formatDate(6.start.dateTime; \\\"dddd, MMMM D, YYYY\\\")}}</td></tr><tr style=\\\"background: #f5f5f5;\\\"><td style=\\\"padding: 12px; border: 1px solid #ddd; font-weight: bold;\\\">Time</td><td style=\\\"padding: 12px; border: 1px solid #ddd;\\\">{{formatDate(6.start.dateTime; \\\"h:mm A\\\")}} Eastern Time</td></tr><tr><td style=\\\"padding: 12px; border: 1px solid #ddd; font-weight: bold;\\\">Duration</td><td style=\\\"padding: 12px; border: 1px solid #ddd;\\\">1 Hour</td></tr></table><p>A Google Calendar invite has been sent to this email address. Please add it to your calendar.</p><p>If you need to reschedule or cancel, please contact us at least 24 hours in advance:</p><ul><li>Email: <a href=\\\"mailto:brian@cwiai.net\\\">brian@cwiai.net</a></li><li>Chat: Reply to your Freshchat conversation</li></ul><p>We look forward to working with you!</p><p>Best regards,<br><strong>Brian &amp; The CWI AI Team</strong></p></div><div style=\\\"background: #f5f5f5; padding: 15px; text-align: center; font-size: 12px; color: #888;\\\"><p>CWI AI | <a href=\\\"https://cwiai.net\\\">cwiai.net</a></p></div></body></html>\"\n}"
+              },
+              "metadata": {
+                "designer": {
+                  "x": 2100,
+                  "y": -200
+                },
+                "notes": "Resend native HTTP email send (replaces Gmail/SMTP). From address pulled from env.RESEND_FROM_ADDRESS."
+              },
+              "onerror": [
+                {
+                  "id": 101,
+                  "module": "http:ActionSendData",
+                  "version": 3,
+                  "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+                  "mapper": {
+                    "url": "https://api.resend.com/emails",
+                    "method": "POST",
+                    "headers": [
+                      { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+                      { "name": "Content-Type", "value": "application/json" }
+                    ],
+                    "bodyType": "raw",
+                    "contentType": "application/json",
+                    "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Booking Flow Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Booking Flow Error Alert</h2><p><strong>Scenario:</strong> Scenario A — Customer Booking Flow</p><p><strong>Failed Module ID:</strong> {{errorHandler.moduleId}}</p><p><strong>Error Message:</strong> {{errorHandler.message}}</p><p><strong>Error Type:</strong> {{errorHandler.type}}</p><p><strong>Timestamp:</strong> {{now}}</p><hr><h3>Trigger Data</h3><p><strong>Conversation ID:</strong> {{1.body.id}}</p><p><strong>Customer:</strong> {{1.body.actors[0].first_name}} {{1.body.actors[0].last_name}}</p><p><strong>Customer Email:</strong> {{1.body.actors[0].email}}</p><p><strong>Message:</strong> {{1.body.messages[0].text}}</p><p><strong>Extracted Date:</strong> {{3.preferred_date}}</p><p><strong>Extracted Time:</strong> {{3.preferred_time}}</p><p><strong>Service Type:</strong> {{3.service_type}}</p><hr><p style=\\\"color: #888; font-size: 12px;\\\">This is an automated alert from Make.com — CWI AI Booking Flow</p></body></html>\"\n}"
+                  },
+                  "metadata": { "designer": { "x": 900, "y": 400 }, "notes": "Resend native HTTP email alert (replaces Gmail/SMTP)." }
+                },
+                {
+                  "id": 102,
+                  "module": "http:ActionSendData",
+                  "version": 3,
+                  "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+                  "mapper": {
+                    "url": "https://api.freshchat.com/v2/conversations/{{1.body.id}}/messages",
+                    "method": "POST",
+                    "headers": [
+                      { "name": "Authorization", "value": "Bearer {{env.FRESHCHAT_API_KEY}}" },
+                      { "name": "Content-Type", "value": "application/json" }
+                    ],
+                    "bodyType": "raw",
+                    "contentType": "application/json",
+                    "body": "{\n  \"actor_type\": \"agent\",\n  \"actor_id\": \"{{env.FRESHCHAT_BOT_ID}}\",\n  \"message_type\": \"normal\",\n  \"message_parts\": [\n    {\n      \"text\": {\n        \"content\": \"I'm sorry, {{1.body.actors[0].first_name}}! We encountered a technical issue while processing your booking request. Our team has been notified and will reach out to you shortly to complete your appointment. In the meantime, you can grab any open time instantly here: {{env.CALENDLY_BOOKING_LINK}}\"\n      }\n    }\n  ]\n}"
+                  },
+                  "metadata": { "designer": { "x": 1200, "y": 400 } }
+                },
+                {
+                  "id": 103,
+                  "module": "http:ActionSendData",
+                  "version": 3,
+                  "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+                  "mapper": {
+                    "url": "https://api.freshchat.com/v2/conversations/{{1.body.id}}",
+                    "method": "PATCH",
+                    "headers": [
+                      { "name": "Authorization", "value": "Bearer {{env.FRESHCHAT_API_KEY}}" },
+                      { "name": "Content-Type", "value": "application/json" }
+                    ],
+                    "bodyType": "raw",
+                    "contentType": "application/json",
+                    "body": "{\n  \"assigned_agent_type\": \"agent\"\n}"
+                  },
+                  "metadata": { "designer": { "x": 1500, "y": 400 }, "notes": "Assigns the conversation to a human agent after the error apology message is sent, so a live agent can follow up with the customer." }
+                }
+              ]
+            },
+            {
+              "id": 11,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": false,
+                "useNewZLibDeCompress": true
+              },
+              "mapper": {
+                "url": "https://api.hubapi.com/crm/v3/objects/meetings",
+                "method": "POST",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.HUBSPOT_API_KEY}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\n  \"properties\": {\n    \"hs_timestamp\": \"{{6.start.dateTime}}\",\n    \"hs_meeting_title\": \"{{3.service_type}} — {{1.body.actors[0].first_name}} {{1.body.actors[0].last_name}}\",\n    \"hs_meeting_body\": \"Service: {{3.service_type}}\\nCustomer: {{1.body.actors[0].first_name}} {{1.body.actors[0].last_name}}\\nEmail: {{1.body.actors[0].email}}\\nPhone: {{1.body.actors[0].phone}}\\nBooked via: Freshchat Chat Bot\\nGoogle Calendar Event ID: {{6.id}}\\nConversation ID: {{1.body.id}}\",\n    \"hs_meeting_location\": \"Eastern Time (America/New_York)\",\n    \"hs_meeting_start_time\": \"{{6.start.dateTime}}\",\n    \"hs_meeting_end_time\": \"{{6.end.dateTime}}\",\n    \"hs_meeting_outcome\": \"SCHEDULED\"\n  }\n}"
+              },
+              "metadata": {
+                "designer": {
+                  "x": 2400,
+                  "y": -200
+                },
+                "notes": "Creates a HubSpot meeting engagement for the booked appointment. hs_timestamp and start/end times come from the created Google Calendar event (module 6). Authenticated via env.HUBSPOT_API_KEY (private app token)."
+              },
+              "onerror": [
+                {
+                  "id": 101,
+                  "module": "http:ActionSendData",
+                  "version": 3,
+                  "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+                  "mapper": {
+                    "url": "https://api.resend.com/emails",
+                    "method": "POST",
+                    "headers": [
+                      { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+                      { "name": "Content-Type", "value": "application/json" }
+                    ],
+                    "bodyType": "raw",
+                    "contentType": "application/json",
+                    "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Booking Flow Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Booking Flow Error Alert</h2><p><strong>Scenario:</strong> Scenario A — Customer Booking Flow</p><p><strong>Failed Module ID:</strong> {{errorHandler.moduleId}}</p><p><strong>Error Message:</strong> {{errorHandler.message}}</p><p><strong>Error Type:</strong> {{errorHandler.type}}</p><p><strong>Timestamp:</strong> {{now}}</p><hr><h3>Trigger Data</h3><p><strong>Conversation ID:</strong> {{1.body.id}}</p><p><strong>Customer:</strong> {{1.body.actors[0].first_name}} {{1.body.actors[0].last_name}}</p><p><strong>Customer Email:</strong> {{1.body.actors[0].email}}</p><p><strong>Message:</strong> {{1.body.messages[0].text}}</p><p><strong>Extracted Date:</strong> {{3.preferred_date}}</p><p><strong>Extracted Time:</strong> {{3.preferred_time}}</p><p><strong>Service Type:</strong> {{3.service_type}}</p><hr><p style=\\\"color: #888; font-size: 12px;\\\">This is an automated alert from Make.com — CWI AI Booking Flow</p></body></html>\"\n}"
+                  },
+                  "metadata": { "designer": { "x": 900, "y": 400 }, "notes": "Resend native HTTP email alert (replaces Gmail/SMTP)." }
+                },
+                {
+                  "id": 102,
+                  "module": "http:ActionSendData",
+                  "version": 3,
+                  "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+                  "mapper": {
+                    "url": "https://api.freshchat.com/v2/conversations/{{1.body.id}}/messages",
+                    "method": "POST",
+                    "headers": [
+                      { "name": "Authorization", "value": "Bearer {{env.FRESHCHAT_API_KEY}}" },
+                      { "name": "Content-Type", "value": "application/json" }
+                    ],
+                    "bodyType": "raw",
+                    "contentType": "application/json",
+                    "body": "{\n  \"actor_type\": \"agent\",\n  \"actor_id\": \"{{env.FRESHCHAT_BOT_ID}}\",\n  \"message_type\": \"normal\",\n  \"message_parts\": [\n    {\n      \"text\": {\n        \"content\": \"I'm sorry, {{1.body.actors[0].first_name}}! We encountered a technical issue while processing your booking request. Our team has been notified and will reach out to you shortly to complete your appointment. In the meantime, you can grab any open time instantly here: {{env.CALENDLY_BOOKING_LINK}}\"\n      }\n    }\n  ]\n}"
+                  },
+                  "metadata": { "designer": { "x": 1200, "y": 400 } }
+                },
+                {
+                  "id": 103,
+                  "module": "http:ActionSendData",
+                  "version": 3,
+                  "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+                  "mapper": {
+                    "url": "https://api.freshchat.com/v2/conversations/{{1.body.id}}",
+                    "method": "PATCH",
+                    "headers": [
+                      { "name": "Authorization", "value": "Bearer {{env.FRESHCHAT_API_KEY}}" },
+                      { "name": "Content-Type", "value": "application/json" }
+                    ],
+                    "bodyType": "raw",
+                    "contentType": "application/json",
+                    "body": "{\n  \"assigned_agent_type\": \"agent\"\n}"
+                  },
+                  "metadata": { "designer": { "x": 1500, "y": 400 }, "notes": "Assigns the conversation to a human agent after the error apology message is sent, so a live agent can follow up with the customer." }
+                }
+              ]
+            },
+            {
+              "id": 12,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": false,
+                "useNewZLibDeCompress": true
+              },
+              "mapper": {
+                "url": "https://api.hubapi.com/crm/v3/objects/deals/{{env.HUBSPOT_DEAL_ID}}",
+                "method": "PATCH",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.HUBSPOT_API_KEY}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\n  \"properties\": {\n    \"dealstage\": \"{{env.HUBSPOT_STAGE_CALL_BOOKED}}\"\n  }\n}"
+              },
+              "metadata": {
+                "designer": {
+                  "x": 2700,
+                  "y": -200
+                },
+                "notes": "Advances the associated HubSpot deal to the CALL_BOOKED stage (env.HUBSPOT_STAGE_CALL_BOOKED) after the meeting engagement is logged. Deal ID resolved from env.HUBSPOT_DEAL_ID; in production this would be looked up by contact email."
+              },
+              "onerror": [
+                {
+                  "id": 101,
+                  "module": "http:ActionSendData",
+                  "version": 3,
+                  "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+                  "mapper": {
+                    "url": "https://api.resend.com/emails",
+                    "method": "POST",
+                    "headers": [
+                      { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+                      { "name": "Content-Type", "value": "application/json" }
+                    ],
+                    "bodyType": "raw",
+                    "contentType": "application/json",
+                    "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Booking Flow Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Booking Flow Error Alert</h2><p><strong>Scenario:</strong> Scenario A — Customer Booking Flow</p><p><strong>Failed Module ID:</strong> {{errorHandler.moduleId}}</p><p><strong>Error Message:</strong> {{errorHandler.message}}</p><p><strong>Error Type:</strong> {{errorHandler.type}}</p><p><strong>Timestamp:</strong> {{now}}</p><hr><h3>Trigger Data</h3><p><strong>Conversation ID:</strong> {{1.body.id}}</p><p><strong>Customer:</strong> {{1.body.actors[0].first_name}} {{1.body.actors[0].last_name}}</p><p><strong>Customer Email:</strong> {{1.body.actors[0].email}}</p><p><strong>Message:</strong> {{1.body.messages[0].text}}</p><p><strong>Extracted Date:</strong> {{3.preferred_date}}</p><p><strong>Extracted Time:</strong> {{3.preferred_time}}</p><p><strong>Service Type:</strong> {{3.service_type}}</p><hr><p style=\\\"color: #888; font-size: 12px;\\\">This is an automated alert from Make.com — CWI AI Booking Flow</p></body></html>\"\n}"
+                  },
+                  "metadata": { "designer": { "x": 900, "y": 400 }, "notes": "Resend native HTTP email alert (replaces Gmail/SMTP)." }
+                },
+                {
+                  "id": 102,
+                  "module": "http:ActionSendData",
+                  "version": 3,
+                  "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+                  "mapper": {
+                    "url": "https://api.freshchat.com/v2/conversations/{{1.body.id}}/messages",
+                    "method": "POST",
+                    "headers": [
+                      { "name": "Authorization", "value": "Bearer {{env.FRESHCHAT_API_KEY}}" },
+                      { "name": "Content-Type", "value": "application/json" }
+                    ],
+                    "bodyType": "raw",
+                    "contentType": "application/json",
+                    "body": "{\n  \"actor_type\": \"agent\",\n  \"actor_id\": \"{{env.FRESHCHAT_BOT_ID}}\",\n  \"message_type\": \"normal\",\n  \"message_parts\": [\n    {\n      \"text\": {\n        \"content\": \"I'm sorry, {{1.body.actors[0].first_name}}! We encountered a technical issue while processing your booking request. Our team has been notified and will reach out to you shortly to complete your appointment. In the meantime, you can grab any open time instantly here: {{env.CALENDLY_BOOKING_LINK}}\"\n      }\n    }\n  ]\n}"
+                  },
+                  "metadata": { "designer": { "x": 1200, "y": 400 } }
+                },
+                {
+                  "id": 103,
+                  "module": "http:ActionSendData",
+                  "version": 3,
+                  "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+                  "mapper": {
+                    "url": "https://api.freshchat.com/v2/conversations/{{1.body.id}}",
+                    "method": "PATCH",
+                    "headers": [
+                      { "name": "Authorization", "value": "Bearer {{env.FRESHCHAT_API_KEY}}" },
+                      { "name": "Content-Type", "value": "application/json" }
+                    ],
+                    "bodyType": "raw",
+                    "contentType": "application/json",
+                    "body": "{\n  \"assigned_agent_type\": \"agent\"\n}"
+                  },
+                  "metadata": { "designer": { "x": 1500, "y": 400 }, "notes": "Assigns the conversation to a human agent after the error apology message is sent, so a live agent can follow up with the customer." }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 9,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": false,
+                "useNewZLibDeCompress": true
+              },
+              "filter": {
+                "name": "Branch B: Slot Busy",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{length(4.items)}}",
+                      "b": "0",
+                      "o": "number:greater"
+                    }
+                  ]
+                ]
+              },
+              "mapper": {
+                "url": "https://openrouter.ai/api/v1/chat/completions",
+                "method": "POST",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.OPENROUTER_API_KEY}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "name": "HTTP-Referer",
+                    "value": "https://cwiai.net"
+                  },
+                  {
+                    "name": "X-Title",
+                    "value": "CWI AI Booking Flow - Alternatives"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\n  \"model\": \"anthropic/claude-sonnet-4-6\",\n  \"models\": [\"anthropic/claude-sonnet-4-6\", \"{{env.OPENROUTER_FALLBACK_MODEL}}\"],\n  \"route\": \"fallback\",\n  \"provider\": {\n    \"allow_fallbacks\": true\n  },\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a friendly scheduling assistant for CWI AI. The customer requested a time slot that is unavailable. Generate a warm, helpful message (2-3 sentences max) suggesting they try a different time on the same day or the next business day. Keep it concise and conversational. Do not use markdown.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Customer {{1.body.actors[0].first_name}} wanted {{3.service_type}} on {{3.preferred_date}} at {{3.preferred_time}}. That slot is booked. The existing events in that window are: {{4.items[0].summary}} from {{4.items[0].start.dateTime}} to {{4.items[0].end.dateTime}}. Suggest 2-3 alternative times.\"\n    }\n  ],\n  \"temperature\": 0.7,\n  \"max_tokens\": 400\n}"
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1500,
+                  "y": 200
+                }
+              }
+            },
+            {
+              "id": 10,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": false,
+                "useNewZLibDeCompress": true
+              },
+              "mapper": {
+                "url": "https://api.freshchat.com/v2/conversations/{{1.body.id}}/messages",
+                "method": "POST",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.FRESHCHAT_API_KEY}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\n  \"actor_type\": \"agent\",\n  \"actor_id\": \"{{env.FRESHCHAT_BOT_ID}}\",\n  \"message_type\": \"normal\",\n  \"message_parts\": [\n    {\n      \"text\": {\n        \"content\": \"Hi {{1.body.actors[0].first_name}}, checking availability now... {{9.data.choices[0].message.content}}\\n\\nYou can also grab any open time instantly here: {{env.CALENDLY_BOOKING_LINK}}\"\n      }\n    }\n  ]\n}"
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1800,
+                  "y": 200
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "slots": null,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": {
+      "orphans": []
+    },
+    "zone": "us2.make.com"
+  },
+  "scheduling": {
+    "type": "indefinitely",
+    "interval": 0
+  },
+  "webhooks": [
+    {
+      "id": 1001,
+      "name": "Freshchat Booking Webhook",
+      "notes": "Make generates the real webhook URL when the scenario is imported and the CustomWebHook trigger (module 1, hook: 1001) is activated. Copy that URL and register it in Freshchat Admin > Settings > Webhooks > New Message."
+    }
+  ],
+  "connections": {
+    "OPENROUTER_API_KEY": {
+      "label": "OpenRouter API Key",
+      "type": "http-api-key",
+      "notes": "Referenced as env.OPENROUTER_API_KEY. Used for Claude API calls via OpenRouter."
+    },
+    "FRESHCHAT_API_KEY": {
+      "label": "Freshchat API Key",
+      "type": "http-bearer",
+      "notes": "Referenced as env.FRESHCHAT_API_KEY. Freshchat account API token from Admin > API Tokens."
+    },
+    "FRESHCHAT_WEBHOOK_ID": {
+      "label": "Freshchat Webhook Hook ID",
+      "type": "gateway-webhook",
+      "notes": "Referenced as env.FRESHCHAT_WEBHOOK_ID. Auto-generated by Make.com when the CustomWebHook trigger is configured. Register the Make webhook URL in Freshchat Admin > Webhooks."
+    },
+    "FRESHCHAT_BOT_ID": {
+      "label": "Freshchat Bot/Agent ID",
+      "type": "string",
+      "notes": "Referenced as env.FRESHCHAT_BOT_ID. The agent or bot actor_id used to send outbound messages via the Freshchat API."
+    },
+    "GOOGLE_CALENDAR_ID": {
+      "label": "Google Calendar ID",
+      "type": "string",
+      "notes": "Referenced as env.GOOGLE_CALENDAR_ID. Primary calendar ID (e.g. primary or full calendar email)."
+    },
+    "RESEND_API_KEY": {
+      "label": "Resend API Key",
+      "type": "http-bearer",
+      "notes": "Referenced as env.RESEND_API_KEY. Resend API key for native HTTP email sends (replaces all Gmail/SMTP)."
+    },
+    "RESEND_FROM_ADDRESS": {
+      "label": "Resend From Address",
+      "type": "string",
+      "notes": "Referenced as env.RESEND_FROM_ADDRESS. Verified sender, e.g. 'CWI AI <brian@cwiai.net>'."
+    },
+    "CALENDLY_BOOKING_LINK": {
+      "label": "Calendly Booking Link",
+      "type": "string",
+      "notes": "Referenced as env.CALENDLY_BOOKING_LINK. Primary self-service booking URL surfaced in the bot."
+    },
+    "RESEND_FROM_ADDRESS_CLIENT": {
+      "label": "Resend Client-Facing From Address",
+      "type": "string",
+      "notes": "Referenced as env.RESEND_FROM_ADDRESS. Verified client-facing sender (NEVER brian@cwiai.net). Used as FROM on all customer emails."
+    },
+    "RESEND_REPLY_TO": {
+      "label": "Resend Reply-To Address",
+      "type": "string",
+      "notes": "Referenced as env.RESEND_REPLY_TO. Reply-to address on all Resend emails (client confirmations and internal alerts)."
+    },
+    "CWI_ALERT_FROM_ADDRESS": {
+      "label": "Internal Alert From Address",
+      "type": "string",
+      "notes": "Referenced as env.CWI_ALERT_FROM_ADDRESS. Verified sender used as FROM on internal error-alert emails to brian@cwiai.net."
+    },
+    "OPENROUTER_FALLBACK_MODEL": {
+      "label": "OpenRouter Fallback Model",
+      "type": "string",
+      "notes": "Referenced as env.OPENROUTER_FALLBACK_MODEL. Secondary model id used by OpenRouter route:fallback when the primary anthropic/claude-sonnet-4-6 returns 429/503."
+    },
+    "HUBSPOT_API_KEY": {
+      "label": "HubSpot Private App Token",
+      "type": "http-bearer",
+      "notes": "Referenced as env.HUBSPOT_API_KEY. HubSpot private app access token with crm.objects.meetings.write and crm.objects.deals.write scopes."
+    },
+    "HUBSPOT_DEAL_ID": {
+      "label": "HubSpot Deal ID",
+      "type": "string",
+      "notes": "Referenced as env.HUBSPOT_DEAL_ID. ID of the deal to advance after a successful booking. In production, resolve dynamically by contact email."
+    },
+    "HUBSPOT_STAGE_CALL_BOOKED": {
+      "label": "HubSpot Deal Stage — Call Booked",
+      "type": "string",
+      "notes": "Referenced as env.HUBSPOT_STAGE_CALL_BOOKED. Pipeline stage ID the deal is moved to once the appointment is confirmed."
+    }
+  },
+  "notes": [
+    {
+      "label": "Module 1 — Freshchat Webhook Trigger",
+      "note": "Fires instantly on any new Freshchat message. The keyword filter (book, schedule, appointment, available, availability, come out) ensures only booking-intent messages proceed. Register the Make webhook URL in Freshchat Admin > Settings > Webhooks > New Message.",
+      "metadata": {
+        "designer": { "x": 0, "y": -180 }
+      }
+    },
+    {
+      "label": "Module 2 — OpenRouter / Claude: Extract Booking Intent",
+      "note": "Sends the raw message to Claude (claude-sonnet-4-6 via OpenRouter). System prompt instructs the model to return ONLY a JSON object with preferred_date, preferred_time, and service_type. Low temperature (0.1) ensures deterministic extraction.",
+      "metadata": {
+        "designer": { "x": 300, "y": -180 }
+      }
+    },
+    {
+      "label": "Module 3 — Parse JSON",
+      "note": "Parses the raw text response from Claude into a structured JSON object so downstream modules can reference {{3.preferred_date}}, {{3.preferred_time}}, and {{3.service_type}}.",
+      "metadata": {
+        "designer": { "x": 600, "y": -180 }
+      }
+    },
+    {
+      "label": "Module 4 — Google Calendar: List Events (Specific Slot Overlap)",
+      "note": "Queries the calendar ONLY for the specific requested time window: timeMin = preferred_date + preferred_time, timeMax = that time + 60 minutes, timeZone America/New_York. Google Calendar listEvents returns only events that overlap this window, so length(4.items)==0 means the exact requested slot is free (true time-slot overlap check, not a whole-day check).",
+      "metadata": {
+        "designer": { "x": 900, "y": -180 }
+      }
+    },
+    {
+      "label": "Router — Branch A (Available) / Branch B (Busy)",
+      "note": "Branch A filter (single AND array): length(4.items) == 0 AND preferred_time != empty (the exact requested slot is free and a time was extracted). Branch B filter: length(4.items) > 0 (an event overlaps the requested slot). Bot replies 'checking availability now...' and offers the Calendly link as the primary self-service booking path.",
+      "metadata": {
+        "designer": { "x": 1200, "y": -180 }
+      }
+    },
+    {
+      "label": "Branch A — Modules 6-12 (Slot Available, Book + CRM)",
+      "note": "After the slot is confirmed free: (6) create the Google Calendar event, (7) send the Freshchat confirmation, (8) send the Resend confirmation email (from env.RESEND_FROM_ADDRESS, reply_to env.RESEND_REPLY_TO — never brian@cwiai.net as FROM), (11) log a HubSpot meeting engagement tied to the created event, (12) advance the HubSpot deal to env.HUBSPOT_STAGE_CALL_BOOKED. The word 'confirmed' appears ONLY after module 6 has actually created the event — never before the calendar overlap check.",
+      "metadata": {
+        "designer": { "x": 2400, "y": -180 }
+      }
+    },
+    {
+      "label": "OpenRouter Resilience — Modules 2 & 9",
+      "note": "Both OpenRouter calls use route:fallback with models:[anthropic/claude-sonnet-4-6, env.OPENROUTER_FALLBACK_MODEL] and provider.allow_fallbacks:true, so a 429/503 on the primary Claude Sonnet 4-6 model automatically retries on the fallback model id. Primary AI model is always anthropic/claude-sonnet-4-6.",
+      "metadata": {
+        "designer": { "x": 300, "y": 380 }
+      }
+    },
+    {
+      "label": "Error Handler",
+      "note": "Attached to ALL modules. On any error: (1) sends a detailed HTML alert email to brian@cwiai.net via Resend including the error type, module ID, and all extracted customer/booking data; (2) sends an apology message (with Calendly link) to the customer's Freshchat conversation; (3) assigns the conversation to a human agent.",
+      "metadata": {
+        "designer": { "x": 900, "y": 600 }
+      }
+    }
+  ]
+}

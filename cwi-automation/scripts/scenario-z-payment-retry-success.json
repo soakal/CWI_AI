@@ -1,0 +1,315 @@
+{
+  "name": "scenario-z-payment-retry-success",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": "stripe_payment_intent_succeeded",
+        "maxResults": 1
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0
+        },
+        "restore": {
+          "parameters": {
+            "hook": {
+              "label": "Stripe — payment_intent.succeeded"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hook",
+            "type": "hook",
+            "label": "Webhook",
+            "required": true
+          },
+          {
+            "name": "maxResults",
+            "type": "number",
+            "label": "Maximum number of results"
+          }
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "module": "builtin:BasicRouter",
+      "version": 1,
+      "parameters": {},
+      "mapper": {},
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0
+        }
+      },
+      "routes": [
+        {
+          "flow": [
+            {
+              "id": 3,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": true,
+                "useNewZLibDeCompress": true
+              },
+              "mapper": {
+                "url": "https://openrouter.ai/api/v1/chat/completions",
+                "method": "POST",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.OPENROUTER_API_KEY}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "name": "HTTP-Referer",
+                    "value": "{{env.APP_URL}}"
+                  },
+                  {
+                    "name": "X-Title",
+                    "value": "CWI Automation"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\"models\":[\"anthropic/claude-sonnet-4-6\",\"{{env.OPENROUTER_FALLBACK_MODEL}}\"],\"route\":\"fallback\",\"messages\":[{\"role\":\"system\",\"content\":\"You are a warm, professional customer success specialist for a consulting company. Write concise, genuine emails that make clients feel valued and reassured.\"},{\"role\":\"user\",\"content\":\"Write a warm payment recovery confirmation email to a client. The client's email is {{1.data.receipt_email}}. Their name may be available as {{1.data.billing_details.name}} (use a friendly greeting if available, otherwise use a general greeting). The payment amount was ${{divide(1.data.amount_received, 100)}} {{upper(1.data.currency)}}. Confirm their payment has been successfully received, thank them sincerely for resolving the billing issue promptly, and reassure them that their service continues completely uninterrupted. Keep it warm, brief, and professional. Do not include a subject line — just the email body. Sign it from the CWI team.\"}]}",
+                "timeout": 60,
+                "followRedirects": true,
+                "compress": true,
+                "parseResponse": true
+              },
+              "metadata": {
+                "designer": {
+                  "x": 600,
+                  "y": -150
+                },
+                "restore": {
+                  "parameters": {
+                    "handleErrors": true
+                  }
+                }
+              }
+            },
+            {
+              "id": 4,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": true,
+                "useNewZLibDeCompress": true
+              },
+              "mapper": {
+                "url": "https://api.resend.com/emails",
+                "method": "POST",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.RESEND_API_KEY}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\"from\":\"{{env.RESEND_FROM_ADDRESS}}\",\"to\":[\"{{1.data.receipt_email}}\"],\"subject\":\"Your payment has been received — thank you\",\"text\":\"{{3.data.choices[].message.content}}\"}",
+                "timeout": 30,
+                "followRedirects": true,
+                "compress": true,
+                "parseResponse": true
+              },
+              "metadata": {
+                "designer": {
+                  "x": 900,
+                  "y": -150
+                }
+              }
+            },
+            {
+              "id": 5,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": true,
+                "useNewZLibDeCompress": true
+              },
+              "mapper": {
+                "url": "https://api.resend.com/emails",
+                "method": "POST",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.RESEND_API_KEY}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\"from\":\"{{env.CWI_ALERT_FROM_ADDRESS}}\",\"to\":[\"{{env.ALERT_EMAIL}}\"],\"subject\":\"Payment recovered — {{1.data.receipt_email}}\",\"text\":\"Payment recovery confirmed.\\n\\nCustomer: {{1.data.receipt_email}}\\nAmount: ${{divide(1.data.amount_received, 100)}} {{upper(1.data.currency)}}\\nPayment Intent ID: {{1.data.id}}\\nDunning Attempt: {{1.data.metadata.dunning_attempt}}\\nTimestamp: {{formatDate(now; 'YYYY-MM-DD HH:mm:ss'; 'America/New_York')}}\\n\\nThe client recovery email has been sent and the HubSpot contact will be updated.\"}",
+                "timeout": 30,
+                "followRedirects": true,
+                "compress": true,
+                "parseResponse": true
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1200,
+                  "y": -150
+                }
+              }
+            },
+            {
+              "id": 6,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": true,
+                "useNewZLibDeCompress": true
+              },
+              "mapper": {
+                "url": "https://api.hubapi.com/crm/v3/objects/contacts/search",
+                "method": "POST",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\"filterGroups\":[{\"filters\":[{\"propertyName\":\"email\",\"operator\":\"EQ\",\"value\":\"{{1.data.receipt_email}}\"}]}],\"properties\":[\"email\",\"hs_lead_status\",\"payment_at_risk\"]}",
+                "timeout": 30,
+                "followRedirects": true,
+                "compress": true,
+                "parseResponse": true
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1500,
+                  "y": -150
+                }
+              }
+            },
+            {
+              "id": 7,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": true,
+                "useNewZLibDeCompress": true
+              },
+              "mapper": {
+                "url": "https://api.hubapi.com/crm/v3/objects/contacts/{{6.data.results[].id}}",
+                "method": "PATCH",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\"properties\":{\"payment_at_risk\":\"false\"}}",
+                "timeout": 30,
+                "followRedirects": true,
+                "compress": true,
+                "parseResponse": true
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1800,
+                  "y": -150
+                }
+              }
+            }
+          ],
+          "label": "Route A — Recovery Payment (dunning_attempt >= 1)",
+          "filter": {
+            "name": "Is recovery payment",
+            "conditions": [
+              [
+                {
+                  "a": "{{1.data.metadata.dunning_attempt}}",
+                  "b": "",
+                  "o": "exist"
+                },
+                {
+                  "a": "{{parseNumber(1.data.metadata.dunning_attempt)}}",
+                  "b": "0",
+                  "o": "number:greater"
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "flow": [],
+          "label": "Route B — Normal First-Time Payment (pass-through)",
+          "filter": {
+            "name": "Normal first-time payment",
+            "conditions": [
+              [
+                {
+                  "a": "{{1.data.metadata.dunning_attempt}}",
+                  "b": "",
+                  "o": "notexist"
+                }
+              ],
+              [
+                {
+                  "a": "{{parseNumber(1.data.metadata.dunning_attempt)}}",
+                  "b": "0",
+                  "o": "number:lessequal"
+                }
+              ]
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "slots": null,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": {
+      "orphans": []
+    },
+    "zone": "us1.make.com",
+    "notes": "Handles Stripe payment_intent.succeeded events. Routes recovery payments (dunning_attempt >= 1) through AI-generated warm email, internal alert, and HubSpot tag removal. Normal first-time payments pass through without action (handled by scenario-f). Timezone: America/New_York."
+  }
+}

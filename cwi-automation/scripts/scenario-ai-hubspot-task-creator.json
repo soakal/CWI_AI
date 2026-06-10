@@ -1,0 +1,688 @@
+{
+  "name": "scenario-ai-hubspot-task-creator",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": "{{env.HUBSPOT_DEAL_STAGE_CHANGE_WEBHOOK_ID}}",
+        "maxResults": 1
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 0, "y": 0 },
+        "restore": {
+          "parameters": {
+            "hook": {
+              "label": "HubSpot Webhook — Deal Property Change (dealstage)"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hook",
+            "type": "hook:gateway-webhook",
+            "label": "Webhook",
+            "required": true
+          },
+          {
+            "name": "maxResults",
+            "type": "number",
+            "label": "Maximum number of results"
+          }
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/deals/{{1.body.objectId}}?properties=dealname,hubspot_owner_id",
+        "method": "GET",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "",
+        "timeout": 30,
+        "followRedirects": true,
+        "compress": true,
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": { "x": 300, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "GET" }
+          }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/deals/{{1.body.objectId}}/associations/contacts",
+        "method": "GET",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "",
+        "timeout": 30,
+        "followRedirects": true,
+        "compress": true,
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": { "x": 600, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "GET" }
+          }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/contacts/{{3.data.results[].id}}?properties=firstname,lastname",
+        "method": "GET",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "",
+        "timeout": 30,
+        "followRedirects": true,
+        "compress": true,
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": { "x": 900, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "GET" }
+          }
+        }
+      }
+    },
+    {
+      "id": 5,
+      "module": "builtin:SetVariable",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "contactName",
+        "scope": "roundtrip",
+        "type": "text",
+        "value": "{{ifempty(trim(concat(ifempty(4.data.properties.firstname; \"\"); \" \"; ifempty(4.data.properties.lastname; \"\"))); \"the contact\")}}"
+      },
+      "metadata": {
+        "designer": { "x": 1200, "y": 0 }
+      }
+    },
+    {
+      "id": 6,
+      "module": "builtin:SetVariable",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "dealId",
+        "scope": "roundtrip",
+        "type": "text",
+        "value": "{{1.body.objectId}}"
+      },
+      "metadata": {
+        "designer": { "x": 1200, "y": 150 }
+      }
+    },
+    {
+      "id": 7,
+      "module": "builtin:SetVariable",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "ownerIdBrian",
+        "scope": "roundtrip",
+        "type": "text",
+        "value": "{{env.HUBSPOT_OWNER_ID_BRIAN}}"
+      },
+      "metadata": {
+        "designer": { "x": 1200, "y": 300 }
+      }
+    },
+    {
+      "id": 8,
+      "module": "builtin:BasicRouter",
+      "version": 1,
+      "parameters": {},
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 1500, "y": 0 }
+      },
+      "routes": [
+        {
+          "flow": [
+            {
+              "id": 9,
+              "module": "builtin:BasicFilter",
+              "version": 1,
+              "parameters": {},
+              "mapper": {},
+              "metadata": {
+                "designer": { "x": 1800, "y": -600 }
+              },
+              "filter": {
+                "name": "Stage = REPLIED",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{1.body.propertyValue}}",
+                      "b": "{{env.HUBSPOT_STAGE_REPLIED}}",
+                      "o": "text:equal"
+                    }
+                  ]
+                ]
+              }
+            },
+            {
+              "id": 10,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": true,
+                "useNewZLibDeCompress": true
+              },
+              "mapper": {
+                "url": "https://api.hubapi.com/crm/v3/objects/tasks",
+                "method": "POST",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\"properties\":{\"hs_task_subject\":\"Schedule discovery call with {{5.contactName}}\",\"hs_task_type\":\"CALL\",\"hs_timestamp\":\"{{formatDate(addDays(now; 1); 'x'; 'America/New_York')}}\",\"hubspot_owner_id\":\"{{7.ownerIdBrian}}\"}}",
+                "timeout": 30,
+                "followRedirects": true,
+                "compress": true,
+                "parseResponse": true
+              },
+              "metadata": {
+                "designer": { "x": 2100, "y": -600 },
+                "restore": {
+                  "expect": {
+                    "method": { "label": "POST" }
+                  }
+                }
+              }
+            },
+            {
+              "id": 11,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": true,
+                "useNewZLibDeCompress": true
+              },
+              "mapper": {
+                "url": "https://api.hubapi.com/crm/v3/associations/tasks/{{10.data.id}}/deals/{{6.dealId}}",
+                "method": "PUT",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\"associationType\":\"task_to_deal\"}",
+                "timeout": 30,
+                "followRedirects": true,
+                "compress": true,
+                "parseResponse": true
+              },
+              "metadata": {
+                "designer": { "x": 2400, "y": -600 },
+                "restore": {
+                  "expect": {
+                    "method": { "label": "PUT" }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 12,
+              "module": "builtin:BasicFilter",
+              "version": 1,
+              "parameters": {},
+              "mapper": {},
+              "metadata": {
+                "designer": { "x": 1800, "y": -200 }
+              },
+              "filter": {
+                "name": "Stage = CALL_BOOKED",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{1.body.propertyValue}}",
+                      "b": "{{env.HUBSPOT_STAGE_CALL_BOOKED}}",
+                      "o": "text:equal"
+                    }
+                  ]
+                ]
+              }
+            },
+            {
+              "id": 13,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": true,
+                "useNewZLibDeCompress": true
+              },
+              "mapper": {
+                "url": "https://api.hubapi.com/crm/v3/objects/tasks",
+                "method": "POST",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\"properties\":{\"hs_task_subject\":\"Send proposal to {{5.contactName}}\",\"hs_task_type\":\"TODO\",\"hs_timestamp\":\"{{formatDate(addDays(now; 2); 'x'; 'America/New_York')}}\",\"hubspot_owner_id\":\"{{7.ownerIdBrian}}\"}}",
+                "timeout": 30,
+                "followRedirects": true,
+                "compress": true,
+                "parseResponse": true
+              },
+              "metadata": {
+                "designer": { "x": 2100, "y": -200 },
+                "restore": {
+                  "expect": {
+                    "method": { "label": "POST" }
+                  }
+                }
+              }
+            },
+            {
+              "id": 14,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": true,
+                "useNewZLibDeCompress": true
+              },
+              "mapper": {
+                "url": "https://api.hubapi.com/crm/v3/associations/tasks/{{13.data.id}}/deals/{{6.dealId}}",
+                "method": "PUT",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\"associationType\":\"task_to_deal\"}",
+                "timeout": 30,
+                "followRedirects": true,
+                "compress": true,
+                "parseResponse": true
+              },
+              "metadata": {
+                "designer": { "x": 2400, "y": -200 },
+                "restore": {
+                  "expect": {
+                    "method": { "label": "PUT" }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 15,
+              "module": "builtin:BasicFilter",
+              "version": 1,
+              "parameters": {},
+              "mapper": {},
+              "metadata": {
+                "designer": { "x": 1800, "y": 200 }
+              },
+              "filter": {
+                "name": "Stage = PROPOSAL_SENT",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{1.body.propertyValue}}",
+                      "b": "{{env.HUBSPOT_STAGE_PROPOSAL_SENT}}",
+                      "o": "text:equal"
+                    }
+                  ]
+                ]
+              }
+            },
+            {
+              "id": 16,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": true,
+                "useNewZLibDeCompress": true
+              },
+              "mapper": {
+                "url": "https://api.hubapi.com/crm/v3/objects/tasks",
+                "method": "POST",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\"properties\":{\"hs_task_subject\":\"Follow up on proposal — {{5.contactName}}\",\"hs_task_type\":\"EMAIL\",\"hs_timestamp\":\"{{formatDate(addDays(now; 3); 'x'; 'America/New_York')}}\",\"hubspot_owner_id\":\"{{7.ownerIdBrian}}\"}}",
+                "timeout": 30,
+                "followRedirects": true,
+                "compress": true,
+                "parseResponse": true
+              },
+              "metadata": {
+                "designer": { "x": 2100, "y": 200 },
+                "restore": {
+                  "expect": {
+                    "method": { "label": "POST" }
+                  }
+                }
+              }
+            },
+            {
+              "id": 17,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": true,
+                "useNewZLibDeCompress": true
+              },
+              "mapper": {
+                "url": "https://api.hubapi.com/crm/v3/associations/tasks/{{16.data.id}}/deals/{{6.dealId}}",
+                "method": "PUT",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\"associationType\":\"task_to_deal\"}",
+                "timeout": 30,
+                "followRedirects": true,
+                "compress": true,
+                "parseResponse": true
+              },
+              "metadata": {
+                "designer": { "x": 2400, "y": 200 },
+                "restore": {
+                  "expect": {
+                    "method": { "label": "PUT" }
+                  }
+                }
+              }
+            },
+            {
+              "id": 18,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": true,
+                "useNewZLibDeCompress": true
+              },
+              "mapper": {
+                "url": "https://api.resend.com/emails",
+                "method": "POST",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.RESEND_API_KEY}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\"from\":\"{{env.CWI_ALERT_FROM_ADDRESS}}\",\"to\":[\"{{env.ALERT_EMAIL}}\"],\"subject\":\"Proposal sent to {{5.contactName}} — follow-up task created for 3 days\",\"text\":\"Proposal sent to {{5.contactName}} — follow-up task created for 3 days.\\n\\nDeal ID: {{6.dealId}}\\nTask ID: {{16.data.id}}\\nFollow-up due: {{formatDate(addDays(now; 3); 'MMMM D, YYYY'; 'America/New_York')}}\\n\\nGenerated by CWI AI Automation\"}",
+                "timeout": 30,
+                "followRedirects": true,
+                "compress": true,
+                "parseResponse": true
+              },
+              "metadata": {
+                "designer": { "x": 2700, "y": 200 },
+                "restore": {
+                  "expect": {
+                    "method": { "label": "POST" }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 19,
+              "module": "builtin:BasicFilter",
+              "version": 1,
+              "parameters": {},
+              "mapper": {},
+              "metadata": {
+                "designer": { "x": 1800, "y": 600 }
+              },
+              "filter": {
+                "name": "Stage = CLOSED_LOST",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{1.body.propertyValue}}",
+                      "b": "{{env.HUBSPOT_STAGE_CLOSED_LOST}}",
+                      "o": "text:equal"
+                    }
+                  ]
+                ]
+              }
+            },
+            {
+              "id": 20,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": true,
+                "useNewZLibDeCompress": true
+              },
+              "mapper": {
+                "url": "https://api.hubapi.com/crm/v3/objects/tasks",
+                "method": "POST",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\"properties\":{\"hs_task_subject\":\"Add {{5.contactName}} to re-engagement list in 30 days\",\"hs_task_type\":\"TODO\",\"hs_timestamp\":\"{{formatDate(addDays(now; 30); 'x'; 'America/New_York')}}\",\"hubspot_owner_id\":\"{{7.ownerIdBrian}}\"}}",
+                "timeout": 30,
+                "followRedirects": true,
+                "compress": true,
+                "parseResponse": true
+              },
+              "metadata": {
+                "designer": { "x": 2100, "y": 600 },
+                "restore": {
+                  "expect": {
+                    "method": { "label": "POST" }
+                  }
+                }
+              }
+            },
+            {
+              "id": 21,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": true,
+                "useNewZLibDeCompress": true
+              },
+              "mapper": {
+                "url": "https://api.hubapi.com/crm/v3/associations/tasks/{{20.data.id}}/deals/{{6.dealId}}",
+                "method": "PUT",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\"associationType\":\"task_to_deal\"}",
+                "timeout": 30,
+                "followRedirects": true,
+                "compress": true,
+                "parseResponse": true
+              },
+              "metadata": {
+                "designer": { "x": 2400, "y": 600 },
+                "restore": {
+                  "expect": {
+                    "method": { "label": "PUT" }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "slots": null,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": {
+      "orphans": []
+    },
+    "zone": "us1.make.com",
+    "notes": "Fires on HubSpot deal property change webhook when dealstage changes. Fetches full deal details and associated contact name from HubSpot. Routes on dealstage value via a 4-route Router. Route 1 (HUBSPOT_STAGE_REPLIED): creates a CALL task due in 1 day — Schedule discovery call with [contact], owner = Brian. Route 2 (HUBSPOT_STAGE_CALL_BOOKED): creates a TODO task due in 2 days — Send proposal to [contact], owner = Brian. Route 3 (HUBSPOT_STAGE_PROPOSAL_SENT): creates an EMAIL task due in 3 days — Follow up on proposal — [contact], owner = Brian; also sends alert email via Resend to env.ALERT_EMAIL from env.CWI_ALERT_FROM_ADDRESS. Route 4 (HUBSPOT_STAGE_CLOSED_LOST): creates a TODO task due in 30 days — Add [contact] to re-engagement list, owner = Brian. All tasks are associated to the deal via PUT /crm/v3/associations/tasks/{task_id}/deals/{deal_id}. Timezone: America/New_York. All secrets via env.VARIABLE_NAME."
+  },
+  "environment": {
+    "HUBSPOT_DEAL_STAGE_CHANGE_WEBHOOK_ID": "env.HUBSPOT_DEAL_STAGE_CHANGE_WEBHOOK_ID",
+    "HUBSPOT_PRIVATE_APP_TOKEN": "env.HUBSPOT_PRIVATE_APP_TOKEN",
+    "HUBSPOT_OWNER_ID_BRIAN": "env.HUBSPOT_OWNER_ID_BRIAN",
+    "HUBSPOT_STAGE_REPLIED": "env.HUBSPOT_STAGE_REPLIED",
+    "HUBSPOT_STAGE_CALL_BOOKED": "env.HUBSPOT_STAGE_CALL_BOOKED",
+    "HUBSPOT_STAGE_PROPOSAL_SENT": "env.HUBSPOT_STAGE_PROPOSAL_SENT",
+    "HUBSPOT_STAGE_CLOSED_LOST": "env.HUBSPOT_STAGE_CLOSED_LOST",
+    "RESEND_API_KEY": "env.RESEND_API_KEY",
+    "ALERT_EMAIL": "env.ALERT_EMAIL",
+    "CWI_ALERT_FROM_ADDRESS": "env.CWI_ALERT_FROM_ADDRESS"
+  }
+}

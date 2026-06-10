@@ -1,0 +1,370 @@
+{
+  "name": "AM Bot Quality Audit",
+  "flow": [
+    {
+      "id": 1,
+      "module": "builtin:BasicTrigger",
+      "version": 1,
+      "parameters": {},
+      "scheduler": {
+        "type": "cron",
+        "cron": "0 17 * * 5",
+        "timezone": "America/New_York"
+      },
+      "metadata": {
+        "designer": { "x": 0, "y": 0 }
+      }
+    },
+    {
+      "id": 2,
+      "module": "util:SetVariable2",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "sevenDaysAgo",
+        "scope": "roundtrip",
+        "value": "{{formatDate(addDays(now; -7); \"YYYY-MM-DDTHH:mm:ssZ\")}}"
+      },
+      "metadata": {
+        "designer": { "x": 300, "y": 0 }
+      }
+    },
+    {
+      "id": 3,
+      "module": "util:SetVariable2",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "weekOf",
+        "scope": "roundtrip",
+        "value": "{{formatDate(addDays(now; -7); \"MMM D, YYYY\")}}"
+      },
+      "metadata": {
+        "designer": { "x": 600, "y": 0 }
+      }
+    },
+    {
+      "id": 4,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true
+      },
+      "mapper": {
+        "url": "https://api.freshchat.com/v2/conversations?updated_since={{2.value}}&page_size=20",
+        "method": "GET",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.FRESHCHAT_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "bodyType": "raw",
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": { "x": 900, "y": 0 }
+      }
+    },
+    {
+      "id": 5,
+      "module": "builtin:BasicIterator",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "array": "{{4.body.conversations}}"
+      },
+      "metadata": {
+        "designer": { "x": 1200, "y": 0 }
+      }
+    },
+    {
+      "id": 6,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true
+      },
+      "mapper": {
+        "url": "https://api.freshchat.com/v2/conversations/{{5.value.id}}/messages",
+        "method": "GET",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.FRESHCHAT_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "bodyType": "raw",
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": { "x": 1500, "y": 0 }
+      }
+    },
+    {
+      "id": 7,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true
+      },
+      "mapper": {
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.OPENROUTER_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "name": "HTTP-Referer",
+            "value": "{{env.SITE_URL}}"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"models\": [\"anthropic/claude-sonnet-4-6\", \"anthropic/claude-3-5-sonnet\"],\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a quality assurance auditor for a customer service AI bot. Analyze the conversation transcript and return a JSON object with the following fields:\\n- score (integer 1-5, where 5 is excellent)\\n- incorrectInfo (boolean, true if the bot gave incorrect information)\\n- missedBooking (boolean, true if the bot failed to complete a booking that the user wanted)\\n- userFrustration (boolean, true if the user expressed frustration or the conversation ended poorly)\\n- humanReviewNeeded (boolean, true if a human should review this conversation)\\n- issueSummary (string, one sentence describing the main issue or \\\"No issues found\\\" if score >= 4)\\n\\nReturn ONLY valid JSON, no additional text.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Please audit this customer service conversation:\\n\\nConversation ID: {{5.value.id}}\\n\\nMessages:\\n{{6.body.messages}}\"\n    }\n  ],\n  \"response_format\": { \"type\": \"json_object\" }\n}",
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": { "x": 1800, "y": 0 }
+      }
+    },
+    {
+      "id": 8,
+      "module": "util:SetVariable2",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "auditResult",
+        "scope": "roundtrip",
+        "value": "{{mergeCollections(parseJSON(7.body.choices[].message.content); {\"conversationId\": \"{{5.value.id}}\"})}}"
+      },
+      "metadata": {
+        "designer": { "x": 2100, "y": 0 }
+      }
+    },
+    {
+      "id": 9,
+      "module": "builtin:BasicAggregator",
+      "version": 1,
+      "parameters": {
+        "source": 5
+      },
+      "mapper": {
+        "value": "{{8.value}}"
+      },
+      "metadata": {
+        "designer": { "x": 2400, "y": 0 }
+      }
+    },
+    {
+      "id": 10,
+      "module": "util:SetVariable2",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "totalConversations",
+        "scope": "roundtrip",
+        "value": "{{length(9.array)}}"
+      },
+      "metadata": {
+        "designer": { "x": 2700, "y": 0 }
+      }
+    },
+    {
+      "id": 11,
+      "module": "util:SetVariable2",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "averageScore",
+        "scope": "roundtrip",
+        "value": "{{if(10.value > 0; divide(sum(map(9.array; \"score\")); 10.value); 0)}}"
+      },
+      "metadata": {
+        "designer": { "x": 3000, "y": 0 }
+      }
+    },
+    {
+      "id": 12,
+      "module": "util:SetVariable2",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "flaggedConversations",
+        "scope": "roundtrip",
+        "value": "{{filter(9.array; \"humanReviewNeeded\"; true)}}"
+      },
+      "metadata": {
+        "designer": { "x": 3300, "y": 0 }
+      }
+    },
+    {
+      "id": 13,
+      "module": "util:SetVariable2",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "flaggedCount",
+        "scope": "roundtrip",
+        "value": "{{length(12.value)}}"
+      },
+      "metadata": {
+        "designer": { "x": 3600, "y": 0 }
+      }
+    },
+    {
+      "id": 14,
+      "module": "util:SetVariable2",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "topIssues",
+        "scope": "roundtrip",
+        "value": "{{join(map(12.value; \"• Conversation \" + value.conversationId + \": \" + value.issueSummary); \"\n\")}}"
+      },
+      "metadata": {
+        "designer": { "x": 3900, "y": 0 }
+      }
+    },
+    {
+      "id": 15,
+      "module": "router:RouterModule",
+      "version": 1,
+      "parameters": {},
+      "routes": [
+        {
+          "flow": [
+            {
+              "id": 16,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": true
+              },
+              "mapper": {
+                "url": "https://api.resend.com/emails",
+                "method": "POST",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.RESEND_API_KEY}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\n  \"from\": \"{{env.EMAIL_FROM}}\",\n  \"to\": [\"{{env.EMAIL_TO}}\"],\n  \"subject\": \"Bot quality report — week of {{3.value}} — {{13.value}} conversations flagged\",\n  \"html\": \"<h2>Bot Quality Audit Report — Week of {{3.value}}</h2><p><strong>Total conversations reviewed:</strong> {{10.value}}</p><p><strong>Average quality score:</strong> {{round(11.value; 2)}} / 5</p><p><strong>Conversations flagged for review:</strong> {{13.value}}</p><h3>Flagged Conversation IDs</h3><pre>{{join(map(12.value; value.conversationId); \", \")}}</pre><h3>Issue Summaries</h3><pre>{{14.value}}</pre><p style=\\\"color:#888;font-size:12px;\\\">This report was generated automatically on {{formatDate(now; \\\"MMM D, YYYY [at] h:mm A z\\\"; \\\"America/New_York\\\")}}.</p>\"\n}",
+                "parseResponse": true
+              },
+              "metadata": {
+                "designer": { "x": 4500, "y": -150 }
+              }
+            }
+          ],
+          "label": "Flagged conversations exist",
+          "filter": {
+            "name": "Has flagged conversations",
+            "conditions": [
+              [
+                {
+                  "a": "{{13.value}}",
+                  "b": "0",
+                  "o": "number:greater"
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "flow": [
+            {
+              "id": 17,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": true
+              },
+              "mapper": {
+                "url": "https://api.resend.com/emails",
+                "method": "POST",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.RESEND_API_KEY}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\n  \"from\": \"{{env.EMAIL_FROM}}\",\n  \"to\": [\"{{env.EMAIL_TO}}\"],\n  \"subject\": \"Bot quality report — week of {{3.value}} — All clear\",\n  \"html\": \"<h2>Bot Quality Audit Report — Week of {{3.value}}</h2><p style=\\\"color:green;\\\"><strong>All clear — no conversations flagged for review.</strong></p><p><strong>Total conversations reviewed:</strong> {{10.value}}</p><p><strong>Average quality score:</strong> {{round(11.value; 2)}} / 5</p><p>The bot performed well this week with no human review needed.</p><p style=\\\"color:#888;font-size:12px;\\\">This report was generated automatically on {{formatDate(now; \\\"MMM D, YYYY [at] h:mm A z\\\"; \\\"America/New_York\\\")}}.</p>\"\n}",
+                "parseResponse": true
+              },
+              "metadata": {
+                "designer": { "x": 4500, "y": 150 }
+              }
+            }
+          ],
+          "label": "All clear",
+          "filter": {
+            "name": "No flagged conversations and good average score",
+            "conditions": [
+              [
+                {
+                  "a": "{{13.value}}",
+                  "b": "0",
+                  "o": "number:equal"
+                },
+                {
+                  "a": "{{11.value}}",
+                  "b": "4",
+                  "o": "number:greater_or_equal"
+                }
+              ]
+            ]
+          }
+        }
+      ],
+      "metadata": {
+        "designer": { "x": 4200, "y": 0 }
+      }
+    }
+  ],
+  "metadata": {
+    "instant": false,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": {
+      "orphans": []
+    }
+  }
+}

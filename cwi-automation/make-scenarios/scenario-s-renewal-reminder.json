@@ -1,0 +1,686 @@
+{
+  "name": "Scenario S: Annual Contract Renewal Reminder",
+  "comments": "Runs daily at 09:30 AM America/New_York (cron: 30 9 * * *). Fetches all rows from the ActiveClients Google Sheet (env.ACTIVE_CLIENTS_SHEET_ID) and iterates over each client. Calculates days_until_renewal from today to renewal_date and flags send_renewal = true when exactly 30 days remain. A router passes only flagged clients downstream. For each eligible client, calculates annual_price (monthly_fee * 10) and savings (monthly_fee * 2), then calls OpenRouter Claude Sonnet 4-6 to generate a personalized 3-paragraph renewal offer email body. Sends that email to the client via Resend (from 'Brian at CWI AI' using env.CWI_ALERT_FROM_ADDRESS). A second Resend call sends Brian an internal renewal alert. Error handler sends a Resend alert to env.ADMIN_EMAIL on any failure. All secrets stored as env.VARIABLE_NAME. Timezone: America/New_York.",
+  "flow": [
+    {
+      "id": 1,
+      "module": "clock:Sleep",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "scheduleType": "cron",
+        "cronExpression": "30 9 * * *",
+        "timezone": "America/New_York"
+      },
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0
+        },
+        "restore": {
+          "parameters": {
+            "scheduleType": { "label": "Cron expression" }
+          }
+        },
+        "parameters": [
+          {
+            "name": "scheduleType",
+            "type": "select",
+            "label": "Run scenario",
+            "required": true
+          },
+          {
+            "name": "cronExpression",
+            "type": "text",
+            "label": "Cron expression"
+          },
+          {
+            "name": "timezone",
+            "type": "timezone",
+            "label": "Timezone"
+          }
+        ],
+        "notes": "Schedule trigger — runs daily at 09:30 AM America/New_York. Cron: 30 9 * * *. No input data — fires the scenario each morning to sweep all active clients for upcoming annual renewals exactly 30 days out."
+      }
+    },
+    {
+      "id": 2,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDecompression": true
+      },
+      "mapper": {
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/{{env.ACTIVE_CLIENTS_SHEET_ID}}/values/ActiveClients",
+        "serializeUrl": false,
+        "method": "get",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.GOOGLE_SHEETS_ACCESS_TOKEN}}"
+          }
+        ],
+        "qs": [
+          {
+            "name": "valueRenderOption",
+            "value": "FORMATTED_VALUE"
+          },
+          {
+            "name": "dateTimeRenderOption",
+            "value": "FORMATTED_STRING"
+          }
+        ],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "authUser": "",
+        "authPass": "",
+        "timeout": 30,
+        "shareCookies": false,
+        "ca": "",
+        "rejectUnauthorized": true,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "gzip": true,
+        "useMtls": false,
+        "contentType": "application/json",
+        "data": ""
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0
+        },
+        "restore": {
+          "expect": {
+            "method": { "label": "GET" },
+            "bodyType": { "label": "Raw" },
+            "contentType": { "label": "JSON (application/json)" }
+          }
+        },
+        "parameters": [
+          {
+            "name": "handleErrors",
+            "type": "boolean",
+            "label": "Evaluate all states as errors (except for 2xx and 3xx)",
+            "required": true
+          },
+          {
+            "name": "useNewZLibDecompression",
+            "type": "boolean",
+            "label": "Use new ZLib decompression library",
+            "required": true
+          }
+        ],
+        "expect": [
+          { "name": "url",           "type": "url",     "label": "URL",            "required": true },
+          { "name": "method",        "type": "select",  "label": "Method",         "required": true },
+          { "name": "headers",       "type": "array",   "label": "Headers"                          },
+          { "name": "qs",            "type": "array",   "label": "Query string"                     },
+          { "name": "bodyType",      "type": "select",  "label": "Body type"                        },
+          { "name": "parseResponse", "type": "boolean", "label": "Parse response"                   }
+        ],
+        "notes": "Google Sheets HTTP GET — GET /v4/spreadsheets/{ACTIVE_CLIENTS_SHEET_ID}/values/ActiveClients. Returns all rows from the ActiveClients tab as a 2D array in response.data.values. Row 0 is the header row (client_name, client_email, renewal_date, tier, monthly_fee). Auth via Bearer env.GOOGLE_SHEETS_ACCESS_TOKEN. valueRenderOption=FORMATTED_VALUE so dates are returned as human-readable strings."
+      }
+    },
+    {
+      "id": 3,
+      "module": "util:Iterator",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "array": "{{slice(2.data.values; 1)}}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0
+        },
+        "restore": {},
+        "parameters": [],
+        "expect": [
+          {
+            "name": "array",
+            "type": "array",
+            "label": "Array",
+            "required": true
+          }
+        ],
+        "notes": "Iterator — loops over each data row in 2.data.values, skipping the header (row index 0) via slice(...; 1). Emits one bundle per client row. Expected column order: [0] client_name, [1] client_email, [2] renewal_date, [3] tier, [4] monthly_fee. Downstream modules (4–9) run once per client row."
+      }
+    },
+    {
+      "id": 4,
+      "module": "util:SetVariables2",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "variables": [
+          {
+            "name": "client_name",
+            "value": "{{3.value[0]}}"
+          },
+          {
+            "name": "client_email",
+            "value": "{{3.value[1]}}"
+          },
+          {
+            "name": "renewal_date",
+            "value": "{{3.value[2]}}"
+          },
+          {
+            "name": "tier",
+            "value": "{{3.value[3]}}"
+          },
+          {
+            "name": "monthly_fee",
+            "value": "{{3.value[4]}}"
+          },
+          {
+            "name": "days_until_renewal",
+            "value": "{{ceil(dateDifference(parseDate(3.value[2]; 'MM/DD/YYYY'; 'America/New_York'); now; 'days'))}}"
+          },
+          {
+            "name": "send_renewal",
+            "value": "{{if(ceil(dateDifference(parseDate(3.value[2]; 'MM/DD/YYYY'; 'America/New_York'); now; 'days')) = 30; true; false)}}"
+          },
+          {
+            "name": "run_date",
+            "value": "{{formatDate(now; 'MMMM D, YYYY'; 'America/New_York')}}"
+          }
+        ]
+      },
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 0
+        },
+        "restore": {},
+        "parameters": [],
+        "expect": [
+          {
+            "name": "variables",
+            "type": "array",
+            "label": "Variables"
+          }
+        ],
+        "notes": "SetVariable — extracts fields from the iterator bundle (module 3) and computes derived values. Sets: client_name (col 0), client_email (col 1), renewal_date (col 2, raw string), tier (col 3), monthly_fee (col 4). Calculates days_until_renewal as ceiling of dateDifference(parseDate(renewal_date), now, 'days') — positive value means renewal is in the future. Sets send_renewal = true only when days_until_renewal equals exactly 30, else false. Sets run_date (today formatted ET). The Router in module 5 reads 4.send_renewal to decide whether to proceed."
+      }
+    },
+    {
+      "id": 5,
+      "module": "flow:Router",
+      "version": 1,
+      "parameters": {},
+      "mapper": {},
+      "routes": [
+        {
+          "id": "route_send_renewal",
+          "label": "Send Renewal Offer",
+          "filter": {
+            "name": "send_renewal is true",
+            "conditions": [
+              [
+                {
+                  "a": "{{4.send_renewal}}",
+                  "b": true,
+                  "o": "boolean:equal"
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "id": "route_skip",
+          "label": "Skip (not 30 days out)",
+          "filter": {
+            "name": "send_renewal is false",
+            "conditions": [
+              [
+                {
+                  "a": "{{4.send_renewal}}",
+                  "b": false,
+                  "o": "boolean:equal"
+                }
+              ]
+            ]
+          }
+        }
+      ],
+      "metadata": {
+        "designer": {
+          "x": 1200,
+          "y": 0
+        },
+        "restore": {},
+        "parameters": [],
+        "notes": "Router — two routes. Route 1 (Send Renewal Offer): passes through when 4.send_renewal == true (exactly 30 days until renewal). Proceeds to modules 6, 7, 8, 9. Route 2 (Skip): matches when 4.send_renewal == false; this branch terminates and the iterator advances to the next client. Only clients whose renewal_date is exactly 30 days away reach the pricing, email, and alert modules."
+      }
+    },
+    {
+      "id": 6,
+      "module": "util:SetVariables2",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "variables": [
+          {
+            "name": "annual_price",
+            "value": "{{4.monthly_fee * 10}}"
+          },
+          {
+            "name": "savings",
+            "value": "{{4.monthly_fee * 2}}"
+          }
+        ]
+      },
+      "metadata": {
+        "designer": {
+          "x": 1500,
+          "y": 0
+        },
+        "restore": {},
+        "parameters": [],
+        "expect": [
+          {
+            "name": "variables",
+            "type": "array",
+            "label": "Variables"
+          }
+        ],
+        "notes": "SetVariable — calculates annual pricing from monthly_fee. Sets annual_price = monthly_fee * 10 (pay for 10 months, get 12 — the annual discount offer). Sets savings = monthly_fee * 2 (the two months the client does not pay under the annual plan). Both values are passed to the Claude prompt in module 7 and surfaced in the client email and internal alert."
+      }
+    },
+    {
+      "id": 7,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDecompression": true
+      },
+      "mapper": {
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "serializeUrl": false,
+        "method": "post",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.OPENROUTER_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "name": "HTTP-Referer",
+            "value": "{{env.OPENROUTER_REFERRER}}"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "authUser": "",
+        "authPass": "",
+        "timeout": 60,
+        "shareCookies": false,
+        "ca": "",
+        "rejectUnauthorized": true,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "gzip": true,
+        "useMtls": false,
+        "contentType": "application/json",
+        "data": "{\n  \"model\": \"anthropic/claude-sonnet-4-6\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Write a warm renewal offer email for {{4.client_name}} who is on the {{4.tier}} plan at ${{4.monthly_fee}}/mo. Their annual renewal is in 30 days. Offer: pay for 10 months and get 12 + setup fee waived (saves them ${{6.savings}}). Annual price is ${{6.annual_price}}. Mention their results have been great. 3 short paragraphs. Return only the email body.\"\n    }\n  ],\n  \"max_tokens\": 500,\n  \"temperature\": 0.7\n}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 1800,
+          "y": 0
+        },
+        "restore": {
+          "expect": {
+            "method": { "label": "POST" },
+            "bodyType": { "label": "Raw" },
+            "contentType": { "label": "JSON (application/json)" }
+          }
+        },
+        "parameters": [
+          {
+            "name": "handleErrors",
+            "type": "boolean",
+            "label": "Evaluate all states as errors (except for 2xx and 3xx)",
+            "required": true
+          },
+          {
+            "name": "useNewZLibDecompression",
+            "type": "boolean",
+            "label": "Use new ZLib decompression library",
+            "required": true
+          }
+        ],
+        "expect": [
+          { "name": "url",           "type": "url",     "label": "URL",            "required": true },
+          { "name": "method",        "type": "select",  "label": "Method",         "required": true },
+          { "name": "headers",       "type": "array",   "label": "Headers"                          },
+          { "name": "bodyType",      "type": "select",  "label": "Body type"                        },
+          { "name": "contentType",   "type": "select",  "label": "Content type"                     },
+          { "name": "data",          "type": "string",  "label": "Request content"                  },
+          { "name": "parseResponse", "type": "boolean", "label": "Parse response"                   }
+        ],
+        "notes": "OpenRouter HTTP POST — model anthropic/claude-sonnet-4-6. Prompt: 'Write a warm renewal offer email for [client_name] who is on the [tier] plan at $[monthly_fee]/mo. Their annual renewal is in 30 days. Offer: pay for 10 months and get 12 + setup fee waived (saves them $[savings]). Annual price is $[annual_price]. Mention their results have been great. 3 short paragraphs. Return only the email body.' max_tokens 500, temperature 0.7. Claude response is at 7.data.choices[0].message.content."
+      }
+    },
+    {
+      "id": 8,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDecompression": true
+      },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "serializeUrl": false,
+        "method": "post",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.RESEND_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "authUser": "",
+        "authPass": "",
+        "timeout": 30,
+        "shareCookies": false,
+        "ca": "",
+        "rejectUnauthorized": true,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "gzip": true,
+        "useMtls": false,
+        "contentType": "application/json",
+        "data": "{\n  \"from\": \"Brian at CWI AI <{{env.CWI_ALERT_FROM_ADDRESS}}>\",\n  \"to\": [\"{{4.client_email}}\"],\n  \"subject\": \"Your renewal is coming up — here is a special offer\",\n  \"html\": \"<p>{{replace(7.data.choices[0].message.content; '\\n'; '<br>')}}</p><p style='margin-top:24px;padding:16px;background:#f0fdf4;border-left:4px solid #16a34a;font-family:Arial,sans-serif;'><strong>Annual Plan Offer:</strong> Lock in 12 months of service for just <strong>${{6.annual_price}}</strong> — pay for 10 months and get 12, plus your setup fee is waived. That is <strong>${{6.savings}}</strong> back in your pocket.</p>\"\n}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 2100,
+          "y": 0
+        },
+        "restore": {
+          "expect": {
+            "method": { "label": "POST" },
+            "bodyType": { "label": "Raw" },
+            "contentType": { "label": "JSON (application/json)" }
+          }
+        },
+        "parameters": [
+          {
+            "name": "handleErrors",
+            "type": "boolean",
+            "label": "Evaluate all states as errors (except for 2xx and 3xx)",
+            "required": true
+          },
+          {
+            "name": "useNewZLibDecompression",
+            "type": "boolean",
+            "label": "Use new ZLib decompression library",
+            "required": true
+          }
+        ],
+        "expect": [
+          { "name": "url",           "type": "url",     "label": "URL",            "required": true },
+          { "name": "method",        "type": "select",  "label": "Method",         "required": true },
+          { "name": "headers",       "type": "array",   "label": "Headers"                          },
+          { "name": "bodyType",      "type": "select",  "label": "Body type"                        },
+          { "name": "contentType",   "type": "select",  "label": "Content type"                     },
+          { "name": "data",          "type": "string",  "label": "Request content"                  },
+          { "name": "parseResponse", "type": "boolean", "label": "Parse response"                   }
+        ],
+        "notes": "Resend HTTP POST — sends personalized renewal offer email to the client. FROM 'Brian at CWI AI <env.CWI_ALERT_FROM_ADDRESS>'. TO: 4.client_email. Subject: 'Your renewal is coming up — here is a special offer'. HTML body: Claude-generated 3-paragraph email (module 7) followed by a highlighted green callout block showing annual_price ($monthly_fee * 10) and savings ($monthly_fee * 2). Annual price is visually emphasized to make the offer scannable."
+      }
+    },
+    {
+      "id": 9,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDecompression": true
+      },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "serializeUrl": false,
+        "method": "post",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.RESEND_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "authUser": "",
+        "authPass": "",
+        "timeout": 30,
+        "shareCookies": false,
+        "ca": "",
+        "rejectUnauthorized": true,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "gzip": true,
+        "useMtls": false,
+        "contentType": "application/json",
+        "data": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"{{env.ADMIN_EMAIL}}\"],\n  \"subject\": \"Renewal email sent to {{4.client_name}} — renewal in 30 days — {{4.tier}} at ${{4.monthly_fee}}/mo\",\n  \"html\": \"<h2 style='color:#1d4ed8;'>Renewal Reminder Alert</h2><p>A renewal offer email was just sent to a client whose annual contract renews in 30 days.</p><table style='border-collapse:collapse;font-family:Arial,sans-serif;font-size:14px;'><tr><td style='padding:6px 12px;font-weight:bold;'>Client</td><td style='padding:6px 12px;'>{{4.client_name}}</td></tr><tr style='background:#f3f4f6;'><td style='padding:6px 12px;font-weight:bold;'>Email</td><td style='padding:6px 12px;'>{{4.client_email}}</td></tr><tr><td style='padding:6px 12px;font-weight:bold;'>Plan</td><td style='padding:6px 12px;'>{{4.tier}} — ${{4.monthly_fee}}/mo</td></tr><tr style='background:#f3f4f6;'><td style='padding:6px 12px;font-weight:bold;'>Renewal Date</td><td style='padding:6px 12px;'>{{4.renewal_date}} (30 days away)</td></tr><tr><td style='padding:6px 12px;font-weight:bold;'>Annual Offer Price</td><td style='padding:6px 12px;'>${{6.annual_price}} (10 months for 12)</td></tr><tr style='background:#f3f4f6;'><td style='padding:6px 12px;font-weight:bold;'>Client Savings</td><td style='padding:6px 12px;'>${{6.savings}}</td></tr><tr><td style='padding:6px 12px;font-weight:bold;'>Email Sent</td><td style='padding:6px 12px;'>{{4.run_date}} at 9:30 AM ET</td></tr></table><p>Follow up if you do not hear back within 5 business days.</p>\"\n}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 2400,
+          "y": 0
+        },
+        "restore": {
+          "expect": {
+            "method": { "label": "POST" },
+            "bodyType": { "label": "Raw" },
+            "contentType": { "label": "JSON (application/json)" }
+          }
+        },
+        "parameters": [
+          {
+            "name": "handleErrors",
+            "type": "boolean",
+            "label": "Evaluate all states as errors (except for 2xx and 3xx)",
+            "required": true
+          },
+          {
+            "name": "useNewZLibDecompression",
+            "type": "boolean",
+            "label": "Use new ZLib decompression library",
+            "required": true
+          }
+        ],
+        "expect": [
+          { "name": "url",           "type": "url",     "label": "URL",            "required": true },
+          { "name": "method",        "type": "select",  "label": "Method",         "required": true },
+          { "name": "headers",       "type": "array",   "label": "Headers"                          },
+          { "name": "bodyType",      "type": "select",  "label": "Body type"                        },
+          { "name": "contentType",   "type": "select",  "label": "Content type"                     },
+          { "name": "data",          "type": "string",  "label": "Request content"                  },
+          { "name": "parseResponse", "type": "boolean", "label": "Parse response"                   }
+        ],
+        "notes": "Resend HTTP POST — internal renewal alert to Brian. FROM env.CWI_ALERT_FROM_ADDRESS. TO env.ADMIN_EMAIL. Subject: 'Renewal email sent to [client_name] — renewal in 30 days — [tier] at $[monthly_fee]/mo'. HTML body includes a styled table with client name, email, plan and monthly fee, renewal date, annual offer price (monthly_fee * 10), savings (monthly_fee * 2), and the date the email was sent. Prompts Brian to follow up if no reply within 5 business days."
+      }
+    },
+    {
+      "id": 10,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": false,
+        "useNewZLibDecompression": true
+      },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "serializeUrl": false,
+        "method": "post",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.RESEND_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "authUser": "",
+        "authPass": "",
+        "timeout": 30,
+        "shareCookies": false,
+        "ca": "",
+        "rejectUnauthorized": true,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "gzip": true,
+        "useMtls": false,
+        "contentType": "application/json",
+        "data": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"{{env.ADMIN_EMAIL}}\"],\n  \"subject\": \"[ERROR] Scenario S Renewal Reminder Failed — {{4.client_name}}\",\n  \"html\": \"<h2 style='color:#dc2626;'>Scenario S Error</h2><p>The Annual Contract Renewal Reminder (Scenario S) encountered an error and did not complete successfully for one or more clients.</p><table style='border-collapse:collapse;font-family:Arial,sans-serif;font-size:14px;'><tr><td style='padding:6px 12px;font-weight:bold;'>Error Message</td><td style='padding:6px 12px;'>{{error.message}}</td></tr><tr style='background:#f3f4f6;'><td style='padding:6px 12px;font-weight:bold;'>Failed Module</td><td style='padding:6px 12px;'>{{error.module}}</td></tr><tr><td style='padding:6px 12px;font-weight:bold;'>Time</td><td style='padding:6px 12px;'>{{formatDate(now; 'MMMM D, YYYY h:mm A'; 'America/New_York')}} ET</td></tr><tr style='background:#f3f4f6;'><td style='padding:6px 12px;font-weight:bold;'>Client Name</td><td style='padding:6px 12px;'>{{4.client_name}}</td></tr><tr><td style='padding:6px 12px;font-weight:bold;'>Client Email</td><td style='padding:6px 12px;'>{{4.client_email}}</td></tr><tr style='background:#f3f4f6;'><td style='padding:6px 12px;font-weight:bold;'>Plan</td><td style='padding:6px 12px;'>{{4.tier}} — ${{4.monthly_fee}}/mo</td></tr><tr><td style='padding:6px 12px;font-weight:bold;'>Renewal Date</td><td style='padding:6px 12px;'>{{4.renewal_date}}</td></tr><tr style='background:#f3f4f6;'><td style='padding:6px 12px;font-weight:bold;'>Days Until Renewal</td><td style='padding:6px 12px;'>{{4.days_until_renewal}}</td></tr></table><p>Please check the Make.com execution log and send the renewal offer to this client manually if needed.</p>\"\n}"
+      },
+      "error_handler": true,
+      "linked_to_module": null,
+      "metadata": {
+        "designer": {
+          "x": 1800,
+          "y": 300
+        },
+        "restore": {
+          "expect": {
+            "method": { "label": "POST" },
+            "bodyType": { "label": "Raw" },
+            "contentType": { "label": "JSON (application/json)" }
+          }
+        },
+        "parameters": [
+          {
+            "name": "handleErrors",
+            "type": "boolean",
+            "label": "Evaluate all states as errors (except for 2xx and 3xx)",
+            "required": true
+          },
+          {
+            "name": "useNewZLibDecompression",
+            "type": "boolean",
+            "label": "Use new ZLib decompression library",
+            "required": true
+          }
+        ],
+        "expect": [
+          { "name": "url",           "type": "url",     "label": "URL",            "required": true },
+          { "name": "method",        "type": "select",  "label": "Method",         "required": true },
+          { "name": "headers",       "type": "array",   "label": "Headers"                          },
+          { "name": "bodyType",      "type": "select",  "label": "Body type"                        },
+          { "name": "contentType",   "type": "select",  "label": "Content type"                     },
+          { "name": "data",          "type": "string",  "label": "Request content"                  },
+          { "name": "parseResponse", "type": "boolean", "label": "Parse response"                   }
+        ],
+        "notes": "Error Handler — Resend alert to env.ADMIN_EMAIL on any scenario failure. FROM env.CWI_ALERT_FROM_ADDRESS. Subject: '[ERROR] Scenario S Renewal Reminder Failed — [client_name]'. HTML body includes error message, failed module, timestamp (ET), client name, client email, tier, monthly_fee, renewal_date, and days_until_renewal from module 4 to allow manual follow-up. handleErrors: false so this module itself does not recurse on error."
+      }
+    }
+  ],
+  "metadata": {
+    "instant": false,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": true,
+      "slots": null,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": {
+      "orphans": []
+    },
+    "zone": "us1.make.com",
+    "notes": [
+      {
+        "id": 1,
+        "content": "Module 1: Schedule trigger — cron 30 9 * * * — fires daily at 09:30 AM America/New_York.",
+        "position": { "x": 0, "y": -80 }
+      },
+      {
+        "id": 2,
+        "content": "Module 2: Google Sheets HTTP GET — /v4/spreadsheets/{ACTIVE_CLIENTS_SHEET_ID}/values/ActiveClients — returns all rows from the ActiveClients tab. Auth: Bearer env.GOOGLE_SHEETS_ACCESS_TOKEN. Columns: client_name, client_email, renewal_date, tier, monthly_fee.",
+        "position": { "x": 300, "y": -80 }
+      },
+      {
+        "id": 3,
+        "content": "Module 3: Iterator — loops over each data row in 2.data.values (skipping header row via slice). One bundle per client. Expected cols: [0] client_name, [1] client_email, [2] renewal_date, [3] tier, [4] monthly_fee.",
+        "position": { "x": 600, "y": -80 }
+      },
+      {
+        "id": 4,
+        "content": "Module 4: SetVariable — extracts client_name, client_email, renewal_date, tier, monthly_fee. Calculates days_until_renewal (ceiling of dateDifference from now to renewal_date). Sets send_renewal = true only when days_until_renewal == 30. Sets run_date (today ET).",
+        "position": { "x": 900, "y": -80 }
+      },
+      {
+        "id": 5,
+        "content": "Module 5: Router — Route 1 (Send Renewal Offer): send_renewal == true → proceeds to modules 6, 7, 8, 9. Route 2 (Skip): send_renewal == false → terminates for that client.",
+        "position": { "x": 1200, "y": -80 }
+      },
+      {
+        "id": 6,
+        "content": "Module 6: SetVariable — calculates annual_price = monthly_fee * 10 (pay 10 months, get 12) and savings = monthly_fee * 2. Both values passed to Claude prompt and internal alert.",
+        "position": { "x": 1500, "y": -80 }
+      },
+      {
+        "id": 7,
+        "content": "Module 7: OpenRouter HTTP POST — anthropic/claude-sonnet-4-6 — generates a warm 3-paragraph renewal offer email for client_name on the tier plan at monthly_fee/mo. Offers annual_price for 12 months (saves savings). Returns only the email body.",
+        "position": { "x": 1800, "y": -80 }
+      },
+      {
+        "id": 8,
+        "content": "Module 8: Resend HTTP POST — client renewal offer email. FROM 'Brian at CWI AI <env.CWI_ALERT_FROM_ADDRESS>'. TO: client email. Subject: 'Your renewal is coming up — here is a special offer'. HTML: Claude-generated email body + highlighted annual price callout block.",
+        "position": { "x": 2100, "y": -80 }
+      },
+      {
+        "id": 9,
+        "content": "Module 9: Resend HTTP POST — internal renewal alert to Brian. FROM env.CWI_ALERT_FROM_ADDRESS. TO env.ADMIN_EMAIL. Subject: 'Renewal email sent to [client_name] — renewal in 30 days — [tier] at $[monthly_fee]/mo'. HTML table with full client and offer details.",
+        "position": { "x": 2400, "y": -80 }
+      },
+      {
+        "id": 10,
+        "content": "Module 10: Error Handler — Resend alert to env.ADMIN_EMAIL on any failure. Includes error message, failed module, timestamp ET, client name, email, tier, monthly_fee, renewal_date, days_until_renewal for manual follow-up.",
+        "position": { "x": 1800, "y": 220 }
+      }
+    ]
+  },
+  "environment_variables": {
+    "ACTIVE_CLIENTS_SHEET_ID": "Google Sheets spreadsheet ID for the ActiveClients workbook",
+    "GOOGLE_SHEETS_ACCESS_TOKEN": "OAuth 2.0 access token (or service account token) with read access to the ActiveClients Google Sheet",
+    "OPENROUTER_API_KEY": "OpenRouter API key for Claude access",
+    "OPENROUTER_REFERRER": "HTTP-Referer header value for OpenRouter requests (e.g. https://cwiai.net)",
+    "RESEND_API_KEY": "Resend API key for sending emails",
+    "CWI_ALERT_FROM_ADDRESS": "Verified sender address used as FROM for both client renewal emails (as 'Brian at CWI AI') and internal alerts (e.g. brian@cwiai.net or alerts@cwiai.net)",
+    "ADMIN_EMAIL": "Brian's email address for internal renewal alerts and error notifications"
+  }
+}

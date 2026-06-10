@@ -1,0 +1,287 @@
+{
+  "name": "Morning Briefing — CWI AI Daily",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": "schedule",
+        "maxResults": 1
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0
+        },
+        "restore": {}
+      },
+      "scheduling": {
+        "type": "cron",
+        "cron": "0 7 * * 1-5",
+        "timezone": "America/New_York"
+      }
+    },
+    {
+      "id": 2,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true
+      },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/contacts/search",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.HUBSPOT_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\"filterGroups\":[{\"filters\":[{\"propertyName\":\"lastmodifieddate\",\"operator\":\"GTE\",\"value\":\"{{formatDate(addHours(now, -24), 'x')}}\"}]}],\"properties\":[\"firstname\",\"lastname\",\"email\",\"phone\",\"createdate\",\"lastmodifieddate\",\"lifecyclestage\"],\"limit\":100}",
+        "parseResponse": true,
+        "timeout": 30
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0
+        },
+        "restore": {
+          "expect": {
+            "method": {
+              "mode": "chose",
+              "label": "POST"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true
+      },
+      "mapper": {
+        "url": "https://api.calendly.com/scheduled_events",
+        "method": "GET",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.CALENDLY_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "qs": [
+          {
+            "name": "organization",
+            "value": "{{env.CALENDLY_ORG_URI}}"
+          },
+          {
+            "name": "min_start_time",
+            "value": "{{formatDate(setHour(setMinute(setSecond(now, 0), 0), 0), 'YYYY-MM-DD[T]HH:mm:ss[Z]', 'America/New_York')}}"
+          },
+          {
+            "name": "max_start_time",
+            "value": "{{formatDate(setHour(setMinute(setSecond(now, 59), 59), 23), 'YYYY-MM-DD[T]HH:mm:ss[Z]', 'America/New_York')}}"
+          },
+          {
+            "name": "status",
+            "value": "active"
+          },
+          {
+            "name": "count",
+            "value": "50"
+          }
+        ],
+        "parseResponse": true,
+        "timeout": 30
+      },
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0
+        },
+        "restore": {
+          "expect": {
+            "method": {
+              "mode": "chose",
+              "label": "GET"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true
+      },
+      "mapper": {
+        "url": "https://api.stripe.com/v1/payment_intents",
+        "method": "GET",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.STRIPE_SECRET_KEY}}"
+          }
+        ],
+        "qs": [
+          {
+            "name": "created[gte]",
+            "value": "{{floor(toTimestamp(addHours(now, -24)) / 1000)}}"
+          },
+          {
+            "name": "limit",
+            "value": "10"
+          }
+        ],
+        "parseResponse": true,
+        "timeout": 30
+      },
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 0
+        },
+        "restore": {
+          "expect": {
+            "method": {
+              "mode": "chose",
+              "label": "GET"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": 5,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true
+      },
+      "mapper": {
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.OPENROUTER_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "name": "HTTP-Referer",
+            "value": "{{env.OPENROUTER_SITE_URL}}"
+          },
+          {
+            "name": "X-Title",
+            "value": "CWI AI Morning Briefing"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\"models\":[\"anthropic/claude-sonnet-4-6\",\"{{env.OPENROUTER_FALLBACK_MODEL}}\"],\"messages\":[{\"role\":\"system\",\"content\":\"You are a concise business assistant for CWI AI. Generate a clean, professional morning briefing email body in plain text. Be brief and actionable. Do not use markdown headers — use plain section labels followed by a colon. Today's date is {{formatDate(now, 'dddd, MMMM D, YYYY', 'America/New_York')}}. Current time: {{formatDate(now, 'h:mm A', 'America/New_York')}} ET.\"},{\"role\":\"user\",\"content\":\"Generate a morning briefing from the following data.\\n\\nHUBSPOT CONTACTS (new or updated in last 24h):\\nTotal count: {{2.body.total}}\\nContacts: {{toString(2.body.results)}}\\n\\nCALENDLY EVENTS (today's appointments):\\n{{toString(3.body.collection)}}\\n\\nSTRIPE PAYMENTS (last 24h):\\nPayments: {{toString(4.body.data)}}\\n\\nPlease produce a briefing with these sections:\\n1. Leads & Contacts — how many were new or updated, notable names or lifecycle stages if available\\n2. Today's Appointments — list each event with time (ET) and invitee name if available\\n3. Payments Received — total amount collected in last 24h and count of successful payments\\n4. Recommended Action — one clear, specific action Brian should take today based on this data\\n\\nKeep it under 300 words. Write as if speaking directly to Brian.\"}],\"max_tokens\":600,\"temperature\":0.4}",
+        "parseResponse": true,
+        "timeout": 60
+      },
+      "metadata": {
+        "designer": {
+          "x": 1200,
+          "y": 0
+        },
+        "restore": {
+          "expect": {
+            "method": {
+              "mode": "chose",
+              "label": "POST"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": 6,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true
+      },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.RESEND_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\"from\":\"{{env.CWI_ALERT_FROM_ADDRESS}}\",\"to\":[\"{{env.ALERT_EMAIL}}\"],\"subject\":\"Good morning Brian \\u2014 Your CWI AI Daily Briefing\",\"text\":\"{{5.body.choices[].message.content}}\\n\\n---\\nGenerated {{formatDate(now, 'MMMM D, YYYY [at] h:mm A', 'America/New_York')}} ET by CWI AI Automation\"}",
+        "parseResponse": true,
+        "timeout": 30
+      },
+      "metadata": {
+        "designer": {
+          "x": 1500,
+          "y": 0
+        },
+        "restore": {
+          "expect": {
+            "method": {
+              "mode": "chose",
+              "label": "POST"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "instant": false,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "slots": null,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": {
+      "orphans": []
+    },
+    "zone": "us2.make.com"
+  },
+  "scheduling": {
+    "type": "cron",
+    "cron": "0 7 * * 1-5",
+    "timezone": "America/New_York"
+  }
+}

@@ -1,0 +1,278 @@
+{
+  "name": "AA Lead Rescore Batch",
+  "flow": [
+    {
+      "id": 1,
+      "module": "builtin:BasicTrigger",
+      "version": 1,
+      "parameters": {},
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 0, "y": 0 }
+      }
+    },
+    {
+      "id": 2,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true
+      },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/contacts/search",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\"filterGroups\":[{\"filters\":[{\"propertyName\":\"lifecyclestage\",\"operator\":\"EQ\",\"value\":\"lead\"},{\"propertyName\":\"lastmodifieddate\",\"operator\":\"LT\",\"value\":\"{{formatDate(subtractDays(now; 7); 'x')}}\"}]}],\"properties\":[\"firstname\",\"lastname\",\"email\",\"jobtitle\",\"industry\",\"company\",\"numberofemployees\",\"hs_email_open\",\"notes_last_contacted\",\"lifecyclestage\",\"createdate\",\"lastmodifieddate\"],\"limit\":50}"
+      },
+      "metadata": {
+        "designer": { "x": 300, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "POST" }
+          }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "module": "builtin:BasicAggregator",
+      "version": 1,
+      "parameters": {
+        "sourceModule": 2
+      },
+      "mapper": {
+        "array": "{{2.body.results}}"
+      },
+      "metadata": {
+        "designer": { "x": 600, "y": 0 }
+      }
+    },
+    {
+      "id": 4,
+      "module": "builtin:BasicIterator",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "array": "{{2.body.results}}"
+      },
+      "metadata": {
+        "designer": { "x": 600, "y": 0 }
+      }
+    },
+    {
+      "id": 5,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true
+      },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/contacts/{{4.value.id}}/associations/emails",
+        "method": "GET",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json"
+      },
+      "metadata": {
+        "designer": { "x": 900, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "GET" }
+          }
+        }
+      }
+    },
+    {
+      "id": 6,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true
+      },
+      "mapper": {
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.OPENROUTER_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "name": "HTTP-Referer",
+            "value": "{{env.OPENROUTER_SITE_URL}}"
+          },
+          {
+            "name": "X-Title",
+            "value": "CWI Lead Rescore"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\"models\":[\"anthropic/claude-sonnet-4-6\",\"{{env.OPENROUTER_FALLBACK_MODEL}}\"],\"messages\":[{\"role\":\"system\",\"content\":\"You are a B2B lead scoring expert. Score leads from 1 to 100 based on provided data. Return only a JSON object with two fields: \\\"score\\\" (integer 1-100) and \\\"reasoning\\\" (one sentence explanation). No other text.\"},{\"role\":\"user\",\"content\":\"Score this lead:\\nName: {{4.value.properties.firstname}} {{4.value.properties.lastname}}\\nEmail: {{4.value.properties.email}}\\nJob Title: {{4.value.properties.jobtitle}}\\nIndustry: {{4.value.properties.industry}}\\nCompany: {{4.value.properties.company}}\\nNumber of Employees: {{4.value.properties.numberofemployees}}\\nEmail Opens: {{4.value.properties.hs_email_open}}\\nLast Contacted: {{4.value.properties.notes_last_contacted}}\\nLast Modified: {{4.value.properties.lastmodifieddate}}\\nEmail Association Count: {{length(5.body.results)}}\\n\\nScoring criteria:\\n- Industry fit (is this a strong B2B industry match?): 0-30 points\\n- Email engagement (opens, responses): 0-25 points\\n- Time since last contact (more recent = higher): 0-20 points\\n- Job title seniority and decision-making power: 0-15 points\\n- Company size if available: 0-10 points\"}],\"max_tokens\":200,\"temperature\":0.2}"
+      },
+      "metadata": {
+        "designer": { "x": 1200, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "POST" }
+          }
+        }
+      }
+    },
+    {
+      "id": 7,
+      "module": "builtin:BasicTransformer",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "value": "{{parseJSON(6.body.choices[].message.content)}}"
+      },
+      "metadata": {
+        "designer": { "x": 1500, "y": 0 }
+      }
+    },
+    {
+      "id": 8,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true
+      },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/contacts/{{4.value.id}}",
+        "method": "PATCH",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\"properties\":{\"ai_lead_score\":\"{{7.value.score}}\"}}"
+      },
+      "metadata": {
+        "designer": { "x": 1800, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "PATCH" }
+          }
+        }
+      }
+    },
+    {
+      "id": 9,
+      "module": "builtin:BasicAggregator",
+      "version": 1,
+      "parameters": {
+        "sourceModule": 4,
+        "stopProcessing": false
+      },
+      "mapper": {
+        "array": "{{array(map(array(4.value; 7.value.score; 4.value.properties.firstname; 4.value.properties.lastname); 'contact_id'; 'score'; 'firstname'; 'lastname'))}}"
+      },
+      "metadata": {
+        "designer": { "x": 2100, "y": 0 }
+      }
+    },
+    {
+      "id": 10,
+      "module": "builtin:BasicTransformer",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "sortedLeads": "{{slice(sort(9.array; 'score'; 'desc'); 0; 5)}}",
+        "totalCount": "{{length(9.array)}}"
+      },
+      "metadata": {
+        "designer": { "x": 2400, "y": 0 }
+      }
+    },
+    {
+      "id": 11,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true
+      },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.RESEND_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\"from\":\"{{env.CWI_ALERT_FROM_ADDRESS}}\",\"to\":\"{{env.ALERT_EMAIL}}\",\"subject\":\"Weekly lead re-score complete — {{10.totalCount}} leads updated\",\"html\":\"<h2>Weekly Lead Re-Score Complete</h2><p><strong>{{10.totalCount}}</strong> leads were re-scored this week.</p><h3>Top 5 Highest-Scoring Leads</h3><table border='1' cellpadding='6' cellspacing='0' style='border-collapse:collapse;'><thead><tr><th>#</th><th>Name</th><th>Score</th></tr></thead><tbody><tr><td>1</td><td>{{10.sortedLeads[0].firstname}} {{10.sortedLeads[0].lastname}}</td><td>{{10.sortedLeads[0].score}}</td></tr><tr><td>2</td><td>{{10.sortedLeads[1].firstname}} {{10.sortedLeads[1].lastname}}</td><td>{{10.sortedLeads[1].score}}</td></tr><tr><td>3</td><td>{{10.sortedLeads[2].firstname}} {{10.sortedLeads[2].lastname}}</td><td>{{10.sortedLeads[2].score}}</td></tr><tr><td>4</td><td>{{10.sortedLeads[3].firstname}} {{10.sortedLeads[3].lastname}}</td><td>{{10.sortedLeads[3].score}}</td></tr><tr><td>5</td><td>{{10.sortedLeads[4].firstname}} {{10.sortedLeads[4].lastname}}</td><td>{{10.sortedLeads[4].score}}</td></tr></tbody></table><p style='color:#888;font-size:12px;'>Scored on {{formatDate(now; 'MMMM D, YYYY [at] h:mm A'; 'America/New_York')}} ET by CWI AI Lead Scorer (OpenRouter / claude-sonnet-4-6)</p>\"}"
+      },
+      "metadata": {
+        "designer": { "x": 2700, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "POST" }
+          }
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "instant": false,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "slots": null,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": {
+      "orphans": []
+    },
+    "zone": "us2.make.com"
+  },
+  "scheduling": {
+    "type": "cron",
+    "interval": 1,
+    "restriction": {
+      "type": "advanced",
+      "cron": "0 18 * * 0",
+      "timezone": "America/New_York"
+    }
+  }
+}

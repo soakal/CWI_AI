@@ -1,0 +1,350 @@
+{
+  "name": "Scenario K: Weekly Business Digest",
+  "comments": "Runs every Monday at 08:00 America/New_York. Fetches active client count from Google Sheets, pulls new HubSpot deals and Calendly bookings created this week via HTTP, builds a stats bundle with SetVariable, generates a 150-word branded digest via OpenRouter (anthropic/claude-sonnet-4-6), and delivers a #FF5A1F-branded HTML email to ADMIN_EMAIL via Resend. A router at the end branches to an error-alert email if the primary send fails. All secrets referenced as env.VARIABLE_NAME.",
+  "flow": [
+    {
+      "id": 1,
+      "module": "builtin:BasicScheduleTrigger",
+      "version": 1,
+      "parameters": {},
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 0, "y": 0 },
+        "restore": {
+          "parameters": {
+            "interval": {
+              "label": "Every Monday at 08:00 America/New_York"
+            }
+          }
+        }
+      },
+      "scheduling": {
+        "type": "cron",
+        "cron": "0 8 * * 1",
+        "timezone": "America/New_York"
+      }
+    },
+    {
+      "id": 2,
+      "module": "google-sheets:getRows",
+      "version": 3,
+      "parameters": {
+        "__IMTCONN__": "{{connection.google_sheets}}"
+      },
+      "mapper": {
+        "spreadsheetId": "{{env.ACTIVE_CLIENTS_SHEET_ID}}",
+        "sheetName": "ActiveClients",
+        "includeColumnNamesInOutput": true,
+        "hasHeader": "yes",
+        "from": 1,
+        "limit": 1000
+      },
+      "metadata": {
+        "designer": { "x": 300, "y": 0 },
+        "restore": {
+          "parameters": {
+            "__IMTCONN__": { "label": "Google Sheets Connection" }
+          }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true
+      },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/deals",
+        "method": "GET",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.HUBSPOT_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "qs": [
+          {
+            "name": "limit",
+            "value": "100"
+          },
+          {
+            "name": "properties",
+            "value": "dealname,createdate"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": ""
+      },
+      "metadata": {
+        "designer": { "x": 600, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "GET" },
+            "bodyType": { "label": "Raw" },
+            "contentType": { "label": "JSON (application/json)" }
+          }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true
+      },
+      "mapper": {
+        "url": "https://api.calendly.com/scheduled_events",
+        "method": "GET",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.CALENDLY_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "qs": [
+          {
+            "name": "count",
+            "value": "100"
+          },
+          {
+            "name": "min_start_time",
+            "value": "{{formatDate(setDay(now; 1); \"YYYY-MM-DDTHH:mm:ssZ\"; \"America/New_York\")}}"
+          },
+          {
+            "name": "max_start_time",
+            "value": "{{formatDate(now; \"YYYY-MM-DDTHH:mm:ssZ\"; \"America/New_York\")}}"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": ""
+      },
+      "metadata": {
+        "designer": { "x": 900, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "GET" },
+            "bodyType": { "label": "Raw" },
+            "contentType": { "label": "JSON (application/json)" }
+          }
+        }
+      }
+    },
+    {
+      "id": 5,
+      "module": "builtin:SetVariable",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "variables": [
+          {
+            "name": "activeClients",
+            "value": "{{length(ifempty(2.rows; emptyarray))}}"
+          },
+          {
+            "name": "newDeals",
+            "value": "{{length(ifempty(3.data.results; emptyarray))}}"
+          },
+          {
+            "name": "weeklyBookings",
+            "value": "{{length(ifempty(4.data.collection; emptyarray))}}"
+          },
+          {
+            "name": "weekLabel",
+            "value": "{{formatDate(setDay(now; 1); \"MMM D\"; \"America/New_York\")}} – {{formatDate(now; \"MMM D, YYYY\"; \"America/New_York\")}}"
+          }
+        ]
+      },
+      "metadata": {
+        "designer": { "x": 1200, "y": 0 }
+      }
+    },
+    {
+      "id": 6,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true
+      },
+      "mapper": {
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.OPENROUTER_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "name": "HTTP-Referer",
+            "value": "https://cwiai.net"
+          },
+          {
+            "name": "X-Title",
+            "value": "CWI AI Weekly Digest"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\"model\": \"anthropic/claude-sonnet-4-6\", \"messages\": [{\"role\": \"system\", \"content\": \"You are a concise business analyst writing a weekly internal digest for CWI AI LLC. Keep the digest to exactly 150 words. Tone: direct, data-driven, professional. Always end with exactly one concrete action item.\"}, {\"role\": \"user\", \"content\": \"Write a 150-word weekly digest for CWI AI LLC for the week of {{5.weekLabel}}. Active Clients: {{5.activeClients}}. New Deals: {{5.newDeals}}. Bookings This Week: {{5.weeklyBookings}}. Include one action item.\"}], \"max_tokens\": 300, \"temperature\": 0.7}"
+      },
+      "metadata": {
+        "designer": { "x": 1500, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "POST" },
+            "bodyType": { "label": "Raw" },
+            "contentType": { "label": "JSON (application/json)" }
+          }
+        }
+      }
+    },
+    {
+      "id": 7,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true
+      },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.RESEND_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\", \"to\": [\"{{env.ADMIN_EMAIL}}\"], \"subject\": \"CWI AI Weekly Digest — {{5.weekLabel}}\", \"html\": \"<div style=\\\"font-family: Arial, sans-serif; max-width: 620px; margin: 0 auto; color: #333;\\\"><div style=\\\"background: #FF5A1F; padding: 28px 32px; border-radius: 10px 10px 0 0;\\\"><h1 style=\\\"color: #ffffff; margin: 0; font-size: 22px; letter-spacing: 0.5px;\\\">CWI AI — Weekly Digest</h1><p style=\\\"color: #FFD5C2; margin: 6px 0 0 0; font-size: 14px;\\\">Week of {{5.weekLabel}}</p></div><div style=\\\"background: #f9fafb; padding: 28px 32px; border-radius: 0 0 10px 10px; border: 1px solid #e5e7eb;\\\"><table style=\\\"width: 100%; border-collapse: collapse; margin-bottom: 24px;\\\"><tr><td style=\\\"padding: 14px 12px; border-bottom: 1px solid #e5e7eb; color: #555; font-size: 15px;\\\">Active Clients</td><td style=\\\"padding: 14px 12px; border-bottom: 1px solid #e5e7eb; font-weight: 700; font-size: 20px; text-align: right; color: #FF5A1F;\\\">{{5.activeClients}}</td></tr><tr><td style=\\\"padding: 14px 12px; border-bottom: 1px solid #e5e7eb; color: #555; font-size: 15px;\\\">New Deals This Week</td><td style=\\\"padding: 14px 12px; border-bottom: 1px solid #e5e7eb; font-weight: 700; font-size: 20px; text-align: right; color: #FF5A1F;\\\">{{5.newDeals}}</td></tr><tr><td style=\\\"padding: 14px 12px; color: #555; font-size: 15px;\\\">Bookings This Week</td><td style=\\\"padding: 14px 12px; font-weight: 700; font-size: 20px; text-align: right; color: #FF5A1F;\\\">{{5.weeklyBookings}}</td></tr></table><div style=\\\"background: #ffffff; border-left: 4px solid #FF5A1F; padding: 18px 20px; border-radius: 0 8px 8px 0; margin-bottom: 24px;\\\"><p style=\\\"margin: 0; font-size: 15px; line-height: 1.7; color: #1f2937;\\\">{{replace(replace(ifempty(6.data.choices[0].message.content; \\\"Digest narrative temporarily unavailable. Please check OpenRouter logs and re-run the scenario.\\\"); \\\"\\\\\\\"\\\"; \\\"&quot;\\\"); newline; \\\"<br>\\\")}}</p></div><p style=\\\"font-size: 13px; color: #9ca3af; margin: 0;\\\">Generated {{formatDate(now; \\\"MMMM D, YYYY [at] h:mm A\\\"; \\\"America/New_York\\\")}} ET by CWI AI Make.com automation &mdash; Scenario K</p></div></div>\"}"
+      },
+      "metadata": {
+        "designer": { "x": 1800, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "POST" },
+            "bodyType": { "label": "Raw" },
+            "contentType": { "label": "JSON (application/json)" }
+          }
+        }
+      }
+    },
+    {
+      "id": 8,
+      "module": "builtin:BasicRouter",
+      "version": 1,
+      "parameters": {},
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 2100, "y": 0 }
+      },
+      "routes": [
+        {
+          "flow": [],
+          "label": "Digest Sent",
+          "filter": {
+            "name": "Email Delivered",
+            "conditions": [
+              [
+                {
+                  "a": "{{7.data.id}}",
+                  "b": "",
+                  "o": "text:notempty"
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "flow": [
+            {
+              "id": 9,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": false
+              },
+              "mapper": {
+                "url": "https://api.resend.com/emails",
+                "method": "POST",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.RESEND_API_KEY}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\", \"to\": [\"{{env.ADMIN_EMAIL}}\"], \"subject\": \"[ERROR] Weekly Digest Failed — {{5.weekLabel}}\", \"html\": \"<div style=\\\"font-family: Arial, sans-serif; padding: 24px; border: 2px solid #e53e3e; border-radius: 8px; max-width: 600px;\\\"><h2 style=\\\"color: #e53e3e; margin-top: 0;\\\">Scenario K: Weekly Digest Failed</h2><p><strong>Week:</strong> {{5.weekLabel}}</p><p><strong>Resend HTTP Status:</strong> {{ifempty(7.statusCode; \\\"no response\\\")}}</p><p><strong>Resend Error:</strong> {{ifempty(7.data.message; \\\"none returned\\\")}}</p><p><strong>AI Content Generated:</strong> {{if(length(ifempty(6.data.choices[0].message.content; \\\"\\\")) > 0; \\\"yes\\\"; \\\"no — check OpenRouter\\\")}}</p><p><strong>Stats at Failure:</strong> Active Clients: {{5.activeClients}} | New Deals: {{5.newDeals}} | Bookings: {{5.weeklyBookings}}</p><p><strong>Timestamp:</strong> {{formatDate(now; \\\"YYYY-MM-DD HH:mm:ss\\\"; \\\"America/New_York\\\")}} ET</p><hr style=\\\"border-color: #fed7d7;\\\"><p style=\\\"color: #718096; font-size: 13px;\\\">Investigate and re-run Scenario K manually if needed. Owner: {{env.ADMIN_EMAIL}}</p></div>\"}"
+              },
+              "metadata": {
+                "designer": { "x": 2400, "y": 150 },
+                "restore": {
+                  "expect": {
+                    "method": { "label": "POST" },
+                    "bodyType": { "label": "Raw" },
+                    "contentType": { "label": "JSON (application/json)" }
+                  }
+                }
+              }
+            }
+          ],
+          "label": "Error Handler",
+          "filter": {
+            "name": "Email Failed",
+            "conditions": [
+              [
+                {
+                  "a": "{{7.data.id}}",
+                  "b": "",
+                  "o": "text:empty"
+                }
+              ]
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "blueprint_spec": {
+    "description": "Scenario K: Weekly Business Digest — fires every Monday at 08:00 America/New_York (cron: 0 8 * * 1). Counts active clients from Google Sheets, fetches new HubSpot deals and Calendly bookings created this week, aggregates stats in a single SetVariable bundle, generates a 150-word AI digest with one action item via OpenRouter (anthropic/claude-sonnet-4-6), and sends a #FF5A1F-branded HTML email from CWI_ALERT_FROM_ADDRESS to ADMIN_EMAIL via Resend. A router at the end detects delivery failure and sends a structured error alert.",
+    "timezone": "America/New_York",
+    "cron": "0 8 * * 1",
+    "required_connections": {
+      "google_sheets": "Service account or OAuth with read access to the active clients spreadsheet"
+    },
+    "required_env_vars": {
+      "ACTIVE_CLIENTS_SHEET_ID": "Google Sheets spreadsheet ID containing the ActiveClients tab",
+      "HUBSPOT_API_KEY": "HubSpot Private App token with crm.objects.deals.read scope",
+      "CALENDLY_API_KEY": "Calendly Personal Access Token",
+      "OPENROUTER_API_KEY": "OpenRouter API key",
+      "RESEND_API_KEY": "Resend API key",
+      "CWI_ALERT_FROM_ADDRESS": "Verified Resend sender for digest and alerts, e.g. CWI AI <digest@cwiai.net>",
+      "ADMIN_EMAIL": "Recipient email address for the weekly digest and error alerts"
+    }
+  }
+}

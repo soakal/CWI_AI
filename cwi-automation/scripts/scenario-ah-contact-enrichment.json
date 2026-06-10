@@ -1,0 +1,431 @@
+{
+  "name": "AH — Contact Enrichment via Apollo",
+  "flow": [
+    {
+      "id": 1,
+      "module": "builtin:BasicTrigger",
+      "version": 1,
+      "parameters": {},
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 0, "y": 0 },
+        "restore": {}
+      }
+    },
+    {
+      "id": 2,
+      "module": "builtin:SetVariable",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "thirtyDaysAgoMs",
+        "scope": "roundtrip",
+        "type": "number",
+        "value": "{{subtract(now; 2592000000)}}"
+      },
+      "metadata": {
+        "designer": { "x": 300, "y": 0 }
+      }
+    },
+    {
+      "id": 3,
+      "module": "builtin:SetVariable",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "enrichedCount",
+        "scope": "roundtrip",
+        "type": "number",
+        "value": "0"
+      },
+      "metadata": {
+        "designer": { "x": 600, "y": 0 }
+      }
+    },
+    {
+      "id": 4,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/contacts/search",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\"filterGroups\":[{\"filters\":[{\"propertyName\":\"jobtitle\",\"operator\":\"NOT_HAS_PROPERTY\"},{\"propertyName\":\"createdate\",\"operator\":\"GTE\",\"value\":\"{{2.thirtyDaysAgoMs}}\"}]},{\"filters\":[{\"propertyName\":\"company\",\"operator\":\"NOT_HAS_PROPERTY\"},{\"propertyName\":\"createdate\",\"operator\":\"GTE\",\"value\":\"{{2.thirtyDaysAgoMs}}\"}]}],\"properties\":[\"email\",\"firstname\",\"lastname\",\"jobtitle\",\"company\",\"city\",\"state\",\"numberofemployees\",\"createdate\"],\"limit\":25}",
+        "timeout": 30,
+        "followRedirects": true,
+        "compress": true,
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": { "x": 900, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "POST" }
+          }
+        }
+      }
+    },
+    {
+      "id": 5,
+      "module": "builtin:BasicIterator",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "array": "{{4.data.results}}"
+      },
+      "metadata": {
+        "designer": { "x": 1200, "y": 0 }
+      }
+    },
+    {
+      "id": 6,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "url": "https://api.apollo.io/api/v1/people/match",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "name": "Cache-Control",
+            "value": "no-cache"
+          },
+          {
+            "name": "X-Api-Key",
+            "value": "{{env.APOLLO_API_KEY}}"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\"email\":\"{{5.value.properties.email}}\",\"reveal_personal_emails\":false,\"reveal_phone_number\":false}",
+        "timeout": 30,
+        "followRedirects": true,
+        "compress": true,
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": { "x": 1500, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "POST" }
+          }
+        }
+      }
+    },
+    {
+      "id": 7,
+      "module": "builtin:BasicFilter",
+      "version": 1,
+      "parameters": {},
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 1800, "y": 0 }
+      },
+      "filter": {
+        "name": "Apollo returned a match",
+        "conditions": [
+          [
+            {
+              "a": "{{6.data.person.id}}",
+              "b": "",
+              "o": "text:notequal"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": 8,
+      "module": "builtin:SetVariable",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "apolloJobTitle",
+        "scope": "roundtrip",
+        "type": "text",
+        "value": "{{ifempty(6.data.person.title; \"\")}}"
+      },
+      "metadata": {
+        "designer": { "x": 2100, "y": 0 }
+      }
+    },
+    {
+      "id": 9,
+      "module": "builtin:SetVariable",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "apolloCompany",
+        "scope": "roundtrip",
+        "type": "text",
+        "value": "{{ifempty(6.data.person.organization_name; \"\")}}"
+      },
+      "metadata": {
+        "designer": { "x": 2100, "y": 150 }
+      }
+    },
+    {
+      "id": 10,
+      "module": "builtin:SetVariable",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "apolloNumEmployees",
+        "scope": "roundtrip",
+        "type": "text",
+        "value": "{{ifempty(6.data.person.organization.estimated_num_employees; \"\")}}"
+      },
+      "metadata": {
+        "designer": { "x": 2100, "y": 300 }
+      }
+    },
+    {
+      "id": 11,
+      "module": "builtin:SetVariable",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "apolloCity",
+        "scope": "roundtrip",
+        "type": "text",
+        "value": "{{ifempty(6.data.person.city; \"\")}}"
+      },
+      "metadata": {
+        "designer": { "x": 2100, "y": 450 }
+      }
+    },
+    {
+      "id": 12,
+      "module": "builtin:SetVariable",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "apolloState",
+        "scope": "roundtrip",
+        "type": "text",
+        "value": "{{ifempty(6.data.person.state; \"\")}}"
+      },
+      "metadata": {
+        "designer": { "x": 2100, "y": 600 }
+      }
+    },
+    {
+      "id": 13,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/contacts/{{5.value.id}}",
+        "method": "PATCH",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\"properties\":{\"jobtitle\":\"{{8.apolloJobTitle}}\",\"company\":\"{{9.apolloCompany}}\",\"city\":\"{{11.apolloCity}}\",\"state\":\"{{12.apolloState}}\",\"numberofemployees\":\"{{10.apolloNumEmployees}}\"}}",
+        "timeout": 30,
+        "followRedirects": true,
+        "compress": true,
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": { "x": 2400, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "PATCH" }
+          }
+        }
+      }
+    },
+    {
+      "id": 14,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/notes",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\"properties\":{\"hs_note_body\":\"Contact enriched via Apollo {{formatDate(now; 'YYYY-MM-DD'; 'America/New_York')}} — {{8.apolloJobTitle}} at {{9.apolloCompany}}\",\"hs_timestamp\":\"{{formatDate(now; 'x')}}\"},\"associations\":[{\"to\":{\"id\":\"{{5.value.id}}\"},\"types\":[{\"associationCategory\":\"HUBSPOT_DEFINED\",\"associationTypeId\":202}]}]}",
+        "timeout": 30,
+        "followRedirects": true,
+        "compress": true,
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": { "x": 2700, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "POST" }
+          }
+        }
+      }
+    },
+    {
+      "id": 15,
+      "module": "builtin:SetVariable",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "enrichedCount",
+        "scope": "roundtrip",
+        "type": "number",
+        "value": "{{add(3.enrichedCount; 1)}}"
+      },
+      "metadata": {
+        "designer": { "x": 3000, "y": 0 }
+      }
+    },
+    {
+      "id": 16,
+      "module": "builtin:BasicAggregator",
+      "version": 1,
+      "parameters": {
+        "sourceModule": 5,
+        "stopProcessing": false
+      },
+      "mapper": {
+        "array": "{{array(map(array(5.value.id; 5.value.properties.email; 8.apolloJobTitle; 9.apolloCompany); 'contact_id'; 'email'; 'job_title'; 'company'))}}"
+      },
+      "metadata": {
+        "designer": { "x": 3300, "y": 0 }
+      }
+    },
+    {
+      "id": 17,
+      "module": "builtin:SetVariable",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "totalEnriched",
+        "scope": "roundtrip",
+        "type": "number",
+        "value": "{{length(16.array)}}"
+      },
+      "metadata": {
+        "designer": { "x": 3600, "y": 0 }
+      }
+    },
+    {
+      "id": 18,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.RESEND_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\"from\":\"{{env.CWI_ALERT_FROM_ADDRESS}}\",\"to\":[\"{{env.ALERT_EMAIL}}\"],\"subject\":\"Weekly enrichment complete — {{17.totalEnriched}} contacts updated\",\"html\":\"<h2>Weekly Contact Enrichment Summary</h2><p>Ran on {{formatDate(now; 'MMMM D, YYYY [at] h:mm A'; 'America/New_York')}} ET.</p><p><strong>{{17.totalEnriched}}</strong> contact(s) were enriched via Apollo this week.</p><p style='color:#888;font-size:12px;'>Enrichment window: contacts created in the last 30 days with missing jobtitle or company. Powered by CWI Automation.</p>\"}",
+        "timeout": 30,
+        "followRedirects": true,
+        "compress": true,
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": { "x": 3900, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "POST" }
+          }
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "instant": false,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": true,
+      "slots": null,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": {
+      "orphans": []
+    },
+    "zone": "us1.make.com",
+    "notes": "Fires every Wednesday at 10:00 AM America/New_York. Searches HubSpot contacts/search for contacts missing jobtitle OR company created in the last 30 days (limit 25). Iterates each contact and POSTs to Apollo.io /api/v1/people/match using api_key header and the contact email. If Apollo returns a person.id (match found), extracts job_title, organization_name, organization.estimated_num_employees, city, and state. PATCHes HubSpot contact with jobtitle, company, city, state, numberofemployees. Creates a HubSpot note on the contact: 'Contact enriched via Apollo [YYYY-MM-DD] — [job_title] at [company]'. Aggregates all enriched contacts, then sends a summary email to env.ALERT_EMAIL via Resend from env.CWI_ALERT_FROM_ADDRESS with subject 'Weekly enrichment complete — [N] contacts updated'. Timezone: America/New_York. All secrets via env variables. handleErrors: true on all HTTP modules."
+  },
+  "scheduling": {
+    "type": "cron",
+    "interval": 1,
+    "restriction": {
+      "type": "advanced",
+      "cron": "0 10 * * 3",
+      "timezone": "America/New_York"
+    }
+  },
+  "environment": {
+    "HUBSPOT_PRIVATE_APP_TOKEN": "env.HUBSPOT_PRIVATE_APP_TOKEN",
+    "APOLLO_API_KEY": "env.APOLLO_API_KEY",
+    "RESEND_API_KEY": "env.RESEND_API_KEY",
+    "CWI_ALERT_FROM_ADDRESS": "env.CWI_ALERT_FROM_ADDRESS",
+    "ALERT_EMAIL": "env.ALERT_EMAIL"
+  }
+}

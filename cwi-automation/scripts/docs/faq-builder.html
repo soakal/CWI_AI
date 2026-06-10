@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FAQ Builder — CWI AI</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --accent: #FF5A1F;
+    --accent-dark: #e04a12;
+    --accent-light: #fff3ef;
+    --bg: #f5f5f5;
+    --surface: #ffffff;
+    --surface2: #fafafa;
+    --border: #e0e0e0;
+    --text: #1a1a1a;
+    --text-muted: #666;
+    --radius: 8px;
+    --shadow: 0 2px 8px rgba(0,0,0,0.08);
+    --shadow-lg: 0 4px 20px rgba(0,0,0,0.12);
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow);
+  }
+
+  .logo {
+    font-weight: 800;
+    font-size: 20px;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+  }
+
+  .logo span { color: var(--text); }
+
+  header h1 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+
+  .header-spacer { flex: 1; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .btn-primary:hover { background: var(--accent-dark); transform: translateY(-1px); }
+
+  .btn-secondary {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  .btn-secondary:hover { background: var(--bg); border-color: #bbb; }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-muted);
+    padding: 4px 8px;
+    font-size: 13px;
+  }
+
+  .btn-ghost:hover { color: var(--text); background: var(--bg); }
+
+  .btn-danger {
+    background: transparent;
+    color: #cc3333;
+    border: 1px solid #cc3333;
+    padding: 4px 10px;
+    font-size: 12px;
+  }
+
+  .btn-danger:hover { background: #fff5f5; }
+
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+  .btn-icon {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.15s;
+  }
+
+  .btn-icon:hover { color: var(--text); border-color: #999; background: var(--bg); }
+
+  .btn-icon:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 420px;
+    gap: 0;
+    height: calc(100vh - 57px);
+  }
+
+  .editor-panel {
+    padding: 24px;
+    overflow-y: auto;
+    border-right: 1px solid var(--border);
+  }
+
+  .preview-panel {
+    background: var(--surface2);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .preview-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .preview-header h3 {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .preview-body {
+    flex: 1;
+    padding: 24px;
+  }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+
+  .toolbar {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+
+  .field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  input[type="text"], select {
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 14px;
+    background: var(--surface);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s;
+    min-width: 180px;
+  }
+
+  input[type="text"]:focus, select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(255,90,31,0.1);
+  }
+
+  .faq-list { display: flex; flex-direction: column; gap: 12px; }
+
+  .faq-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: box-shadow 0.15s, opacity 0.2s;
+    position: relative;
+  }
+
+  .faq-item.excluded {
+    opacity: 0.45;
+  }
+
+  .faq-item.dragging {
+    box-shadow: var(--shadow-lg);
+    border-color: var(--accent);
+  }
+
+  .faq-item-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .drag-handle {
+    color: #ccc;
+    cursor: grab;
+    font-size: 16px;
+    line-height: 1;
+    user-select: none;
+    padding: 2px;
+  }
+
+  .drag-handle:active { cursor: grabbing; }
+
+  .faq-num {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    min-width: 20px;
+  }
+
+  .faq-controls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+  }
+
+  .toggle-include {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-muted);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .toggle-include input { display: none; }
+
+  .toggle-track {
+    width: 32px;
+    height: 18px;
+    border-radius: 9px;
+    background: #ddd;
+    position: relative;
+    transition: background 0.2s;
+  }
+
+  .toggle-include input:checked + .toggle-track { background: var(--accent); }
+
+  .toggle-track::after {
+    content: '';
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #fff;
+    top: 2px;
+    left: 2px;
+    transition: transform 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+
+  .toggle-include input:checked + .toggle-track::after { transform: translateX(14px); }
+
+  .faq-item-body { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+
+  .faq-field { display: flex; flex-direction: column; gap: 4px; }
+
+  .faq-field-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--accent);
+  }
+
+  [contenteditable] {
+    outline: none;
+    padding: 8px 10px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    font-size: 14px;
+    line-height: 1.5;
+    background: var(--surface2);
+    transition: border-color 0.15s, background 0.15s;
+    min-height: 36px;
+  }
+
+  [contenteditable]:focus {
+    border-color: var(--accent);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(255,90,31,0.08);
+  }
+
+  [contenteditable].question {
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  [contenteditable].answer {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .add-faq-row {
+    margin-top: 4px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .stats-bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 16px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .stats-bar strong { color: var(--text); }
+
+  .export-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+
+  /* Preview accordion styles */
+  .preview-faq-wrapper {
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  .preview-faq-title {
+    padding: 20px 24px 12px;
+    font-size: 20px;
+    font-weight: 700;
+    color: #1a1a1a;
+    border-bottom: 2px solid #FF5A1F;
+  }
+
+  .preview-accordion-item {
+    border-bottom: 1px solid #ebebeb;
+  }
+
+  .preview-accordion-item:last-child { border-bottom: none; }
+
+  .preview-accordion-trigger {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    font-size: 15px;
+    font-weight: 600;
+    color: #1a1a1a;
+    gap: 12px;
+    transition: background 0.15s;
+  }
+
+  .preview-accordion-trigger:hover { background: #FFF3EF; }
+
+  .preview-accordion-trigger.open { color: #FF5A1F; }
+
+  .preview-chevron {
+    font-size: 12px;
+    color: #FF5A1F;
+    flex-shrink: 0;
+    transition: transform 0.25s;
+  }
+
+  .preview-accordion-trigger.open .preview-chevron { transform: rotate(180deg); }
+
+  .preview-accordion-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+  }
+
+  .preview-accordion-body.open { max-height: 400px; }
+
+  .preview-accordion-body-inner {
+    padding: 4px 24px 18px;
+    font-size: 14px;
+    color: #555;
+    line-height: 1.65;
+  }
+
+  .empty-preview {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+
+  .empty-preview svg { opacity: 0.25; margin-bottom: 12px; }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: #1a1a1a;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    z-index: 9999;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+    pointer-events: none;
+  }
+
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  .toast.success::before { content: '✓  '; color: #4caf50; }
+  .toast.error::before { content: '✕  '; color: #f44336; }
+
+  .saved-badge {
+    font-size: 11px;
+    color: #4caf50;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .saved-badge.visible { opacity: 1; }
+
+  .client-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .saved-clients {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+
+  .client-chip {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--text-muted);
+  }
+
+  .client-chip:hover, .client-chip.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 20px 0;
+  }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; height: auto; }
+    .preview-panel { display: none; }
+  }
+
+  .drop-zone {
+    height: 4px;
+    border-radius: 2px;
+    background: transparent;
+    transition: background 0.15s, height 0.15s;
+    margin: -6px 0;
+  }
+
+  .drop-zone.active {
+    height: 12px;
+    background: var(--accent);
+    border-radius: 4px;
+    margin: 0;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">CWI <span>AI</span></div>
+  <h1>FAQ Builder</h1>
+  <div class="header-spacer"></div>
+  <div id="savedBadge" class="saved-badge">&#10003; Saved</div>
+</header>
+
+<div class="layout">
+  <div class="editor-panel">
+
+    <div class="client-row">
+      <div class="field-group">
+        <label>Client Name</label>
+        <input type="text" id="clientName" placeholder="e.g. Smith Plumbing Co." style="min-width:220px;">
+      </div>
+      <div class="field-group">
+        <label>Industry Template</label>
+        <select id="industrySelect">
+          <option value="">— Select to load template —</option>
+          <option value="plumbing">Plumbing</option>
+          <option value="hvac">HVAC</option>
+          <option value="accounting">Accounting</option>
+        </select>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="loadTemplate()" title="Load selected template">Load Template</button>
+      <button class="btn btn-secondary btn-sm" onclick="saveClient()">Save</button>
+    </div>
+
+    <div id="savedClients" class="saved-clients"></div>
+
+    <div class="stats-bar">
+      <span>FAQs: <strong id="statTotal">0</strong></span>
+      <span>Included: <strong id="statIncluded">0</strong></span>
+      <span>Excluded: <strong id="statExcluded">0</strong></span>
+    </div>
+
+    <div class="export-row">
+      <button class="btn btn-primary btn-sm" onclick="copyHTML()">&#128203; Copy HTML</button>
+      <button class="btn btn-secondary btn-sm" onclick="copyJSON()">&#123;&#125; Copy JSON</button>
+      <button class="btn btn-secondary btn-sm" onclick="copyPlainText()">&#9776; Copy Plain Text</button>
+    </div>
+
+    <div class="faq-list" id="faqList"></div>
+
+    <div class="add-faq-row" style="margin-top:16px;">
+      <button class="btn btn-secondary" onclick="addFAQ()">+ Add Custom FAQ</button>
+    </div>
+
+  </div>
+
+  <div class="preview-panel">
+    <div class="preview-header">
+      <h3>Live Preview</h3>
+      <span style="font-size:12px;color:var(--text-muted);">accordion style</span>
+    </div>
+    <div class="preview-body">
+      <div id="previewContainer"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── Data ────────────────────────────────────────────────────────────────────
+
+const TEMPLATES = {
+  plumbing: [
+    { q: "How quickly can you respond to a plumbing emergency?", a: "We offer 24/7 emergency plumbing service and can typically have a licensed plumber at your door within 60–90 minutes of your call, any time of day or night." },
+    { q: "Do you provide free estimates?", a: "Yes! We offer free on-site estimates for all non-emergency plumbing work. A technician will assess the job and provide a written quote before any work begins." },
+    { q: "Are your plumbers licensed and insured?", a: "Absolutely. All of our plumbers are fully licensed by the state, carry liability insurance, and are background-checked for your peace of mind." },
+    { q: "What are the most common signs I need a plumber?", a: "Warning signs include slow drains, low water pressure, discolored water, unusually high water bills, dripping faucets, running toilets, or water stains on ceilings and walls." },
+    { q: "Do you handle both residential and commercial plumbing?", a: "Yes, we service both residential homes and commercial properties including offices, restaurants, and multi-unit buildings. We have the equipment and crew size for jobs of any scale." },
+    { q: "Can you repair or replace a water heater?", a: "We install, repair, and replace all types of water heaters including traditional tank units, tankless on-demand systems, and hybrid heat pump water heaters." },
+    { q: "How do I prevent clogged drains?", a: "Avoid putting grease, food scraps, coffee grounds, or fibrous materials down drains. Use drain strainers in showers, and schedule an annual drain cleaning service to keep pipes clear." },
+    { q: "Do you offer a warranty on your work?", a: "Yes. All labor comes with a 1-year workmanship warranty. Parts and fixtures carry the manufacturer's warranty, which we help you register and honor." },
+    { q: "What payment methods do you accept?", a: "We accept cash, all major credit cards, and financing options for larger projects. We also work with most home warranty providers." },
+    { q: "How can I shut off water to my home in an emergency?", a: "Locate your main water shut-off valve — usually near the water meter, in the basement, or in a utility closet. Turn it clockwise to shut off all water to the house. We can show you its location during any service visit." }
+  ],
+  hvac: [
+    { q: "How often should I have my HVAC system serviced?", a: "We recommend a tune-up twice a year — once in spring before cooling season and once in fall before heating season. Regular maintenance extends equipment life and improves efficiency." },
+    { q: "What size HVAC unit do I need for my home?", a: "Sizing depends on square footage, ceiling height, insulation, window area, and local climate. We perform a Manual J load calculation to recommend the correctly sized system — oversized and undersized units both cause problems." },
+    { q: "Why is my energy bill suddenly higher?", a: "A spike in energy bills often signals a dirty filter, refrigerant leak, failing components, duct leaks, or a system working harder due to age. A diagnostic inspection can pinpoint the cause quickly." },
+    { q: "How long does an HVAC system typically last?", a: "With proper maintenance, air conditioners last 15–20 years and furnaces last 20–30 years. Heat pumps typically last 15–20 years. Systems in extreme climates may have shorter lifespans." },
+    { q: "What should I do if my AC stops cooling?", a: "First check your thermostat settings and air filter. If those are fine, check the circuit breaker and outdoor unit for ice buildup. If issues persist, call us — common causes include low refrigerant, a failed capacitor, or a dirty coil." },
+    { q: "Do you offer emergency HVAC service?", a: "Yes, we provide 24/7 emergency service because we know a broken furnace in winter or a failed AC in a heatwave can't wait. Emergency calls are answered live, not by voicemail." },
+    { q: "Should I repair or replace my old HVAC system?", a: "A general rule: if the repair cost exceeds 50% of the replacement cost, or the system is over 12–15 years old, replacement is usually more cost-effective. We'll give you an honest recommendation either way." },
+    { q: "How often should I change my air filter?", a: "Standard 1-inch filters should be replaced every 30–90 days. Thicker 4–5 inch media filters can last 6–12 months. Homes with pets or allergy sufferers benefit from more frequent changes." },
+    { q: "Do you service all HVAC brands?", a: "Yes, our technicians are trained and certified to service all major brands including Carrier, Trane, Lennox, Rheem, Goodman, American Standard, Bryant, and more." },
+    { q: "What financing options are available for a new system?", a: "We offer flexible financing plans with low monthly payments and deferred interest options. Many customers also qualify for federal tax credits and local utility rebates on qualifying high-efficiency equipment." }
+  ],
+  accounting: [
+    { q: "What accounting services do you offer?", a: "We provide a full range of services including bookkeeping, payroll processing, tax preparation and planning, financial statement preparation, CFO advisory, sales tax compliance, and IRS audit representation." },
+    { q: "How much do your accounting services cost?", a: "Fees vary based on the complexity and volume of work. We offer fixed monthly packages for bookkeeping and payroll starting at competitive rates, and flat-fee pricing for tax returns. Contact us for a free consultation and custom quote." },
+    { q: "Do you work with small businesses or just large companies?", a: "We specialize in small to mid-sized businesses, freelancers, and entrepreneurs. We understand the unique challenges of growing businesses and provide personalized attention you won't get at a large firm." },
+    { q: "Can you help me catch up on years of unfiled taxes?", a: "Yes. We handle back-tax filings, IRS correspondence, penalty abatement requests, and installment agreement negotiations. Getting compliant sooner reduces penalties and interest, so don't wait." },
+    { q: "What accounting software do you use?", a: "We are certified in QuickBooks Online, QuickBooks Desktop, Xero, and FreshBooks. We work within your existing system or recommend the best platform for your business type and size." },
+    { q: "Do I need a bookkeeper if I already use accounting software?", a: "Even with software like QuickBooks, a professional bookkeeper ensures transactions are coded correctly, bank accounts are reconciled monthly, and financial reports are accurate — preventing costly errors at tax time." },
+    { q: "How do you keep my financial data secure?", a: "We use bank-level encryption, two-factor authentication, and secure document portals for all file sharing. We never email sensitive documents without encryption and maintain strict data privacy policies." },
+    { q: "Can you help me with tax planning, not just filing?", a: "Absolutely. Proactive tax planning throughout the year is far more valuable than just filing after the fact. We analyze your situation quarterly and recommend strategies to minimize your tax liability legally." },
+    { q: "What records should I keep for my business?", a: "Keep receipts, invoices, bank and credit card statements, payroll records, contracts, and tax returns for at least 7 years. We can set up a document management system to make this effortless." },
+    { q: "How do I get started with your firm?", a: "Simply schedule a free 30-minute consultation. We'll review your current situation, discuss your needs, and recommend the right service package. Onboarding typically takes just a few business days." }
+  ]
+};
+
+// ─── State ───────────────────────────────────────────────────────────────────
+
+let faqs = [];
+let dragSrcIndex = null;
+
+// ─── Init ────────────────────────────────────────────────────────────────────
+
+function init() {
+  renderSavedClients();
+  const last = localStorage.getItem('cwi_faq_last_client');
+  if (last) {
+    const data = loadClientData(last);
+    if (data) {
+      document.getElementById('clientName').value = last;
+      faqs = data;
+      render();
+      return;
+    }
+  }
+  faqs = [];
+  render();
+}
+
+// ─── FAQ CRUD ────────────────────────────────────────────────────────────────
+
+function addFAQ(q = '', a = '', included = true) {
+  faqs.push({ q, a, included, id: Date.now() + Math.random() });
+  render();
+  // Focus the new question
+  setTimeout(() => {
+    const items = document.querySelectorAll('.faq-question');
+    if (items.length) items[items.length - 1].focus();
+  }, 50);
+}
+
+function deleteFAQ(idx) {
+  faqs.splice(idx, 1);
+  render();
+}
+
+function moveFAQ(idx, dir) {
+  const newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= faqs.length) return;
+  [faqs[idx], faqs[newIdx]] = [faqs[newIdx], faqs[idx]];
+  render();
+}
+
+function syncFromDOM() {
+  const items = document.querySelectorAll('.faq-item');
+  items.forEach((item, i) => {
+    const qEl = item.querySelector('.faq-question');
+    const aEl = item.querySelector('.faq-answer');
+    const chk = item.querySelector('.include-toggle');
+    if (qEl) faqs[i].q = qEl.innerText.trim();
+    if (aEl) faqs[i].a = aEl.innerText.trim();
+    if (chk) faqs[i].included = chk.checked;
+  });
+}
+
+// ─── Render ──────────────────────────────────────────────────────────────────
+
+function render() {
+  renderEditor();
+  renderPreview();
+  updateStats();
+  autoSave();
+}
+
+function renderEditor() {
+  const list = document.getElementById('faqList');
+  list.innerHTML = '';
+  faqs.forEach((faq, i) => {
+    const item = document.createElement('div');
+    item.className = 'faq-item' + (faq.included ? '' : ' excluded');
+    item.dataset.index = i;
+    item.draggable = true;
+    item.innerHTML = `
+      <div class="faq-item-header">
+        <span class="drag-handle" title="Drag to reorder">&#8942;&#8942;</span>
+        <span class="faq-num">#${i + 1}</span>
+        <label class="toggle-include" title="Include in export">
+          <input type="checkbox" class="include-toggle" ${faq.included ? 'checked' : ''} onchange="onToggle(${i}, this.checked)">
+          <span class="toggle-track"></span>
+          <span style="margin-left:4px;">${faq.included ? 'Included' : 'Excluded'}</span>
+        </label>
+        <div class="faq-controls">
+          <button class="btn-icon" onclick="moveFAQ(${i}, -1)" ${i === 0 ? 'disabled' : ''} title="Move up">&#8593;</button>
+          <button class="btn-icon" onclick="moveFAQ(${i}, 1)" ${i === faqs.length - 1 ? 'disabled' : ''} title="Move down">&#8595;</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteFAQ(${i})" title="Delete">&#128465;</button>
+        </div>
+      </div>
+      <div class="faq-item-body">
+        <div class="faq-field">
+          <span class="faq-field-label">Question</span>
+          <div class="faq-question question" contenteditable="true" data-idx="${i}" oninput="onEdit(${i}, 'q', this)">${escHTML(faq.q)}</div>
+        </div>
+        <div class="faq-field">
+          <span class="faq-field-label">Answer</span>
+          <div class="faq-answer answer" contenteditable="true" data-idx="${i}" oninput="onEdit(${i}, 'a', this)">${escHTML(faq.a)}</div>
+        </div>
+      </div>
+    `;
+
+    // Drag events
+    item.addEventListener('dragstart', (e) => {
+      dragSrcIndex = i;
+      e.dataTransfer.effectAllowed = 'move';
+      setTimeout(() => item.classList.add('dragging'), 0);
+    });
+    item.addEventListener('dragend', () => {
+      item.classList.remove('dragging');
+      dragSrcIndex = null;
+    });
+    item.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+    });
+    item.addEventListener('drop', (e) => {
+      e.preventDefault();
+      if (dragSrcIndex === null || dragSrcIndex === i) return;
+      const moved = faqs.splice(dragSrcIndex, 1)[0];
+      faqs.splice(i, 0, moved);
+      render();
+    });
+
+    list.appendChild(item);
+  });
+}
+
+function onEdit(idx, field, el) {
+  faqs[idx][field] = el.innerText.trim();
+  renderPreview();
+  updateStats();
+  debouncedAutoSave();
+}
+
+function onToggle(idx, val) {
+  faqs[idx].included = val;
+  render();
+}
+
+let _saveTimer = null;
+function debouncedAutoSave() {
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(autoSave, 800);
+}
+
+function renderPreview() {
+  const container = document.getElementById('previewContainer');
+  const included = faqs.filter(f => f.included);
+  const clientName = document.getElementById('clientName').value.trim();
+
+  if (included.length === 0) {
+    container.innerHTML = `<div class="empty-preview">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/>
+      </svg>
+      <p>No included FAQs yet.<br>Add or load a template to preview.</p>
+    </div>`;
+    return;
+  }
+
+  const title = clientName ? `Frequently Asked Questions` : 'Frequently Asked Questions';
+  let html = `<div class="preview-faq-wrapper">`;
+  if (clientName) {
+    html += `<div class="preview-faq-title">${escHTML(clientName)} — FAQ</div>`;
+  } else {
+    html += `<div class="preview-faq-title">Frequently Asked Questions</div>`;
+  }
+
+  included.forEach((faq, i) => {
+    html += `
+      <div class="preview-accordion-item">
+        <button class="preview-accordion-trigger" onclick="toggleAccordion(this)">
+          <span>${escHTML(faq.q)}</span>
+          <span class="preview-chevron">&#9660;</span>
+        </button>
+        <div class="preview-accordion-body">
+          <div class="preview-accordion-body-inner">${escHTML(faq.a)}</div>
+        </div>
+      </div>
+    `;
+  });
+
+  html += `</div>`;
+  container.innerHTML = html;
+}
+
+function toggleAccordion(btn) {
+  const body = btn.nextElementSibling;
+  const isOpen = body.classList.contains('open');
+  // Close all
+  document.querySelectorAll('.preview-accordion-body').forEach(b => b.classList.remove('open'));
+  document.querySelectorAll('.preview-accordion-trigger').forEach(b => b.classList.remove('open'));
+  if (!isOpen) {
+    body.classList.add('open');
+    btn.classList.add('open');
+  }
+}
+
+function updateStats() {
+  document.getElementById('statTotal').textContent = faqs.length;
+  const inc = faqs.filter(f => f.included).length;
+  document.getElementById('statIncluded').textContent = inc;
+  document.getElementById('statExcluded').textContent = faqs.length - inc;
+}
+
+// ─── Template Loading ────────────────────────────────────────────────────────
+
+function loadTemplate() {
+  const sel = document.getElementById('industrySelect').value;
+  if (!sel) { showToast('Select an industry first.', 'error'); return; }
+  const tpl = TEMPLATES[sel];
+  if (!tpl) return;
+  if (faqs.length > 0 && !confirm('This will replace your current FAQs with the template. Continue?')) return;
+  faqs = tpl.map((item, i) => ({ q: item.q, a: item.a, included: true, id: Date.now() + i }));
+  render();
+  showToast(`Loaded ${tpl.length} ${sel.charAt(0).toUpperCase() + sel.slice(1)} FAQs`, 'success');
+}
+
+// ─── Save / Load ─────────────────────────────────────────────────────────────
+
+function autoSave() {
+  const name = document.getElementById('clientName').value.trim();
+  if (!name) return;
+  saveClientData(name, faqs);
+  const badge = document.getElementById('savedBadge');
+  badge.classList.add('visible');
+  setTimeout(() => badge.classList.remove('visible'), 2000);
+}
+
+function saveClient() {
+  const name = document.getElementById('clientName').value.trim();
+  if (!name) { showToast('Enter a client name first.', 'error'); return; }
+  saveClientData(name, faqs);
+  localStorage.setItem('cwi_faq_last_client', name);
+  renderSavedClients();
+  showToast(`Saved "${name}"`, 'success');
+}
+
+function saveClientData(name, data) {
+  const key = 'cwi_faq_client_' + name.toLowerCase().replace(/\s+/g, '_');
+  localStorage.setItem(key, JSON.stringify(data));
+  // Track client list
+  let clients = JSON.parse(localStorage.getItem('cwi_faq_clients') || '[]');
+  if (!clients.includes(name)) { clients.push(name); localStorage.setItem('cwi_faq_clients', JSON.stringify(clients)); }
+}
+
+function loadClientData(name) {
+  const key = 'cwi_faq_client_' + name.toLowerCase().replace(/\s+/g, '_');
+  const raw = localStorage.getItem(key);
+  return raw ? JSON.parse(raw) : null;
+}
+
+function renderSavedClients() {
+  const clients = JSON.parse(localStorage.getItem('cwi_faq_clients') || '[]');
+  const container = document.getElementById('savedClients');
+  if (clients.length === 0) { container.innerHTML = ''; return; }
+  const current = document.getElementById('clientName').value.trim();
+  container.innerHTML = clients.map(c =>
+    `<span class="client-chip${c === current ? ' active' : ''}" onclick="switchClient('${escAttr(c)}')">${escHTML(c)}</span>`
+  ).join('');
+}
+
+function switchClient(name) {
+  if (faqs.length > 0 && document.getElementById('clientName').value.trim() !== name) {
+    if (!confirm(`Switch to "${name}"? Unsaved changes to current client will be lost.`)) return;
+  }
+  document.getElementById('clientName').value = name;
+  const data = loadClientData(name);
+  if (data) {
+    faqs = data;
+    render();
+    localStorage.setItem('cwi_faq_last_client', name);
+    renderSavedClients();
+    showToast(`Loaded "${name}"`, 'success');
+  }
+}
+
+// ─── Export ──────────────────────────────────────────────────────────────────
+
+function copyHTML() {
+  const included = faqs.filter(f => f.included);
+  if (!included.length) { showToast('No included FAQs to export.', 'error'); return; }
+  const clientName = document.getElementById('clientName').value.trim();
+  const title = clientName ? `${escHTML(clientName)} — Frequently Asked Questions` : 'Frequently Asked Questions';
+
+  const items = included.map((faq, i) => `
+    <div class="cwi-faq-item">
+      <button class="cwi-faq-trigger" onclick="cwiToggle(this)" aria-expanded="false">
+        <span>${escHTML(faq.q)}</span>
+        <span class="cwi-faq-chevron" aria-hidden="true">&#9660;</span>
+      </button>
+      <div class="cwi-faq-body" role="region">
+        <div class="cwi-faq-body-inner">${escHTML(faq.a)}</div>
+      </div>
+    </div>`).join('\n');
+
+  const snippet = `<!-- CWI AI FAQ Section -->
+<style>
+.cwi-faq-wrap{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:800px;margin:0 auto;}
+.cwi-faq-title{font-size:24px;font-weight:700;color:#1a1a1a;margin-bottom:12px;padding-bottom:10px;border-bottom:2px solid #FF5A1F;}
+.cwi-faq-item{border-bottom:1px solid #ebebeb;}
+.cwi-faq-item:last-child{border-bottom:none;}
+.cwi-faq-trigger{width:100%;display:flex;align-items:center;justify-content:space-between;padding:16px 0;background:none;border:none;cursor:pointer;text-align:left;font-size:16px;font-weight:600;color:#1a1a1a;gap:12px;transition:color 0.15s;}
+.cwi-faq-trigger:hover{color:#FF5A1F;}
+.cwi-faq-trigger[aria-expanded="true"]{color:#FF5A1F;}
+.cwi-faq-chevron{font-size:12px;color:#FF5A1F;flex-shrink:0;transition:transform 0.25s;}
+.cwi-faq-trigger[aria-expanded="true"] .cwi-faq-chevron{transform:rotate(180deg);}
+.cwi-faq-body{max-height:0;overflow:hidden;transition:max-height 0.3s ease;}
+.cwi-faq-body-inner{padding:0 0 16px;font-size:15px;color:#555;line-height:1.65;}
+</style>
+<div class="cwi-faq-wrap">
+  <h2 class="cwi-faq-title">${title}</h2>
+${items}
+</div>
+<script>
+function cwiToggle(btn){
+  var body=btn.nextElementSibling;
+  var isOpen=btn.getAttribute('aria-expanded')==='true';
+  document.querySelectorAll('.cwi-faq-trigger').forEach(function(b){b.setAttribute('aria-expanded','false');});
+  document.querySelectorAll('.cwi-faq-body').forEach(function(b){b.style.maxHeight='';});
+  if(!isOpen){btn.setAttribute('aria-expanded','true');body.style.maxHeight=body.scrollHeight+'px';}
+}
+<\/script>`;
+
+  copyToClipboard(snippet, 'HTML snippet copied!');
+}
+
+function copyJSON() {
+  const included = faqs.filter(f => f.included);
+  if (!included.length) { showToast('No included FAQs to export.', 'error'); return; }
+  const clientName = document.getElementById('clientName').value.trim();
+  const data = included.map((faq, i) => ({
+    id: i + 1,
+    question: faq.q,
+    answer: faq.a,
+    ...(clientName ? { client: clientName } : {})
+  }));
+  copyToClipboard(JSON.stringify(data, null, 2), 'JSON copied (Freshchat-compatible)!');
+}
+
+function copyPlainText() {
+  const included = faqs.filter(f => f.included);
+  if (!included.length) { showToast('No included FAQs to export.', 'error'); return; }
+  const clientName = document.getElementById('clientName').value.trim();
+  let text = clientName ? `${clientName} — Frequently Asked Questions\n${'='.repeat(60)}\n\n` : 'Frequently Asked Questions\n' + '='.repeat(40) + '\n\n';
+  included.forEach((faq, i) => {
+    text += `${i + 1}. ${faq.q}\n${faq.a}\n\n`;
+  });
+  copyToClipboard(text.trim(), 'Plain text copied (Google Business ready)!');
+}
+
+// ─── Utilities ───────────────────────────────────────────────────────────────
+
+function copyToClipboard(text, successMsg) {
+  navigator.clipboard.writeText(text).then(() => {
+    showToast(successMsg, 'success');
+  }).catch(() => {
+    // Fallback
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast(successMsg, 'success');
+  });
+}
+
+function escHTML(str) {
+  if (!str) return '';
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function escAttr(str) {
+  return (str || '').replace(/'/g, "\\'");
+}
+
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + type;
+  void t.offsetWidth;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ─── Event Listeners ─────────────────────────────────────────────────────────
+
+document.getElementById('clientName').addEventListener('input', function() {
+  renderSavedClients();
+  renderPreview();
+  debouncedAutoSave();
+});
+
+document.getElementById('industrySelect').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') loadTemplate();
+});
+
+// ─── Boot ────────────────────────────────────────────────────────────────────
+
+init();
+</script>
+</body>
+</html>

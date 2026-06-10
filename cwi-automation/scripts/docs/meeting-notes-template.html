@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CWI AI — Meeting Notes</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --accent: #FF5A1F;
+    --accent-dark: #d94a18;
+    --accent-light: #fff2ee;
+    --text: #1a1a2e;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+    --bg: #f9fafb;
+    --white: #ffffff;
+    --success: #059669;
+    --radius: 8px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.05);
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  header {
+    background: var(--white);
+    border-bottom: 3px solid var(--accent);
+    padding: 18px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: var(--shadow);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo-area {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-mark {
+    width: 38px;
+    height: 38px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    color: white;
+    font-size: 14px;
+    letter-spacing: -0.5px;
+  }
+
+  .logo-text {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.3px;
+  }
+
+  .logo-sub {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 1px;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  /* ── Buttons ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: var(--radius);
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: white;
+  }
+  .btn-primary:hover { background: var(--accent-dark); }
+
+  .btn-outline {
+    background: white;
+    color: var(--text);
+    border: 1.5px solid var(--border);
+  }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--muted);
+    border: 1.5px solid transparent;
+    padding: 6px 12px;
+  }
+  .btn-ghost:hover { background: var(--bg); color: var(--text); }
+
+  .btn-sm { padding: 6px 12px; font-size: 12.5px; }
+
+  .btn-success { background: var(--success); color: white; }
+  .btn-success:hover { background: #047857; }
+
+  /* ── Layout ── */
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 28px 24px 60px;
+  }
+
+  /* ── Recent meetings bar ── */
+  .recents-bar {
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: var(--shadow);
+  }
+
+  .recents-bar label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .recents-bar select {
+    flex: 1;
+    padding: 7px 10px;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    font-size: 13.5px;
+    color: var(--text);
+    background: white;
+    cursor: pointer;
+  }
+  .recents-bar select:focus { outline: none; border-color: var(--accent); }
+
+  /* ── Save indicator ── */
+  .save-status {
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 130px;
+    justify-content: flex-end;
+  }
+
+  .save-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--border);
+    transition: background 0.3s;
+  }
+  .save-dot.saved { background: var(--success); }
+  .save-dot.unsaved { background: #f59e0b; }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .card-header {
+    background: var(--accent-light);
+    border-bottom: 1.5px solid #ffd5c5;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .card-header h2 {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent-dark);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .section-number {
+    width: 22px;
+    height: 22px;
+    background: var(--accent);
+    color: white;
+    border-radius: 50%;
+    font-size: 11px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .card-body { padding: 20px; }
+
+  /* ── Meeting meta ── */
+  .meta-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .meta-grid .full-width { grid-column: 1 / -1; }
+
+  .field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .field-group label {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+
+  .field-group input,
+  .field-group select,
+  .field-group textarea {
+    padding: 9px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    font-size: 14.5px;
+    color: var(--text);
+    font-family: inherit;
+    transition: border-color 0.15s;
+    background: white;
+  }
+
+  .field-group input:focus,
+  .field-group select:focus,
+  .field-group textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(255,90,31,0.08);
+  }
+
+  .meeting-type-select {
+    font-weight: 600;
+    color: var(--accent-dark);
+  }
+
+  /* ── Agenda pills ── */
+  .agenda-container { position: relative; }
+
+  .agenda-textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: inherit;
+    line-height: 1.7;
+    resize: vertical;
+    color: var(--text);
+    transition: border-color 0.15s;
+  }
+  .agenda-textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255,90,31,0.08); }
+
+  .agenda-hint {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 6px;
+    font-style: italic;
+  }
+
+  /* ── Section textareas ── */
+  .notes-textarea {
+    width: 100%;
+    min-height: 130px;
+    padding: 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: inherit;
+    line-height: 1.7;
+    resize: vertical;
+    color: var(--text);
+    transition: border-color 0.15s;
+  }
+  .notes-textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255,90,31,0.08); }
+
+  .textarea-hint {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+
+  /* ── Action Items table ── */
+  .action-table-wrap { overflow-x: auto; }
+
+  table.action-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+
+  table.action-table th {
+    background: #f3f4f6;
+    padding: 9px 12px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--muted);
+    border-bottom: 1.5px solid var(--border);
+  }
+
+  table.action-table td {
+    padding: 0;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+
+  table.action-table tr:last-child td { border-bottom: none; }
+
+  table.action-table td input,
+  table.action-table td select {
+    width: 100%;
+    padding: 9px 12px;
+    border: none;
+    font-size: 13.5px;
+    font-family: inherit;
+    color: var(--text);
+    background: transparent;
+  }
+
+  table.action-table td input:focus,
+  table.action-table td select:focus {
+    outline: none;
+    background: var(--accent-light);
+  }
+
+  table.action-table td.status-cell select {
+    font-weight: 600;
+  }
+
+  table.action-table td.status-cell select.status-done { color: var(--success); }
+  table.action-table td.status-cell select.status-open { color: #d97706; }
+
+  table.action-table td.del-cell {
+    width: 36px;
+    text-align: center;
+  }
+
+  .del-row-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: #d1d5db;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: auto;
+    transition: all 0.15s;
+  }
+  .del-row-btn:hover { background: #fee2e2; color: #dc2626; }
+
+  .add-row-btn {
+    margin-top: 12px;
+  }
+
+  /* ── Follow-up email ── */
+  .email-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .email-textarea {
+    width: 100%;
+    min-height: 180px;
+    padding: 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: inherit;
+    line-height: 1.75;
+    resize: vertical;
+    color: var(--text);
+    transition: border-color 0.15s;
+  }
+  .email-textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255,90,31,0.08); }
+
+  /* ── Next meeting ── */
+  .next-meeting-row {
+    display: flex;
+    gap: 16px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+  }
+
+  .next-meeting-row .field-group { flex: 1; min-width: 180px; }
+
+  /* ── Bottom toolbar ── */
+  .bottom-toolbar {
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    box-shadow: var(--shadow-md);
+  }
+
+  .bottom-toolbar-left { display: flex; gap: 10px; flex-wrap: wrap; }
+  .bottom-toolbar-right { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    background: #1f2937;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 500;
+    box-shadow: var(--shadow-md);
+    transform: translateY(20px);
+    opacity: 0;
+    transition: all 0.25s;
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.green { background: var(--success); }
+
+  /* ── Print styles ── */
+  @media print {
+    header, .recents-bar, .bottom-toolbar, .add-row-btn, .del-row-btn,
+    .agenda-hint, .textarea-hint, .email-header .btn, #generateEmailBtn { display: none !important; }
+    body { background: white; font-size: 13px; }
+    .card { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; margin-bottom: 14px; }
+    .container { padding: 0; max-width: 100%; }
+    .email-textarea { min-height: unset; }
+    .notes-textarea { min-height: unset; }
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 640px) {
+    .meta-grid { grid-template-columns: 1fr; }
+    .meta-grid .full-width { grid-column: 1; }
+    header { padding: 14px 16px; }
+    .container { padding: 16px 12px 50px; }
+    .header-actions .btn span { display: none; }
+    .next-meeting-row { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-area">
+    <div class="logo-mark">CWI</div>
+    <div>
+      <div class="logo-text">CWI AI</div>
+      <div class="logo-sub">Meeting Notes</div>
+    </div>
+  </div>
+  <div class="header-actions">
+    <div class="save-status" id="saveStatus">
+      <div class="save-dot" id="saveDot"></div>
+      <span id="saveText">Not saved</span>
+    </div>
+    <button class="btn btn-outline btn-sm" onclick="saveNotes()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+      <span>Save</span>
+    </button>
+    <button class="btn btn-outline btn-sm" onclick="window.print()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      <span>Print</span>
+    </button>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- Recent Meetings -->
+  <div class="recents-bar">
+    <label>Recent Meetings</label>
+    <select id="recentSelect" onchange="loadRecent(this.value)">
+      <option value="">— Load a previous meeting —</option>
+    </select>
+    <button class="btn btn-ghost btn-sm" onclick="clearForm()" title="New meeting">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      New
+    </button>
+    <button class="btn btn-ghost btn-sm" onclick="deleteRecent()" title="Delete selected" style="color:#dc2626">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+      Delete
+    </button>
+  </div>
+
+  <!-- Section 0: Meeting Info -->
+  <div class="card">
+    <div class="card-header">
+      <h2>Meeting Information</h2>
+    </div>
+    <div class="card-body">
+      <div class="meta-grid">
+        <div class="field-group">
+          <label>Meeting Type</label>
+          <select id="meetingType" class="meeting-type-select" onchange="onMeetingTypeChange()">
+            <option value="">— Select type —</option>
+            <option value="discovery">Discovery Call</option>
+            <option value="onboarding">Onboarding</option>
+            <option value="monthly">Monthly Review</option>
+            <option value="checkin">Check-in</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label>Client Name</label>
+          <input type="text" id="clientName" placeholder="e.g. Acme Corporation" />
+        </div>
+        <div class="field-group">
+          <label>Date &amp; Time</label>
+          <input type="datetime-local" id="meetingDate" />
+        </div>
+        <div class="field-group full-width">
+          <label>Attendees</label>
+          <input type="text" id="attendees" placeholder="e.g. Brian (CWI AI), Jane Smith, Tom Lee (Client)" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 1: Agenda -->
+  <div class="card">
+    <div class="card-header">
+      <div class="section-number">1</div>
+      <h2>Agenda</h2>
+    </div>
+    <div class="card-body">
+      <div class="agenda-container">
+        <textarea class="agenda-textarea" id="agenda" placeholder="Agenda items will auto-populate when a meeting type is selected. You may edit freely."></textarea>
+        <p class="agenda-hint">Auto-populated based on meeting type. Edit as needed before the call.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 2: Key Discussion Points -->
+  <div class="card">
+    <div class="card-header">
+      <div class="section-number">2</div>
+      <h2>Key Discussion Points</h2>
+    </div>
+    <div class="card-body">
+      <textarea class="notes-textarea" id="discussionPoints" placeholder="• Enter each discussion point on a new line&#10;• Use bullet points (•) or dashes (-)&#10;• Capture the most important topics covered"></textarea>
+      <p class="textarea-hint">Tip: Press Enter + • to add bullet points quickly.</p>
+    </div>
+  </div>
+
+  <!-- Section 3: Decisions Made -->
+  <div class="card">
+    <div class="card-header">
+      <div class="section-number">3</div>
+      <h2>Decisions Made</h2>
+    </div>
+    <div class="card-body">
+      <textarea class="notes-textarea" id="decisions" placeholder="• Record any decisions, agreements, or commitments made during this meeting&#10;• Include who made each decision where relevant"></textarea>
+    </div>
+  </div>
+
+  <!-- Section 4: Action Items -->
+  <div class="card">
+    <div class="card-header">
+      <div class="section-number">4</div>
+      <h2>Action Items</h2>
+    </div>
+    <div class="card-body">
+      <div class="action-table-wrap">
+        <table class="action-table" id="actionTable">
+          <thead>
+            <tr>
+              <th style="width:42%">Action Item</th>
+              <th style="width:18%">Owner</th>
+              <th style="width:18%">Due Date</th>
+              <th style="width:14%">Status</th>
+              <th style="width:8%"></th>
+            </tr>
+          </thead>
+          <tbody id="actionBody">
+          </tbody>
+        </table>
+      </div>
+      <button class="btn btn-outline btn-sm add-row-btn" onclick="addActionRow()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add Action Item
+      </button>
+    </div>
+  </div>
+
+  <!-- Section 5: Follow-up Email -->
+  <div class="card">
+    <div class="card-header">
+      <div class="section-number">5</div>
+      <h2>Follow-up Email Draft</h2>
+    </div>
+    <div class="card-body">
+      <div class="email-header">
+        <span style="font-size:13px;color:var(--muted)">Auto-generated summary — edit before sending</span>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-outline btn-sm" id="generateEmailBtn" onclick="generateEmail()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.42"/></svg>
+            Regenerate
+          </button>
+          <button class="btn btn-primary btn-sm" onclick="copyEmail()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy Email
+          </button>
+        </div>
+      </div>
+      <textarea class="email-textarea" id="followUpEmail" placeholder="Fill in meeting details above, then click Regenerate to auto-generate a follow-up email draft."></textarea>
+    </div>
+  </div>
+
+  <!-- Section 6: Next Meeting -->
+  <div class="card">
+    <div class="card-header">
+      <div class="section-number">6</div>
+      <h2>Next Meeting</h2>
+    </div>
+    <div class="card-body">
+      <div class="next-meeting-row">
+        <div class="field-group">
+          <label>Scheduled Date &amp; Time</label>
+          <input type="datetime-local" id="nextMeetingDate" />
+        </div>
+        <div class="field-group">
+          <label>Meeting Type</label>
+          <select id="nextMeetingType">
+            <option value="">— TBD —</option>
+            <option value="discovery">Discovery Call</option>
+            <option value="onboarding">Onboarding</option>
+            <option value="monthly">Monthly Review</option>
+            <option value="checkin">Check-in</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="field-group" style="flex:2;min-width:220px">
+          <label>Notes / Preparation</label>
+          <input type="text" id="nextMeetingNotes" placeholder="Topics to cover, prep needed..." />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom toolbar -->
+  <div class="bottom-toolbar">
+    <div class="bottom-toolbar-left">
+      <button class="btn btn-primary" onclick="saveNotes()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Save Notes
+      </button>
+      <button class="btn btn-outline" onclick="generateEmail()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        Generate Email
+      </button>
+    </div>
+    <div class="bottom-toolbar-right">
+      <button class="btn btn-outline" onclick="copyEmail()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        Copy Email
+      </button>
+      <button class="btn btn-outline" onclick="window.print()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Print / PDF
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Agenda templates ──────────────────────────────────────────────
+const AGENDAS = {
+  discovery: `• Introductions and company overview
+• Client's current business challenges and goals
+• Current tools, processes, and tech stack
+• Where AI could add the most value
+• CWI AI services overview and approach
+• Pricing and engagement models
+• Questions and next steps`,
+
+  onboarding: `• Welcome and introductions
+• Review signed agreement and scope of work
+• Onboarding timeline and milestones
+• Access and credentials setup
+• Communication preferences and cadence
+• Tools and platforms we'll be using
+• Immediate priorities (first 30 days)
+• Q&A and open items`,
+
+  monthly: `• Review of last month's goals and deliverables
+• Results and metrics review
+• What's working well
+• Challenges or blockers
+• Upcoming priorities for next month
+• Roadmap updates
+• Budget and resource check-in
+• Action items and next steps`,
+
+  checkin: `• Quick status update on active projects
+• Any blockers or urgent issues
+• Wins and progress highlights
+• Adjustments or changes needed
+• Open questions
+• Confirm next meeting`,
+
+  other: `• Review agenda topics with client before the call
+• `
+};
+
+// ── Meeting type labels ───────────────────────────────────────────
+const TYPE_LABELS = {
+  discovery: 'Discovery Call',
+  onboarding: 'Onboarding',
+  monthly: 'Monthly Review',
+  checkin: 'Check-in',
+  other: 'Meeting'
+};
+
+// ── DOM shortcuts ─────────────────────────────────────────────────
+const $  = id => document.getElementById(id);
+let saveTimer = null;
+let isDirty = false;
+
+// ── Init ──────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  // Set today's date/time as default
+  const now = new Date();
+  const local = toLocalInputValue(now);
+  $('meetingDate').value = local;
+
+  addActionRow();
+  loadRecentsList();
+  markDirty();
+
+  // Auto-save on any input change
+  document.querySelectorAll('input, select, textarea').forEach(el => {
+    el.addEventListener('input', () => markDirty());
+    el.addEventListener('change', () => markDirty());
+  });
+});
+
+function toLocalInputValue(date) {
+  const pad = n => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+// ── Meeting type change ───────────────────────────────────────────
+function onMeetingTypeChange() {
+  const type = $('meetingType').value;
+  if (type && AGENDAS[type]) {
+    $('agenda').value = AGENDAS[type];
+  }
+  markDirty();
+}
+
+// ── Action Items ──────────────────────────────────────────────────
+function addActionRow(item='', owner='Brian', dueDate='', status='Open') {
+  const tbody = $('actionBody');
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input type="text" placeholder="Describe the action item..." value="${escHtml(item)}" oninput="markDirty()" /></td>
+    <td>
+      <select onchange="markDirty()">
+        <option${owner==='Brian'?' selected':''}>Brian</option>
+        <option${owner==='Client'?' selected':''}>Client</option>
+        <option${owner==='Both'?' selected':''}>Both</option>
+      </select>
+    </td>
+    <td><input type="date" value="${escHtml(dueDate)}" oninput="markDirty()" /></td>
+    <td class="status-cell">
+      <select class="status-${status.toLowerCase()}" onchange="onStatusChange(this)">
+        <option${status==='Open'?' selected':''}>Open</option>
+        <option${status==='Done'?' selected':''}>Done</option>
+      </select>
+    </td>
+    <td class="del-cell"><button class="del-row-btn" onclick="removeRow(this)" title="Remove">×</button></td>
+  `;
+  tbody.appendChild(tr);
+}
+
+function onStatusChange(sel) {
+  sel.className = `status-${sel.value.toLowerCase()}`;
+  markDirty();
+}
+
+function removeRow(btn) {
+  btn.closest('tr').remove();
+  markDirty();
+}
+
+// ── Generate follow-up email ──────────────────────────────────────
+function generateEmail() {
+  const type     = $('meetingType').value;
+  const typeLabel = TYPE_LABELS[type] || 'Meeting';
+  const client   = $('clientName').value.trim() || '[Client Name]';
+  const dateStr  = formatDateTime($('meetingDate').value);
+  const attendees = $('attendees').value.trim();
+  const decisions = $('decisions').value.trim();
+  const discussion = $('discussionPoints').value.trim();
+  const nextDate = $('nextMeetingDate').value ? formatDateTime($('nextMeetingDate').value) : '';
+  const nextType = $('nextMeetingType').value ? (TYPE_LABELS[$('nextMeetingType').value] || '') : '';
+
+  // Collect open action items
+  const rows = $('actionBody').querySelectorAll('tr');
+  const openItems = [];
+  rows.forEach(tr => {
+    const cells = tr.querySelectorAll('input, select');
+    if (cells.length >= 4) {
+      const item   = cells[0].value.trim();
+      const owner  = cells[1].value;
+      const due    = cells[2].value ? formatDate(cells[2].value) : '';
+      const status = cells[3].value;
+      if (item && status !== 'Done') {
+        openItems.push({ item, owner, due });
+      }
+    }
+  });
+
+  // Build first name of client contact (first attendee that isn't Brian)
+  let firstName = 'Team';
+  const attendeeList = attendees.split(',').map(a => a.trim()).filter(Boolean);
+  const nonBrian = attendeeList.find(a => !/brian/i.test(a));
+  if (nonBrian) {
+    firstName = nonBrian.split(' ')[0].replace(/\s*\(.*\)/, '');
+  }
+
+  let body = `Hi ${firstName},\n\n`;
+  body += `Thank you for joining our ${typeLabel} on ${dateStr}. It was great connecting with you`;
+  if (client && client !== '[Client Name]') body += ` and the ${client} team`;
+  body += `.\n\n`;
+
+  if (discussion) {
+    body += `During our call, we covered the following key topics:\n`;
+    const lines = discussion.split('\n').filter(l => l.trim());
+    lines.forEach(l => { body += `  ${l.trim()}\n`; });
+    body += `\n`;
+  }
+
+  if (decisions.trim()) {
+    body += `Key decisions from our conversation:\n`;
+    const dLines = decisions.split('\n').filter(l => l.trim());
+    dLines.forEach(l => { body += `  ${l.trim()}\n`; });
+    body += `\n`;
+  }
+
+  if (openItems.length > 0) {
+    body += `As a follow-up, here are the action items we agreed on:\n`;
+    openItems.forEach(ai => {
+      body += `  • ${ai.item} — Owner: ${ai.owner}${ai.due ? ' | Due: ' + ai.due : ''}\n`;
+    });
+    body += `\n`;
+  }
+
+  if (nextDate) {
+    body += `Our next ${nextType || 'meeting'} is scheduled for ${nextDate}. `;
+    body += `I'll send a calendar invite shortly.\n\n`;
+  }
+
+  body += `Please don't hesitate to reach out if you have any questions or need anything before then. Looking forward to continuing our work together.\n\n`;
+  body += `Best regards,\nBrian\nCWI AI\nclaudeai@tbfamily.us`;
+
+  $('followUpEmail').value = body;
+  markDirty();
+  showToast('Follow-up email generated', 'green');
+}
+
+// ── Clipboard ─────────────────────────────────────────────────────
+function copyEmail() {
+  const text = $('followUpEmail').value.trim();
+  if (!text) { showToast('No email to copy — generate it first.'); return; }
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('Email copied to clipboard!', 'green');
+  }).catch(() => {
+    // Fallback
+    const ta = $('followUpEmail');
+    ta.select();
+    document.execCommand('copy');
+    showToast('Email copied to clipboard!', 'green');
+  });
+}
+
+// ── LocalStorage ──────────────────────────────────────────────────
+function buildKey() {
+  const client = $('clientName').value.trim() || 'Unknown';
+  const date   = $('meetingDate').value ? $('meetingDate').value.split('T')[0] : 'no-date';
+  return `cwi-meeting::${client}::${date}`;
+}
+
+function collectData() {
+  const rows = $('actionBody').querySelectorAll('tr');
+  const actionItems = [];
+  rows.forEach(tr => {
+    const inputs = tr.querySelectorAll('input');
+    const selects = tr.querySelectorAll('select');
+    actionItems.push({
+      item:   inputs[0]?.value || '',
+      owner:  selects[0]?.value || 'Brian',
+      due:    inputs[1]?.value || '',
+      status: selects[1]?.value || 'Open'
+    });
+  });
+
+  return {
+    meetingType:       $('meetingType').value,
+    clientName:        $('clientName').value,
+    meetingDate:       $('meetingDate').value,
+    attendees:         $('attendees').value,
+    agenda:            $('agenda').value,
+    discussionPoints:  $('discussionPoints').value,
+    decisions:         $('decisions').value,
+    actionItems,
+    followUpEmail:     $('followUpEmail').value,
+    nextMeetingDate:   $('nextMeetingDate').value,
+    nextMeetingType:   $('nextMeetingType').value,
+    nextMeetingNotes:  $('nextMeetingNotes').value,
+    savedAt:           new Date().toISOString()
+  };
+}
+
+function saveNotes() {
+  const data = collectData();
+  const key = buildKey();
+  localStorage.setItem(key, JSON.stringify(data));
+
+  // Keep an index of all saved keys
+  const idx = getSavedIndex();
+  if (!idx.includes(key)) {
+    idx.unshift(key);
+    // Keep last 50
+    localStorage.setItem('cwi-meeting-index', JSON.stringify(idx.slice(0, 50)));
+  }
+
+  loadRecentsList(key);
+  markClean();
+  showToast('Meeting notes saved!', 'green');
+}
+
+function getSavedIndex() {
+  try { return JSON.parse(localStorage.getItem('cwi-meeting-index') || '[]'); }
+  catch { return []; }
+}
+
+function loadRecentsList(activeKey) {
+  const idx = getSavedIndex();
+  const sel = $('recentSelect');
+  const current = activeKey || sel.value;
+  sel.innerHTML = '<option value="">— Load a previous meeting —</option>';
+  idx.forEach(key => {
+    const parts = key.split('::');
+    const label = parts.length >= 3 ? `${parts[1]} — ${parts[2]}` : key;
+    const opt = document.createElement('option');
+    opt.value = key;
+    opt.textContent = label;
+    if (key === current) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+function loadRecent(key) {
+  if (!key) return;
+  const raw = localStorage.getItem(key);
+  if (!raw) { showToast('Meeting data not found.'); return; }
+  try {
+    const d = JSON.parse(raw);
+    $('meetingType').value       = d.meetingType || '';
+    $('clientName').value        = d.clientName || '';
+    $('meetingDate').value       = d.meetingDate || '';
+    $('attendees').value         = d.attendees || '';
+    $('agenda').value            = d.agenda || '';
+    $('discussionPoints').value  = d.discussionPoints || '';
+    $('decisions').value         = d.decisions || '';
+    $('followUpEmail').value     = d.followUpEmail || '';
+    $('nextMeetingDate').value   = d.nextMeetingDate || '';
+    $('nextMeetingType').value   = d.nextMeetingType || '';
+    $('nextMeetingNotes').value  = d.nextMeetingNotes || '';
+
+    // Rebuild action items
+    $('actionBody').innerHTML = '';
+    if (d.actionItems && d.actionItems.length > 0) {
+      d.actionItems.forEach(ai => addActionRow(ai.item, ai.owner, ai.due, ai.status));
+    } else {
+      addActionRow();
+    }
+
+    markClean();
+    showToast(`Loaded: ${d.clientName || 'Meeting'} — ${d.meetingDate ? d.meetingDate.split('T')[0] : ''}`, 'green');
+  } catch(e) {
+    showToast('Error loading meeting data.');
+  }
+}
+
+function deleteRecent() {
+  const key = $('recentSelect').value;
+  if (!key) { showToast('Select a meeting to delete.'); return; }
+  if (!confirm('Delete this saved meeting? This cannot be undone.')) return;
+  localStorage.removeItem(key);
+  const idx = getSavedIndex().filter(k => k !== key);
+  localStorage.setItem('cwi-meeting-index', JSON.stringify(idx));
+  loadRecentsList();
+  showToast('Meeting deleted.');
+}
+
+function clearForm() {
+  if (isDirty && !confirm('You have unsaved changes. Start a new meeting anyway?')) return;
+  $('meetingType').value = '';
+  $('clientName').value = '';
+  const now = new Date();
+  $('meetingDate').value = toLocalInputValue(now);
+  $('attendees').value = '';
+  $('agenda').value = '';
+  $('discussionPoints').value = '';
+  $('decisions').value = '';
+  $('followUpEmail').value = '';
+  $('nextMeetingDate').value = '';
+  $('nextMeetingType').value = '';
+  $('nextMeetingNotes').value = '';
+  $('actionBody').innerHTML = '';
+  addActionRow();
+  $('recentSelect').value = '';
+  markDirty();
+  showToast('New meeting started.');
+}
+
+// ── Dirty / clean state ───────────────────────────────────────────
+function markDirty() {
+  isDirty = true;
+  $('saveDot').className = 'save-dot unsaved';
+  $('saveText').textContent = 'Unsaved changes';
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(autoSave, 3000);
+}
+
+function markClean() {
+  isDirty = false;
+  $('saveDot').className = 'save-dot saved';
+  $('saveText').textContent = 'Saved';
+}
+
+function autoSave() {
+  if (!isDirty) return;
+  saveNotes();
+}
+
+// ── Toast ─────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg, type) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.className = `toast${type === 'green' ? ' green' : ''} show`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.className = 'toast'; }, 2800);
+}
+
+// ── Helpers ───────────────────────────────────────────────────────
+function formatDateTime(val) {
+  if (!val) return '';
+  try {
+    const d = new Date(val);
+    return d.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' })
+      + ' at '
+      + d.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', hour12:true });
+  } catch { return val; }
+}
+
+function formatDate(val) {
+  if (!val) return '';
+  try {
+    const [y,m,d] = val.split('-');
+    return new Date(+y, +m-1, +d).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+  } catch { return val; }
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
+</body>
+</html>

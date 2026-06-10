@@ -1,0 +1,461 @@
+{
+  "name": "Scenario D: Apollo to HubSpot Sync",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": 1,
+        "maxResults": 1
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 0, "y": 0 },
+        "restore": {
+          "parameters": {
+            "hook": {
+              "label": "Apollo Contact Enrolled Webhook",
+              "data": {
+                "editable": true,
+                "headers": [],
+                "method": "POST",
+                "stringify": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hook",
+            "type": "hook:gateway-webhook",
+            "label": "Webhook",
+            "required": true
+          },
+          {
+            "name": "maxResults",
+            "type": "number",
+            "label": "Maximum number of results"
+          }
+        ],
+        "expect": [
+          { "name": "event", "type": "text", "label": "Event", "help": "Expected value: contact.enrolled_in_sequence" },
+          { "name": "contact_name", "type": "text", "label": "Contact Name" },
+          { "name": "contact_email", "type": "text", "label": "Contact Email" },
+          { "name": "company_name", "type": "text", "label": "Company Name" },
+          { "name": "industry", "type": "text", "label": "Industry" },
+          { "name": "city", "type": "text", "label": "City" },
+          { "name": "sequence_name", "type": "text", "label": "Sequence Name" }
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": true },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/contacts/search",
+        "method": "POST",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.HUBSPOT_API_KEY}}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "contentType": "application/json",
+        "body": "{\"filterGroups\":[{\"filters\":[{\"propertyName\":\"email\",\"operator\":\"EQ\",\"value\":\"{{1.contact_email}}\"}]}],\"properties\":[\"email\",\"firstname\",\"lastname\",\"company\",\"industry\",\"city\",\"hs_object_id\",\"last_sequence_enrolled\"]}"
+      },
+      "metadata": {
+        "designer": { "x": 300, "y": 0 },
+        "restore": {},
+        "parameters": [
+          { "name": "handleErrors", "type": "boolean", "label": "Evaluate all states" }
+        ],
+        "expect": [
+          { "name": "url", "type": "url", "label": "URL" },
+          { "name": "method", "type": "select", "label": "Method" },
+          { "name": "headers", "type": "array", "label": "Headers" },
+          { "name": "qs", "type": "array", "label": "Query String" },
+          { "name": "bodyType", "type": "select", "label": "Body type" },
+          { "name": "parseResponse", "type": "boolean", "label": "Parse response" },
+          { "name": "contentType", "type": "select", "label": "Content type" },
+          { "name": "body", "type": "buffer", "label": "Request content" }
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "module": "builtin:RouterModule",
+      "version": 1,
+      "parameters": {},
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 600, "y": 0 }
+      },
+      "routes": [
+        {
+          "flow": [
+            {
+              "id": 4,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": { "handleErrors": true },
+              "filter": {
+                "name": "Contact Exists",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{2.data.total}}",
+                      "b": "0",
+                      "o": "number:greater"
+                    }
+                  ]
+                ]
+              },
+              "mapper": {
+                "url": "https://api.hubapi.com/crm/v3/objects/contacts/{{2.data.results[0].id}}",
+                "method": "PATCH",
+                "headers": [
+                  { "name": "Authorization", "value": "Bearer {{env.HUBSPOT_API_KEY}}" },
+                  { "name": "Content-Type", "value": "application/json" }
+                ],
+                "qs": [],
+                "bodyType": "raw",
+                "parseResponse": true,
+                "contentType": "application/json",
+                "body": "{\"properties\":{\"last_sequence_enrolled\":\"{{1.sequence_name}}\",\"industry\":\"{{1.industry}}\",\"city\":\"{{1.city}}\"}}"
+              },
+              "metadata": {
+                "designer": { "x": 900, "y": -150 },
+                "restore": {},
+                "parameters": [
+                  { "name": "handleErrors", "type": "boolean", "label": "Evaluate all states" }
+                ],
+                "expect": [
+                  { "name": "url", "type": "url", "label": "URL" },
+                  { "name": "method", "type": "select", "label": "Method" },
+                  { "name": "headers", "type": "array", "label": "Headers" },
+                  { "name": "qs", "type": "array", "label": "Query String" },
+                  { "name": "bodyType", "type": "select", "label": "Body type" },
+                  { "name": "parseResponse", "type": "boolean", "label": "Parse response" },
+                  { "name": "contentType", "type": "select", "label": "Content type" },
+                  { "name": "body", "type": "buffer", "label": "Request content" }
+                ]
+              }
+            },
+            {
+              "id": 10,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": { "handleErrors": true },
+              "mapper": {
+                "url": "https://api.hubapi.com/crm/v3/objects/deals/search",
+                "method": "POST",
+                "headers": [
+                  { "name": "Authorization", "value": "Bearer {{env.HUBSPOT_API_KEY}}" },
+                  { "name": "Content-Type", "value": "application/json" }
+                ],
+                "qs": [],
+                "bodyType": "raw",
+                "parseResponse": true,
+                "contentType": "application/json",
+                "body": "{\"filterGroups\":[{\"filters\":[{\"propertyName\":\"associations.contact\",\"operator\":\"EQ\",\"value\":\"{{2.data.results[0].id}}\"}]}],\"properties\":[\"dealname\",\"dealstage\",\"pipeline\",\"hs_object_id\"]}"
+              },
+              "metadata": {
+                "designer": { "x": 1200, "y": -150 },
+                "restore": {},
+                "parameters": [
+                  { "name": "handleErrors", "type": "boolean", "label": "Evaluate all states" }
+                ],
+                "expect": [
+                  { "name": "url", "type": "url", "label": "URL" },
+                  { "name": "method", "type": "select", "label": "Method" },
+                  { "name": "headers", "type": "array", "label": "Headers" },
+                  { "name": "qs", "type": "array", "label": "Query String" },
+                  { "name": "bodyType", "type": "select", "label": "Body type" },
+                  { "name": "parseResponse", "type": "boolean", "label": "Parse response" },
+                  { "name": "contentType", "type": "select", "label": "Content type" },
+                  { "name": "body", "type": "buffer", "label": "Request content" }
+                ]
+              }
+            },
+            {
+              "id": 11,
+              "module": "builtin:RouterModule",
+              "version": 1,
+              "parameters": {},
+              "mapper": {},
+              "metadata": {
+                "designer": { "x": 1500, "y": -150 }
+              },
+              "routes": [
+                {
+                  "flow": [
+                    {
+                      "id": 6,
+                      "module": "http:ActionSendData",
+                      "version": 3,
+                      "parameters": { "handleErrors": true },
+                      "filter": {
+                        "name": "No Existing Deal",
+                        "conditions": [
+                          [
+                            {
+                              "a": "{{10.data.total}}",
+                              "b": "0",
+                              "o": "number:equal"
+                            }
+                          ]
+                        ]
+                      },
+                      "mapper": {
+                        "url": "https://api.hubapi.com/crm/v3/objects/deals",
+                        "method": "POST",
+                        "headers": [
+                          { "name": "Authorization", "value": "Bearer {{env.HUBSPOT_API_KEY}}" },
+                          { "name": "Content-Type", "value": "application/json" }
+                        ],
+                        "qs": [],
+                        "bodyType": "raw",
+                        "parseResponse": true,
+                        "contentType": "application/json",
+                        "body": "{\"properties\":{\"dealname\":\"{{1.company_name}} - {{1.contact_name}}\",\"pipeline\":\"{{env.HUBSPOT_PIPELINE_ID}}\",\"dealstage\":\"{{env.HUBSPOT_STAGE_NEW_LEAD}}\",\"hubspot_owner_id\":\"\"},\"associations\":[{\"to\":{\"id\":\"{{2.data.results[0].id}}\"},\"types\":[{\"associationCategory\":\"HUBSPOT_DEFINED\",\"associationTypeId\":3}]}]}"
+                      },
+                      "metadata": {
+                        "designer": { "x": 1800, "y": -300 },
+                        "restore": {},
+                        "parameters": [
+                          { "name": "handleErrors", "type": "boolean", "label": "Evaluate all states" }
+                        ],
+                        "expect": [
+                          { "name": "url", "type": "url", "label": "URL" },
+                          { "name": "method", "type": "select", "label": "Method" },
+                          { "name": "headers", "type": "array", "label": "Headers" },
+                          { "name": "qs", "type": "array", "label": "Query String" },
+                          { "name": "bodyType", "type": "select", "label": "Body type" },
+                          { "name": "parseResponse", "type": "boolean", "label": "Parse response" },
+                          { "name": "contentType", "type": "select", "label": "Content type" },
+                          { "name": "body", "type": "buffer", "label": "Request content" }
+                        ]
+                      }
+                    },
+                    {
+                      "id": 8,
+                      "module": "http:ActionSendData",
+                      "version": 3,
+                      "parameters": { "handleErrors": true },
+                      "mapper": {
+                        "url": "https://api.hubapi.com/crm/v3/objects/notes",
+                        "method": "POST",
+                        "headers": [
+                          { "name": "Authorization", "value": "Bearer {{env.HUBSPOT_API_KEY}}" },
+                          { "name": "Content-Type", "value": "application/json" }
+                        ],
+                        "qs": [],
+                        "bodyType": "raw",
+                        "parseResponse": true,
+                        "contentType": "application/json",
+                        "body": "{\"properties\":{\"hs_note_body\":\"Added to Apollo sequence: {{1.company_name}} on {{formatDate(now; 'YYYY-MM-DD'; 'America/New_York')}} | Enrolled by brian@cwiai.net\",\"hs_timestamp\":\"{{now}}\"},\"associations\":[{\"to\":{\"id\":\"{{2.data.results[0].id}}\"},\"types\":[{\"associationCategory\":\"HUBSPOT_DEFINED\",\"associationTypeId\":202}]},{\"to\":{\"id\":\"{{6.data.id}}\"},\"types\":[{\"associationCategory\":\"HUBSPOT_DEFINED\",\"associationTypeId\":214}]}]}"
+                      },
+                      "metadata": {
+                        "designer": { "x": 2100, "y": -300 },
+                        "restore": {},
+                        "parameters": [
+                          { "name": "handleErrors", "type": "boolean", "label": "Evaluate all states" }
+                        ],
+                        "expect": [
+                          { "name": "url", "type": "url", "label": "URL" },
+                          { "name": "method", "type": "select", "label": "Method" },
+                          { "name": "headers", "type": "array", "label": "Headers" },
+                          { "name": "qs", "type": "array", "label": "Query String" },
+                          { "name": "bodyType", "type": "select", "label": "Body type" },
+                          { "name": "parseResponse", "type": "boolean", "label": "Parse response" },
+                          { "name": "contentType", "type": "select", "label": "Content type" },
+                          { "name": "body", "type": "buffer", "label": "Request content" }
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "flow": [
+                    {
+                      "id": 12,
+                      "module": "builtin:BasicFeeder",
+                      "version": 1,
+                      "parameters": {},
+                      "filter": {
+                        "name": "Deal Already Exists — Skip Creation",
+                        "conditions": [
+                          [
+                            {
+                              "a": "{{10.data.total}}",
+                              "b": "0",
+                              "o": "number:greater"
+                            }
+                          ]
+                        ]
+                      },
+                      "mapper": {},
+                      "metadata": {
+                        "designer": { "x": 1800, "y": -150 },
+                        "restore": {}
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 5,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": { "handleErrors": true },
+              "filter": {
+                "name": "Contact New",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{2.data.total}}",
+                      "b": "0",
+                      "o": "number:equal"
+                    }
+                  ]
+                ]
+              },
+              "mapper": {
+                "url": "https://api.hubapi.com/crm/v3/objects/contacts",
+                "method": "POST",
+                "headers": [
+                  { "name": "Authorization", "value": "Bearer {{env.HUBSPOT_API_KEY}}" },
+                  { "name": "Content-Type", "value": "application/json" }
+                ],
+                "qs": [],
+                "bodyType": "raw",
+                "parseResponse": true,
+                "contentType": "application/json",
+                "body": "{\"properties\":{\"email\":\"{{1.contact_email}}\",\"firstname\":\"{{ifempty(split(1.contact_name; ' ')[0]; 1.contact_name)}}\",\"lastname\":\"{{ifempty(split(1.contact_name; ' ')[1]; '')}}\",\"company\":\"{{1.company_name}}\",\"industry\":\"{{1.industry}}\",\"city\":\"{{1.city}}\",\"last_sequence_enrolled\":\"{{1.sequence_name}}\"}}"
+              },
+              "metadata": {
+                "designer": { "x": 900, "y": 150 },
+                "restore": {},
+                "parameters": [
+                  { "name": "handleErrors", "type": "boolean", "label": "Evaluate all states" }
+                ],
+                "expect": [
+                  { "name": "url", "type": "url", "label": "URL" },
+                  { "name": "method", "type": "select", "label": "Method" },
+                  { "name": "headers", "type": "array", "label": "Headers" },
+                  { "name": "qs", "type": "array", "label": "Query String" },
+                  { "name": "bodyType", "type": "select", "label": "Body type" },
+                  { "name": "parseResponse", "type": "boolean", "label": "Parse response" },
+                  { "name": "contentType", "type": "select", "label": "Content type" },
+                  { "name": "body", "type": "buffer", "label": "Request content" }
+                ]
+              }
+            },
+            {
+              "id": 7,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": { "handleErrors": true },
+              "mapper": {
+                "url": "https://api.hubapi.com/crm/v3/objects/deals",
+                "method": "POST",
+                "headers": [
+                  { "name": "Authorization", "value": "Bearer {{env.HUBSPOT_API_KEY}}" },
+                  { "name": "Content-Type", "value": "application/json" }
+                ],
+                "qs": [],
+                "bodyType": "raw",
+                "parseResponse": true,
+                "contentType": "application/json",
+                "body": "{\"properties\":{\"dealname\":\"{{1.company_name}} - {{1.contact_name}}\",\"pipeline\":\"{{env.HUBSPOT_PIPELINE_ID}}\",\"dealstage\":\"{{env.HUBSPOT_STAGE_NEW_LEAD}}\",\"hubspot_owner_id\":\"\"},\"associations\":[{\"to\":{\"id\":\"{{5.data.id}}\"},\"types\":[{\"associationCategory\":\"HUBSPOT_DEFINED\",\"associationTypeId\":3}]}]}"
+              },
+              "metadata": {
+                "designer": { "x": 1200, "y": 150 },
+                "restore": {},
+                "parameters": [
+                  { "name": "handleErrors", "type": "boolean", "label": "Evaluate all states" }
+                ],
+                "expect": [
+                  { "name": "url", "type": "url", "label": "URL" },
+                  { "name": "method", "type": "select", "label": "Method" },
+                  { "name": "headers", "type": "array", "label": "Headers" },
+                  { "name": "qs", "type": "array", "label": "Query String" },
+                  { "name": "bodyType", "type": "select", "label": "Body type" },
+                  { "name": "parseResponse", "type": "boolean", "label": "Parse response" },
+                  { "name": "contentType", "type": "select", "label": "Content type" },
+                  { "name": "body", "type": "buffer", "label": "Request content" }
+                ]
+              }
+            },
+            {
+              "id": 9,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": { "handleErrors": true },
+              "mapper": {
+                "url": "https://api.hubapi.com/crm/v3/objects/notes",
+                "method": "POST",
+                "headers": [
+                  { "name": "Authorization", "value": "Bearer {{env.HUBSPOT_API_KEY}}" },
+                  { "name": "Content-Type", "value": "application/json" }
+                ],
+                "qs": [],
+                "bodyType": "raw",
+                "parseResponse": true,
+                "contentType": "application/json",
+                "body": "{\"properties\":{\"hs_note_body\":\"Added to Apollo sequence: {{1.company_name}} on {{formatDate(now; 'YYYY-MM-DD'; 'America/New_York')}} | Enrolled by brian@cwiai.net\",\"hs_timestamp\":\"{{now}}\"},\"associations\":[{\"to\":{\"id\":\"{{5.data.id}}\"},\"types\":[{\"associationCategory\":\"HUBSPOT_DEFINED\",\"associationTypeId\":202}]},{\"to\":{\"id\":\"{{7.data.id}}\"},\"types\":[{\"associationCategory\":\"HUBSPOT_DEFINED\",\"associationTypeId\":214}]}]}"
+              },
+              "metadata": {
+                "designer": { "x": 1500, "y": 150 },
+                "restore": {},
+                "parameters": [
+                  { "name": "handleErrors", "type": "boolean", "label": "Evaluate all states" }
+                ],
+                "expect": [
+                  { "name": "url", "type": "url", "label": "URL" },
+                  { "name": "method", "type": "select", "label": "Method" },
+                  { "name": "headers", "type": "array", "label": "Headers" },
+                  { "name": "qs", "type": "array", "label": "Query String" },
+                  { "name": "bodyType", "type": "select", "label": "Body type" },
+                  { "name": "parseResponse", "type": "boolean", "label": "Parse response" },
+                  { "name": "contentType", "type": "select", "label": "Content type" },
+                  { "name": "body", "type": "buffer", "label": "Request content" }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "slots": null,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false,
+      "timezone": "America/New_York"
+    },
+    "designer": {
+      "orphans": []
+    },
+    "zone": "us1.make.com"
+  }
+}

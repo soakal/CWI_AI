@@ -1,0 +1,694 @@
+{
+  "name": "Scenario E: Lead Reply Routing",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": 1001,
+        "maxResults": 1
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 0, "y": 0 },
+        "restore": {
+          "parameters": {
+            "hook": {
+              "label": "Apollo Webhook - email.reply_received",
+              "data": {
+                "editable": true
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hook",
+            "type": "hook:gateway-webhook",
+            "label": "Webhook",
+            "required": true
+          },
+          {
+            "name": "maxResults",
+            "type": "number",
+            "label": "Maximum number of results"
+          }
+        ],
+        "interface": [
+          { "name": "contact_email", "type": "text", "label": "Contact Email" },
+          { "name": "contact_name", "type": "text", "label": "Contact Name" },
+          { "name": "reply_text", "type": "text", "label": "Reply Text" },
+          { "name": "sequence_step", "type": "text", "label": "Sequence Step" }
+        ],
+        "label": "Apollo Webhook: email.reply_received"
+      }
+    },
+    {
+      "id": 2,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": true, "useNewZLibDeCompress": true },
+      "mapper": {
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "serializeUrl": false,
+        "method": "post",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.OPENROUTER_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "name": "HTTP-Referer",
+            "value": "https://cwi-automation.make.com"
+          },
+          {
+            "name": "X-Title",
+            "value": "CWI Lead Reply Routing"
+          }
+        ],
+        "queryString": [],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "authUser": "",
+        "authPass": "",
+        "timeout": 30,
+        "shareCookies": false,
+        "ca": "",
+        "rejectUnauthorized": true,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "gzip": true,
+        "useMtls": false,
+        "contentType": "application/json",
+        "data": "{\"model\":\"anthropic/claude-sonnet-4-6\",\"messages\":[{\"role\":\"system\",\"content\":\"You are a reply sentiment classifier. Respond with exactly one word only — no punctuation, no explanation. The word must be one of: positive, negative, neutral. Positive = interested, wants to talk, asking for a meeting, or expressing enthusiasm. Negative = unsubscribe, stop, remove me, not interested, or any opt-out request. Neutral = out of office, unclear, ambiguous, or requires follow-up.\"},{\"role\":\"user\",\"content\":\"Classify this email reply from {{1.contact_name}}: {{1.reply_text}}\"}],\"max_tokens\":5,\"temperature\":0}"
+      },
+      "metadata": {
+        "designer": { "x": 300, "y": 0 },
+        "label": "OpenRouter: Classify Reply Sentiment"
+      }
+    },
+    {
+      "id": 3,
+      "module": "builtin:BasicFeeder",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "array": "{{2.data.choices[0].message.content}}"
+      },
+      "metadata": {
+        "designer": { "x": 600, "y": 0 },
+        "label": "Extract Sentiment Value"
+      }
+    },
+    {
+      "id": 4,
+      "module": "builtin:RouterModule",
+      "version": 1,
+      "parameters": {},
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 900, "y": 0 },
+        "label": "Route by Sentiment"
+      },
+      "routes": [
+        {
+          "flow": [
+            {
+              "id": 101,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": { "handleErrors": true, "useNewZLibDeCompress": true },
+              "mapper": {
+                "url": "https://api.hubapi.com/crm/v3/objects/contacts/search",
+                "serializeUrl": false,
+                "method": "post",
+                "headers": [
+                  { "name": "Authorization", "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}" },
+                  { "name": "Content-Type", "value": "application/json" }
+                ],
+                "queryString": [],
+                "bodyType": "raw",
+                "parseResponse": true,
+                "contentType": "application/json",
+                "data": "{\"filterGroups\":[{\"filters\":[{\"propertyName\":\"email\",\"operator\":\"EQ\",\"value\":\"{{1.contact_email}}\"}]}],\"properties\":[\"email\",\"firstname\",\"lastname\"],\"limit\":1}"
+              },
+              "metadata": {
+                "designer": { "x": 1200, "y": -450 },
+                "label": "HubSpot: Search Contact by Email (Positive)"
+              }
+            },
+            {
+              "id": 102,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": { "handleErrors": true, "useNewZLibDeCompress": true },
+              "mapper": {
+                "url": "https://api.hubapi.com/crm/v3/objects/deals/search",
+                "serializeUrl": false,
+                "method": "post",
+                "headers": [
+                  { "name": "Authorization", "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}" },
+                  { "name": "Content-Type", "value": "application/json" }
+                ],
+                "queryString": [],
+                "bodyType": "raw",
+                "parseResponse": true,
+                "contentType": "application/json",
+                "data": "{\"filterGroups\":[{\"filters\":[{\"propertyName\":\"associations.contact\",\"operator\":\"EQ\",\"value\":\"{{101.data.results[0].id}}\"}]}],\"properties\":[\"dealname\",\"dealstage\",\"hs_object_id\"],\"limit\":1}"
+              },
+              "metadata": {
+                "designer": { "x": 1200, "y": -360 },
+                "label": "HubSpot: Search Deal by Contact ID (Positive)"
+              }
+            },
+            {
+              "id": 5,
+              "module": "hubspot:ActionUpdateDeal",
+              "version": 1,
+              "parameters": {
+                "portalId": "{{env.HUBSPOT_PORTAL_ID}}"
+              },
+              "mapper": {
+                "dealId": "{{102.data.results[0].id}}",
+                "properties": [
+                  {
+                    "name": "dealstage",
+                    "value": "{{env.HUBSPOT_STAGE_REPLIED}}"
+                  },
+                  {
+                    "name": "hs_lead_status",
+                    "value": "IN_PROGRESS"
+                  },
+                  {
+                    "name": "reply_sentiment",
+                    "value": "positive"
+                  },
+                  {
+                    "name": "last_reply_date",
+                    "value": "{{now}}"
+                  }
+                ]
+              },
+              "metadata": {
+                "designer": { "x": 1200, "y": -300 },
+                "label": "HubSpot: Move Deal to Replied"
+              }
+            },
+            {
+              "id": 6,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": { "handleErrors": true, "useNewZLibDeCompress": true },
+              "mapper": {
+                "url": "https://api.resend.com/emails",
+                "serializeUrl": false,
+                "method": "post",
+                "headers": [
+                  { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+                  { "name": "Content-Type", "value": "application/json" }
+                ],
+                "queryString": [],
+                "bodyType": "raw",
+                "parseResponse": true,
+                "contentType": "application/json",
+                "data": "{\"from\":\"{{env.RESEND_FROM_ADDRESS}}\",\"to\":[\"{{1.contact_email}}\"],\"subject\":\"Re: Let's Connect — Schedule Time to Chat\",\"html\":\"<p>Hi {{1.contact_name}},</p><p>Thank you so much for getting back to me — I'm really glad to hear you're open to connecting!</p><p>I'd love to set up a quick call to learn more about your goals and share how CWI has helped similar businesses. You can grab a time that works best for you directly on my calendar:</p><p><a href=\\\"https://cwiai.net/demo.html\\\" style=\\\"background-color:#0066cc;color:#ffffff;padding:10px 20px;text-decoration:none;border-radius:4px;display:inline-block;\\\">Schedule a Discovery Call</a></p><p>The call typically runs 20-30 minutes and is completely pressure-free. Looking forward to speaking with you!</p><p>Best regards,<br>The CWI Team<br><a href=\\\"mailto:brian@cwiai.net\\\">brian@cwiai.net</a></p>\"}"
+              },
+              "metadata": {
+                "designer": { "x": 1500, "y": -300 },
+                "label": "Resend: Send Calendar Link (Positive)"
+              }
+            },
+            {
+              "id": 7,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": { "handleErrors": true, "useNewZLibDeCompress": true },
+              "mapper": {
+                "url": "https://api.apollo.io/v1/contact/bulk_attributes_update",
+                "serializeUrl": false,
+                "method": "post",
+                "headers": [
+                  { "name": "Content-Type", "value": "application/json" },
+                  { "name": "X-Api-Key", "value": "{{env.APOLLO_API_KEY}}" }
+                ],
+                "queryString": [],
+                "bodyType": "raw",
+                "parseResponse": true,
+                "contentType": "application/json",
+                "data": "{\"api_key\":\"{{env.APOLLO_API_KEY}}\",\"contact_emails\":[\"{{1.contact_email}}\"],\"label_names\":[\"Replied-Interested\"]}"
+              },
+              "metadata": {
+                "designer": { "x": 1800, "y": -300 },
+                "label": "Apollo: Tag Replied-Interested"
+              }
+            }
+          ],
+          "label": "POSITIVE",
+          "filter": {
+            "name": "Sentiment is Positive",
+            "conditions": [
+              [
+                {
+                  "a": "{{lower(3.value)}}",
+                  "b": "positive",
+                  "o": "text:equal"
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "flow": [
+            {
+              "id": 8,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": { "handleErrors": true, "useNewZLibDeCompress": true },
+              "mapper": {
+                "url": "https://api.apollo.io/v1/emailer_campaigns/remove_contact",
+                "serializeUrl": false,
+                "method": "post",
+                "headers": [
+                  { "name": "Content-Type", "value": "application/json" },
+                  { "name": "X-Api-Key", "value": "{{env.APOLLO_API_KEY}}" }
+                ],
+                "queryString": [],
+                "bodyType": "raw",
+                "parseResponse": true,
+                "contentType": "application/json",
+                "data": "{\"api_key\":\"{{env.APOLLO_API_KEY}}\",\"contact_emails\":[\"{{1.contact_email}}\"],\"remove_from_all_sequences\":true}"
+              },
+              "metadata": {
+                "designer": { "x": 1200, "y": 0 },
+                "label": "Apollo: Remove from All Sequences"
+              }
+            },
+            {
+              "id": 103,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": { "handleErrors": true, "useNewZLibDeCompress": true },
+              "mapper": {
+                "url": "https://api.hubapi.com/crm/v3/objects/contacts/search",
+                "serializeUrl": false,
+                "method": "post",
+                "headers": [
+                  { "name": "Authorization", "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}" },
+                  { "name": "Content-Type", "value": "application/json" }
+                ],
+                "queryString": [],
+                "bodyType": "raw",
+                "parseResponse": true,
+                "contentType": "application/json",
+                "data": "{\"filterGroups\":[{\"filters\":[{\"propertyName\":\"email\",\"operator\":\"EQ\",\"value\":\"{{1.contact_email}}\"}]}],\"properties\":[\"email\",\"firstname\",\"lastname\"],\"limit\":1}"
+              },
+              "metadata": {
+                "designer": { "x": 1350, "y": 0 },
+                "label": "HubSpot: Search Contact by Email (Negative)"
+              }
+            },
+            {
+              "id": 104,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": { "handleErrors": true, "useNewZLibDeCompress": true },
+              "mapper": {
+                "url": "https://api.hubapi.com/crm/v3/objects/deals/search",
+                "serializeUrl": false,
+                "method": "post",
+                "headers": [
+                  { "name": "Authorization", "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}" },
+                  { "name": "Content-Type", "value": "application/json" }
+                ],
+                "queryString": [],
+                "bodyType": "raw",
+                "parseResponse": true,
+                "contentType": "application/json",
+                "data": "{\"filterGroups\":[{\"filters\":[{\"propertyName\":\"associations.contact\",\"operator\":\"EQ\",\"value\":\"{{103.data.results[0].id}}\"}]}],\"properties\":[\"dealname\",\"dealstage\",\"hs_object_id\"],\"limit\":1}"
+              },
+              "metadata": {
+                "designer": { "x": 1425, "y": 0 },
+                "label": "HubSpot: Search Deal by Contact ID (Negative)"
+              }
+            },
+            {
+              "id": 9,
+              "module": "hubspot:ActionUpdateDeal",
+              "version": 1,
+              "parameters": {
+                "portalId": "{{env.HUBSPOT_PORTAL_ID}}"
+              },
+              "mapper": {
+                "dealId": "{{104.data.results[0].id}}",
+                "properties": [
+                  {
+                    "name": "dealstage",
+                    "value": "{{env.HUBSPOT_STAGE_CLOSED_LOST}}"
+                  },
+                  {
+                    "name": "hs_lead_status",
+                    "value": "UNQUALIFIED"
+                  },
+                  {
+                    "name": "reply_sentiment",
+                    "value": "negative"
+                  },
+                  {
+                    "name": "closed_lost_reason",
+                    "value": "Opted out — unsubscribe request"
+                  },
+                  {
+                    "name": "last_reply_date",
+                    "value": "{{now}}"
+                  }
+                ]
+              },
+              "metadata": {
+                "designer": { "x": 1500, "y": 0 },
+                "label": "HubSpot: Move Deal to Closed Lost"
+              }
+            },
+            {
+              "id": 10,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": { "handleErrors": true, "useNewZLibDeCompress": true },
+              "mapper": {
+                "url": "https://api.resend.com/emails",
+                "serializeUrl": false,
+                "method": "post",
+                "headers": [
+                  { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+                  { "name": "Content-Type", "value": "application/json" }
+                ],
+                "queryString": [],
+                "bodyType": "raw",
+                "parseResponse": true,
+                "contentType": "application/json",
+                "data": "{\"from\":\"{{env.RESEND_FROM_ADDRESS}}\",\"to\":[\"{{1.contact_email}}\"],\"subject\":\"Re: You've Been Removed — No Further Emails\",\"html\":\"<p>Hi {{1.contact_name}},</p><p>Absolutely understood, and I sincerely apologize for any inconvenience. You have been immediately removed from all outreach sequences and will not receive any further emails from us.</p><p>We respect your time and your inbox. If you ever find yourself curious about what CWI offers in the future, please don't hesitate to reach out — we're always happy to help on your terms.</p><p>Wishing you all the best,<br>The CWI Team<br><a href=\\\"mailto:brian@cwiai.net\\\">brian@cwiai.net</a></p>\"}"
+              },
+              "metadata": {
+                "designer": { "x": 1800, "y": 0 },
+                "label": "Resend: Send Polite Pass (Negative)"
+              }
+            },
+            {
+              "id": 11,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": { "handleErrors": true, "useNewZLibDeCompress": true },
+              "mapper": {
+                "url": "https://api.apollo.io/v1/contact/bulk_attributes_update",
+                "serializeUrl": false,
+                "method": "post",
+                "headers": [
+                  { "name": "Content-Type", "value": "application/json" },
+                  { "name": "X-Api-Key", "value": "{{env.APOLLO_API_KEY}}" }
+                ],
+                "queryString": [],
+                "bodyType": "raw",
+                "parseResponse": true,
+                "contentType": "application/json",
+                "data": "{\"api_key\":\"{{env.APOLLO_API_KEY}}\",\"contact_emails\":[\"{{1.contact_email}}\"],\"label_names\":[\"Not-Interested\"]}"
+              },
+              "metadata": {
+                "designer": { "x": 2100, "y": 0 },
+                "label": "Apollo: Tag Not-Interested"
+              }
+            }
+          ],
+          "label": "NEGATIVE",
+          "filter": {
+            "name": "Sentiment is Negative",
+            "conditions": [
+              [
+                {
+                  "a": "{{lower(3.value)}}",
+                  "b": "negative",
+                  "o": "text:equal"
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "flow": [
+            {
+              "id": 12,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": { "handleErrors": true, "useNewZLibDeCompress": true },
+              "mapper": {
+                "url": "https://api.resend.com/emails",
+                "serializeUrl": false,
+                "method": "post",
+                "headers": [
+                  { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+                  { "name": "Content-Type", "value": "application/json" }
+                ],
+                "queryString": [],
+                "bodyType": "raw",
+                "parseResponse": true,
+                "contentType": "application/json",
+                "data": "{\"from\":\"{{env.RESEND_FROM_ADDRESS}}\",\"to\":[\"{{1.contact_email}}\"],\"subject\":\"Re: Quick Clarification — Happy to Find a Good Time\",\"html\":\"<p>Hi {{1.contact_name}},</p><p>Thanks for the reply! I want to make sure I understand where you're coming from so I can be as helpful as possible.</p><p>If you'd like to explore how CWI could support your business, I'd love to set aside 20 minutes for a no-pressure conversation. Feel free to pick a slot that's convenient for you:</p><p><a href=\\\"https://cwiai.net/demo.html\\\" style=\\\"background-color:#0066cc;color:#ffffff;padding:10px 20px;text-decoration:none;border-radius:4px;display:inline-block;\\\">Pick a Time on My Calendar</a></p><p>Alternatively, if now isn't the right time or you have a specific question, just hit reply and let me know — I'm happy to follow up at a better moment.</p><p>Best,<br>The CWI Team<br><a href=\\\"mailto:brian@cwiai.net\\\">brian@cwiai.net</a></p>\"}"
+              },
+              "metadata": {
+                "designer": { "x": 1200, "y": 300 },
+                "label": "Resend: Send Clarifying Response + Calendly (Neutral)"
+              }
+            },
+            {
+              "id": 13,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": { "handleErrors": true, "useNewZLibDeCompress": true },
+              "mapper": {
+                "url": "https://api.apollo.io/v1/contact/bulk_attributes_update",
+                "serializeUrl": false,
+                "method": "post",
+                "headers": [
+                  { "name": "Content-Type", "value": "application/json" },
+                  { "name": "X-Api-Key", "value": "{{env.APOLLO_API_KEY}}" }
+                ],
+                "queryString": [],
+                "bodyType": "raw",
+                "parseResponse": true,
+                "contentType": "application/json",
+                "data": "{\"api_key\":\"{{env.APOLLO_API_KEY}}\",\"contact_emails\":[\"{{1.contact_email}}\"],\"label_names\":[\"Replied-Neutral\"]}"
+              },
+              "metadata": {
+                "designer": { "x": 1500, "y": 300 },
+                "label": "Apollo: Tag Replied-Neutral"
+              }
+            },
+            {
+              "id": 105,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": { "handleErrors": true, "useNewZLibDeCompress": true },
+              "mapper": {
+                "url": "https://api.hubapi.com/crm/v3/objects/contacts/search",
+                "serializeUrl": false,
+                "method": "post",
+                "headers": [
+                  { "name": "Authorization", "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}" },
+                  { "name": "Content-Type", "value": "application/json" }
+                ],
+                "queryString": [],
+                "bodyType": "raw",
+                "parseResponse": true,
+                "contentType": "application/json",
+                "data": "{\"filterGroups\":[{\"filters\":[{\"propertyName\":\"email\",\"operator\":\"EQ\",\"value\":\"{{1.contact_email}}\"}]}],\"properties\":[\"email\",\"firstname\",\"lastname\"],\"limit\":1}"
+              },
+              "metadata": {
+                "designer": { "x": 1650, "y": 300 },
+                "label": "HubSpot: Search Contact by Email (Neutral)"
+              }
+            },
+            {
+              "id": 106,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": { "handleErrors": true, "useNewZLibDeCompress": true },
+              "mapper": {
+                "url": "https://api.hubapi.com/crm/v3/objects/deals/search",
+                "serializeUrl": false,
+                "method": "post",
+                "headers": [
+                  { "name": "Authorization", "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}" },
+                  { "name": "Content-Type", "value": "application/json" }
+                ],
+                "queryString": [],
+                "bodyType": "raw",
+                "parseResponse": true,
+                "contentType": "application/json",
+                "data": "{\"filterGroups\":[{\"filters\":[{\"propertyName\":\"associations.contact\",\"operator\":\"EQ\",\"value\":\"{{105.data.results[0].id}}\"}]}],\"properties\":[\"dealname\",\"dealstage\",\"hs_object_id\"],\"limit\":1}"
+              },
+              "metadata": {
+                "designer": { "x": 1725, "y": 300 },
+                "label": "HubSpot: Search Deal by Contact ID (Neutral)"
+              }
+            },
+            {
+              "id": 14,
+              "module": "hubspot:ActionUpdateDeal",
+              "version": 1,
+              "parameters": {
+                "portalId": "{{env.HUBSPOT_PORTAL_ID}}"
+              },
+              "mapper": {
+                "dealId": "{{106.data.results[0].id}}",
+                "properties": [
+                  {
+                    "name": "dealstage",
+                    "value": "{{env.HUBSPOT_STAGE_REPLIED}}"
+                  },
+                  {
+                    "name": "hs_lead_status",
+                    "value": "IN_PROGRESS"
+                  },
+                  {
+                    "name": "reply_sentiment",
+                    "value": "neutral"
+                  },
+                  {
+                    "name": "last_reply_date",
+                    "value": "{{now}}"
+                  }
+                ]
+              },
+              "metadata": {
+                "designer": { "x": 1800, "y": 300 },
+                "label": "HubSpot: Move Deal to Replied (Neutral)"
+              }
+            }
+          ],
+          "label": "NEUTRAL",
+          "filter": {
+            "name": "Sentiment is Neutral",
+            "conditions": [
+              [
+                {
+                  "a": "{{lower(3.value)}}",
+                  "b": "neutral",
+                  "o": "text:equal"
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "flow": [
+            {
+              "id": 15,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": { "handleErrors": true, "useNewZLibDeCompress": true },
+              "mapper": {
+                "url": "https://api.resend.com/emails",
+                "serializeUrl": false,
+                "method": "post",
+                "headers": [
+                  { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+                  { "name": "Content-Type", "value": "application/json" }
+                ],
+                "queryString": [],
+                "bodyType": "raw",
+                "parseResponse": true,
+                "contentType": "application/json",
+                "data": "{\"from\":\"{{env.CWI_ALERT_FROM_ADDRESS}}\",\"to\":[\"brian@cwiai.net\"],\"subject\":\"[CWI ALERT] Unrecognized reply sentiment — manual review needed\",\"html\":\"<p>Hi Brian,</p><p>The Lead Reply Routing scenario received a reply that did not classify cleanly as positive, negative, or neutral (e.g. the classifier returned an unexpected value such as 'Positive.' with punctuation). The lead was NOT auto-handled and needs manual review.</p><hr><p><strong>Contact name:</strong> {{1.contact_name}}<br><strong>Contact email:</strong> {{1.contact_email}}<br><strong>Sequence step:</strong> {{1.sequence_step}}</p><p><strong>Original reply text:</strong></p><blockquote>{{1.reply_text}}</blockquote><p><strong>Raw Claude classifier output:</strong></p><pre>{{2.data.choices[0].message.content}}</pre><p><strong>Normalized value evaluated:</strong> {{3.value}}</p><hr><p>Action: review the raw output above and follow up with this lead manually.</p><p>— CWI Automation (Scenario E)</p>\"}"
+              },
+              "metadata": {
+                "designer": { "x": 1200, "y": 600 },
+                "label": "Resend: Internal Alert — Unclassified Reply (Fallback)"
+              }
+            },
+            {
+              "id": 16,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": { "handleErrors": true, "useNewZLibDeCompress": true },
+              "mapper": {
+                "url": "https://api.apollo.io/v1/contact/bulk_attributes_update",
+                "serializeUrl": false,
+                "method": "post",
+                "headers": [
+                  { "name": "Content-Type", "value": "application/json" },
+                  { "name": "X-Api-Key", "value": "{{env.APOLLO_API_KEY}}" }
+                ],
+                "queryString": [],
+                "bodyType": "raw",
+                "parseResponse": true,
+                "contentType": "application/json",
+                "data": "{\"api_key\":\"{{env.APOLLO_API_KEY}}\",\"contact_emails\":[\"{{1.contact_email}}\"],\"label_names\":[\"Reply-Needs-Review\"]}"
+              },
+              "metadata": {
+                "designer": { "x": 1500, "y": 600 },
+                "label": "Apollo: Tag Reply-Needs-Review (Fallback)"
+              }
+            }
+          ],
+          "label": "FALLBACK — Unclassified Sentiment",
+          "filter": null
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": {
+      "orphans": []
+    },
+    "zone": "us1.make.com"
+  },
+  "connections": {
+    "hubspot": {
+      "label": "HubSpot CWI Account",
+      "scopes": ["crm.objects.deals.write", "crm.objects.contacts.read"]
+    }
+  },
+  "environment_variables": {
+    "OPENROUTER_API_KEY": "REPLACE_WITH_OPENROUTER_API_KEY",
+    "APOLLO_API_KEY": "REPLACE_WITH_APOLLO_API_KEY",
+    "HUBSPOT_PORTAL_ID": "REPLACE_WITH_HUBSPOT_PORTAL_ID",
+    "HUBSPOT_PRIVATE_APP_TOKEN": "REPLACE_WITH_HUBSPOT_PRIVATE_APP_TOKEN",
+    "HUBSPOT_STAGE_REPLIED": "REPLACE_WITH_HUBSPOT_REPLIED_STAGE_ID",
+    "HUBSPOT_STAGE_CLOSED_LOST": "REPLACE_WITH_HUBSPOT_CLOSED_LOST_STAGE_ID",
+    "RESEND_API_KEY": "REPLACE_WITH_RESEND_API_KEY",
+    "RESEND_FROM_ADDRESS": "REPLACE_WITH_CLIENT_FACING_FROM_ADDRESS",
+    "CWI_ALERT_FROM_ADDRESS": "REPLACE_WITH_INTERNAL_ALERT_FROM_ADDRESS"
+  },
+  "webhooks": [
+    {
+      "id": 1001,
+      "name": "Apollo Reply Received",
+      "url": "GENERATED_BY_MAKE_ON_IMPORT",
+      "method": "POST",
+      "headers": [],
+      "stringify": false,
+      "retrieval": "lastdup",
+      "type": "gateway",
+      "json": true,
+      "typedConfig": null,
+      "rawConfig": null,
+      "note": "Paste this URL into Apollo > Settings > Webhooks > email.reply_received"
+    }
+  ]
+}

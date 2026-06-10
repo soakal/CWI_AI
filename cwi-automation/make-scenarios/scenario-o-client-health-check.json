@@ -1,0 +1,804 @@
+{
+  "name": "Scenario O: Monthly Client Health Check",
+  "comments": "Runs on the 1st of every month at 9AM ET. Fetches all rows from the ActiveClients tab of the Google Sheet defined by env.ACTIVE_CLIENTS_SHEET_ID. Iterates over each client and calculates days_since_activity and an at_risk flag (true if days_since_activity > 14 OR containment_rate < 60). A Router passes only at-risk clients forward. For each at-risk client, HubSpot is updated with today as CWI_Last_CheckIn, Claude (OpenRouter, claude-sonnet-4-6) writes a 2-sentence internal alert with one suggested action, and Resend delivers the alert to the admin. An error handler sends a Resend alert on any failure. All secrets are stored as env.VARIABLE_NAME. Timezone: America/New_York.",
+  "flow": [
+    {
+      "id": 1,
+      "module": "builtin:BasicTrigger",
+      "version": 1,
+      "parameters": {
+        "type": "schedule",
+        "cron": "0 9 1 * *",
+        "timezone": "America/New_York"
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0
+        },
+        "restore": {},
+        "parameters": [
+          {
+            "name": "type",
+            "type": "select",
+            "label": "Trigger type",
+            "required": true
+          },
+          {
+            "name": "cron",
+            "type": "text",
+            "label": "Cron expression",
+            "required": true
+          },
+          {
+            "name": "timezone",
+            "type": "timezone",
+            "label": "Timezone",
+            "required": true
+          }
+        ],
+        "expect": []
+      }
+    },
+    {
+      "id": 2,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDecompression": true
+      },
+      "mapper": {
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/{{env.ACTIVE_CLIENTS_SHEET_ID}}/values/ActiveClients",
+        "serializeUrl": false,
+        "method": "get",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.GOOGLE_SHEETS_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "qs": [
+          {
+            "name": "majorDimension",
+            "value": "ROWS"
+          },
+          {
+            "name": "valueRenderOption",
+            "value": "UNFORMATTED_VALUE"
+          }
+        ],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "authUser": "",
+        "authPass": "",
+        "timeout": 30,
+        "shareCookies": false,
+        "ca": "",
+        "rejectUnauthorized": true,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "gzip": true,
+        "useMtls": false
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0
+        },
+        "restore": {
+          "expect": {
+            "method": {
+              "label": "GET"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "handleErrors",
+            "type": "boolean",
+            "label": "Evaluate all states as errors (except for 2xx and 3xx)",
+            "required": true
+          },
+          {
+            "name": "useNewZLibDecompression",
+            "type": "boolean",
+            "label": "Use new ZLib decompression library",
+            "required": true
+          }
+        ],
+        "expect": [
+          {
+            "name": "url",
+            "type": "url",
+            "label": "URL",
+            "required": true
+          },
+          {
+            "name": "method",
+            "type": "select",
+            "label": "Method",
+            "required": true
+          },
+          {
+            "name": "headers",
+            "type": "array",
+            "label": "Headers"
+          },
+          {
+            "name": "qs",
+            "type": "array",
+            "label": "Query string"
+          },
+          {
+            "name": "parseResponse",
+            "type": "boolean",
+            "label": "Parse response"
+          }
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "module": "util:Iterator",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "array": "{{slice(2.data.values; 1)}}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0
+        },
+        "restore": {},
+        "parameters": [],
+        "expect": [
+          {
+            "name": "array",
+            "type": "array",
+            "label": "Array",
+            "required": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 4,
+      "module": "util:SetVariables2",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "variables": [
+          {
+            "name": "client_name",
+            "value": "{{3.value[0]}}"
+          },
+          {
+            "name": "client_email",
+            "value": "{{3.value[1]}}"
+          },
+          {
+            "name": "hubspot_company_id",
+            "value": "{{3.value[2]}}"
+          },
+          {
+            "name": "last_activity_date",
+            "value": "{{3.value[3]}}"
+          },
+          {
+            "name": "containment_rate",
+            "value": "{{toNumber(3.value[4])}}"
+          },
+          {
+            "name": "monthly_fee",
+            "value": "{{3.value[5]}}"
+          },
+          {
+            "name": "days_since_activity",
+            "value": "{{round(dateDifference(now; parseDate(3.value[3]; 'YYYY-MM-DD'); 'days'))}}"
+          },
+          {
+            "name": "at_risk",
+            "value": "{{if(round(dateDifference(now; parseDate(3.value[3]; 'YYYY-MM-DD'); 'days')) > 14 OR toNumber(3.value[4]) < 60; true; false)}}"
+          }
+        ]
+      },
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 0
+        },
+        "restore": {},
+        "parameters": [],
+        "expect": [
+          {
+            "name": "variables",
+            "type": "array",
+            "label": "Variables"
+          }
+        ]
+      }
+    },
+    {
+      "id": 5,
+      "module": "builtin:BasicRouter",
+      "version": 1,
+      "parameters": {},
+      "mapper": {},
+      "routes": [
+        {
+          "name": "At-Risk Client (alert required)",
+          "flow": [6, 7, 8],
+          "filter": {
+            "name": "at_risk = true",
+            "conditions": [
+              [
+                {
+                  "a": "{{4.at_risk}}",
+                  "b": "true",
+                  "o": "text:equal"
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "name": "Healthy Client (skip)",
+          "flow": [],
+          "filter": {
+            "name": "at_risk = false",
+            "conditions": [
+              [
+                {
+                  "a": "{{4.at_risk}}",
+                  "b": "false",
+                  "o": "text:equal"
+                }
+              ]
+            ]
+          }
+        }
+      ],
+      "metadata": {
+        "designer": {
+          "x": 1200,
+          "y": 0
+        },
+        "restore": {}
+      }
+    },
+    {
+      "id": 6,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDecompression": true
+      },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/companies/{{4.hubspot_company_id}}",
+        "serializeUrl": false,
+        "method": "patch",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.HUBSPOT_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "authUser": "",
+        "authPass": "",
+        "timeout": 30,
+        "shareCookies": false,
+        "ca": "",
+        "rejectUnauthorized": true,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "gzip": true,
+        "useMtls": false,
+        "contentType": "application/json",
+        "data": "{\n  \"properties\": {\n    \"CWI_Last_CheckIn\": \"{{formatDate(now; 'YYYY-MM-DD')}}\"\n  }\n}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 1500,
+          "y": -150
+        },
+        "restore": {
+          "expect": {
+            "method": {
+              "label": "PATCH"
+            },
+            "bodyType": {
+              "label": "Raw"
+            },
+            "contentType": {
+              "label": "JSON (application/json)"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "handleErrors",
+            "type": "boolean",
+            "label": "Evaluate all states as errors (except for 2xx and 3xx)",
+            "required": true
+          },
+          {
+            "name": "useNewZLibDecompression",
+            "type": "boolean",
+            "label": "Use new ZLib decompression library",
+            "required": true
+          }
+        ],
+        "expect": [
+          {
+            "name": "url",
+            "type": "url",
+            "label": "URL",
+            "required": true
+          },
+          {
+            "name": "method",
+            "type": "select",
+            "label": "Method",
+            "required": true
+          },
+          {
+            "name": "headers",
+            "type": "array",
+            "label": "Headers"
+          },
+          {
+            "name": "bodyType",
+            "type": "select",
+            "label": "Body type"
+          },
+          {
+            "name": "contentType",
+            "type": "select",
+            "label": "Content type"
+          },
+          {
+            "name": "data",
+            "type": "string",
+            "label": "Request content"
+          },
+          {
+            "name": "parseResponse",
+            "type": "boolean",
+            "label": "Parse response"
+          }
+        ]
+      }
+    },
+    {
+      "id": 7,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDecompression": true
+      },
+      "mapper": {
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "serializeUrl": false,
+        "method": "post",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.OPENROUTER_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "name": "HTTP-Referer",
+            "value": "{{env.OPENROUTER_REFERRER}}"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "authUser": "",
+        "authPass": "",
+        "timeout": 30,
+        "shareCookies": false,
+        "ca": "",
+        "rejectUnauthorized": true,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "gzip": true,
+        "useMtls": false,
+        "contentType": "application/json",
+        "data": "{\n  \"model\": \"anthropic/claude-sonnet-4-6\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Write a 2-sentence internal alert about client {{4.client_name}} who may be at risk. Days since last activity: {{4.days_since_activity}}. Containment rate: {{4.containment_rate}}%. Suggest one action Brian should take. Return only the alert message.\"\n    }\n  ],\n  \"max_tokens\": 200,\n  \"temperature\": 0.7\n}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 1800,
+          "y": -150
+        },
+        "restore": {
+          "expect": {
+            "method": {
+              "label": "POST"
+            },
+            "bodyType": {
+              "label": "Raw"
+            },
+            "contentType": {
+              "label": "JSON (application/json)"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "handleErrors",
+            "type": "boolean",
+            "label": "Evaluate all states as errors (except for 2xx and 3xx)",
+            "required": true
+          },
+          {
+            "name": "useNewZLibDecompression",
+            "type": "boolean",
+            "label": "Use new ZLib decompression library",
+            "required": true
+          }
+        ],
+        "expect": [
+          {
+            "name": "url",
+            "type": "url",
+            "label": "URL",
+            "required": true
+          },
+          {
+            "name": "method",
+            "type": "select",
+            "label": "Method",
+            "required": true
+          },
+          {
+            "name": "headers",
+            "type": "array",
+            "label": "Headers"
+          },
+          {
+            "name": "bodyType",
+            "type": "select",
+            "label": "Body type"
+          },
+          {
+            "name": "contentType",
+            "type": "select",
+            "label": "Content type"
+          },
+          {
+            "name": "data",
+            "type": "string",
+            "label": "Request content"
+          },
+          {
+            "name": "parseResponse",
+            "type": "boolean",
+            "label": "Parse response"
+          }
+        ]
+      }
+    },
+    {
+      "id": 8,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDecompression": true
+      },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "serializeUrl": false,
+        "method": "post",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.RESEND_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "authUser": "",
+        "authPass": "",
+        "timeout": 30,
+        "shareCookies": false,
+        "ca": "",
+        "rejectUnauthorized": true,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "gzip": true,
+        "useMtls": false,
+        "contentType": "application/json",
+        "data": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"{{env.ADMIN_EMAIL}}\"],\n  \"subject\": \"At-Risk Client Alert: {{4.client_name}}\",\n  \"html\": \"<p>{{7.data.choices[0].message.content}}</p><hr><p><strong>Client:</strong> {{4.client_name}}</p><p><strong>Client Email:</strong> {{4.client_email}}</p><p><strong>Monthly Fee:</strong> ${{4.monthly_fee}}</p><p><strong>Days Since Last Activity:</strong> {{4.days_since_activity}}</p><p><strong>Containment Rate:</strong> {{4.containment_rate}}%</p><p><strong>HubSpot Company ID:</strong> {{4.hubspot_company_id}}</p><p><strong>Check-In Logged:</strong> {{formatDate(now; 'YYYY-MM-DD')}}</p>\"\n}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 2100,
+          "y": -150
+        },
+        "restore": {
+          "expect": {
+            "method": {
+              "label": "POST"
+            },
+            "bodyType": {
+              "label": "Raw"
+            },
+            "contentType": {
+              "label": "JSON (application/json)"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "handleErrors",
+            "type": "boolean",
+            "label": "Evaluate all states as errors (except for 2xx and 3xx)",
+            "required": true
+          },
+          {
+            "name": "useNewZLibDecompression",
+            "type": "boolean",
+            "label": "Use new ZLib decompression library",
+            "required": true
+          }
+        ],
+        "expect": [
+          {
+            "name": "url",
+            "type": "url",
+            "label": "URL",
+            "required": true
+          },
+          {
+            "name": "method",
+            "type": "select",
+            "label": "Method",
+            "required": true
+          },
+          {
+            "name": "headers",
+            "type": "array",
+            "label": "Headers"
+          },
+          {
+            "name": "bodyType",
+            "type": "select",
+            "label": "Body type"
+          },
+          {
+            "name": "contentType",
+            "type": "select",
+            "label": "Content type"
+          },
+          {
+            "name": "data",
+            "type": "string",
+            "label": "Request content"
+          },
+          {
+            "name": "parseResponse",
+            "type": "boolean",
+            "label": "Parse response"
+          }
+        ]
+      }
+    },
+    {
+      "id": 9,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": false,
+        "useNewZLibDecompression": true
+      },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "serializeUrl": false,
+        "method": "post",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.RESEND_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "authUser": "",
+        "authPass": "",
+        "timeout": 30,
+        "shareCookies": false,
+        "ca": "",
+        "rejectUnauthorized": true,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "gzip": true,
+        "useMtls": false,
+        "contentType": "application/json",
+        "data": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"{{env.ADMIN_EMAIL}}\"],\n  \"subject\": \"[ERROR] Scenario O Monthly Client Health Check Failed\",\n  \"html\": \"<p>The Monthly Client Health Check scenario (Scenario O) encountered an error and could not complete.</p><p><strong>Error:</strong> {{error.message}}</p><p><strong>Module:</strong> {{error.module}}</p><p><strong>Time:</strong> {{now}}</p><p>Please check the Make.com execution log for details.</p>\"\n}"
+      },
+      "error_handler": true,
+      "linked_to_module": null,
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 300
+        },
+        "restore": {
+          "expect": {
+            "method": {
+              "label": "POST"
+            },
+            "bodyType": {
+              "label": "Raw"
+            },
+            "contentType": {
+              "label": "JSON (application/json)"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "handleErrors",
+            "type": "boolean",
+            "label": "Evaluate all states as errors (except for 2xx and 3xx)",
+            "required": true
+          },
+          {
+            "name": "useNewZLibDecompression",
+            "type": "boolean",
+            "label": "Use new ZLib decompression library",
+            "required": true
+          }
+        ],
+        "expect": [
+          {
+            "name": "url",
+            "type": "url",
+            "label": "URL",
+            "required": true
+          },
+          {
+            "name": "method",
+            "type": "select",
+            "label": "Method",
+            "required": true
+          },
+          {
+            "name": "headers",
+            "type": "array",
+            "label": "Headers"
+          },
+          {
+            "name": "bodyType",
+            "type": "select",
+            "label": "Body type"
+          },
+          {
+            "name": "contentType",
+            "type": "select",
+            "label": "Content type"
+          },
+          {
+            "name": "data",
+            "type": "string",
+            "label": "Request content"
+          },
+          {
+            "name": "parseResponse",
+            "type": "boolean",
+            "label": "Parse response"
+          }
+        ]
+      }
+    }
+  ],
+  "metadata": {
+    "instant": false,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "slots": null,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": {
+      "orphans": []
+    },
+    "zone": "us1.make.com",
+    "notes": [
+      {
+        "id": 1,
+        "content": "Module 1: Schedule trigger — 1st of every month at 9AM ET (America/New_York). Cron: 0 9 1 * *",
+        "position": { "x": 0, "y": -80 }
+      },
+      {
+        "id": 2,
+        "content": "Module 2: Google Sheets HTTP GET — fetches all rows from ActiveClients tab of env.ACTIVE_CLIENTS_SHEET_ID. Columns: client_name, client_email, hubspot_company_id, last_activity_date, containment_rate, monthly_fee",
+        "position": { "x": 300, "y": -80 }
+      },
+      {
+        "id": 3,
+        "content": "Module 3: Iterator — loops over each client row (skips header row via slice). Each item is a value array indexed 0-5.",
+        "position": { "x": 600, "y": -80 }
+      },
+      {
+        "id": 4,
+        "content": "Module 4: SetVariables — maps row columns to named vars, calculates days_since_activity (dateDifference from last_activity_date to now), sets at_risk = true if days_since_activity > 14 OR containment_rate < 60",
+        "position": { "x": 900, "y": -80 }
+      },
+      {
+        "id": 5,
+        "content": "Module 5: Router — at_risk = true proceeds to alert path (modules 6-8); at_risk = false is discarded silently",
+        "position": { "x": 1200, "y": -80 }
+      },
+      {
+        "id": 6,
+        "content": "Module 6: HubSpot HTTP PATCH — updates CWI_Last_CheckIn property to today (YYYY-MM-DD) on the company identified by hubspot_company_id",
+        "position": { "x": 1500, "y": -230 }
+      },
+      {
+        "id": 7,
+        "content": "Module 7: OpenRouter HTTP POST — model anthropic/claude-sonnet-4-6 — generates 2-sentence at-risk alert for client, including days_since_activity and containment_rate, with one suggested action for Brian",
+        "position": { "x": 1800, "y": -230 }
+      },
+      {
+        "id": 8,
+        "content": "Module 8: Resend HTTP POST — sends at-risk alert email from env.CWI_ALERT_FROM_ADDRESS to env.ADMIN_EMAIL. Subject: 'At-Risk Client Alert: [client_name]'. Body includes Claude alert, client email, and monthly fee.",
+        "position": { "x": 2100, "y": -230 }
+      },
+      {
+        "id": 9,
+        "content": "Module 9: Error Handler — Resend alert to admin on any scenario failure, including error message and module name",
+        "position": { "x": 900, "y": 220 }
+      }
+    ]
+  },
+  "environment_variables": {
+    "ACTIVE_CLIENTS_SHEET_ID": "Google Sheets spreadsheet ID containing the ActiveClients tab",
+    "GOOGLE_SHEETS_API_KEY": "Google Sheets API bearer token (service account or OAuth2 access token)",
+    "HUBSPOT_API_KEY": "HubSpot private app bearer token",
+    "OPENROUTER_API_KEY": "OpenRouter API key for Claude access",
+    "OPENROUTER_REFERRER": "HTTP-Referer header value for OpenRouter requests",
+    "RESEND_API_KEY": "Resend API key for sending emails",
+    "CWI_ALERT_FROM_ADDRESS": "Verified sender address for alert emails (e.g. alerts@yourdomain.com)",
+    "ADMIN_EMAIL": "Brian's email address for at-risk client and error alerts"
+  }
+}

@@ -1,0 +1,473 @@
+{
+  "name": "Scenario C: Monthly Client Report",
+  "flow": [
+    {
+      "id": 1,
+      "module": "builtin:BasicScheduleTrigger",
+      "version": 1,
+      "parameters": {},
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 0, "y": 0 },
+        "restore": {
+          "parameters": {
+            "interval": {
+              "label": "Monthly (first Monday at 08:00 America/New_York)"
+            }
+          }
+        }
+      },
+      "scheduling": {
+        "type": "cron",
+        "interval": 1,
+        "unit": "months",
+        "weekday": 1,
+        "time": "08:00",
+        "restriction": "first",
+        "timezone": "America/New_York"
+      }
+    },
+    {
+      "id": 2,
+      "module": "google-sheets:getRows",
+      "version": 3,
+      "parameters": {
+        "__IMTCONN__": "{{connection.google_sheets}}"
+      },
+      "mapper": {
+        "spreadsheetId": "{{env.ACTIVE_CLIENTS_SHEET_ID}}",
+        "sheetName": "ActiveClients",
+        "includeColumnNamesInOutput": true,
+        "hasHeader": "yes",
+        "from": 1,
+        "limit": 1000
+      },
+      "metadata": {
+        "designer": { "x": 300, "y": 0 },
+        "restore": {
+          "parameters": {
+            "__IMTCONN__": { "label": "Google Sheets Connection" }
+          }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "module": "builtin:BasicIterator",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "array": "{{2.rows}}"
+      },
+      "metadata": {
+        "designer": { "x": 600, "y": 0 }
+      }
+    },
+    {
+      "id": 4,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true
+      },
+      "mapper": {
+        "url": "{{env.FRESHCHAT_BASE_URL}}/analytics/summary",
+        "method": "GET",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.FRESHCHAT_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "qs": [
+          {
+            "name": "account_id",
+            "value": "{{3.value.freshchat_account_id}}"
+          },
+          {
+            "name": "start_date",
+            "value": "{{formatDate(startOfMonth(addDays(startOfMonth(now); -1)); \"YYYY-MM-DD\"; \"America/New_York\")}}"
+          },
+          {
+            "name": "end_date",
+            "value": "{{formatDate(addDays(startOfMonth(now); -1); \"YYYY-MM-DD\"; \"America/New_York\")}}"
+          },
+          {
+            "name": "group_by",
+            "value": "channel"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": ""
+      },
+      "metadata": {
+        "designer": { "x": 900, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "GET" },
+            "bodyType": { "label": "Raw" },
+            "contentType": { "label": "JSON (application/json)" }
+          }
+        }
+      }
+    },
+    {
+      "id": 5,
+      "module": "google-calendar:listEvents",
+      "version": 3,
+      "parameters": {
+        "__IMTCONN__": "{{connection.google_calendar}}"
+      },
+      "mapper": {
+        "calendarId": "{{3.value.google_calendar_id}}",
+        "timeMin": "{{formatDate(startOfMonth(addDays(startOfMonth(now); -1)); \"YYYY-MM-DDTHH:mm:ssZ\"; \"America/New_York\")}}",
+        "timeMax": "{{formatDate(addDays(addDays(startOfMonth(now); -1); 1); \"YYYY-MM-DDTHH:mm:ssZ\"; \"America/New_York\")}}",
+        "singleEvents": true,
+        "orderBy": "startTime",
+        "maxResults": 2500
+      },
+      "metadata": {
+        "designer": { "x": 1200, "y": 0 },
+        "restore": {
+          "parameters": {
+            "__IMTCONN__": { "label": "Google Calendar Connection" }
+          }
+        }
+      }
+    },
+    {
+      "id": 6,
+      "module": "builtin:SetVariable",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "variables": [
+          {
+            "name": "total_conversations",
+            "value": "{{parseNumber(ifempty(4.data.total_conversations; 0); \".\")}}"
+          },
+          {
+            "name": "bot_resolved",
+            "value": "{{parseNumber(ifempty(4.data.bot_resolved_count; 0); \".\")}}"
+          },
+          {
+            "name": "escalated",
+            "value": "{{parseNumber(ifempty(4.data.escalated_count; 0); \".\")}}"
+          },
+          {
+            "name": "avg_response_time",
+            "value": "{{round(parseNumber(ifempty(4.data.avg_first_response_time; 0); \".\"))}}"
+          },
+          {
+            "name": "appointments_booked",
+            "value": "{{length(ifempty(5.events; emptyarray))}}"
+          },
+          {
+            "name": "report_month",
+            "value": "{{formatDate(addDays(startOfMonth(now); -1); \"MMMM YYYY\"; \"America/New_York\")}}"
+          }
+        ]
+      },
+      "metadata": {
+        "designer": { "x": 1500, "y": 0 }
+      }
+    },
+    {
+      "id": 12,
+      "module": "builtin:SetVariable",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "variables": [
+          {
+            "name": "containment_rate",
+            "value": "{{if(6.total_conversations > 0; round(6.bot_resolved / 6.total_conversations * 100; 1); 0)}}"
+          },
+          {
+            "name": "escalation_rate",
+            "value": "{{if(6.total_conversations > 0; round(6.escalated / 6.total_conversations * 100; 1); 0)}}"
+          }
+        ]
+      },
+      "metadata": {
+        "designer": { "x": 1650, "y": 0 }
+      }
+    },
+    {
+      "id": 7,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true
+      },
+      "mapper": {
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.OPENROUTER_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "name": "HTTP-Referer",
+            "value": "https://cwiai.net"
+          },
+          {
+            "name": "X-Title",
+            "value": "CWI Monthly Client Report"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\"model\": \"anthropic/claude-sonnet-4-6\", \"messages\": [{\"role\": \"system\", \"content\": \"You are a friendly AI business consultant writing a concise monthly performance narrative for a client. Keep it exactly 150 words. Tone: warm, professional, encouraging. End with one specific actionable recommendation based on the stats provided.\"}, {\"role\": \"user\", \"content\": \"Write a 150-word monthly performance narrative for {{3.value.client_name}} for {{6.report_month}}. Stats: Total conversations: {{6.total_conversations}}, Bot resolved: {{6.bot_resolved}} ({{12.containment_rate}}%), Escalated to human: {{6.escalated}} ({{12.escalation_rate}}%), Appointments booked via calendar: {{6.appointments_booked}}, Avg first response time: {{6.avg_response_time}} seconds. Industry: {{3.value.industry}}. Make it specific, data-driven, and end with one clear recommendation to improve their lowest-performing metric.\"}], \"max_tokens\": 300, \"temperature\": 0.7}"
+      },
+      "metadata": {
+        "designer": { "x": 1800, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "POST" },
+            "bodyType": { "label": "Raw" },
+            "contentType": { "label": "JSON (application/json)" }
+          }
+        }
+      }
+    },
+    {
+      "id": 13,
+      "module": "builtin:SetVariable",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "variables": [
+          {
+            "name": "ai_narrative",
+            "value": "{{ifempty(7.data.choices[0].message.content; \"Your AI assistant continued to support your customers this month. Detailed narrative is temporarily unavailable; the key metrics above reflect this period's performance. Reply to this email and we will walk you through the results.\")}}"
+          }
+        ]
+      },
+      "metadata": {
+        "designer": { "x": 1950, "y": 0 }
+      }
+    },
+    {
+      "id": 8,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true
+      },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.RESEND_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\"from\": \"{{env.RESEND_FROM_ADDRESS}}\", \"to\": [\"{{3.value.client_email}}\"], \"reply_to\": [\"brian@cwiai.net\"], \"bcc\": [\"brian@cwiai.net\"], \"subject\": \"Your {{6.report_month}} AI Performance Report — {{3.value.client_name}}\", \"html\": \"<div style=\\\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;\\\"><div style=\\\"background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;\\\"><h1 style=\\\"color: #ffffff; margin: 0; font-size: 24px;\\\">Monthly AI Performance Report</h1><p style=\\\"color: #a0aec0; margin: 8px 0 0 0;\\\">{{6.report_month}}</p></div><div style=\\\"background: #f8f9fa; padding: 30px; border-radius: 0 0 12px 12px; border: 1px solid #e2e8f0;\\\"><p style=\\\"font-size: 16px; margin-top: 0;\\\">Hi {{3.value.client_name}},</p><p style=\\\"font-size: 16px;\\\">Here is your monthly AI performance snapshot:</p><div style=\\\"background: #ffffff; border-radius: 8px; padding: 20px; margin: 20px 0; border: 1px solid #e2e8f0;\\\"><table style=\\\"width: 100%; border-collapse: collapse;\\\"><tr style=\\\"border-bottom: 1px solid #f0f0f0;\\\"><td style=\\\"padding: 12px 8px; font-size: 20px;\\\">📊</td><td style=\\\"padding: 12px 8px; color: #555;\\\">Total conversations</td><td style=\\\"padding: 12px 8px; font-weight: bold; text-align: right; font-size: 18px;\\\">{{6.total_conversations}}</td></tr><tr style=\\\"border-bottom: 1px solid #f0f0f0;\\\"><td style=\\\"padding: 12px 8px; font-size: 20px;\\\">🤖</td><td style=\\\"padding: 12px 8px; color: #555;\\\">AI resolved</td><td style=\\\"padding: 12px 8px; font-weight: bold; text-align: right; font-size: 18px;\\\">{{6.bot_resolved}} <span style=\\\"color: #38a169; font-size: 14px;\\\">({{12.containment_rate}}%)</span></td></tr><tr style=\\\"border-bottom: 1px solid #f0f0f0;\\\"><td style=\\\"padding: 12px 8px; font-size: 20px;\\\">📅</td><td style=\\\"padding: 12px 8px; color: #555;\\\">Appointments booked</td><td style=\\\"padding: 12px 8px; font-weight: bold; text-align: right; font-size: 18px;\\\">{{6.appointments_booked}}</td></tr><tr><td style=\\\"padding: 12px 8px; font-size: 20px;\\\">⚡</td><td style=\\\"padding: 12px 8px; color: #555;\\\">Avg response time</td><td style=\\\"padding: 12px 8px; font-weight: bold; text-align: right; font-size: 18px;\\\">{{6.avg_response_time}}s</td></tr></table></div><div style=\\\"background: #edf2f7; border-left: 4px solid #4299e1; padding: 16px 20px; border-radius: 0 8px 8px 0; margin: 20px 0;\\\"><p style=\\\"margin: 0; font-size: 15px; line-height: 1.6; color: #2d3748;\\\">{{replace(replace(13.ai_narrative; \"\\\"\"; \"&quot;\"); newline; \"<br>\")}}</p></div><p style=\\\"font-size: 15px;\\\">Questions? Reply to this email or book time with me directly:</p><div style=\\\"text-align: center; margin: 24px 0;\\\"><a href=\\\"{{3.value.calendly_link}}\\\" style=\\\"background: #4299e1; color: #ffffff; padding: 12px 28px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 15px;\\\">Book a Call</a></div><p style=\\\"font-size: 15px; margin-bottom: 0;\\\">— Brian<br><span style=\\\"color: #718096; font-size: 13px;\\\">CWI AI | brian@cwiai.net | (734) 812-9971</span></p></div></div>\"}"
+      },
+      "metadata": {
+        "designer": { "x": 2250, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "POST" },
+            "bodyType": { "label": "Raw" },
+            "contentType": { "label": "JSON (application/json)" }
+          }
+        }
+      }
+    },
+    {
+      "id": 9,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true
+      },
+      "mapper": {
+        "url": "{{env.HUBSPOT_BASE_URL}}/crm/v3/objects/companies/{{3.value.hubspot_company_id}}",
+        "method": "PATCH",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\"properties\": {\"cwi_last_report_month\": \"{{6.report_month}}\", \"cwi_total_conversations\": \"{{6.total_conversations}}\", \"cwi_bot_resolved\": \"{{6.bot_resolved}}\", \"cwi_containment_rate\": \"{{12.containment_rate}}\", \"cwi_escalation_rate\": \"{{12.escalation_rate}}\", \"cwi_appointments_booked\": \"{{6.appointments_booked}}\", \"cwi_avg_response_time\": \"{{6.avg_response_time}}\", \"cwi_report_sent_date\": \"{{formatDate(now; \"YYYY-MM-DD\"; \"America/New_York\")}}\", \"cwi_report_sent_timestamp\": \"{{toString(formatDate(now; \"X\")) * 1000}}\"}}"
+      },
+      "metadata": {
+        "designer": { "x": 2550, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "PATCH" },
+            "bodyType": { "label": "Raw" },
+            "contentType": { "label": "JSON (application/json)" }
+          }
+        }
+      }
+    },
+    {
+      "id": 10,
+      "module": "builtin:BasicRouter",
+      "version": 1,
+      "parameters": {},
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 2850, "y": 0 }
+      },
+      "routes": [
+        {
+          "flow": [],
+          "label": "Success",
+          "filter": {
+            "name": "Report Sent Successfully",
+            "conditions": [
+              [
+                {
+                  "a": "{{8.data.id}}",
+                  "b": "",
+                  "o": "text:notempty"
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "flow": [
+            {
+              "id": 11,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": false
+              },
+              "mapper": {
+                "url": "https://api.resend.com/emails",
+                "method": "POST",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.RESEND_API_KEY}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\", \"to\": [\"brian@cwiai.net\"], \"subject\": \"[ERROR] Monthly Report Failed — {{3.value.client_name}}\", \"html\": \"<div style=\\\"font-family: Arial, sans-serif; padding: 20px; border: 2px solid #e53e3e; border-radius: 8px; max-width: 600px;\\\"><h2 style=\\\"color: #e53e3e; margin-top: 0;\\\">Monthly Report Failed</h2><p><strong>Client:</strong> {{3.value.client_name}}</p><p><strong>Client Email:</strong> {{3.value.client_email}}</p><p><strong>HubSpot Company ID:</strong> {{3.value.hubspot_company_id}}</p><p><strong>Report Month:</strong> {{6.report_month}}</p><p><strong>Resend HTTP Status:</strong> {{ifempty(8.statusCode; \"no response\")}}</p><p><strong>Resend Error:</strong> {{ifempty(8.data.message; \"none returned\")}}</p><p><strong>AI Narrative Generated:</strong> {{if(length(ifempty(7.data.choices[0].message.content; \"\")) > 0; \"yes\"; \"no — used fallback\")}}</p><p><strong>Timestamp:</strong> {{formatDate(now; \"YYYY-MM-DD HH:mm:ss\"; \"America/New_York\")}} ET</p><hr style=\\\"border-color: #fed7d7;\\\"><p style=\\\"color: #718096; font-size: 13px;\\\">Please investigate and resend the report manually if needed. Owner: brian@cwiai.net | (734) 812-9971.</p></div>\"}"
+              },
+              "metadata": {
+                "designer": { "x": 3150, "y": 150 },
+                "restore": {
+                  "expect": {
+                    "method": { "label": "POST" },
+                    "bodyType": { "label": "Raw" },
+                    "contentType": { "label": "JSON (application/json)" }
+                  }
+                }
+              }
+            }
+          ],
+          "label": "Error Handler",
+          "filter": {
+            "name": "Report Failed",
+            "conditions": [
+              [
+                {
+                  "a": "{{8.data.id}}",
+                  "b": "",
+                  "o": "text:empty"
+                }
+              ]
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "instant": false,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "slots": null,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": {
+      "orphans": []
+    },
+    "zone": "us1.make.com"
+  },
+  "blueprint_spec": {
+    "description": "Scenario C: Monthly Client Report — Runs first Monday of each month at 08:00 (America/New_York). Pulls active client list from Google Sheets, iterates each client, fetches Freshchat analytics for the previous calendar month, counts Google Calendar appointments within the previous-month window, calculates containment and escalation rates (in a separate SetVariable module so they can reference the base-metrics module's output), generates AI narrative via OpenRouter (anthropic/claude-sonnet-4-6) with a graceful fallback narrative, sends branded HTML report via Resend native HTTP API from RESEND_FROM_ADDRESS to the client (BCC owner), and updates the HubSpot company record with KPIs. Failed reports trigger a Resend error notification from CWI_ALERT_FROM_ADDRESS to brian@cwiai.net.",
+    "timezone": "America/New_York",
+    "required_connections": {
+      "google_sheets": "Service account or OAuth with read access to active clients spreadsheet",
+      "google_calendar": "OAuth with read access to appointment calendars"
+    },
+    "required_env_vars": {
+      "ACTIVE_CLIENTS_SHEET_ID": "Google Sheets spreadsheet ID containing the ActiveClients tab",
+      "FRESHCHAT_BASE_URL": "e.g. https://api.freshchat.com/v2",
+      "FRESHCHAT_API_KEY": "Freshchat API key",
+      "OPENROUTER_API_KEY": "OpenRouter API key",
+      "HUBSPOT_BASE_URL": "e.g. https://api.hubapi.com",
+      "HUBSPOT_PRIVATE_APP_TOKEN": "HubSpot Private App token with CRM write scope",
+      "RESEND_API_KEY": "Resend API key for sending transactional email",
+      "RESEND_FROM_ADDRESS": "Verified Resend sender for client-facing reports, e.g. Brian | CWI AI <reports@cwiai.net>",
+      "CWI_ALERT_FROM_ADDRESS": "Verified Resend sender for internal error alerts, e.g. CWI AI — Error Handler <alerts@cwiai.net>"
+    },
+    "required_sheet_columns": {
+      "ActiveClients_tab": [
+        "client_name",
+        "client_email",
+        "freshchat_account_id",
+        "google_calendar_id",
+        "hubspot_company_id",
+        "industry",
+        "calendly_link"
+      ]
+    },
+    "required_hubspot_properties": [
+      "cwi_last_report_month",
+      "cwi_total_conversations",
+      "cwi_bot_resolved",
+      "cwi_containment_rate",
+      "cwi_escalation_rate",
+      "cwi_appointments_booked",
+      "cwi_avg_response_time",
+      "cwi_report_sent_date",
+      "cwi_report_sent_timestamp"
+    ]
+  }
+}

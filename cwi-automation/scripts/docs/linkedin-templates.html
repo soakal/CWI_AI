@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LinkedIn Templates — CWI AI</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent: #FF5A1F;
+      --accent-dark: #d94a16;
+      --bg: #0a0a0a;
+      --surface: #111111;
+      --surface2: #1a1a1a;
+      --surface3: #222222;
+      --border: #2a2a2a;
+      --text: #f0f0f0;
+      --text-muted: #888;
+      --text-dim: #555;
+      --success: #22c55e;
+      --radius: 10px;
+      --radius-sm: 6px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 32px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-logo {
+      width: 36px;
+      height: 36px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 14px;
+      color: #fff;
+      letter-spacing: -0.5px;
+      flex-shrink: 0;
+    }
+    .header h1 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .header-sub {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-left: auto;
+    }
+
+    /* ── Layout ── */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+
+    /* ── Section ── */
+    .section {
+      margin-bottom: 64px;
+    }
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 28px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .section-num {
+      width: 34px;
+      height: 34px;
+      background: var(--accent);
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .section-title {
+      font-size: 22px;
+      font-weight: 700;
+    }
+    .section-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 16px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .card:hover {
+      border-color: #3a3a3a;
+    }
+    .card-header {
+      padding: 14px 18px 12px;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .card-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--accent);
+    }
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .card-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .card-body {
+      padding: 18px;
+      position: relative;
+    }
+
+    /* ── Copy Button ── */
+    .copy-btn {
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+      flex-shrink: 0;
+      letter-spacing: 0.3px;
+    }
+    .copy-btn:hover {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    .copy-btn.copied {
+      background: var(--success);
+      border-color: var(--success);
+      color: #fff;
+    }
+
+    /* ── Template Text ── */
+    .template-text {
+      font-size: 14px;
+      line-height: 1.75;
+      color: var(--text);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .fill {
+      color: var(--accent);
+      font-weight: 600;
+      font-style: italic;
+    }
+
+    /* ── Character Count ── */
+    .char-count {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 10px;
+      padding: 4px 10px;
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+    }
+    .char-count .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--success);
+    }
+    .char-count.warn .dot { background: #f59e0b; }
+    .char-count.over .dot { background: #ef4444; }
+    .char-count.over { color: #ef4444; }
+
+    /* ── Skills Grid ── */
+    .skills-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 18px;
+    }
+    .skill-tag {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 13px;
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .skill-tag:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .skill-tag.copied {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    .skill-icon {
+      font-size: 11px;
+      opacity: 0.6;
+    }
+
+    /* ── Featured Tips ── */
+    .tips-list {
+      list-style: none;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .tip-item {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 12px 14px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+    }
+    .tip-icon {
+      color: var(--accent);
+      font-size: 16px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .tip-text {
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--text);
+    }
+    .tip-text strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    /* ── Post Grid ── */
+    .post-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 768px) {
+      .post-grid { grid-template-columns: 1fr; }
+      .header-sub { display: none; }
+    }
+
+    /* ── Connection Templates ── */
+    .connection-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 900px) {
+      .connection-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ── Inline notice ── */
+    .notice {
+      background: rgba(255, 90, 31, 0.08);
+      border: 1px solid rgba(255, 90, 31, 0.25);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+    .notice span { color: var(--accent); font-weight: 600; }
+
+    /* ── Divider ── */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 20px 0;
+    }
+
+    /* ── Variant badge ── */
+    .variant-badge {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: rgba(255,90,31,0.15);
+      color: var(--accent);
+      border: 1px solid rgba(255,90,31,0.3);
+    }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-logo">CWI</div>
+  <div>
+    <h1>LinkedIn Templates</h1>
+  </div>
+  <div class="header-sub">CWI AI — Profile &amp; Content Toolkit</div>
+</header>
+
+<div class="container">
+
+  <!-- ══════════════════════════════════════════════
+       SECTION 1: PROFILE OPTIMIZATION
+  ══════════════════════════════════════════════ -->
+  <section class="section">
+    <div class="section-header">
+      <div class="section-num">1</div>
+      <div>
+        <div class="section-title">Profile Optimization</div>
+        <div class="section-desc">Headlines, About section, Featured tips, and Skills — everything needed to convert profile visitors</div>
+      </div>
+    </div>
+
+    <!-- Headlines -->
+    <div class="notice"><span>Tip:</span> Test one headline for 2 weeks, track profile views in LinkedIn analytics, then switch.</div>
+
+    <!-- Headline 1 -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-label">Headline</div>
+          <div class="card-title">Value-Focused Variant</div>
+          <div class="card-meta">Leads with what the prospect gains</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="variant-badge">Value</span>
+          <button class="copy-btn" onclick="copyCard(this, 'headline-1')">Copy</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div id="headline-1" class="template-text">I Help Plumbers, HVAC Techs &amp; Tradespeople Never Miss a Revenue-Generating Call — AI Automation That Works While You Sleep | Founder @ CWI AI</div>
+        <div class="char-count" id="cc-headline-1">
+          <span class="dot"></span>
+          <span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Headline 2 -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-label">Headline</div>
+          <div class="card-title">Result-Focused Variant</div>
+          <div class="card-meta">Leads with a specific measurable outcome</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="variant-badge">Results</span>
+          <button class="copy-btn" onclick="copyCard(this, 'headline-2')">Copy</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div id="headline-2" class="template-text">Helping Trade Businesses Book More Jobs Without Hiring More Staff — AI Receptionists, Follow-Up Automation &amp; Lead Recovery | CWI AI</div>
+        <div class="char-count" id="cc-headline-2">
+          <span class="dot"></span>
+          <span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Headline 3 -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-label">Headline</div>
+          <div class="card-title">Curiosity-Focused Variant</div>
+          <div class="card-meta">Leads with a question that makes prospects self-identify</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="variant-badge">Curiosity</span>
+          <button class="copy-btn" onclick="copyCard(this, 'headline-3')">Copy</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div id="headline-3" class="template-text">What If Your Business Answered Every Call, Followed Up Every Lead &amp; Booked Jobs 24/7 — Without You? | AI Automation for Trades &amp; Small Business | CWI AI</div>
+        <div class="char-count" id="cc-headline-3">
+          <span class="dot"></span>
+          <span></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- About Section -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-label">About Section</div>
+          <div class="card-title">350-Word About Template</div>
+          <div class="card-meta">Opens with a hook, builds credibility, closes with a CTA</div>
+        </div>
+        <button class="copy-btn" onclick="copyCard(this, 'about-section')">Copy</button>
+      </div>
+      <div class="card-body">
+        <div id="about-section" class="template-text">If you run a plumbing, HVAC, electrical, or trade business — you already know the problem.
+
+You miss a call at 8pm. That caller hires your competitor by 8:05.
+
+You send a quote. You never follow up. The job disappears.
+
+You get busy in the field. Leads pile up. Revenue walks out the door.
+
+I started CWI AI because I kept seeing the same story play out for good business owners who were working harder than anyone — but losing jobs simply because they couldn't respond fast enough.
+
+The fix isn't hiring another person. It's AI automation that runs 24/7.
+
+Here's what we build for our clients:
+
+→ AI Voice Receptionists that answer every call, qualify the lead, and book the appointment — even at midnight
+→ Automated follow-up sequences that re-engage cold leads without you lifting a finger
+→ Text &amp; email campaigns that keep your business top-of-mind until the prospect is ready to buy
+→ Missed-call text-back so no lead ever goes cold again
+→ Custom workflows built around how YOUR business actually operates
+
+We work specifically with trades and small service businesses because that's where a single missed call has the biggest dollar impact — and where AI delivers results the fastest.
+
+Most of our clients see ROI within the first 30 days.
+
+No tech background required. No complicated setup. We handle everything.
+
+If you're a plumber, HVAC tech, electrician, landscaper, roofer, or service-based business owner who's tired of leaving money on the table — let's talk.
+
+DM me the word AUTOMATE and I'll send you a free 15-minute audit of where your business is losing leads right now.
+
+Or book directly: [YOUR CALENDAR LINK]</div>
+        <div class="char-count" id="cc-about-section">
+          <span class="dot"></span>
+          <span></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Featured Section Tips -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-label">Featured Section</div>
+          <div class="card-title">What to Pin &amp; Why</div>
+          <div class="card-meta">5 high-converting items for your Featured section</div>
+        </div>
+      </div>
+      <ul class="tips-list">
+        <li class="tip-item">
+          <div class="tip-icon">&#9733;</div>
+          <div class="tip-text"><strong>Pin your best-performing post.</strong> The post with the most comments or shares — ideally a client result or myth-busting post. Social proof converts better than any ad.</div>
+        </li>
+        <li class="tip-item">
+          <div class="tip-icon">&#9733;</div>
+          <div class="tip-text"><strong>Add a booking link as a featured link.</strong> Use a headline like "Book a Free 15-Min AI Audit" with a thumbnail image. This is the fastest path from profile view to booked call.</div>
+        </li>
+        <li class="tip-item">
+          <div class="tip-icon">&#9733;</div>
+          <div class="tip-text"><strong>Feature a short case study or PDF.</strong> A one-page "How We Got [Client Type] [X Result] in [Y Days]" doc positions you as the proven expert before the conversation starts.</div>
+        </li>
+        <li class="tip-item">
+          <div class="tip-icon">&#9733;</div>
+          <div class="tip-text"><strong>Add a video introduction (60–90 seconds).</strong> Say who you help, what problem you solve, and invite them to book a call. Video builds trust faster than any written content.</div>
+        </li>
+        <li class="tip-item">
+          <div class="tip-icon">&#9733;</div>
+          <div class="tip-text"><strong>Link to your website or demo page.</strong> A live demo or explainer page showing your AI in action removes skepticism before prospects even reach out.</div>
+        </li>
+      </ul>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Skills -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-label">Skills to Add</div>
+          <div class="card-title">15 Skills — Click any to copy</div>
+          <div class="card-meta">These increase profile discoverability and search ranking on LinkedIn</div>
+        </div>
+        <button class="copy-btn" onclick="copyAllSkills(this)">Copy All</button>
+      </div>
+      <div class="skills-grid" id="skills-grid">
+        <span class="skill-tag" onclick="copySkill(this)"><span class="skill-icon">+</span>AI Automation</span>
+        <span class="skill-tag" onclick="copySkill(this)"><span class="skill-icon">+</span>Business Automation</span>
+        <span class="skill-tag" onclick="copySkill(this)"><span class="skill-icon">+</span>Lead Generation</span>
+        <span class="skill-tag" onclick="copySkill(this)"><span class="skill-icon">+</span>Conversational AI</span>
+        <span class="skill-tag" onclick="copySkill(this)"><span class="skill-icon">+</span>AI Voice Agents</span>
+        <span class="skill-tag" onclick="copySkill(this)"><span class="skill-icon">+</span>CRM Automation</span>
+        <span class="skill-tag" onclick="copySkill(this)"><span class="skill-icon">+</span>Workflow Automation</span>
+        <span class="skill-tag" onclick="copySkill(this)"><span class="skill-icon">+</span>Small Business Growth</span>
+        <span class="skill-tag" onclick="copySkill(this)"><span class="skill-icon">+</span>Marketing Automation</span>
+        <span class="skill-tag" onclick="copySkill(this)"><span class="skill-icon">+</span>Appointment Setting</span>
+        <span class="skill-tag" onclick="copySkill(this)"><span class="skill-icon">+</span>SMS Marketing</span>
+        <span class="skill-tag" onclick="copySkill(this)"><span class="skill-icon">+</span>Customer Follow-Up Systems</span>
+        <span class="skill-tag" onclick="copySkill(this)"><span class="skill-icon">+</span>Prompt Engineering</span>
+        <span class="skill-tag" onclick="copySkill(this)"><span class="skill-icon">+</span>GoHighLevel (GHL)</span>
+        <span class="skill-tag" onclick="copySkill(this)"><span class="skill-icon">+</span>AI for Tradespeople</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════
+       SECTION 2: POST TEMPLATES
+  ══════════════════════════════════════════════ -->
+  <section class="section">
+    <div class="section-header">
+      <div class="section-num">2</div>
+      <div>
+        <div class="section-title">Post Templates</div>
+        <div class="section-desc">10 proven LinkedIn post formats — fill in the blanks and publish. Orange text = your input.</div>
+      </div>
+    </div>
+
+    <div class="notice"><span>How to use:</span> Replace <span style="font-style:italic;">[bracketed text]</span> with your specifics. Keep line breaks as shown — short paragraphs outperform walls of text on LinkedIn.</div>
+
+    <div class="post-grid">
+
+      <!-- Post 1: Insight -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-label">Post Format 1</div>
+            <div class="card-title">Insight Post</div>
+          </div>
+          <button class="copy-btn" onclick="copyCard(this, 'post-insight')">Copy</button>
+        </div>
+        <div class="card-body">
+          <div id="post-insight" class="template-text">I learned something surprising about [INDUSTRY] businesses last week.
+
+They're not losing jobs because of their prices.
+
+They're not losing because of their skills.
+
+They're losing because of a 4-minute window.
+
+Research shows that if you don't respond to a new lead within 4 minutes, your chance of closing drops by over 80%.
+
+Most [INDUSTRY] owners are in the field. They can't respond in 4 minutes.
+
+So the job goes to whoever answers first.
+
+That's what we fix.
+
+Our AI responds instantly — 24/7 — qualifies the lead and books the appointment before your competitor even sees the missed call.
+
+If you're in [INDUSTRY], how fast are you typically responding to new leads?
+
+Drop it in the comments — I'm genuinely curious.</div>
+          <div class="char-count" id="cc-post-insight"><span class="dot"></span><span></span></div>
+        </div>
+      </div>
+
+      <!-- Post 2: Results -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-label">Post Format 2</div>
+            <div class="card-title">Results Post</div>
+          </div>
+          <button class="copy-btn" onclick="copyCard(this, 'post-results')">Copy</button>
+        </div>
+        <div class="card-body">
+          <div id="post-results" class="template-text">[CLIENT TYPE] went from [PROBLEM] to [RESULT] in [TIME FRAME].
+
+Here's what changed:
+
+Before:
+→ [PAIN POINT 1]
+→ [PAIN POINT 2]
+→ [PAIN POINT 3]
+
+After:
+→ [RESULT 1]
+→ [RESULT 2]
+→ [RESULT 3]
+
+What actually changed? We set up:
+— An AI receptionist that handles every incoming call
+— Automated follow-up that runs for 30 days after first contact
+— Missed-call text-back so no lead goes cold
+
+The owner told me: "[DIRECT QUOTE FROM CLIENT]"
+
+No extra staff. No extra hours.
+
+Just systems that work while they sleep.
+
+If you run a [INDUSTRY] business and this sounds familiar, drop a comment or DM me.
+
+I audit businesses like this every week.</div>
+          <div class="char-count" id="cc-post-results"><span class="dot"></span><span></span></div>
+        </div>
+      </div>
+
+      <!-- Post 3: Myth-Busting -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-label">Post Format 3</div>
+            <div class="card-title">Myth-Busting Post</div>
+          </div>
+          <button class="copy-btn" onclick="copyCard(this, 'post-myth')">Copy</button>
+        </div>
+        <div class="card-body">
+          <div id="post-myth" class="template-text">Most people think AI is expensive.
+
+Here's the truth.
+
+The AI receptionist we install for a $500K plumbing business costs less per month than a single unanswered call from a commercial job.
+
+Think about that.
+
+One missed commercial lead = potentially $2,000–$10,000 in lost revenue.
+
+The AI that catches it = a fraction of that.
+
+The businesses that say "AI is too expensive" are usually the ones quietly hemorrhaging the most money through missed calls, slow follow-up, and leads that go cold.
+
+The businesses winning right now aren't the ones spending more.
+
+They're the ones plugging the leaks.
+
+Myth: AI is a luxury for big companies.
+Reality: AI is the reason small companies are eating big companies' lunches.
+
+What other AI myths have you heard? I'll bust them in the comments.</div>
+          <div class="char-count" id="cc-post-myth"><span class="dot"></span><span></span></div>
+        </div>
+      </div>
+
+      <!-- Post 4: Story Post -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-label">Post Format 4</div>
+            <div class="card-title">Story Post</div>
+          </div>
+          <button class="copy-btn" onclick="copyCard(this, 'post-story')">Copy</button>
+        </div>
+        <div class="card-body">
+          <div id="post-story" class="template-text">Last week a plumber called me at 7pm.
+
+He wasn't looking to buy anything.
+
+He just wanted to vent.
+
+He'd lost a $4,200 job — a full bathroom remodel — because he was under a sink when the lead came in, and by the time he called back 2 hours later, the homeowner had already booked someone else.
+
+"It happens all the time," he said. "I just accept it."
+
+I told him that's exactly the problem.
+
+He'd accepted revenue loss as a cost of doing business.
+
+It isn't.
+
+We got him set up with an AI that answers calls while he's working, texts the lead immediately, and books a time slot without him doing a single thing.
+
+Within 3 weeks he recovered $6,800 in jobs he would have lost.
+
+The $4,200 job he lost that night? That's gone. But the next 10 like it? Those are his now.
+
+If you're in the trades and losing jobs to voicemail, I want to talk to you.
+
+DM me the word MISSED and let's fix it.</div>
+          <div class="char-count" id="cc-post-story"><span class="dot"></span><span></span></div>
+        </div>
+      </div>
+
+      <!-- Post 5: Question Post -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-label">Post Format 5</div>
+            <div class="card-title">Question Post</div>
+          </div>
+          <button class="copy-btn" onclick="copyCard(this, 'post-question')">Copy</button>
+        </div>
+        <div class="card-body">
+          <div id="post-question" class="template-text">What happens to your business when you miss a call?
+
+Not a rhetorical question.
+
+I'm asking because most small business owners have never actually calculated this number.
+
+Let me do the math with you:
+
+Average job value for a [INDUSTRY] business: $[AMOUNT]
+Calls missed per week: [NUMBER]
+Weeks per year: 52
+
+That's $[TOTAL] in revenue that walked to your competitor — not because of price, not because of quality, but because of voicemail.
+
+Now flip it.
+
+What if every missed call triggered an immediate text?
+What if that text started a conversation, qualified the lead, and booked the job?
+
+Same business. Same owner. Just different systems.
+
+That's what we build.
+
+Serious question for any [INDUSTRY] owners here:
+
+How many calls does your business miss in a typical week?
+
+Comment below — I'll tell you exactly what that number costs you annually.</div>
+          <div class="char-count" id="cc-post-question"><span class="dot"></span><span></span></div>
+        </div>
+      </div>
+
+      <!-- Post 6: List Post -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-label">Post Format 6</div>
+            <div class="card-title">List Post</div>
+          </div>
+          <button class="copy-btn" onclick="copyCard(this, 'post-list')">Copy</button>
+        </div>
+        <div class="card-body">
+          <div id="post-list" class="template-text">5 things AI can do for your HVAC business tonight.
+
+(That used to require a full-time employee.)
+
+1. Answer every incoming call — qualify the caller, collect their info, and book them into your calendar. Even at 11pm.
+
+2. Send an instant text to every missed call — so they don't go to Google and call your competitor.
+
+3. Follow up with every estimate you've sent that hasn't been accepted yet — automatically, over 30 days.
+
+4. Remind confirmed appointments via text so your no-show rate drops.
+
+5. Re-engage your old leads list — the people who inquired 6 months ago and went quiet — with a 3-message sequence.
+
+None of this requires you to be available.
+
+None of this requires more staff.
+
+It just requires the right system.
+
+Most HVAC owners I talk to are sitting on $10K–$50K in dormant leads they've never followed up with.
+
+That's not a lead problem. That's a follow-up problem.
+
+Which of these 5 would have the biggest impact on your business right now?</div>
+          <div class="char-count" id="cc-post-list"><span class="dot"></span><span></span></div>
+        </div>
+      </div>
+
+      <!-- Post 7: Behind the Scenes -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-label">Post Format 7</div>
+            <div class="card-title">Behind the Scenes Post</div>
+          </div>
+          <button class="copy-btn" onclick="copyCard(this, 'post-bts')">Copy</button>
+        </div>
+        <div class="card-body">
+          <div id="post-bts" class="template-text">Building something I've wanted to build for years.
+
+An AI system that makes a one-person trade business feel like a 10-person operation — without the 10 people.
+
+Here's what's going into it:
+
+— A voice AI that handles inbound calls with a personality that matches the business owner (not a robotic script)
+— A follow-up engine that texts, emails, and re-engages over 30 days without sounding spammy
+— A booking system that syncs directly with the owner's calendar, confirms with the customer, and sends reminders
+— A review request sequence that fires automatically after every completed job
+
+The goal: a business owner crawls under a sink at 9am, comes out at 5pm, and has 3 new jobs booked with deposits paid — none of which they spoke to personally.
+
+We're testing this with [NUMBER] beta clients right now.
+
+Early results: [EARLY RESULT OR METRIC].
+
+If you run a [INDUSTRY] business and want to be part of the beta, drop a comment.
+
+Limited spots. Real results only.</div>
+          <div class="char-count" id="cc-post-bts"><span class="dot"></span><span></span></div>
+        </div>
+      </div>
+
+      <!-- Post 8: Social Proof -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-label">Post Format 8</div>
+            <div class="card-title">Social Proof Post</div>
+          </div>
+          <button class="copy-btn" onclick="copyCard(this, 'post-social')">Copy</button>
+        </div>
+        <div class="card-body">
+          <div id="post-social" class="template-text">Just got off a call with a [INDUSTRY] owner in [CITY].
+
+He told me something that stopped me mid-sentence.
+
+"I was about to hire a part-time receptionist for $18/hour. I'm glad I didn't."
+
+Here's what his AI system handled in the past 30 days:
+
+→ [NUMBER] inbound calls answered
+→ [NUMBER] leads followed up automatically
+→ [NUMBER] appointments booked without his involvement
+→ [NUMBER] 5-star review requests sent
+
+Total revenue recovered from leads that would have gone cold: $[AMOUNT].
+
+Monthly cost of the system: $[PRICE].
+
+He didn't need a receptionist.
+
+He needed a system.
+
+There's a version of this for almost every service business.
+
+Plumbers. HVAC. Electricians. Roofers. Landscapers. Accountants. Chiropractors.
+
+If you're manually following up with leads, manually answering calls, or manually chasing reviews — there's a better way.
+
+What's the most time-consuming part of your lead process right now?</div>
+          <div class="char-count" id="cc-post-social"><span class="dot"></span><span></span></div>
+        </div>
+      </div>
+
+      <!-- Post 9: Educational -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-label">Post Format 9</div>
+            <div class="card-title">Educational Post</div>
+          </div>
+          <button class="copy-btn" onclick="copyCard(this, 'post-edu')">Copy</button>
+        </div>
+        <div class="card-body">
+          <div id="post-edu" class="template-text">Here's how AI appointment booking actually works.
+
+(No jargon. No hype. Just the real process.)
+
+Step 1: A potential customer calls your business number.
+
+Step 2: Instead of voicemail, they reach an AI voice agent trained on your business — your services, your prices, your service area.
+
+Step 3: The AI asks the right questions, qualifies the caller, and checks your availability in real time.
+
+Step 4: The appointment is booked, a confirmation text is sent to the customer, and the job appears in your calendar.
+
+Step 5: 24 hours before the job, the AI sends a reminder. If the customer needs to reschedule, it handles that too.
+
+You found out about the new job when you opened your calendar.
+
+That's it.
+
+You were under a sink, on a roof, or having dinner.
+
+Your business was still working.
+
+The most common objection I hear: "Will it sound robotic?"
+
+Honestly — we've had customers call us after their appointment to compliment the 'person' who booked them.
+
+That's the bar we build to.
+
+Questions about how this would work in your specific business? Ask me in the comments.</div>
+          <div class="char-count" id="cc-post-edu"><span class="dot"></span><span></span></div>
+        </div>
+      </div>
+
+      <!-- Post 10: CTA Post -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-label">Post Format 10</div>
+            <div class="card-title">CTA Post</div>
+          </div>
+          <button class="copy-btn" onclick="copyCard(this, 'post-cta')">Copy</button>
+        </div>
+        <div class="card-body">
+          <div id="post-cta" class="template-text">If you're a plumber, HVAC tech, or accountant — this is for you.
+
+I'm offering 5 free AI Lead Audit calls this week.
+
+Here's what we do in 15 minutes:
+
+1. I look at where your business is losing leads right now (missed calls, slow follow-up, dead estimates)
+
+2. I show you exactly how much that's costing you in real dollars
+
+3. I map out what an automated system would look like specifically for your business
+
+Zero sales pressure. If it's not a fit, I'll tell you.
+
+But if it is — you'll leave the call knowing exactly what to do next.
+
+Who is this for:
+✓ Trade business doing $200K–$2M/year
+✓ You're the main point of contact for new inquiries
+✓ You know you're missing leads but don't have time to fix it
+✓ You're open to using technology if it's simple and proven
+
+To claim one of the 5 spots:
+
+Comment "AUDIT" below or DM me directly.
+
+I'll send you a link to book your time.
+
+First come, first served.</div>
+          <div class="char-count" id="cc-post-cta"><span class="dot"></span><span></span></div>
+        </div>
+      </div>
+
+    </div><!-- /post-grid -->
+  </section>
+
+  <!-- ══════════════════════════════════════════════
+       SECTION 3: CONNECTION REQUEST TEMPLATES
+  ══════════════════════════════════════════════ -->
+  <section class="section">
+    <div class="section-header">
+      <div class="section-num">3</div>
+      <div>
+        <div class="section-title">Connection Request Templates</div>
+        <div class="section-desc">LinkedIn connection notes are limited to 300 characters. Keep it personal, brief, and relevant.</div>
+      </div>
+    </div>
+
+    <div class="notice"><span>LinkedIn limit:</span> Connection request notes are capped at <span>300 characters</span>. All templates below are under the limit. Do not add extra text without checking the count.</div>
+
+    <div class="connection-grid">
+
+      <!-- Template A -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-label">Connection Template A</div>
+            <div class="card-title">For Trade Business Owners</div>
+            <div class="card-meta">Plumbers, HVAC, electricians, etc.</div>
+          </div>
+          <button class="copy-btn" onclick="copyCard(this, 'conn-a')">Copy</button>
+        </div>
+        <div class="card-body">
+          <div id="conn-a" class="template-text">Hey [NAME] — I work with [INDUSTRY] businesses on AI systems that handle calls and follow-up automatically. Saw your profile and thought it might be relevant. Happy to connect and share what's working.</div>
+          <div class="char-count" id="cc-conn-a"><span class="dot"></span><span></span></div>
+        </div>
+      </div>
+
+      <!-- Template B -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-label">Connection Template B</div>
+            <div class="card-title">For Business Coaches / Referral Partners</div>
+            <div class="card-meta">Coaches, consultants, agency owners</div>
+          </div>
+          <button class="copy-btn" onclick="copyCard(this, 'conn-b')">Copy</button>
+        </div>
+        <div class="card-body">
+          <div id="conn-b" class="template-text">Hey [NAME] — I help small service businesses with AI automation. Your audience seems like a strong overlap with mine. Thought it'd be worth connecting — open to a quick intro call if there's ever a fit.</div>
+          <div class="char-count" id="cc-conn-b"><span class="dot"></span><span></span></div>
+        </div>
+      </div>
+
+      <!-- Template C -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-label">Connection Template C</div>
+            <div class="card-title">For Post Engagers / Warm Prospects</div>
+            <div class="card-meta">People who liked/commented on a relevant post</div>
+          </div>
+          <button class="copy-btn" onclick="copyCard(this, 'conn-c')">Copy</button>
+        </div>
+        <div class="card-body">
+          <div id="conn-c" class="template-text">Hey [NAME] — saw you engaged with [POST TOPIC]. That's exactly the kind of thing we help [INDUSTRY] businesses solve with AI automation. Wanted to connect in case it's ever useful. No pitch — just value.</div>
+          <div class="char-count" id="cc-conn-c"><span class="dot"></span><span></span></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</div><!-- /container -->
+
+<script>
+  // ── Character counter ──
+  const LIMITS = {
+    'headline-1': 220, 'headline-2': 220, 'headline-3': 220,
+    'about-section': 2600,
+    'post-insight': 3000, 'post-results': 3000, 'post-myth': 3000,
+    'post-story': 3000, 'post-question': 3000, 'post-list': 3000,
+    'post-bts': 3000, 'post-social': 3000, 'post-edu': 3000,
+    'post-cta': 3000,
+    'conn-a': 300, 'conn-b': 300, 'conn-c': 300
+  };
+
+  function updateCharCount(id) {
+    const el = document.getElementById(id);
+    const cc = document.getElementById('cc-' + id);
+    if (!el || !cc) return;
+    const text = el.textContent || el.innerText || '';
+    const count = text.length;
+    const limit = LIMITS[id];
+    const dot = cc.querySelector('.dot');
+    const span = cc.querySelector('span:last-child');
+    if (limit) {
+      span.textContent = count + ' / ' + limit + ' characters';
+      cc.classList.remove('warn', 'over');
+      if (count > limit) cc.classList.add('over');
+      else if (count > limit * 0.9) cc.classList.add('warn');
+    } else {
+      span.textContent = count + ' characters';
+    }
+  }
+
+  function initCharCounts() {
+    Object.keys(LIMITS).forEach(id => updateCharCount(id));
+  }
+
+  // ── Copy card text ──
+  function copyCard(btn, id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const text = (el.textContent || el.innerText || '').trim();
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = 'Copy';
+        btn.classList.remove('copied');
+      }, 2000);
+    });
+  }
+
+  // ── Copy skill tag ──
+  function copySkill(el) {
+    const text = el.textContent.replace('+', '').trim();
+    navigator.clipboard.writeText(text).then(() => {
+      el.classList.add('copied');
+      el.querySelector('.skill-icon').textContent = '✓';
+      setTimeout(() => {
+        el.classList.remove('copied');
+        el.querySelector('.skill-icon').textContent = '+';
+      }, 1800);
+    });
+  }
+
+  // ── Copy all skills ──
+  function copyAllSkills(btn) {
+    const tags = document.querySelectorAll('#skills-grid .skill-tag');
+    const skills = Array.from(tags).map(t => t.textContent.replace('+', '').trim());
+    const text = skills.join('\n');
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'Copied All!';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = 'Copy All';
+        btn.classList.remove('copied');
+      }, 2000);
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', initCharCounts);
+</script>
+</body>
+</html>

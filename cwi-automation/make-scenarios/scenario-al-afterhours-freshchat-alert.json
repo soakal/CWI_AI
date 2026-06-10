@@ -1,0 +1,435 @@
+{
+  "name": "AL After Hours Freshchat Alert",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": "{{env.FRESHCHAT_WEBHOOK_ID}}",
+        "maxResults": 1
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0
+        },
+        "restore": {
+          "parameters": {
+            "hook": {
+              "label": "Freshchat Webhook — conversation.created"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hook",
+            "type": "hook:gateway-webhook",
+            "label": "Webhook",
+            "required": true
+          },
+          {
+            "name": "maxResults",
+            "type": "number",
+            "label": "Maximum number of results"
+          }
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "module": "util:SetVariable",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "currentHour",
+        "scope": "roundtrip",
+        "value": "{{formatDate(now; \"HH\"; \"America/New_York\")}}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0
+        },
+        "restore": {},
+        "parameters": [
+          {
+            "name": "name",
+            "type": "text",
+            "label": "Variable name",
+            "required": true
+          },
+          {
+            "name": "scope",
+            "type": "select",
+            "label": "Variable lifetime",
+            "required": true
+          },
+          {
+            "name": "value",
+            "type": "any",
+            "label": "Variable value"
+          }
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "module": "util:SetVariable",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "currentDay",
+        "scope": "roundtrip",
+        "value": "{{formatDate(now; \"E\"; \"America/New_York\")}}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0
+        },
+        "restore": {},
+        "parameters": [
+          {
+            "name": "name",
+            "type": "text",
+            "label": "Variable name",
+            "required": true
+          },
+          {
+            "name": "scope",
+            "type": "select",
+            "label": "Variable lifetime",
+            "required": true
+          },
+          {
+            "name": "value",
+            "type": "any",
+            "label": "Variable value"
+          }
+        ]
+      }
+    },
+    {
+      "id": 4,
+      "module": "router:RouterModule",
+      "version": 1,
+      "parameters": {},
+      "mapper": {},
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 0
+        }
+      },
+      "routes": [
+        {
+          "flow": [
+            {
+              "id": 5,
+              "module": "util:SetVariable",
+              "version": 1,
+              "parameters": {},
+              "mapper": {
+                "name": "visitorName",
+                "scope": "roundtrip",
+                "value": "{{ifempty(1.body.data.conversation.requester.first_name; \"Guest\")}}"
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1200,
+                  "y": -200
+                },
+                "restore": {},
+                "parameters": [
+                  {
+                    "name": "name",
+                    "type": "text",
+                    "label": "Variable name",
+                    "required": true
+                  },
+                  {
+                    "name": "scope",
+                    "type": "select",
+                    "label": "Variable lifetime",
+                    "required": true
+                  },
+                  {
+                    "name": "value",
+                    "type": "any",
+                    "label": "Variable value"
+                  }
+                ]
+              }
+            },
+            {
+              "id": 6,
+              "module": "util:SetVariable",
+              "version": 1,
+              "parameters": {},
+              "mapper": {
+                "name": "messageText",
+                "scope": "roundtrip",
+                "value": "{{ifempty(1.body.data.conversation.messages[].message_parts[].text.content; \"(no message preview available)\")}}"
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1500,
+                  "y": -200
+                },
+                "restore": {},
+                "parameters": [
+                  {
+                    "name": "name",
+                    "type": "text",
+                    "label": "Variable name",
+                    "required": true
+                  },
+                  {
+                    "name": "scope",
+                    "type": "select",
+                    "label": "Variable lifetime",
+                    "required": true
+                  },
+                  {
+                    "name": "value",
+                    "type": "any",
+                    "label": "Variable value"
+                  }
+                ]
+              }
+            },
+            {
+              "id": 7,
+              "module": "util:SetVariable",
+              "version": 1,
+              "parameters": {},
+              "mapper": {
+                "name": "conversationId",
+                "scope": "roundtrip",
+                "value": "{{1.body.data.conversation.id}}"
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1800,
+                  "y": -200
+                },
+                "restore": {},
+                "parameters": [
+                  {
+                    "name": "name",
+                    "type": "text",
+                    "label": "Variable name",
+                    "required": true
+                  },
+                  {
+                    "name": "scope",
+                    "type": "select",
+                    "label": "Variable lifetime",
+                    "required": true
+                  },
+                  {
+                    "name": "value",
+                    "type": "any",
+                    "label": "Variable value"
+                  }
+                ]
+              }
+            },
+            {
+              "id": 8,
+              "module": "util:SetVariable",
+              "version": 1,
+              "parameters": {},
+              "mapper": {
+                "name": "channelName",
+                "scope": "roundtrip",
+                "value": "{{ifempty(1.body.data.conversation.channel.name; \"Freshchat\")}}"
+              },
+              "metadata": {
+                "designer": {
+                  "x": 2100,
+                  "y": -200
+                },
+                "restore": {},
+                "parameters": [
+                  {
+                    "name": "name",
+                    "type": "text",
+                    "label": "Variable name",
+                    "required": true
+                  },
+                  {
+                    "name": "scope",
+                    "type": "select",
+                    "label": "Variable lifetime",
+                    "required": true
+                  },
+                  {
+                    "name": "value",
+                    "type": "any",
+                    "label": "Variable value"
+                  }
+                ]
+              }
+            },
+            {
+              "id": 9,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": true,
+                "useNewZLibDecompress": true
+              },
+              "mapper": {
+                "url": "https://api.resend.com/emails",
+                "serializeUrl": false,
+                "method": "POST",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.RESEND_API_KEY}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "qs": [],
+                "bodyType": "raw",
+                "parseResponse": true,
+                "authUser": "",
+                "authPass": "",
+                "timeout": "",
+                "shareCookies": false,
+                "ca": "",
+                "rejectUnauthorized": true,
+                "followRedirect": true,
+                "useQuerystring": false,
+                "encoding": "utf-8",
+                "serializeBody": false,
+                "contentType": "application/json",
+                "data": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"{{env.ALERT_EMAIL}}\"],\n  \"subject\": \"LIVE CHAT \\u2014 someone is waiting right now \\u2014 {{ifempty(5.visitorName; \\\"Guest\\\")}}\",\n  \"html\": \"<!DOCTYPE html><html><head><meta name=\\\"viewport\\\" content=\\\"width=device-width, initial-scale=1.0\\\"><style>body{font-family:Arial,sans-serif;background:#f4f4f4;margin:0;padding:0}.container{max-width:600px;margin:0 auto;background:#ffffff;padding:0}.header{background:#d32f2f;color:#ffffff;padding:24px 20px;text-align:center}.header h1{margin:0;font-size:28px;letter-spacing:1px}.alert-badge{background:#ff6f00;color:#fff;display:inline-block;padding:8px 18px;border-radius:20px;font-size:14px;font-weight:bold;margin-top:10px}.body-content{padding:28px 24px}.visitor-name{font-size:32px;font-weight:bold;color:#d32f2f;margin:0 0 8px 0}.label{font-size:12px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}.message-preview{background:#f9f9f9;border-left:4px solid #d32f2f;padding:14px 16px;margin:20px 0;font-size:18px;color:#333;border-radius:0 6px 6px 0}.meta{font-size:15px;color:#555;margin:8px 0}.cta{display:block;background:#d32f2f;color:#ffffff;text-decoration:none;text-align:center;padding:18px;border-radius:8px;font-size:20px;font-weight:bold;margin:28px 0}.note{background:#fff8e1;border:1px solid #ffe082;border-radius:6px;padding:14px 16px;font-size:15px;color:#5d4037;margin-top:16px}.footer{background:#eeeeee;padding:14px 24px;text-align:center;font-size:12px;color:#999}</style></head><body><div class=\\\"container\\\"><div class=\\\"header\\\"><h1>LIVE CHAT ALERT</h1><span class=\\\"alert-badge\\\">Someone is waiting right now</span></div><div class=\\\"body-content\\\"><p class=\\\"label\\\">Visitor Name</p><p class=\\\"visitor-name\\\">{{ifempty(5.visitorName; \\\"Guest\\\")}}</p><div class=\\\"message-preview\\\"><p class=\\\"label\\\" style=\\\"margin:0 0 6px 0\\\">First Message</p>{{ifempty(6.messageText; \\\"(no message preview available)\\\")}}</div><p class=\\\"meta\\\"><strong>Channel:</strong> {{ifempty(8.channelName; \\\"Freshchat\\\")}}</p><p class=\\\"meta\\\"><strong>Conversation ID:</strong> {{7.conversationId}}</p><p class=\\\"meta\\\"><strong>Time Received:</strong> {{formatDate(now; \\\"MMMM D, YYYY [at] h:mm A\\\"; \\\"America/New_York\\\")}} ET</p><a href=\\\"https://web.freshchat.com/open/conversations/{{7.conversationId}}\\\" class=\\\"cta\\\">Open Conversation in Freshchat</a><div class=\\\"note\\\">The bot is handling this conversation automatically. Respond only if you are available and want to step in.</div></div><div class=\\\"footer\\\">This is an automated after-hours alert from your CWI live chat system.</div></div></body></html>\"\n}"
+              },
+              "metadata": {
+                "designer": {
+                  "x": 2400,
+                  "y": -200
+                },
+                "restore": {
+                  "parameters": {
+                    "handleErrors": {
+                      "label": "Yes"
+                    },
+                    "useNewZLibDecompress": {
+                      "label": "Yes"
+                    }
+                  }
+                },
+                "parameters": [
+                  {
+                    "name": "handleErrors",
+                    "type": "boolean",
+                    "label": "Evaluate all states",
+                    "required": true
+                  },
+                  {
+                    "name": "useNewZLibDecompress",
+                    "type": "boolean",
+                    "label": "Use new zlib decompress"
+                  }
+                ]
+              }
+            }
+          ],
+          "label": "After Hours — Send Alert",
+          "filter": {
+            "name": "After Hours Filter",
+            "conditions": [
+              [
+                {
+                  "a": "{{toNumber(2.currentHour)}}",
+                  "b": "9",
+                  "o": "number:less"
+                }
+              ],
+              [
+                {
+                  "a": "{{toNumber(2.currentHour)}}",
+                  "b": "18",
+                  "o": "number:greaterThanOrEqual"
+                }
+              ],
+              [
+                {
+                  "a": "{{3.currentDay}}",
+                  "b": "Sat",
+                  "o": "text:equal"
+                }
+              ],
+              [
+                {
+                  "a": "{{3.currentDay}}",
+                  "b": "Sun",
+                  "o": "text:equal"
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "flow": [],
+          "label": "Business Hours — Bot Handles It",
+          "filter": {
+            "name": "Business Hours Filter",
+            "conditions": [
+              [
+                {
+                  "a": "{{toNumber(2.currentHour)}}",
+                  "b": "9",
+                  "o": "number:greaterThanOrEqual"
+                },
+                {
+                  "a": "{{toNumber(2.currentHour)}}",
+                  "b": "18",
+                  "o": "number:less"
+                },
+                {
+                  "a": "{{3.currentDay}}",
+                  "b": "Sat",
+                  "o": "text:notEqual"
+                },
+                {
+                  "a": "{{3.currentDay}}",
+                  "b": "Sun",
+                  "o": "text:notEqual"
+                }
+              ]
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "slots": null,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": {
+      "orphans": []
+    },
+    "zone": "us2.make.com"
+  }
+}

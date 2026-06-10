@@ -1,0 +1,272 @@
+{
+  "name": "Deal Velocity Alert — Stale Pipeline Deals",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": "schedule",
+        "maxResults": 1
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 0, "y": 0 },
+        "restore": {},
+        "parameters": [
+          {
+            "name": "hook",
+            "type": "hook:gateway-webhook",
+            "label": "Webhook",
+            "required": true
+          },
+          {
+            "name": "maxResults",
+            "type": "number",
+            "label": "Maximum number of results"
+          }
+        ]
+      },
+      "scheduling": {
+        "type": "cron",
+        "cron": "0 9 * * *",
+        "timezone": "America/New_York"
+      }
+    },
+    {
+      "id": 2,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true
+      },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/deals/search",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\"filterGroups\":[{\"filters\":[{\"propertyName\":\"pipeline\",\"operator\":\"EQ\",\"value\":\"{{env.HUBSPOT_PIPELINE_ID}}\"},{\"propertyName\":\"dealstage\",\"operator\":\"NOT_IN\",\"values\":[\"{{env.HUBSPOT_STAGE_CLOSED_WON}}\",\"{{env.HUBSPOT_STAGE_CLOSED_LOST}}\"]}]}],\"properties\":[\"dealname\",\"dealstage\",\"hs_lastmodifieddate\",\"amount\",\"hubspot_owner_id\"],\"limit\":100,\"sorts\":[{\"propertyName\":\"hs_lastmodifieddate\",\"direction\":\"ASCENDING\"}]}",
+        "parseResponse": true,
+        "timeout": 30
+      },
+      "metadata": {
+        "designer": { "x": 300, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": {
+              "mode": "chose",
+              "label": "POST"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "module": "util:SetVariables",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "variables": [
+          {
+            "name": "stale_threshold_ms",
+            "value": "{{5 * 24 * 60 * 60 * 1000}}"
+          },
+          {
+            "name": "now_ms",
+            "value": "{{toTimestamp(now)}}"
+          },
+          {
+            "name": "stale_deals",
+            "value": "{{filter(2.body.results; (now_ms - toTimestamp(item.properties.hs_lastmodifieddate)) > stale_threshold_ms)}}"
+          },
+          {
+            "name": "stale_count",
+            "value": "{{length(filter(2.body.results; (toTimestamp(now) - toTimestamp(item.properties.hs_lastmodifieddate)) > (5 * 24 * 60 * 60 * 1000)))}}"
+          },
+          {
+            "name": "stale_deals_text",
+            "value": "{{join(map(filter(2.body.results; (toTimestamp(now) - toTimestamp(item.properties.hs_lastmodifieddate)) > (5 * 24 * 60 * 60 * 1000)); concat(item.properties.dealname; \" | Stage: \"; item.properties.dealstage; \" | Last Modified: \"; formatDate(item.properties.hs_lastmodifieddate; \"MMMM D, YYYY\"; \"America/New_York\"); \" | Days Stuck: \"; floor((toTimestamp(now) - toTimestamp(item.properties.hs_lastmodifieddate)) / (24 * 60 * 60 * 1000)); \" | Amount: $\"; ifempty(item.properties.amount; \"N/A\"); \" | Owner ID: \"; ifempty(item.properties.hubspot_owner_id; \"Unassigned\"))); \"\\n\")}}"
+          }
+        ],
+        "scope": "scenario"
+      },
+      "metadata": {
+        "designer": { "x": 600, "y": 0 }
+      }
+    },
+    {
+      "id": 4,
+      "module": "builtin:BasicRouter",
+      "version": 1,
+      "parameters": {},
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 900, "y": 0 }
+      },
+      "routes": [
+        {
+          "flow": [
+            {
+              "id": 5,
+              "module": "builtin:BasicFilter",
+              "version": 1,
+              "parameters": {},
+              "mapper": {},
+              "metadata": {
+                "designer": { "x": 1200, "y": -150 }
+              },
+              "filter": {
+                "name": "Stale deals exist",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{3.stale_count}}",
+                      "b": "0",
+                      "o": "number:greater"
+                    }
+                  ]
+                ]
+              }
+            },
+            {
+              "id": 6,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": true
+              },
+              "mapper": {
+                "url": "https://openrouter.ai/api/v1/chat/completions",
+                "method": "POST",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.OPENROUTER_API_KEY}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "name": "HTTP-Referer",
+                    "value": "{{env.APP_URL}}"
+                  },
+                  {
+                    "name": "X-Title",
+                    "value": "CWI Automation Deal Velocity Alert"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\"models\":[\"anthropic/claude-sonnet-4-6\",\"{{env.OPENROUTER_FALLBACK_MODEL}}\"],\"messages\":[{\"role\":\"system\",\"content\":\"You are a concise sales operations assistant. Your job is to generate brief, action-oriented pipeline health summaries. Be direct and specific. No filler phrases. Use plain text only — no markdown, no bullet symbols, just numbered lines where lists are needed. Today is {{formatDate(now; \\\"MMMM D, YYYY\\\"; \\\"America/New_York\\\")}} ET.\"},{\"role\":\"user\",\"content\":\"The following HubSpot deals have had no activity for more than 5 days and need immediate attention.\\n\\nSTALE DEALS:\\n{{3.stale_deals_text}}\\n\\nFor each deal, provide:\\n1. Deal name\\n2. Current stage\\n3. Days stuck (how long since last modification)\\n4. One specific, actionable next step to move it forward (e.g., schedule a follow-up call, send a proposal, loop in a decision-maker)\\n\\nEnd with a one-sentence overall recommendation for the team.\\n\\nKeep the entire response under 400 words. Plain text only.\"}],\"max_tokens\":600,\"temperature\":0.3}",
+                "parseResponse": true,
+                "timeout": 60
+              },
+              "metadata": {
+                "designer": { "x": 1500, "y": -150 },
+                "restore": {
+                  "parameters": { "handleErrors": { "label": "Yes" } }
+                }
+              }
+            },
+            {
+              "id": 7,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": true
+              },
+              "mapper": {
+                "url": "https://api.resend.com/emails",
+                "method": "POST",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.RESEND_API_KEY}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\"from\":\"{{env.CWI_ALERT_FROM_ADDRESS}}\",\"to\":[\"{{env.ALERT_EMAIL}}\"],\"subject\":\"Action needed: {{3.stale_count}} deal{{if(3.stale_count == 1; \\\"\\\"; \\\"s\\\")}} stuck in pipeline\",\"text\":\"PIPELINE VELOCITY ALERT\\n{{formatDate(now; \\\"MMMM D, YYYY [at] h:mm A\\\"; \\\"America/New_York\\\")}} ET\\n\\n{{6.body.choices[].message.content}}\\n\\n---\\nTotal open deals checked: {{2.body.total}}\\nStale deals (5+ days without activity): {{3.stale_count}}\\n\\nGenerated by CWI AI Automation\"}",
+                "parseResponse": true,
+                "timeout": 30
+              },
+              "metadata": {
+                "designer": { "x": 1800, "y": -150 },
+                "restore": {
+                  "parameters": { "handleErrors": { "label": "Yes" } }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 8,
+              "module": "builtin:BasicFilter",
+              "version": 1,
+              "parameters": {},
+              "mapper": {},
+              "metadata": {
+                "designer": { "x": 1200, "y": 150 }
+              },
+              "filter": {
+                "name": "No stale deals — skip email",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{3.stale_count}}",
+                      "b": "0",
+                      "o": "number:equal"
+                    }
+                  ]
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "instant": false,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "slots": null,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": {
+      "orphans": []
+    },
+    "zone": "us2.make.com"
+  },
+  "scheduling": {
+    "type": "cron",
+    "cron": "0 9 * * *",
+    "timezone": "America/New_York"
+  }
+}

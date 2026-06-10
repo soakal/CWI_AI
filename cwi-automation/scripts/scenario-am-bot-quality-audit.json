@@ -1,0 +1,497 @@
+{
+  "name": "AM — Bot Quality Audit",
+  "flow": [
+    {
+      "id": 1,
+      "module": "builtin:BasicTrigger",
+      "version": 1,
+      "parameters": {},
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 0, "y": 0 },
+        "restore": {}
+      }
+    },
+    {
+      "id": 2,
+      "module": "util:SetVariable2",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "sevenDaysAgoISO",
+        "scope": "roundtrip",
+        "type": "text",
+        "value": "{{formatDate(addDays(now; -7); \"YYYY-MM-DDTHH:mm:ssZ\")}}"
+      },
+      "metadata": {
+        "designer": { "x": 300, "y": 0 },
+        "restore": {
+          "parameters": { "scope": { "label": "One cycle" } }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "module": "util:SetVariable2",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "weekOf",
+        "scope": "roundtrip",
+        "type": "text",
+        "value": "{{formatDate(now; \"MMMM D, YYYY\"; \"America/New_York\")}}"
+      },
+      "metadata": {
+        "designer": { "x": 600, "y": 0 },
+        "restore": {
+          "parameters": { "scope": { "label": "One cycle" } }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDecompress": true
+      },
+      "mapper": {
+        "url": "https://api.freshchat.com/v2/conversations",
+        "method": "GET",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.FRESHCHAT_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "qs": [
+          { "name": "updated_since", "value": "{{2.value}}" },
+          { "name": "page_size", "value": "20" }
+        ],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "timeout": 30,
+        "followRedirect": true,
+        "rejectUnauthorized": true
+      },
+      "metadata": {
+        "designer": { "x": 900, "y": 0 },
+        "restore": {
+          "parameters": {
+            "handleErrors": { "label": "Yes" },
+            "useNewZLibDecompress": { "label": "Yes" }
+          },
+          "expect": {
+            "method": { "label": "GET" }
+          }
+        }
+      }
+    },
+    {
+      "id": 5,
+      "module": "builtin:BasicIterator",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "array": "{{4.body.conversations}}"
+      },
+      "metadata": {
+        "designer": { "x": 1200, "y": 0 },
+        "restore": {}
+      }
+    },
+    {
+      "id": 6,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDecompress": true
+      },
+      "mapper": {
+        "url": "https://api.freshchat.com/v2/conversations/{{5.value.id}}/messages",
+        "method": "GET",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.FRESHCHAT_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "timeout": 30,
+        "followRedirect": true,
+        "rejectUnauthorized": true
+      },
+      "metadata": {
+        "designer": { "x": 1500, "y": 0 },
+        "restore": {
+          "parameters": {
+            "handleErrors": { "label": "Yes" },
+            "useNewZLibDecompress": { "label": "Yes" }
+          },
+          "expect": {
+            "method": { "label": "GET" }
+          }
+        }
+      }
+    },
+    {
+      "id": 7,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDecompress": true
+      },
+      "mapper": {
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{env.OPENROUTER_API_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "name": "HTTP-Referer",
+            "value": "{{env.OPENROUTER_SITE_URL}}"
+          },
+          {
+            "name": "X-Title",
+            "value": "CWI Bot Quality Audit"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "data": "{\"models\":[\"anthropic/claude-sonnet-4-6\",\"{{env.OPENROUTER_FALLBACK_MODEL}}\"],\"route\":\"fallback\",\"messages\":[{\"role\":\"system\",\"content\":\"You are a quality assurance analyst reviewing customer service bot conversations. Analyze the conversation provided and return a JSON object only — no prose, no markdown, no code fences. The JSON must have exactly these fields: \\\"conversationId\\\" (string), \\\"score\\\" (integer 1-5 where 5 is excellent), \\\"incorrectInfo\\\" (boolean — true if the bot gave any factually wrong or misleading information), \\\"missedBooking\\\" (boolean — true if the bot failed to book something when the user clearly wanted to book), \\\"userFrustration\\\" (boolean — true if the user showed signs of frustration, repeated themselves, hit dead ends, or had to retry multiple times), \\\"humanReviewNeeded\\\" (boolean — true if score is 3 or below OR any flag is true), \\\"issueSummary\\\" (string — one sentence describing the main quality issue, or 'No issues found' if score is 4 or 5 and all flags are false).\"},{\"role\":\"user\",\"content\":\"Review this Freshchat conversation.\\nConversation ID: {{5.value.id}}\\nMessages: {{toString(6.body.messages)}}\"}],\"max_tokens\":400,\"temperature\":0.2}",
+        "parseResponse": true,
+        "timeout": 60,
+        "followRedirect": true,
+        "rejectUnauthorized": true
+      },
+      "metadata": {
+        "designer": { "x": 1800, "y": 0 },
+        "restore": {
+          "parameters": {
+            "handleErrors": { "label": "Yes" },
+            "useNewZLibDecompress": { "label": "Yes" }
+          },
+          "expect": {
+            "method": { "label": "POST" }
+          }
+        }
+      }
+    },
+    {
+      "id": 8,
+      "module": "util:SetVariable2",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "auditResult",
+        "scope": "roundtrip",
+        "type": "any",
+        "value": "{{parseJSON(7.body.choices[].message.content)}}"
+      },
+      "metadata": {
+        "designer": { "x": 2100, "y": 0 },
+        "restore": {
+          "parameters": { "scope": { "label": "One cycle" } }
+        }
+      }
+    },
+    {
+      "id": 9,
+      "module": "builtin:BasicAggregator",
+      "version": 1,
+      "parameters": {
+        "sourceModule": 5,
+        "stopProcessing": false
+      },
+      "mapper": {
+        "array": "{{array(object('conversationId'; 5.value.id; 'score'; 8.value.score; 'incorrectInfo'; 8.value.incorrectInfo; 'missedBooking'; 8.value.missedBooking; 'userFrustration'; 8.value.userFrustration; 'humanReviewNeeded'; 8.value.humanReviewNeeded; 'issueSummary'; 8.value.issueSummary))}}"
+      },
+      "metadata": {
+        "designer": { "x": 2400, "y": 0 },
+        "restore": {}
+      }
+    },
+    {
+      "id": 10,
+      "module": "util:SetVariable2",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "totalConversations",
+        "scope": "roundtrip",
+        "type": "number",
+        "value": "{{length(9.array)}}"
+      },
+      "metadata": {
+        "designer": { "x": 2700, "y": 0 },
+        "restore": {
+          "parameters": { "scope": { "label": "One cycle" } }
+        }
+      }
+    },
+    {
+      "id": 11,
+      "module": "util:SetVariable2",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "averageScore",
+        "scope": "roundtrip",
+        "type": "number",
+        "value": "{{if(10.value > 0; round(sum(map(9.array; item; item.score)) / 10.value; 2); 0)}}"
+      },
+      "metadata": {
+        "designer": { "x": 3000, "y": 0 },
+        "restore": {
+          "parameters": { "scope": { "label": "One cycle" } }
+        }
+      }
+    },
+    {
+      "id": 12,
+      "module": "util:SetVariable2",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "flaggedConversations",
+        "scope": "roundtrip",
+        "type": "any",
+        "value": "{{filter(9.array; item; item.humanReviewNeeded = true)}}"
+      },
+      "metadata": {
+        "designer": { "x": 3300, "y": 0 },
+        "restore": {
+          "parameters": { "scope": { "label": "One cycle" } }
+        }
+      }
+    },
+    {
+      "id": 13,
+      "module": "util:SetVariable2",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "flaggedCount",
+        "scope": "roundtrip",
+        "type": "number",
+        "value": "{{length(12.value)}}"
+      },
+      "metadata": {
+        "designer": { "x": 3600, "y": 0 },
+        "restore": {
+          "parameters": { "scope": { "label": "One cycle" } }
+        }
+      }
+    },
+    {
+      "id": 14,
+      "module": "util:SetVariable2",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "topIssues",
+        "scope": "roundtrip",
+        "type": "text",
+        "value": "{{join(map(filter(9.array; item; item.humanReviewNeeded = true); item; concat('• Conversation ', item.conversationId, ': ', item.issueSummary)); '\n')}}"
+      },
+      "metadata": {
+        "designer": { "x": 3900, "y": 0 },
+        "restore": {
+          "parameters": { "scope": { "label": "One cycle" } }
+        }
+      }
+    },
+    {
+      "id": 15,
+      "module": "router:RouterModule",
+      "version": 1,
+      "parameters": {},
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 4200, "y": 0 }
+      },
+      "routes": [
+        {
+          "flow": [
+            {
+              "id": 16,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": true,
+                "useNewZLibDecompress": true
+              },
+              "mapper": {
+                "url": "https://api.resend.com/emails",
+                "method": "POST",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.RESEND_API_KEY}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "data": "{\"from\":\"{{env.CWI_ALERT_FROM_ADDRESS}}\",\"to\":[\"{{env.ALERT_EMAIL}}\"],\"subject\":\"Bot quality report \\u2014 week of {{3.value}} \\u2014 {{13.value}} conversations flagged\",\"html\":\"<!DOCTYPE html><html><head><meta name=\\\"viewport\\\" content=\\\"width=device-width, initial-scale=1.0\\\"><style>body{font-family:Arial,sans-serif;background:#f4f4f4;margin:0;padding:0}.container{max-width:640px;margin:0 auto;background:#ffffff;padding:0}.header{background:#c62828;color:#ffffff;padding:24px 20px;text-align:center}.header h1{margin:0;font-size:24px}.badge{background:#ff6f00;color:#fff;display:inline-block;padding:6px 16px;border-radius:16px;font-size:13px;font-weight:bold;margin-top:8px}.body-content{padding:28px 24px}.stat-row{display:flex;gap:24px;margin:20px 0}.stat-box{background:#f9f9f9;border:1px solid #e0e0e0;border-radius:8px;padding:16px 20px;flex:1;text-align:center}.stat-label{font-size:12px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}.stat-value{font-size:28px;font-weight:bold;color:#c62828}.section-title{font-size:16px;font-weight:bold;color:#333;margin:24px 0 10px 0;border-bottom:2px solid #e0e0e0;padding-bottom:6px}.flagged-item{background:#fff8e1;border-left:4px solid #ff6f00;border-radius:0 6px 6px 0;padding:12px 16px;margin-bottom:10px;font-size:14px;color:#333}.conv-id{font-weight:bold;color:#c62828}.footer{background:#eeeeee;padding:14px 24px;text-align:center;font-size:12px;color:#999}</style></head><body><div class=\\\"container\\\"><div class=\\\"header\\\"><h1>Bot Quality Report</h1><span class=\\\"badge\\\">{{13.value}} conversation{{if(13.value != 1; 's'; '')}} flagged for review</span></div><div class=\\\"body-content\\\"><p style=\\\"color:#555;font-size:15px;margin-top:0\\\">Week of {{3.value}} &mdash; {{10.value}} conversation{{if(10.value != 1; 's'; '')}} reviewed</p><div class=\\\"stat-row\\\"><div class=\\\"stat-box\\\"><div class=\\\"stat-label\\\">Average Score</div><div class=\\\"stat-value\\\">{{11.value}} / 5</div></div><div class=\\\"stat-box\\\"><div class=\\\"stat-label\\\">Flagged</div><div class=\\\"stat-value\\\">{{13.value}}</div></div><div class=\\\"stat-box\\\"><div class=\\\"stat-label\\\">Total Reviewed</div><div class=\\\"stat-value\\\">{{10.value}}</div></div></div><div class=\\\"section-title\\\">Flagged Conversations</div>{{join(map(12.value; item; concat('<div class=\\\"flagged-item\\\"><span class=\\\"conv-id\\\">Conversation ID: ', item.conversationId, '</span><br/>', item.issueSummary, '</div>')); '')}}</div><div class=\\\"footer\\\">Generated {{formatDate(now; 'MMMM D, YYYY [at] h:mm A'; 'America/New_York')}} ET &mdash; CWI Bot Quality Audit (OpenRouter / claude-sonnet-4-6)</div></div></body></html>\"}",
+                "parseResponse": true,
+                "timeout": 30,
+                "followRedirect": true,
+                "rejectUnauthorized": true
+              },
+              "metadata": {
+                "designer": { "x": 4500, "y": -200 },
+                "restore": {
+                  "parameters": {
+                    "handleErrors": { "label": "Yes" },
+                    "useNewZLibDecompress": { "label": "Yes" }
+                  },
+                  "expect": {
+                    "method": { "label": "POST" }
+                  }
+                }
+              }
+            }
+          ],
+          "label": "Conversations Flagged — Send Alert",
+          "filter": {
+            "name": "Has Flagged Conversations",
+            "conditions": [
+              [
+                {
+                  "a": "{{13.value}}",
+                  "b": "0",
+                  "o": "number:greater"
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "flow": [
+            {
+              "id": 17,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": true,
+                "useNewZLibDecompress": true
+              },
+              "mapper": {
+                "url": "https://api.resend.com/emails",
+                "method": "POST",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.RESEND_API_KEY}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "data": "{\"from\":\"{{env.CWI_ALERT_FROM_ADDRESS}}\",\"to\":[\"{{env.ALERT_EMAIL}}\"],\"subject\":\"Bot quality report \\u2014 week of {{3.value}} \\u2014 all clear\",\"html\":\"<!DOCTYPE html><html><head><meta name=\\\"viewport\\\" content=\\\"width=device-width, initial-scale=1.0\\\"><style>body{font-family:Arial,sans-serif;background:#f4f4f4;margin:0;padding:0}.container{max-width:640px;margin:0 auto;background:#ffffff;padding:0}.header{background:#2e7d32;color:#ffffff;padding:24px 20px;text-align:center}.header h1{margin:0;font-size:24px}.badge{background:#a5d6a7;color:#1b5e20;display:inline-block;padding:6px 16px;border-radius:16px;font-size:13px;font-weight:bold;margin-top:8px}.body-content{padding:28px 24px}.stat-row{display:flex;gap:24px;margin:20px 0}.stat-box{background:#f9f9f9;border:1px solid #e0e0e0;border-radius:8px;padding:16px 20px;flex:1;text-align:center}.stat-label{font-size:12px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}.stat-value{font-size:28px;font-weight:bold;color:#2e7d32}.footer{background:#eeeeee;padding:14px 24px;text-align:center;font-size:12px;color:#999}</style></head><body><div class=\\\"container\\\"><div class=\\\"header\\\"><h1>Bot Quality Report \\u2014 All Clear</h1><span class=\\\"badge\\\">No conversations flagged this week</span></div><div class=\\\"body-content\\\"><p style=\\\"color:#555;font-size:15px;margin-top:0\\\">Week of {{3.value}} &mdash; {{10.value}} conversation{{if(10.value != 1; 's'; '')}} reviewed</p><div class=\\\"stat-row\\\"><div class=\\\"stat-box\\\"><div class=\\\"stat-label\\\">Average Score</div><div class=\\\"stat-value\\\">{{11.value}} / 5</div></div><div class=\\\"stat-box\\\"><div class=\\\"stat-label\\\">Flagged</div><div class=\\\"stat-value\\\">0</div></div><div class=\\\"stat-box\\\"><div class=\\\"stat-label\\\">Total Reviewed</div><div class=\\\"stat-value\\\">{{10.value}}</div></div></div><p style=\\\"color:#2e7d32;font-size:16px;font-weight:bold;\\\">All conversations scored 4 or higher. The bot is performing well.</p></div><div class=\\\"footer\\\">Generated {{formatDate(now; 'MMMM D, YYYY [at] h:mm A'; 'America/New_York')}} ET &mdash; CWI Bot Quality Audit (OpenRouter / claude-sonnet-4-6)</div></div></body></html>\"}",
+                "parseResponse": true,
+                "timeout": 30,
+                "followRedirect": true,
+                "rejectUnauthorized": true
+              },
+              "metadata": {
+                "designer": { "x": 4500, "y": 200 },
+                "restore": {
+                  "parameters": {
+                    "handleErrors": { "label": "Yes" },
+                    "useNewZLibDecompress": { "label": "Yes" }
+                  },
+                  "expect": {
+                    "method": { "label": "POST" }
+                  }
+                }
+              }
+            }
+          ],
+          "label": "All Clear — Average Score 4+",
+          "filter": {
+            "name": "All Conversations Score 4+",
+            "conditions": [
+              [
+                {
+                  "a": "{{13.value}}",
+                  "b": "0",
+                  "o": "number:equal"
+                },
+                {
+                  "a": "{{11.value}}",
+                  "b": "4",
+                  "o": "number:greaterThanOrEqual"
+                }
+              ]
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "instant": false,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "slots": null,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": {
+      "orphans": []
+    },
+    "zone": "us2.make.com",
+    "notes": "Weekly bot quality audit. Runs every Friday at 5:00 PM America/New_York. Fetches the last 7 days of Freshchat conversations (up to 20), retrieves messages for each, and sends each conversation to OpenRouter (anthropic/claude-sonnet-4-6 with fallback) for quality analysis. Scores 1-5, flags for human review if score <= 3 or any quality flag is true. After all conversations are processed, routes to either a flagged-alert email or an all-clear summary via Resend. All secrets via env variables."
+  },
+  "scheduling": {
+    "type": "cron",
+    "interval": 1,
+    "restriction": {
+      "type": "advanced",
+      "cron": "0 17 * * 5",
+      "timezone": "America/New_York"
+    }
+  },
+  "environment": {
+    "FRESHCHAT_API_KEY": "env.FRESHCHAT_API_KEY",
+    "OPENROUTER_API_KEY": "env.OPENROUTER_API_KEY",
+    "OPENROUTER_FALLBACK_MODEL": "env.OPENROUTER_FALLBACK_MODEL",
+    "OPENROUTER_SITE_URL": "env.OPENROUTER_SITE_URL",
+    "RESEND_API_KEY": "env.RESEND_API_KEY",
+    "CWI_ALERT_FROM_ADDRESS": "env.CWI_ALERT_FROM_ADDRESS",
+    "ALERT_EMAIL": "env.ALERT_EMAIL"
+  }
+}

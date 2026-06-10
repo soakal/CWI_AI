@@ -1,0 +1,299 @@
+{
+  "name": "AC: Case Study Request",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": "{{env.HUBSPOT_WEBHOOK_HOOK_ID}}",
+        "maxResults": 1
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 0, "y": 0 },
+        "restore": {
+          "parameters": {
+            "hook": { "label": "HubSpot Contact Property Set – client_onboarding_date" }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hook",
+            "type": "hook:gateway-webhook",
+            "label": "Webhook",
+            "required": true
+          },
+          {
+            "name": "maxResults",
+            "type": "number",
+            "label": "Maximum number of results"
+          }
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "module": "util:Sleep",
+      "version": 1,
+      "parameters": {
+        "delay": 7776000
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 300, "y": 0 },
+        "parameters": [
+          {
+            "name": "delay",
+            "type": "number",
+            "label": "Delay (seconds)",
+            "required": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "module": "hubspot:makeAnAPICall",
+      "version": 1,
+      "parameters": {
+        "connection": "{{env.HUBSPOT_CONNECTION_ID}}"
+      },
+      "mapper": {
+        "url": "/crm/v3/objects/contacts/{{1.body.objectId}}",
+        "method": "GET",
+        "qs": [
+          {
+            "key": "properties",
+            "value": "firstname,lastname,email,lifecyclestage,company"
+          }
+        ],
+        "headers": [],
+        "body": ""
+      },
+      "metadata": {
+        "designer": { "x": 600, "y": 0 },
+        "restore": {
+          "parameters": {
+            "connection": { "label": "HubSpot Connection" }
+          }
+        },
+        "parameters": [
+          {
+            "name": "connection",
+            "type": "account:hubspot",
+            "label": "Connection",
+            "required": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 4,
+      "module": "builtin:BasicRouter",
+      "version": 1,
+      "parameters": {},
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 900, "y": 0 }
+      },
+      "routes": [
+        {
+          "flow": [
+            {
+              "id": 5,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": true,
+                "useNewZLibDeCompress": true
+              },
+              "mapper": {
+                "url": "https://openrouter.ai/api/v1/chat/completions",
+                "serializeUrl": false,
+                "method": "POST",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.OPENROUTER_API_KEY}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "name": "HTTP-Referer",
+                    "value": "https://cwiai.com"
+                  },
+                  {
+                    "name": "X-Title",
+                    "value": "CWI AI Automation"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\"models\":[\"anthropic/claude-sonnet-4-6\",\"{{env.OPENROUTER_FALLBACK_MODEL}}\"],\"messages\":[{\"role\":\"system\",\"content\":\"You are a warm, professional email writer for CWI AI, a company that helps businesses implement AI-driven automation. Write concise, genuine, non-salesy emails.\"},{\"role\":\"user\",\"content\":\"Write a warm, personalized case study request email. The client's first name is {{3.body.properties.firstname}}, they work at {{3.body.properties.company}}, and they have been a CWI AI customer for approximately 3 months. Thank them for being a customer. Mention a placeholder stat like 'many of our clients report saving 10+ hours per week on repetitive tasks after 90 days'. Ask if they would be willing to participate in a 15-minute case study interview to share their experience. Include this Calendly booking link for them to choose a time: {{env.CALENDLY_BOOKING_LINK}}. Sign the email from the CWI AI team. Keep the tone warm, genuine, and brief. Return only the email body text, no subject line.\"}]}",
+                "timeout": 60
+              },
+              "metadata": {
+                "designer": { "x": 1200, "y": -200 },
+                "parameters": [
+                  {
+                    "name": "handleErrors",
+                    "type": "boolean",
+                    "label": "Handle errors"
+                  },
+                  {
+                    "name": "useNewZLibDeCompress",
+                    "type": "boolean",
+                    "label": "Use new zlib de-compress"
+                  }
+                ]
+              }
+            },
+            {
+              "id": 6,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": true,
+                "useNewZLibDeCompress": true
+              },
+              "mapper": {
+                "url": "https://api.resend.com/emails",
+                "serializeUrl": false,
+                "method": "POST",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.RESEND_API_KEY}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\"from\":\"{{env.RESEND_FROM_ADDRESS}}\",\"to\":[\"{{3.body.properties.email}}\"],\"subject\":\"Would you share your story? (15 min)\",\"text\":\"{{5.body.choices[].message.content}}\"}",
+                "timeout": 30
+              },
+              "metadata": {
+                "designer": { "x": 1500, "y": -200 }
+              }
+            },
+            {
+              "id": 7,
+              "module": "hubspot:makeAnAPICall",
+              "version": 1,
+              "parameters": {
+                "connection": "{{env.HUBSPOT_CONNECTION_ID}}"
+              },
+              "mapper": {
+                "url": "/crm/v3/objects/notes",
+                "method": "POST",
+                "qs": [],
+                "headers": [
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": "{\"properties\":{\"hs_note_body\":\"Case study request sent {{formatDate(now; 'YYYY-MM-DD'; 'America/New_York')}}\",\"hs_timestamp\":\"{{formatDate(now; 'x')}}\"},\"associations\":[{\"to\":{\"id\":\"{{1.body.objectId}}\"},\"types\":[{\"associationCategory\":\"HUBSPOT_DEFINED\",\"associationTypeId\":202}]}]}"
+              },
+              "metadata": {
+                "designer": { "x": 1800, "y": -200 },
+                "restore": {
+                  "parameters": {
+                    "connection": { "label": "HubSpot Connection" }
+                  }
+                }
+              }
+            },
+            {
+              "id": 8,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": true,
+                "useNewZLibDeCompress": true
+              },
+              "mapper": {
+                "url": "https://api.resend.com/emails",
+                "serializeUrl": false,
+                "method": "POST",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer {{env.RESEND_API_KEY}}"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "body": "{\"from\":\"{{env.CWI_ALERT_FROM_ADDRESS}}\",\"to\":[\"{{env.ALERT_EMAIL}}\"],\"subject\":\"Case study request sent to {{3.body.properties.firstname}} {{3.body.properties.lastname}}\",\"text\":\"A case study request email has been sent to {{3.body.properties.firstname}} {{3.body.properties.lastname}} ({{3.body.properties.email}}) at {{3.body.properties.company}}.\\n\\nSent on: {{formatDate(now; 'MMMM D, YYYY h:mm A'; 'America/New_York')}}\\n\\nContact ID: {{1.body.objectId}}\"}",
+                "timeout": 30
+              },
+              "metadata": {
+                "designer": { "x": 2100, "y": -200 }
+              }
+            }
+          ],
+          "label": "Route A: Still Active (customer)",
+          "filter": {
+            "name": "lifecyclestage is customer",
+            "conditions": [
+              [
+                {
+                  "a": "{{3.body.properties.lifecyclestage}}",
+                  "b": "customer",
+                  "o": "text:equal"
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "flow": [],
+          "label": "Route B: Not Active – Skip",
+          "filter": {
+            "name": "lifecyclestage is not customer",
+            "conditions": [
+              [
+                {
+                  "a": "{{3.body.properties.lifecyclestage}}",
+                  "b": "customer",
+                  "o": "text:notequal"
+                }
+              ]
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "slots": null,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": {
+      "orphans": []
+    },
+    "zone": "us2.make.com",
+    "timezone": "America/New_York"
+  }
+}

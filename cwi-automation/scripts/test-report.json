@@ -1,0 +1,170 @@
+{
+  "run_date": "2026-06-08",
+  "total_tests": 20,
+  "passed": 18,
+  "failed": 2,
+  "tests": [
+    {
+      "id": 1,
+      "name": "Scenario A JSON valid",
+      "status": "PASS",
+      "detail": "scenario-a-booking-flow.json parses as valid JSON"
+    },
+    {
+      "id": 2,
+      "name": "Scenario B JSON valid",
+      "status": "PASS",
+      "detail": "scenario-b-missed-followup.json parses as valid JSON"
+    },
+    {
+      "id": 3,
+      "name": "Scenario C JSON valid",
+      "status": "PASS",
+      "detail": "scenario-c-monthly-report.json parses as valid JSON"
+    },
+    {
+      "id": 4,
+      "name": "Scenario D JSON valid",
+      "status": "PASS",
+      "detail": "scenario-d-apollo-hubspot.json parses as valid JSON"
+    },
+    {
+      "id": 5,
+      "name": "Scenario E JSON valid",
+      "status": "PASS",
+      "detail": "scenario-e-lead-routing.json parses as valid JSON"
+    },
+    {
+      "id": 6,
+      "name": "Scenario F JSON valid",
+      "status": "PASS",
+      "detail": "scenario-f-payment-logging.json parses as valid JSON"
+    },
+    {
+      "id": 7,
+      "name": "Scenarios have name field",
+      "status": "PASS",
+      "detail": "All 6 scenarios have a 'name' field: A=Customer Booking Flow, B=Missed Inquiry Follow-Up, C=Monthly Client Report, D=Apollo to HubSpot Sync, E=Lead Reply Routing, F=Payment Logging"
+    },
+    {
+      "id": 8,
+      "name": "Scenarios have flow array with >= 4 modules (including nested)",
+      "status": "PASS",
+      "detail": "A=10 modules, B=9 modules, C=9 modules, D=9 modules, E=14 modules, F=8 modules (counts include nested route flows)"
+    },
+    {
+      "id": 9,
+      "name": "Scenarios have metadata with scheduling",
+      "status": "PASS",
+      "detail": "All 6 scenarios have metadata field. Scheduling present via: A=root scheduling block, B=trigger module scheduling (interval 1800), C=root scheduling cron (monthly first Monday 08:00), D/E/F=webhook trigger (event-driven, no explicit schedule required)"
+    },
+    {
+      "id": 10,
+      "name": "Module IDs are sequential",
+      "status": "PASS",
+      "detail": "All 6 scenarios have top-level flow module IDs starting at 1 and incrementing sequentially. Nested route modules use continuation IDs (A: 6-10 in routes, E: 5-14 in routes)"
+    },
+    {
+      "id": 11,
+      "name": "No real API keys in scenario JSON files",
+      "status": "PASS",
+      "detail": "No patterns matching sk-or-[20+chars], sk_live_[20+chars], or whsec_[20+chars] found in any scenario file. All API key references use Make.com connection variables or env placeholders."
+    },
+    {
+      "id": 12,
+      "name": "bot-flows.json has >= 6 flows",
+      "status": "PASS",
+      "detail": "bot-flows.json contains exactly 6 flows: booking, pricing, hours, emergency, fallback, human_handoff"
+    },
+    {
+      "id": 13,
+      "name": "Each flow has trigger_keywords or fallback designation",
+      "status": "PASS",
+      "detail": "5 flows have trigger_keywords arrays (booking=5 keywords, pricing=6 keywords, hours=5 keywords, emergency=5 keywords, human_handoff=5 keywords). 1 flow is the designated fallback with empty keywords array (id=fallback)"
+    },
+    {
+      "id": 14,
+      "name": "bot-flows.json has welcome_message and after_hours_message",
+      "status": "FAIL",
+      "detail": "bot-flows.json is a bare array of flows with no wrapper object. No top-level 'welcome_message' or 'after_hours_message' keys exist. The 'hours' flow covers business hours info in its message text, but dedicated welcome_message and after_hours_message fields are absent. Fix: wrap the array in an object with these keys, or configure welcome/after-hours messages directly in Freshchat Admin > Bot Settings."
+    },
+    {
+      "id": 15,
+      "name": ".env.template has all 24+ required variable names",
+      "status": "PASS",
+      "detail": ".env.template contains 35 variables, including all 24 required: OPENROUTER_API_KEY, OPENROUTER_BASE_URL, OPENROUTER_PRIMARY_MODEL, OPENROUTER_FALLBACK_MODEL, FRESHCHAT_API_KEY, FRESHCHAT_DOMAIN, FRESHCHAT_BOT_ID, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_CALENDAR_ID, APOLLO_API_KEY, APOLLO_WEBHOOK_SECRET, HUBSPOT_API_KEY, HUBSPOT_PIPELINE_ID, HUBSPOT_STAGE_NEW_LEAD, HUBSPOT_STAGE_REPLIED, HUBSPOT_STAGE_CALL_BOOKED, HUBSPOT_STAGE_PROPOSAL_SENT, HUBSPOT_STAGE_CLOSED_WON, HUBSPOT_STAGE_ACTIVE_CLIENT, STRIPE_API_KEY, STRIPE_WEBHOOK_SECRET, SMTP_HOST, SMTP_PORT, plus 11 more"
+    },
+    {
+      "id": 16,
+      "name": ".env.template values are placeholders (not real keys)",
+      "status": "PASS",
+      "detail": "All sensitive values use xxxx placeholder pattern: OPENROUTER_API_KEY=sk-or-xxxx, STRIPE_API_KEY=sk_live_xxxx, STRIPE_WEBHOOK_SECRET=whsec_xxxx. Non-sensitive defaults (model names, SMTP host/port, email address) are acceptable real values."
+    },
+    {
+      "id": 17,
+      "name": "scripts/test-suite.ps1 exists and is non-empty",
+      "status": "PASS",
+      "detail": "test-suite.ps1 exists at 3283 bytes. Contains 11 test cases covering JSON validation, required fields, Freshchat config, env template, OpenRouter API live test, flow counts, scheduling, sentiment routing, file completeness, module chain, and security checks. Previously ran successfully (11/11 PASS per generated report)."
+    },
+    {
+      "id": 18,
+      "name": "scripts/setup-env.ps1 exists and is non-empty",
+      "status": "PASS",
+      "detail": "setup-env.ps1 exists at 2367 bytes. Loads .env variables into PowerShell session, copies from template if .env is missing, validates 8 required variables."
+    },
+    {
+      "id": 19,
+      "name": "docs/pricing-calculator.html exists and is non-empty",
+      "status": "PASS",
+      "detail": "pricing-calculator.html exists at 26865 bytes"
+    },
+    {
+      "id": 20,
+      "name": "docs/onboarding-form.html exists and is non-empty",
+      "status": "PASS",
+      "detail": "onboarding-form.html exists at 46001 bytes"
+    }
+  ],
+  "files_created": [
+    "make-scenarios/scenario-a-booking-flow.json",
+    "make-scenarios/scenario-b-missed-followup.json",
+    "make-scenarios/scenario-c-monthly-report.json",
+    "make-scenarios/scenario-d-apollo-hubspot.json",
+    "make-scenarios/scenario-e-lead-routing.json",
+    "make-scenarios/scenario-f-payment-logging.json",
+    "freshchat/bot-flows.json",
+    "freshchat/knowledge-base-template.json",
+    "scripts/test-suite.ps1",
+    "scripts/setup-env.ps1",
+    "scripts/verify-connections.ps1",
+    "scripts/test-report.json",
+    "scripts/verify-report.json",
+    "docs/pricing-calculator.html",
+    "docs/onboarding-form.html",
+    "docs/generate-google-form.gs",
+    ".env.template",
+    "README.md"
+  ],
+  "ready_for_deployment": false,
+  "deployment_blockers": [
+    "Test 14 FAIL: bot-flows.json missing welcome_message and after_hours_message root-level fields",
+    "All 35 .env placeholder values must be replaced with real credentials before any Make.com scenario can run"
+  ],
+  "next_steps": [
+    "1. Fix bot-flows.json: wrap the flows array in an object with 'welcome_message', 'after_hours_message', and 'flows' keys (or set these in Freshchat Admin > Bot Settings directly)",
+    "2. Copy .env.template to .env and fill in all real API keys: OpenRouter, Freshchat, Google OAuth (Client ID + Secret), Apollo, HubSpot, Stripe (live key + webhook secret), SMTP password, Calendly",
+    "3. Run scripts/setup-env.ps1 to verify all 8 core environment variables load correctly with no placeholders",
+    "4. Create Make.com account and import each scenario JSON via Make > Scenarios > Import Blueprint (upload the JSON files)",
+    "5. Create Make.com connections: Freshchat (HTTP + API key), Google Calendar (OAuth2), Gmail (OAuth2), HubSpot (Private App token), Stripe (API key + webhook signing secret)",
+    "6. Register Scenario A webhook URL in Freshchat Admin > Settings > Webhooks > New Message",
+    "7. Register Scenario D webhook URL in Apollo > Settings > Integrations > Webhooks > contact.enrolled_in_sequence",
+    "8. Register Scenario E webhook URL in Apollo > Settings > Integrations > Webhooks > email.reply_received",
+    "9. Register Scenario F webhook URL in Stripe Dashboard > Developers > Webhooks > payment_intent.succeeded",
+    "10. Create required HubSpot custom company properties for Scenario C KPIs (cwi_last_report_month, cwi_total_conversations, cwi_bot_resolved, cwi_containment_rate, cwi_escalation_rate, cwi_appointments_booked, cwi_avg_response_time, cwi_report_sent_date)",
+    "11. Create Google Sheets spreadsheet with 'ActiveClients' tab containing columns: client_name, client_email, freshchat_account_id, google_calendar_id, hubspot_company_id, industry, calendly_link",
+    "12. Configure Freshchat bot flows using freshchat/bot-flows.json in Freshchat Admin > Bots > Create Bot",
+    "13. Test Scenario A end-to-end: send a chat with keyword 'book an appointment' to the Freshchat widget, verify Google Calendar event is created and confirmation email is sent",
+    "14. Test Scenario F with Stripe CLI: stripe trigger payment_intent.succeeded, verify HubSpot note is created",
+    "15. Onboard first client using docs/onboarding-form.html and share docs/pricing-calculator.html during the sales call"
+  ]
+}

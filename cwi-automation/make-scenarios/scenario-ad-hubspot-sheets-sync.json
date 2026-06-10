@@ -1,0 +1,362 @@
+{
+  "name": "HubSpot Active Clients → Google Sheets Sync",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": "schedule",
+        "maxResults": 1
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 0, "y": 0 },
+        "restore": {}
+      }
+    },
+    {
+      "id": 2,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": true },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/contacts/search",
+        "method": "POST",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.HUBSPOT_PRIVATE_APP_TOKEN}}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\"filterGroups\":[{\"filters\":[{\"propertyName\":\"lifecyclestage\",\"operator\":\"EQ\",\"value\":\"customer\"}]}],\"properties\":[\"firstname\",\"lastname\",\"email\",\"phone\",\"company\",\"hs_lead_source\",\"createdate\",\"plan_tier\",\"client_onboarding_date\"],\"limit\":100,\"after\":\"0\"}",
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": { "x": 300, "y": 0 },
+        "restore": { "expect": { "method": { "label": "POST" } } }
+      }
+    },
+    {
+      "id": 3,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": true },
+      "mapper": {
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/{{env.ACTIVE_CLIENTS_SHEET_ID}}/values/Clients",
+        "method": "GET",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{oauth2.google.access_token}}" }
+        ],
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": { "x": 600, "y": 0 },
+        "restore": { "expect": { "method": { "label": "GET" } } }
+      }
+    },
+    {
+      "id": 4,
+      "module": "builtin:BasicFeeder",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "array": "{{2.body.results}}"
+      },
+      "metadata": {
+        "designer": { "x": 900, "y": 0 }
+      }
+    },
+    {
+      "id": 5,
+      "module": "builtin:SetVariable",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "contactEmail",
+        "scope": "roundtrip",
+        "type": "text",
+        "value": "{{toLower(4.properties.email)}}"
+      },
+      "metadata": {
+        "designer": { "x": 1200, "y": 0 }
+      }
+    },
+    {
+      "id": 6,
+      "module": "builtin:SetVariable",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "fullName",
+        "scope": "roundtrip",
+        "type": "text",
+        "value": "{{trim(if(4.properties.firstname; 4.properties.firstname & \" \"; \"\") & if(4.properties.lastname; 4.properties.lastname; \"\"))}}"
+      },
+      "metadata": {
+        "designer": { "x": 1200, "y": 150 }
+      }
+    },
+    {
+      "id": 7,
+      "module": "builtin:SetVariable",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "onboardingDate",
+        "scope": "roundtrip",
+        "type": "text",
+        "value": "{{formatDate(4.properties.client_onboarding_date; \"YYYY-MM-DD\"; \"America/New_York\")}}"
+      },
+      "metadata": {
+        "designer": { "x": 1200, "y": 300 }
+      }
+    },
+    {
+      "id": 8,
+      "module": "builtin:SetVariable",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "daysActive",
+        "scope": "roundtrip",
+        "type": "number",
+        "value": "{{if(4.properties.client_onboarding_date; round((now - parseDate(4.properties.client_onboarding_date; \"x\")) / 86400); 0)}}"
+      },
+      "metadata": {
+        "designer": { "x": 1200, "y": 450 }
+      }
+    },
+    {
+      "id": 9,
+      "module": "builtin:SetVariable",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "lastSynced",
+        "scope": "roundtrip",
+        "type": "text",
+        "value": "{{formatDate(now; \"YYYY-MM-DD\"; \"America/New_York\")}}"
+      },
+      "metadata": {
+        "designer": { "x": 1200, "y": 600 }
+      }
+    },
+    {
+      "id": 10,
+      "module": "builtin:SetVariable",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "sheetEmails",
+        "scope": "roundtrip",
+        "type": "array",
+        "value": "{{map(slice(3.body.values; 1); toLower(item[1]))}}"
+      },
+      "metadata": {
+        "designer": { "x": 1200, "y": 750 }
+      }
+    },
+    {
+      "id": 11,
+      "module": "builtin:SetVariable",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "emailExists",
+        "scope": "roundtrip",
+        "type": "boolean",
+        "value": "{{contains(10.sheetEmails; 5.contactEmail)}}"
+      },
+      "metadata": {
+        "designer": { "x": 1500, "y": 0 }
+      }
+    },
+    {
+      "id": 12,
+      "module": "builtin:SetVariable",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "matchedRowIndex",
+        "scope": "roundtrip",
+        "type": "number",
+        "value": "{{if(11.emailExists; add(indexOf(10.sheetEmails; 5.contactEmail); 2); null)}}"
+      },
+      "metadata": {
+        "designer": { "x": 1500, "y": 150 }
+      }
+    },
+    {
+      "id": 13,
+      "module": "builtin:Filter",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "condition": "{{not(11.emailExists)}}",
+        "operator": "equal",
+        "value": true
+      },
+      "metadata": {
+        "designer": { "x": 1800, "y": 0 },
+        "restore": { "parameters": { "label": "Email NOT in sheet — append new row" } }
+      }
+    },
+    {
+      "id": 14,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": true },
+      "mapper": {
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/{{env.ACTIVE_CLIENTS_SHEET_ID}}/values/Clients!A1:H1:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS",
+        "method": "POST",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{oauth2.google.access_token}}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\"values\":[[\"{{6.fullName}}\",\"{{4.properties.email}}\",\"{{4.properties.phone}}\",\"{{4.properties.company}}\",\"{{4.properties.plan_tier}}\",\"{{7.onboardingDate}}\",\"{{8.daysActive}}\",\"{{9.lastSynced}}\"]]}"
+      },
+      "metadata": {
+        "designer": { "x": 2100, "y": -150 },
+        "restore": { "expect": { "method": { "label": "POST" } } }
+      }
+    },
+    {
+      "id": 15,
+      "module": "builtin:Filter",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "condition": "{{11.emailExists}}",
+        "operator": "equal",
+        "value": true
+      },
+      "metadata": {
+        "designer": { "x": 1800, "y": 300 },
+        "restore": { "parameters": { "label": "Email in sheet — update existing row" } }
+      }
+    },
+    {
+      "id": 16,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": true },
+      "mapper": {
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/{{env.ACTIVE_CLIENTS_SHEET_ID}}/values/Clients!A{{12.matchedRowIndex}}:H{{12.matchedRowIndex}}?valueInputOption=USER_ENTERED",
+        "method": "PUT",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{oauth2.google.access_token}}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\"values\":[[\"{{6.fullName}}\",\"{{4.properties.email}}\",\"{{4.properties.phone}}\",\"{{4.properties.company}}\",\"{{4.properties.plan_tier}}\",\"{{7.onboardingDate}}\",\"{{8.daysActive}}\",\"{{9.lastSynced}}\"]]}"
+      },
+      "metadata": {
+        "designer": { "x": 2100, "y": 300 },
+        "restore": { "expect": { "method": { "label": "PUT" } } }
+      }
+    },
+    {
+      "id": 17,
+      "module": "builtin:SetVariable",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "newClientCount",
+        "scope": "execution",
+        "type": "number",
+        "value": "{{length(selectCollection(map(2.body.results; properties.email); not(contains(map(slice(3.body.values; 1); toLower(item[1])); toLower(item)))))}}",
+        "description": "Count of HubSpot contacts whose emails were not already in the sheet"
+      },
+      "metadata": {
+        "designer": { "x": 2400, "y": 0 }
+      }
+    },
+    {
+      "id": 18,
+      "module": "builtin:Filter",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "condition": "{{17.newClientCount}}",
+        "operator": "greater",
+        "value": "0"
+      },
+      "metadata": {
+        "designer": { "x": 2700, "y": 0 },
+        "restore": { "parameters": { "label": "New rows were added — send alert" } }
+      }
+    },
+    {
+      "id": 19,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": true },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "method": "POST",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\"from\":\"{{env.CWI_ALERT_FROM_ADDRESS}}\",\"to\":[\"{{env.ALERT_EMAIL}}\"],\"subject\":\"Client sheet updated — {{17.newClientCount}} new clients synced\",\"html\":\"<p>The HubSpot → Google Sheets sync completed successfully on {{formatDate(now; \\\"YYYY-MM-DD\\\"; \\\"America/New_York\\\")}} at {{formatDate(now; \\\"hh:mm A\\\"; \\\"America/New_York\\\")}} ET.</p><p><strong>{{17.newClientCount}} new client(s)</strong> were appended to the <em>Clients</em> sheet.</p><p>Sheet ID: {{env.ACTIVE_CLIENTS_SHEET_ID}}</p>\"}"
+      },
+      "metadata": {
+        "designer": { "x": 3000, "y": 0 },
+        "restore": { "expect": { "method": { "label": "POST" } } }
+      }
+    }
+  ],
+  "metadata": {
+    "instant": false,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "slots": null,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": {
+      "orphans": []
+    },
+    "zone": "us1.make.com"
+  },
+  "scheduling": {
+    "type": "indefinitely",
+    "interval": 86400,
+    "startAt": "07:30",
+    "timezone": "America/New_York"
+  },
+  "connections": {
+    "google_oauth2": {
+      "type": "oauth2",
+      "clientId": "{{env.GOOGLE_CLIENT_ID}}",
+      "clientSecret": "{{env.GOOGLE_CLIENT_SECRET}}",
+      "scopes": [
+        "https://www.googleapis.com/auth/spreadsheets"
+      ],
+      "tokenUrl": "https://oauth2.googleapis.com/token",
+      "authUrl": "https://accounts.google.com/o/oauth2/v2/auth"
+    }
+  },
+  "environment": {
+    "HUBSPOT_PRIVATE_APP_TOKEN": "env.HUBSPOT_PRIVATE_APP_TOKEN",
+    "ACTIVE_CLIENTS_SHEET_ID": "env.ACTIVE_CLIENTS_SHEET_ID",
+    "GOOGLE_CLIENT_ID": "env.GOOGLE_CLIENT_ID",
+    "GOOGLE_CLIENT_SECRET": "env.GOOGLE_CLIENT_SECRET",
+    "RESEND_API_KEY": "env.RESEND_API_KEY",
+    "ALERT_EMAIL": "env.ALERT_EMAIL",
+    "CWI_ALERT_FROM_ADDRESS": "env.CWI_ALERT_FROM_ADDRESS"
+  }
+}
