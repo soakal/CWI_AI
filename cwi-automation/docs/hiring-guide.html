@@ -1,1 +1,251 @@
-C:\Users\Brian\Documents\CWI AI\cwi-automation\docs\hiring-guide.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hiring Guide — CWI</title>
+<meta name="description" content="Hiring checklist and candidate tracker for CWI team growth. Track roles, interview stages, candidate notes, and offer status.">
+<link rel="icon" type="image/png" href="../assets/cwi-favicon-64.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0A0A0C;--surface:#141418;--surface-2:#191920;--line:rgba(255,255,255,.09);--line-2:rgba(255,255,255,.14);--accent:#FF5A1F;--ember:#FF8A3D;--steel:#85858E;--text:#F4F4F6;--text-dim:#C2C2C8;--font-disp:'Sora',sans-serif;--font-body:'Instrument Sans',sans-serif;--r-sm:12px;--r-md:18px;--r-pill:999px;--ease:cubic-bezier(.22,.61,.36,1);}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:var(--font-body);background:var(--ink);color:var(--text);-webkit-font-smoothing:antialiased;line-height:1.6;min-height:100vh;}
+h1,h2,h3{font-family:var(--font-disp);letter-spacing:-.035em;line-height:1.1;font-weight:800;}
+a{color:inherit;text-decoration:none;}
+.bg-field{position:fixed;inset:0;z-index:-1;pointer-events:none;}
+.bg-field::before{content:"";position:absolute;inset:0;background:radial-gradient(700px 450px at 80% -4%,rgba(255,90,31,.11),transparent 60%);}
+.wrap{max-width:1100px;margin:0 auto;padding:0 28px;}
+.topbar{border-bottom:1px solid var(--line);background:rgba(10,10,12,.82);backdrop-filter:blur(14px);position:sticky;top:0;z-index:100;padding:14px 0;}
+.topbar-inner{display:flex;align-items:center;justify-content:space-between;}
+.logo{font-family:var(--font-disp);font-weight:800;font-size:18px;letter-spacing:-.04em;display:flex;align-items:center;gap:9px;}
+.logo .dot{color:var(--accent);}
+.back-link{font-size:13px;color:var(--steel);display:flex;align-items:center;gap:6px;transition:color .2s;}
+.back-link:hover{color:var(--text);}
+.hero{padding:56px 0 36px;text-align:center;}
+.kicker{display:inline-flex;align-items:center;gap:9px;font-size:11.5px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--steel);margin-bottom:18px;}
+.pip{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);}
+.hero h1{font-size:clamp(28px,4vw,48px);margin-bottom:12px;}
+.hero h1 .acc{color:var(--accent);}
+.hero p{font-size:clamp(14px,1.6vw,17px);color:var(--text-dim);max-width:52ch;margin:0 auto;}
+.tabs{display:flex;gap:6px;margin-bottom:28px;border-bottom:1px solid var(--line);padding-bottom:0;}
+.tab-btn{font-family:var(--font-body);font-size:14px;font-weight:600;padding:10px 20px;border:none;background:transparent;color:var(--steel);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .2s;}
+.tab-btn.active{color:var(--text);border-bottom-color:var(--accent);}
+.tab-pane{display:none;animation:fadeUp .3s var(--ease) both;}
+.tab-pane.active{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.add-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:24px 26px;margin-bottom:28px;}
+.add-card h2{font-size:17px;margin-bottom:16px;}
+.add-card h2 span{color:var(--accent);}
+.form-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:14px;}
+label{display:block;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--steel);margin-bottom:6px;}
+input,select,textarea{width:100%;background:var(--surface-2);border:1px solid var(--line-2);border-radius:var(--r-sm);color:var(--text);font-family:var(--font-body);font-size:14px;padding:9px 12px;outline:none;transition:border-color .2s;}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(255,90,31,.15);}
+textarea{resize:vertical;min-height:64px;}
+.btn{font-family:var(--font-body);font-size:14px;font-weight:600;padding:10px 24px;border-radius:var(--r-pill);background:var(--accent);color:#0A0A0C;border:none;cursor:pointer;transition:all .22s var(--ease);}
+.btn:hover{background:var(--ember);box-shadow:0 0 20px rgba(255,90,31,.35);}
+.candidates-list{display:flex;flex-direction:column;gap:14px;margin-bottom:56px;}
+.cand-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:18px 22px;animation:fadeUp .3s var(--ease) both;}
+.cand-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px;}
+.cand-name{font-family:var(--font-disp);font-size:17px;font-weight:700;}
+.cand-role{font-size:13px;color:var(--accent);font-weight:600;}
+.stage-badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.stage{font-size:11px;font-weight:600;padding:4px 12px;border-radius:var(--r-pill);border:1px solid var(--line-2);color:var(--steel);}
+.stage.active-stage{border-color:var(--accent);color:var(--accent);background:rgba(255,90,31,.08);}
+.stage.done-stage{border-color:rgba(74,222,128,.4);color:#4ade80;background:rgba(74,222,128,.06);}
+.cand-notes{font-size:13px;color:var(--text-dim);line-height:1.5;margin-bottom:10px;}
+.cand-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.offer-badge{font-size:12px;font-weight:600;padding:4px 14px;border-radius:var(--r-pill);}
+.offer-extended{background:rgba(250,204,21,.12);border:1px solid rgba(250,204,21,.4);color:#facc15;}
+.offer-accepted{background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.4);color:#4ade80;}
+.offer-declined{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);color:#f87171;}
+.offer-none{background:var(--surface-2);border:1px solid var(--line-2);color:var(--steel);}
+.btn-sm{font-family:var(--font-body);font-size:12px;padding:5px 14px;border-radius:var(--r-pill);border:1px solid rgba(248,113,113,.3);background:transparent;color:#f87171;cursor:pointer;transition:all .2s;}
+.btn-sm:hover{background:rgba(248,113,113,.1);}
+.checklist-section{margin-bottom:48px;}
+.checklist-section h2{font-size:20px;margin-bottom:16px;}
+.checklist-section h2 span{color:var(--accent);}
+.check-group{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:20px 22px;margin-bottom:14px;}
+.check-group-title{font-family:var(--font-disp);font-size:14px;font-weight:700;color:var(--text-dim);letter-spacing:.05em;text-transform:uppercase;margin-bottom:12px;}
+.check-item{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);}
+.check-item:last-child{border-bottom:none;}
+.check-item input[type=checkbox]{appearance:none;-webkit-appearance:none;width:18px;height:18px;border-radius:5px;border:1.5px solid var(--line-2);background:transparent;cursor:pointer;flex-shrink:0;margin-top:2px;transition:all .18s;position:relative;}
+.check-item input[type=checkbox]:checked{background:var(--accent);border-color:var(--accent);}
+.check-item input[type=checkbox]:checked::after{content:"";position:absolute;left:4px;top:1px;width:6px;height:10px;border:2px solid #fff;border-top:none;border-left:none;transform:rotate(42deg);}
+.check-item label{font-size:14px;color:var(--text-dim);cursor:pointer;flex:1;}
+.check-item input:checked + label{color:var(--steel);text-decoration:line-through;}
+.empty{text-align:center;padding:56px 0;color:var(--steel);}
+.empty h3{font-size:18px;margin-bottom:6px;color:var(--text-dim);}
+.footer{border-top:1px solid var(--line);padding:24px 0;text-align:center;font-size:13px;color:var(--steel);}
+.footer a{color:var(--accent);}
+</style>
+</head>
+<body>
+<div class="bg-field"></div>
+<header class="topbar">
+  <div class="wrap">
+    <div class="topbar-inner">
+      <div class="logo">
+        <svg width="22" height="22" viewBox="0 0 32 32" fill="none" aria-hidden="true"><rect x="4" y="10" width="4" height="12" rx="2" fill="#FF5A1F"/><rect x="10" y="6" width="4" height="20" rx="2" fill="#FF5A1F" opacity=".85"/><rect x="16" y="2" width="4" height="28" rx="2" fill="#FF5A1F" opacity=".7"/><rect x="22" y="6" width="4" height="20" rx="2" fill="#FF5A1F" opacity=".55"/></svg>
+        CWI <span class="dot">·</span> Hiring Guide
+      </div>
+      <a class="back-link" href="../index.html">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 2L3 7l5 5"/><line x1="3" y1="7" x2="12" y2="7"/></svg>
+        Back to site
+      </a>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <div class="kicker"><span class="pip"></span> Team Growth</div>
+    <h1>Hiring <span class="acc">Guide</span></h1>
+    <p>Track candidates, interview stages, and offer status. Use the checklist tab to ensure every hire is done right.</p>
+  </div>
+</section>
+
+<main>
+  <div class="wrap">
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="candidates">Candidates</button>
+      <button class="tab-btn" data-tab="checklist">Hiring Checklist</button>
+    </div>
+
+    <div class="tab-pane active" id="tab-candidates">
+      <div class="add-card">
+        <h2>Add <span>Candidate</span></h2>
+        <div class="form-row">
+          <div><label for="c-name">Candidate Name</label><input type="text" id="c-name" placeholder="Jane Smith"></div>
+          <div><label for="c-role">Role</label><input type="text" id="c-role" placeholder="AI Automation Specialist"></div>
+          <div><label for="c-stage">Current Stage</label>
+            <select id="c-stage">
+              <option>Applied</option><option>Phone Screen</option><option>Technical Interview</option>
+              <option>Culture Fit</option><option>Final Interview</option><option>Reference Check</option>
+            </select>
+          </div>
+          <div><label for="c-offer">Offer Status</label>
+            <select id="c-offer">
+              <option value="none">No Offer Yet</option><option value="extended">Offer Extended</option>
+              <option value="accepted">Offer Accepted</option><option value="declined">Offer Declined</option>
+            </select>
+          </div>
+        </div>
+        <div><label for="c-notes">Notes</label><textarea id="c-notes" rows="2" placeholder="Interview impressions, strengths, concerns..."></textarea></div>
+        <div style="margin-top:14px;"><button class="btn" id="btn-add-cand">Add Candidate</button></div>
+      </div>
+      <div class="candidates-list" id="candidates-list"></div>
+    </div>
+
+    <div class="tab-pane" id="tab-checklist">
+      <div class="checklist-section">
+        <h2>Interview <span>Process Checklist</span></h2>
+        <div class="check-group">
+          <div class="check-group-title">Before Posting</div>
+          <div id="checks-pre"></div>
+        </div>
+        <div class="check-group">
+          <div class="check-group-title">During Interviews</div>
+          <div id="checks-during"></div>
+        </div>
+        <div class="check-group">
+          <div class="check-group-title">After Hire</div>
+          <div id="checks-post"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="footer"><div class="wrap">Built by <a href="../index.html">CWI · Compute With Imagination</a> &nbsp;·&nbsp; Internal tool</div></footer>
+
+<script>
+const KEY='cwi-hiring-v1';
+const CHECKS_KEY='cwi-hiring-checks-v1';
+const STAGES=['Applied','Phone Screen','Technical Interview','Culture Fit','Final Interview','Reference Check'];
+
+let candidates=JSON.parse(localStorage.getItem(KEY)||'[]');
+let checks=JSON.parse(localStorage.getItem(CHECKS_KEY)||'null');
+
+const PRE_CHECKS=['Write detailed job description with clear requirements','Define must-have vs nice-to-have skills','Set salary range and budget','Get hiring manager sign-off on role','Post to relevant job boards and LinkedIn','Set application deadline and review schedule'];
+const DURING_CHECKS=['Send confirmation email to all applicants','Use consistent scoring rubric for each stage','Send reminder 24h before interview','Take notes during interview (not just after)','Ask same core questions to all candidates','Check references before extending offer'];
+const POST_CHECKS=['Send offer letter within 24h of decision','Confirm start date and equipment needs','Assign onboarding buddy','Schedule first-week 1:1s','Add to payroll and benefits systems','Send day-1 welcome email with agenda'];
+
+if(!checks){
+  checks={pre:PRE_CHECKS.map(()=>false),during:DURING_CHECKS.map(()=>false),post:POST_CHECKS.map(()=>false)};
+}
+function saveChecks(){localStorage.setItem(CHECKS_KEY,JSON.stringify(checks));}
+function save(){localStorage.setItem(KEY,JSON.stringify(candidates));}
+
+function renderChecks(containerId, items, stateArr, stateKey){
+  const el=document.getElementById(containerId); el.innerHTML='';
+  items.forEach((item,i)=>{
+    const div=document.createElement('div'); div.className='check-item';
+    const id=`chk-${stateKey}-${i}`;
+    div.innerHTML=`<input type="checkbox" id="${id}" ${stateArr[i]?'checked':''}><label for="${id}">${item}</label>`;
+    div.querySelector('input').addEventListener('change',e=>{checks[stateKey][i]=e.target.checked;saveChecks();});
+    el.appendChild(div);
+  });
+}
+
+function renderCandidates(){
+  const list=document.getElementById('candidates-list');
+  if(!candidates.length){list.innerHTML='<div class="empty"><h3>No candidates yet</h3><p>Add your first candidate above.</p></div>';return;}
+  list.innerHTML='';
+  candidates.forEach((c,idx)=>{
+    const stageIdx=STAGES.indexOf(c.stage);
+    const stagePills=STAGES.map((s,si)=>`<span class="stage ${si<stageIdx?'done-stage':si===stageIdx?'active-stage':''}">${s}</span>`).join('');
+    const offerClass=`offer-${c.offer}`;
+    const offerLabel={none:'No Offer',extended:'Offer Extended',accepted:'Offer Accepted',declined:'Offer Declined'}[c.offer];
+    const card=document.createElement('div'); card.className='cand-card';
+    card.innerHTML=`
+      <div class="cand-header">
+        <div><div class="cand-name">${escHtml(c.name)}</div><div class="cand-role">${escHtml(c.role)}</div></div>
+        <span class="offer-badge ${offerClass}">${offerLabel}</span>
+      </div>
+      <div class="stage-badges">${stagePills}</div>
+      ${c.notes?`<div class="cand-notes">${escHtml(c.notes)}</div>`:''}
+      <div class="cand-footer">
+        <span style="font-size:12px;color:var(--steel)">${c.date}</span>
+        <button class="btn-sm" data-idx="${idx}">Remove</button>
+      </div>`;
+    list.appendChild(card);
+  });
+  document.querySelectorAll('.btn-sm').forEach(btn=>{
+    btn.addEventListener('click',()=>{candidates.splice(parseInt(btn.dataset.idx),1);save();renderCandidates();});
+  });
+}
+
+document.getElementById('btn-add-cand').addEventListener('click',()=>{
+  const name=document.getElementById('c-name').value.trim();
+  if(!name){alert('Enter candidate name.');return;}
+  candidates.unshift({
+    name, role:document.getElementById('c-role').value.trim(),
+    stage:document.getElementById('c-stage').value,
+    offer:document.getElementById('c-offer').value,
+    notes:document.getElementById('c-notes').value.trim(),
+    date:new Date().toLocaleDateString()
+  });
+  save(); renderCandidates();
+  ['c-name','c-role','c-notes'].forEach(id=>document.getElementById(id).value='');
+});
+
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
+  });
+});
+
+function escHtml(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+renderChecks('checks-pre',PRE_CHECKS,checks.pre,'pre');
+renderChecks('checks-during',DURING_CHECKS,checks.during,'during');
+renderChecks('checks-post',POST_CHECKS,checks.post,'post');
+renderCandidates();
+</script>
+</body>
+</html>

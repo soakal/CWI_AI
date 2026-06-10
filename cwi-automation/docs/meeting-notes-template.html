@@ -3,239 +3,193 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CWI Meeting Notes</title>
-<meta name="description" content="CWI internal tool: CWI Meeting Notes. Internal use only — CWI Compute With Imagination.">
+<title>Meeting Notes — CWI</title>
+<meta name="description" content="Internal meeting notes tool for capturing agendas, discussion points, decisions, action items, and generating follow-up email drafts.">
+<link rel="icon" type="image/png" href="../assets/cwi-favicon-64.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --accent: #FF5A1F;
-    --accent-light: #fff3ee;
-    --accent-dark: #cc4518;
-    --amber: #f59e0b;
-    --green: #10b981;
-    --gray-50: #f9fafb;
-    --gray-100: #f3f4f6;
-    --gray-200: #e5e7eb;
-    --gray-300: #d1d5db;
-    --gray-400: #9ca3af;
-    --gray-500: #6b7280;
-    --gray-700: #374151;
-    --gray-900: #111827;
-    --radius: 8px;
-    --shadow: 0 1px 3px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.06);
-    --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.05);
-  }
+:root{--ink:#0A0A0C;--ink-2:#0E0E11;--surface:#141418;--surface-2:#191920;--line:rgba(255,255,255,.09);--line-2:rgba(255,255,255,.14);--accent:#FF5A1F;--ember:#FF8A3D;--steel:#85858E;--text:#F4F4F6;--text-dim:#C2C2C8;--font-disp:'Sora',sans-serif;--font-body:'Instrument Sans',sans-serif;--r-sm:12px;--r-md:18px;--r-pill:999px;--ease:cubic-bezier(.22,.61,.36,1);}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:var(--font-body);background:var(--ink);color:var(--text);-webkit-font-smoothing:antialiased;line-height:1.6;min-height:100vh;padding:0 0 64px;}
+h1,h2,h3,h4,h5,h6{font-family:var(--font-disp);letter-spacing:-.03em;line-height:1.15;font-weight:800;color:var(--text);}
+a{color:var(--accent);text-decoration:none;}
+p{color:var(--text-dim);line-height:1.65;}
+ul,ol{color:var(--text-dim);padding-left:1.4em;}
+li{margin-bottom:6px;}
+/* Layout */
+.wrap{max-width:960px;margin:0 auto;padding:0 24px;}
+.container{max-width:900px;margin:0 auto;padding:0 24px;}
+/* Topbar */
+.topbar{border-bottom:1px solid var(--line);background:rgba(10,10,12,.9);backdrop-filter:blur(14px);position:sticky;top:0;z-index:100;padding:14px 0;}
+.topbar-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;max-width:960px;margin:0 auto;padding:0 24px;}
+.logo{font-family:var(--font-disp);font-weight:800;font-size:17px;letter-spacing:-.04em;display:flex;align-items:center;gap:8px;color:var(--text);}
+.logo .dot{color:var(--accent);}
+.back-link{font-size:13px;color:var(--steel);display:flex;align-items:center;gap:5px;transition:color .2s;}
+.back-link:hover{color:var(--text);}
+/* Hero */
+.page-header,.hero{padding:52px 0 32px;text-align:center;}
+.page-header .logo-block,.hero .logo-block{display:flex;align-items:center;justify-content:center;gap:8px;font-family:var(--font-disp);font-size:20px;font-weight:800;margin-bottom:10px;color:var(--accent);}
+.kicker,.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--steel);margin-bottom:16px;}
+.pip{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);}
+.hero h1,.page-title{font-size:clamp(26px,3.5vw,44px);margin-bottom:12px;}
+.hero p,.page-subtitle{font-size:clamp(14px,1.5vw,16px);color:var(--text-dim);max-width:52ch;margin:0 auto;}
+/* Cards & panels */
+.card,.panel,.form-card,.section-card,.box{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:28px 32px;margin-bottom:24px;}
+.card:hover,.panel:hover{border-color:var(--line-2);}
+/* Form elements */
+label,.form-label{font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--steel);display:block;margin-bottom:6px;}
+input,select,textarea,.form-control{width:100%;background:var(--ink-2);border:1.5px solid var(--line-2);border-radius:var(--r-sm);padding:10px 14px;font-size:14px;font-family:var(--font-body);color:var(--text);outline:none;transition:border-color .2s;box-sizing:border-box;}
+input:focus,select:focus,textarea:focus,.form-control:focus{border-color:var(--accent);background:var(--surface);}
+textarea{resize:vertical;min-height:96px;}
+select option{background:var(--surface);color:var(--text);}
+/* Form layout */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+.form-group,.field{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;}
+.form-group.full,.field.full{grid-column:1/-1;}
+/* Buttons */
+.btn,.btn-primary,.btn-generate,.btn-action{font-family:var(--font-body);font-size:14px;font-weight:600;padding:11px 24px;border-radius:var(--r-pill);border:1.5px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer;transition:all .22s var(--ease);display:inline-flex;align-items:center;gap:8px;text-decoration:none;}
+.btn:hover,.btn-primary:hover,.btn-generate:hover,.btn-action:hover{background:var(--ember);border-color:var(--ember);box-shadow:0 0 22px rgba(255,90,31,.35);}
+.btn-outline,.btn-ghost,.btn-secondary{background:rgba(255,90,31,.1);border-color:var(--accent);color:var(--text);}
+.btn-outline:hover,.btn-ghost:hover,.btn-secondary:hover{background:var(--accent);color:#fff;}
+.btn-sm{padding:8px 16px;font-size:13px;}
+/* Tables */
+.table-wrap{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden;margin-bottom:32px;}
+table{width:100%;border-collapse:collapse;}
+thead{background:var(--surface-2);}
+th{font-family:var(--font-disp);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--steel);padding:12px 16px;text-align:left;border-bottom:1px solid var(--line);}
+td{font-size:14px;color:var(--text-dim);padding:11px 16px;border-bottom:1px solid var(--line);}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(255,255,255,.02);}
+/* Badges / tags */
+.badge,.tag{display:inline-block;padding:3px 12px;border-radius:var(--r-pill);font-size:12px;font-weight:600;background:rgba(255,90,31,.12);color:var(--accent);border:1px solid rgba(255,90,31,.25);}
+.badge.green,.tag.green{background:rgba(74,222,128,.12);color:#4ade80;border-color:rgba(74,222,128,.25);}
+.badge.red,.tag.red{background:rgba(248,113,113,.12);color:#f87171;border-color:rgba(248,113,113,.25);}
+/* Sections */
+.section{padding:40px 0 0;}
+.section-title{font-family:var(--font-disp);font-size:20px;font-weight:700;margin-bottom:18px;color:var(--text);}
+.section-title span,.acc{color:var(--accent);}
+/* Output/preview areas */
+.output-area,.preview,.result-card,.output-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:28px 32px;margin-top:24px;}
+/* Dividers */
+hr,.rule,.divider{border:none;border-top:1px solid var(--line);margin:32px 0;}
+/* Checklist items */
+.check-item{display:flex;align-items:flex-start;gap:12px;padding:14px 0;border-bottom:1px solid var(--line);}
+.check-item:last-child{border-bottom:none;}
+.check-item input[type="checkbox"]{width:18px;height:18px;margin-top:2px;accent-color:var(--accent);flex-shrink:0;cursor:pointer;}
+/* Lists */
+.list-item{padding:12px 0;border-bottom:1px solid var(--line);color:var(--text-dim);}
+.list-item:last-child{border-bottom:none;}
+/* Stats / KPI */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-bottom:28px;}
+.stat-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:20px 22px;}
+.stat-label{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--steel);margin-bottom:8px;}
+.stat-value{font-family:var(--font-disp);font-size:30px;font-weight:800;color:var(--text);}
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surface-2);border:1px solid var(--line-2);border-radius:var(--r-pill);padding:11px 22px;font-size:14px;color:var(--text);transition:transform .3s var(--ease),opacity .3s;opacity:0;z-index:999;pointer-events:none;}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+/* Footer */
+.footer{border-top:1px solid var(--line);padding:24px 0;text-align:center;font-size:13px;color:var(--steel);margin-top:64px;}
+.footer a{color:var(--accent);}
+/* Responsive */
+@media(max-width:640px){.form-grid{grid-template-columns:1fr;}.card,.panel,.form-card{padding:20px 16px;}.stat-grid{grid-template-columns:1fr 1fr;}}
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+/* ── Tool-specific: card header ── */
+.card{padding:0;overflow:hidden;}
+.card-header{background:var(--surface-2);border-bottom:1px solid var(--line);border-left:3px solid var(--accent);padding:12px 20px;display:flex;align-items:center;gap:10px;}
+.card-header h2{font-size:0.97rem;font-weight:700;color:var(--text-dim);letter-spacing:normal;}
+.card-body{padding:20px;}
+.section-num{background:var(--accent);color:#fff;font-size:0.75rem;font-weight:700;width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
 
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: var(--gray-100);
-    color: var(--gray-900);
-    min-height: 100vh;
-  }
+/* ── Meta grid ── */
+.meta-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:0;}
+.field label{font-size:0.78rem;font-weight:600;color:var(--steel);text-transform:uppercase;letter-spacing:0.05em;}
 
-  /* ── Header ── */
-  #app-header {
-    background: var(--accent);
-    color: #fff;
-    padding: 0 24px;
-    height: 56px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    box-shadow: 0 2px 8px rgba(255,90,31,0.30);
-  }
-  #app-header h1 { font-size: 1.15rem; font-weight: 700; letter-spacing: 0.01em; }
-  #header-actions { display: flex; align-items: center; gap: 12px; }
+/* ── Action items table ── */
+.ai-table{width:100%;border-collapse:collapse;}
+.ai-table th{text-align:left;font-size:0.75rem;font-weight:700;color:var(--steel);text-transform:uppercase;letter-spacing:0.05em;padding:8px 10px;border-bottom:2px solid var(--line);background:var(--surface-2);}
+.ai-table td{padding:7px 8px;vertical-align:middle;border-bottom:1px solid var(--line);}
+.ai-table tbody tr:last-child td{border-bottom:none;}
+.ai-table tbody tr:nth-child(even) td{background:rgba(255,255,255,.02);}
+.ai-table input,.ai-table select{padding:5px 8px;font-size:0.85rem;}
 
-  .save-indicator {
-    width: 10px; height: 10px;
-    border-radius: 50%;
-    background: var(--amber);
-    transition: background 0.4s;
-    flex-shrink: 0;
-  }
-  .save-indicator.saved { background: var(--green); }
+/* Status select colours */
+.status-open{background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.35);color:#fbbf24;}
+.status-done{background:rgba(16,185,129,.12);border-color:rgba(16,185,129,.35);color:#34d399;}
+.status-inprogress{background:rgba(59,130,246,.12);border-color:rgba(59,130,246,.35);color:#60a5fa;}
 
-  #recent-select {
-    font-size: 0.82rem;
-    padding: 4px 8px;
-    border-radius: var(--radius);
-    border: none;
-    background: rgba(255,255,255,0.2);
-    color: #fff;
-    cursor: pointer;
-    max-width: 200px;
-  }
-  #recent-select option { color: var(--gray-900); background: #fff; }
+.ai-actions{margin-top:12px;display:flex;gap:8px;}
 
-  .btn {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 6px 14px;
-    border-radius: var(--radius);
-    border: none;
-    font-size: 0.84rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.15s, opacity 0.15s;
-  }
-  .btn-white { background: #fff; color: var(--accent); }
-  .btn-white:hover { background: var(--accent-light); }
-  .btn-ghost { background: rgba(255,255,255,0.15); color: #fff; }
-  .btn-ghost:hover { background: rgba(255,255,255,0.25); }
-  .btn-accent { background: var(--accent); color: #fff; }
-  .btn-accent:hover { background: var(--accent-dark); }
-  .btn-danger { background: #fee2e2; color: #b91c1c; }
-  .btn-danger:hover { background: #fecaca; }
-  .btn-sm { padding: 4px 10px; font-size: 0.78rem; }
+/* ── Email output ── */
+#email-output{min-height:180px;background:var(--ink-2);border:1.5px solid var(--line-2);border-radius:var(--r-sm);padding:14px;font-size:0.88rem;line-height:1.7;white-space:pre-wrap;color:var(--text-dim);}
+.email-actions{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;}
 
-  /* ── Layout ── */
-  #main {
-    max-width: 900px;
-    margin: 32px auto;
-    padding: 0 16px 64px;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-  }
+/* ── Next meeting grid ── */
+.next-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;}
 
-  /* ── Cards ── */
-  .card {
-    background: #fff;
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    overflow: hidden;
-  }
-  .card-header {
-    background: var(--accent-light);
-    border-left: 4px solid var(--accent);
-    padding: 12px 20px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .section-num {
-    background: var(--accent);
-    color: #fff;
-    font-size: 0.75rem;
-    font-weight: 700;
-    width: 22px; height: 22px;
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-  .card-header h2 { font-size: 0.97rem; font-weight: 700; color: var(--gray-700); }
-  .card-body { padding: 20px; }
+/* ── Header actions area ── */
+#header-actions{display:flex;align-items:center;gap:12px;}
 
-  /* ── Meta fields ── */
-  .meta-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 16px;
-  }
-  .field { display: flex; flex-direction: column; gap: 5px; }
-  .field label { font-size: 0.78rem; font-weight: 600; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.05em; }
+/* ── Save indicator ── */
+.save-indicator{width:10px;height:10px;border-radius:50%;background:#fbbf24;transition:background 0.4s;flex-shrink:0;}
+.save-indicator.saved{background:#34d399;}
 
-  input, select, textarea {
-    width: 100%;
-    padding: 8px 12px;
-    border: 1.5px solid var(--gray-200);
-    border-radius: var(--radius);
-    font-size: 0.9rem;
-    font-family: inherit;
-    color: var(--gray-900);
-    background: #fff;
-    transition: border-color 0.15s, box-shadow 0.15s;
-    outline: none;
-  }
-  input:focus, select:focus, textarea:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(255,90,31,0.12);
-  }
-  textarea { resize: vertical; min-height: 120px; line-height: 1.6; }
+/* ── Recent select in topbar ── */
+#recent-select{font-size:0.82rem;padding:5px 10px;border-radius:var(--r-sm);border:1.5px solid var(--line-2);background:var(--surface-2);color:var(--text-dim);cursor:pointer;max-width:200px;}
+#recent-select option{background:var(--surface);color:var(--text);}
 
-  /* ── Action Items table ── */
-  .ai-table { width: 100%; border-collapse: collapse; }
-  .ai-table th {
-    text-align: left;
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: var(--gray-500);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    padding: 8px 10px;
-    border-bottom: 2px solid var(--gray-200);
-    background: var(--gray-50);
-  }
-  .ai-table td { padding: 7px 8px; vertical-align: middle; }
-  .ai-table tbody tr:nth-child(even) { background: var(--gray-50); }
-  .ai-table input, .ai-table select { padding: 5px 8px; font-size: 0.85rem; }
+/* ── Btn variants used in this file ── */
+.btn-white{background:rgba(255,90,31,.15);border-color:var(--accent);color:var(--text);}
+.btn-white:hover{background:var(--accent);color:#fff;}
+.btn-accent{background:var(--accent);border-color:var(--accent);color:#fff;}
+.btn-accent:hover{background:var(--ember);border-color:var(--ember);box-shadow:0 0 22px rgba(255,90,31,.35);}
+.btn-danger{background:rgba(248,113,113,.12);border-color:rgba(248,113,113,.3);color:#f87171;}
+.btn-danger:hover{background:rgba(248,113,113,.22);border-color:#f87171;}
 
-  .status-open  { background: #fffbeb; border-color: var(--amber); color: #92400e; }
-  .status-done  { background: #ecfdf5; border-color: var(--green); color: #065f46; }
-  .status-inprogress { background: #eff6ff; border-color: #3b82f6; color: #1e40af; }
+/* ── Main layout ── */
+#main{max-width:900px;margin:32px auto;padding:0 16px 64px;display:flex;flex-direction:column;gap:20px;}
 
-  .ai-actions { margin-top: 12px; display: flex; gap: 8px; }
+/* ── Print ── */
+@media print{
+  .topbar,.btn,.ai-actions,.email-actions,#recent-select,.save-indicator,#delete-btn,#print-btn{display:none !important;}
+  body{background:#fff;color:#000;}
+  #main{margin:0;padding:0;max-width:100%;}
+  .card{box-shadow:none;border:1px solid #ccc;break-inside:avoid;}
+  #email-output{border:1px solid #ccc;}
+}
 
-  /* ── Email draft ── */
-  #email-output {
-    min-height: 180px;
-    background: var(--gray-50);
-    border: 1.5px solid var(--gray-200);
-    border-radius: var(--radius);
-    padding: 14px;
-    font-size: 0.88rem;
-    line-height: 1.7;
-    white-space: pre-wrap;
-    color: var(--gray-700);
-  }
-  .email-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
-
-  /* ── Next meeting ── */
-  .next-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 16px;
-  }
-
-  /* ── Print ── */
-  @media print {
-    #app-header, .btn, .ai-actions, .email-actions, #recent-select,
-    .save-indicator, #delete-btn, #print-btn { display: none !important; }
-    body { background: #fff; }
-    #main { margin: 0; padding: 0; max-width: 100%; }
-    .card { box-shadow: none; border: 1px solid var(--gray-200); break-inside: avoid; }
-    #email-output { border: 1px solid var(--gray-300); }
-  }
-
-  /* ── Responsive ── */
-  @media (max-width: 600px) {
-    #app-header { padding: 0 12px; }
-    #app-header h1 { font-size: 1rem; }
-    #main { margin: 16px auto; }
-    .meta-grid { grid-template-columns: 1fr; }
-    .ai-table { font-size: 0.8rem; }
-    .ai-table th:nth-child(3), .ai-table td:nth-child(3) { display: none; }
-  }
+/* ── Responsive ── */
+@media(max-width:600px){
+  #main{margin:16px auto;}
+  .meta-grid{grid-template-columns:1fr;}
+  .ai-table{font-size:0.8rem;}
+  .ai-table th:nth-child(3),.ai-table td:nth-child(3){display:none;}
+}
 </style>
 </head>
 <body>
 
-<!-- ════════════════════════════ HEADER ════════════════════════════ -->
-<header id="app-header">
-  <h1>CWI Meeting Notes</h1>
-  <div id="header-actions">
-    <span class="save-indicator" id="save-dot" title="Unsaved changes"></span>
-    <select id="recent-select" title="Load a recent meeting">
-      <option value="">— Recent Meetings —</option>
-    </select>
-    <button class="btn btn-ghost btn-sm" id="delete-btn" title="Delete loaded meeting" style="display:none">Delete</button>
-    <button class="btn btn-white btn-sm" id="print-btn" onclick="window.print()">Print</button>
+<div class="bg-field" style="position:fixed;inset:0;z-index:-1;pointer-events:none;"><div style="position:absolute;inset:0;background:radial-gradient(720px 460px at 82% -6%,rgba(255,90,31,.09),transparent 60%),radial-gradient(620px 520px at 6% 8%,rgba(255,90,31,.04),transparent 60%);"></div></div>
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="logo">
+      <svg width="22" height="22" viewBox="0 0 32 32" fill="none" aria-hidden="true"><rect x="4" y="10" width="4" height="12" rx="2" fill="#FF5A1F"/><rect x="10" y="6" width="4" height="20" rx="2" fill="#FF5A1F" opacity=".85"/><rect x="16" y="2" width="4" height="28" rx="2" fill="#FF5A1F" opacity=".7"/><rect x="22" y="6" width="4" height="20" rx="2" fill="#FF5A1F" opacity=".55"/></svg>
+      CWI <span class="dot">·</span> Meeting Notes
+    </div>
+    <div id="header-actions">
+      <span class="save-indicator" id="save-dot" title="Unsaved changes"></span>
+      <select id="recent-select" title="Load a recent meeting">
+        <option value="">— Recent Meetings —</option>
+      </select>
+      <button class="btn btn-ghost btn-sm" id="delete-btn" title="Delete loaded meeting" style="display:none">Delete</button>
+      <button class="btn btn-white btn-sm" id="print-btn" onclick="window.print()">Print</button>
+    </div>
+    <a class="back-link" href="../index.html">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 2L3 7l5 5"/><line x1="3" y1="7" x2="12" y2="7"/></svg>
+      Back
+    </a>
   </div>
 </header>
 
@@ -346,7 +300,7 @@
       <div id="email-output">Click "Generate Email" to assemble a follow-up draft from the fields above.</div>
       <div class="email-actions">
         <button class="btn btn-accent" id="gen-email-btn">Generate Email</button>
-        <button class="btn btn-ghost btn-sm" id="copy-email-btn" style="background:var(--gray-200);color:var(--gray-700)" disabled>Copy Email</button>
+        <button class="btn btn-ghost btn-sm" id="copy-email-btn" disabled>Copy Email</button>
       </div>
     </div>
   </div>

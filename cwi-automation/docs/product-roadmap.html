@@ -1,1 +1,192 @@
-C:\Users\Brian\Documents\CWI AI\cwi-automation\docs\product-roadmap.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Product Roadmap — CWI</title>
+<meta name="description" content="Track quarterly product features by status and priority. Drag features between quarters, mark progress, export roadmap.">
+<link rel="icon" type="image/png" href="../assets/cwi-favicon-64.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0A0A0C;--surface:#141418;--surface-2:#191920;--line:rgba(255,255,255,.09);--line-2:rgba(255,255,255,.14);--accent:#FF5A1F;--ember:#FF8A3D;--steel:#85858E;--text:#F4F4F6;--text-dim:#C2C2C8;--font-disp:'Sora',sans-serif;--font-body:'Instrument Sans',sans-serif;--r-sm:12px;--r-md:18px;--r-pill:999px;--ease:cubic-bezier(.22,.61,.36,1);}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:var(--font-body);background:var(--ink);color:var(--text);-webkit-font-smoothing:antialiased;line-height:1.6;min-height:100vh;}
+h1,h2,h3{font-family:var(--font-disp);letter-spacing:-.035em;line-height:1.1;font-weight:800;}
+a{color:inherit;text-decoration:none;}
+.bg-field{position:fixed;inset:0;z-index:-1;pointer-events:none;}
+.bg-field::before{content:"";position:absolute;inset:0;background:radial-gradient(700px 450px at 78% -4%,rgba(255,90,31,.11),transparent 60%);}
+.wrap{max-width:1200px;margin:0 auto;padding:0 28px;}
+.topbar{border-bottom:1px solid var(--line);background:rgba(10,10,12,.82);backdrop-filter:blur(14px);position:sticky;top:0;z-index:100;padding:14px 0;}
+.topbar-inner{display:flex;align-items:center;justify-content:space-between;}
+.logo{font-family:var(--font-disp);font-weight:800;font-size:18px;letter-spacing:-.04em;display:flex;align-items:center;gap:9px;}
+.logo .dot{color:var(--accent);}
+.back-link{font-size:13px;color:var(--steel);display:flex;align-items:center;gap:6px;transition:color .2s;}
+.back-link:hover{color:var(--text);}
+.hero{padding:56px 0 36px;text-align:center;}
+.kicker{display:inline-flex;align-items:center;gap:9px;font-size:11.5px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--steel);margin-bottom:18px;}
+.pip{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);}
+.hero h1{font-size:clamp(28px,4vw,48px);margin-bottom:12px;}
+.hero h1 .acc{color:var(--accent);}
+.hero p{font-size:clamp(14px,1.6vw,17px);color:var(--text-dim);max-width:52ch;margin:0 auto;}
+.add-bar{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:18px 22px;margin-bottom:28px;display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;}
+.add-field{display:flex;flex-direction:column;gap:6px;flex:1;min-width:130px;}
+label{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--steel);}
+input,select{background:var(--surface-2);border:1px solid var(--line-2);border-radius:var(--r-sm);color:var(--text);font-family:var(--font-body);font-size:14px;padding:9px 12px;outline:none;transition:border-color .2s;width:100%;}
+input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(255,90,31,.15);}
+.btn{font-family:var(--font-body);font-size:14px;font-weight:600;padding:10px 22px;border-radius:var(--r-pill);background:var(--accent);color:#0A0A0C;border:none;cursor:pointer;transition:all .22s var(--ease);white-space:nowrap;}
+.btn:hover{background:var(--ember);box-shadow:0 0 20px rgba(255,90,31,.35);}
+.btn-outline{background:transparent;border:1.5px solid var(--accent);color:#fff;}
+.btn-outline:hover{background:rgba(255,90,31,.1);}
+.roadmap-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-bottom:48px;}
+@media(max-width:900px){.roadmap-grid{grid-template-columns:1fr 1fr;}}
+@media(max-width:500px){.roadmap-grid{grid-template-columns:1fr;}}
+.quarter-col{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden;}
+.q-header{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;}
+.q-title{font-family:var(--font-disp);font-size:15px;font-weight:700;}
+.q-count{font-size:12px;font-weight:600;padding:3px 10px;border-radius:var(--r-pill);background:rgba(255,90,31,.1);border:1px solid rgba(255,90,31,.2);color:var(--accent);}
+.q-items{padding:12px;display:flex;flex-direction:column;gap:8px;min-height:120px;}
+.feature-card{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px 14px;cursor:pointer;transition:border-color .2s;}
+.feature-card:hover{border-color:var(--line-2);}
+.f-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;}
+.f-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.f-status{font-size:10px;font-weight:600;padding:2px 8px;border-radius:var(--r-pill);text-transform:uppercase;}
+.f-status.planned{background:rgba(133,133,142,.15);border:1px solid rgba(133,133,142,.3);color:var(--steel);}
+.f-status.in-progress{background:rgba(250,204,21,.1);border:1px solid rgba(250,204,21,.3);color:#facc15;}
+.f-status.done{background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.3);color:#4ade80;}
+.f-priority{font-size:10px;font-weight:600;padding:2px 8px;border-radius:var(--r-pill);}
+.f-priority.high{background:rgba(255,90,31,.1);border:1px solid rgba(255,90,31,.25);color:var(--accent);}
+.f-priority.medium{background:rgba(133,133,142,.1);border:1px solid rgba(133,133,142,.25);color:var(--steel);}
+.f-priority.low{background:transparent;border:1px solid var(--line);color:var(--steel);}
+.f-del{background:transparent;border:none;color:rgba(248,113,113,.5);cursor:pointer;font-size:14px;padding:2px 4px;border-radius:4px;transition:color .2s;margin-left:auto;}
+.f-del:hover{color:#f87171;}
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:28px;}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--steel);}
+.legend-dot{width:8px;height:8px;border-radius:50%;}
+.footer{border-top:1px solid var(--line);padding:24px 0;text-align:center;font-size:13px;color:var(--steel);}
+.footer a{color:var(--accent);}
+</style>
+</head>
+<body>
+<div class="bg-field"></div>
+<header class="topbar">
+  <div class="wrap">
+    <div class="topbar-inner">
+      <div class="logo">
+        <svg width="22" height="22" viewBox="0 0 32 32" fill="none" aria-hidden="true"><rect x="4" y="10" width="4" height="12" rx="2" fill="#FF5A1F"/><rect x="10" y="6" width="4" height="20" rx="2" fill="#FF5A1F" opacity=".85"/><rect x="16" y="2" width="4" height="28" rx="2" fill="#FF5A1F" opacity=".7"/><rect x="22" y="6" width="4" height="20" rx="2" fill="#FF5A1F" opacity=".55"/></svg>
+        CWI <span class="dot">·</span> Product Roadmap
+      </div>
+      <a class="back-link" href="../index.html">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 2L3 7l5 5"/><line x1="3" y1="7" x2="12" y2="7"/></svg>
+        Back to site
+      </a>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <div class="kicker"><span class="pip"></span> Product Planning</div>
+    <h1>Product <span class="acc">Roadmap</span></h1>
+    <p>Plan features by quarter. Set status (planned / in-progress / done) and priority. All data saves locally.</p>
+  </div>
+</section>
+
+<main>
+  <div class="wrap">
+    <div class="add-bar">
+      <div class="add-field" style="flex:2;min-width:200px"><label for="f-name">Feature Name</label><input type="text" id="f-name" placeholder="e.g. AI call summaries"></div>
+      <div class="add-field"><label for="f-quarter">Quarter</label>
+        <select id="f-quarter"><option value="q1">Q1</option><option value="q2">Q2</option><option value="q3" selected>Q3</option><option value="q4">Q4</option></select>
+      </div>
+      <div class="add-field"><label for="f-status">Status</label>
+        <select id="f-status"><option value="planned">Planned</option><option value="in-progress">In Progress</option><option value="done">Done</option></select>
+      </div>
+      <div class="add-field"><label for="f-priority">Priority</label>
+        <select id="f-priority"><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select>
+      </div>
+      <button class="btn" id="btn-add" style="align-self:flex-end">Add Feature</button>
+      <button class="btn btn-outline" id="btn-export" style="align-self:flex-end">Export CSV</button>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#85858E"></div>Planned</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#facc15"></div>In Progress</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#4ade80"></div>Done</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#FF5A1F"></div>High Priority</div>
+    </div>
+
+    <div class="roadmap-grid" id="roadmap-grid"></div>
+  </div>
+</main>
+
+<footer class="footer"><div class="wrap">Built by <a href="../index.html">CWI · Compute With Imagination</a> &nbsp;·&nbsp; Internal tool</div></footer>
+
+<script>
+const KEY='cwi-roadmap-v1';
+const QUARTERS=['q1','q2','q3','q4'];
+const QLABELS={q1:'Q1 — Jan–Mar',q2:'Q2 — Apr–Jun',q3:'Q3 — Jul–Sep',q4:'Q4 — Oct–Dec'};
+let features=JSON.parse(localStorage.getItem(KEY)||'null');
+if(!features){
+  features=[
+    {id:1,name:'AI bot onboarding wizard',quarter:'q1',status:'done',priority:'high'},
+    {id:2,name:'HubSpot two-way sync',quarter:'q1',status:'done',priority:'high'},
+    {id:3,name:'SMS follow-up automation',quarter:'q2',status:'done',priority:'medium'},
+    {id:4,name:'Multi-location support',quarter:'q2',status:'in-progress',priority:'high'},
+    {id:5,name:'Analytics dashboard v2',quarter:'q3',status:'in-progress',priority:'medium'},
+    {id:6,name:'Custom bot personas',quarter:'q3',status:'planned',priority:'low'},
+    {id:7,name:'Stripe revenue reporting',quarter:'q4',status:'planned',priority:'medium'},
+    {id:8,name:'White-label client portal',quarter:'q4',status:'planned',priority:'high'},
+  ];
+}
+let nextId=Math.max(...features.map(f=>f.id),0)+1;
+function save(){localStorage.setItem(KEY,JSON.stringify(features));}
+
+function render(){
+  const grid=document.getElementById('roadmap-grid'); grid.innerHTML='';
+  QUARTERS.forEach(q=>{
+    const qFeatures=features.filter(f=>f.quarter===q);
+    const col=document.createElement('div'); col.className='quarter-col';
+    col.innerHTML=`<div class="q-header"><div class="q-title">${QLABELS[q]}</div><span class="q-count">${qFeatures.length}</span></div><div class="q-items" id="q-${q}"></div>`;
+    grid.appendChild(col);
+    const itemsDiv=col.querySelector('.q-items');
+    qFeatures.forEach(f=>{
+      const card=document.createElement('div'); card.className='feature-card';
+      card.innerHTML=`<div class="f-title">${escHtml(f.name)}</div><div class="f-meta"><span class="f-status ${f.status}">${f.status.replace('-',' ')}</span><span class="f-priority ${f.priority}">${f.priority}</span><button class="f-del" data-id="${f.id}" title="Remove">✕</button></div>`;
+      card.querySelector('.f-del').addEventListener('click',e=>{
+        e.stopPropagation(); features=features.filter(x=>x.id!==parseInt(e.target.dataset.id)); save(); render();
+      });
+      card.addEventListener('click',e=>{
+        if(e.target.classList.contains('f-del'))return;
+        const statuses=['planned','in-progress','done'];
+        const fi=features.find(x=>x.id===f.id);
+        fi.status=statuses[(statuses.indexOf(fi.status)+1)%statuses.length];
+        save(); render();
+      });
+      itemsDiv.appendChild(card);
+    });
+  });
+}
+
+document.getElementById('btn-add').addEventListener('click',()=>{
+  const name=document.getElementById('f-name').value.trim();
+  if(!name){alert('Enter a feature name.');return;}
+  features.push({id:nextId++,name,quarter:document.getElementById('f-quarter').value,status:document.getElementById('f-status').value,priority:document.getElementById('f-priority').value});
+  save(); render(); document.getElementById('f-name').value='';
+});
+
+document.getElementById('btn-export').addEventListener('click',()=>{
+  const hdr='Quarter,Feature,Status,Priority';
+  const rows=features.map(f=>[QLABELS[f.quarter],f.name,f.status,f.priority].join(','));
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent([hdr,...rows].join('\n'));
+  a.download='cwi-roadmap.csv'; a.click();
+});
+
+document.getElementById('f-name').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('btn-add').click();});
+function escHtml(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+render();
+</script>
+</body>
+</html>

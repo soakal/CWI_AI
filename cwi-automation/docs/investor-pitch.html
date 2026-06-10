@@ -1,1 +1,199 @@
-C:\Users\Brian\Documents\CWI AI\cwi-automation\docs\investor-pitch.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Investor Pitch Organizer — CWI</title>
+<meta name="description" content="Pitch deck content organizer: structure your problem, solution, market size, traction, team, and ask sections.">
+<link rel="icon" type="image/png" href="../assets/cwi-favicon-64.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0A0A0C;--surface:#141418;--surface-2:#191920;--line:rgba(255,255,255,.09);--line-2:rgba(255,255,255,.14);--accent:#FF5A1F;--ember:#FF8A3D;--steel:#85858E;--text:#F4F4F6;--text-dim:#C2C2C8;--font-disp:'Sora',sans-serif;--font-body:'Instrument Sans',sans-serif;--r-sm:12px;--r-md:18px;--r-pill:999px;--ease:cubic-bezier(.22,.61,.36,1);}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:var(--font-body);background:var(--ink);color:var(--text);-webkit-font-smoothing:antialiased;line-height:1.6;min-height:100vh;}
+h1,h2,h3{font-family:var(--font-disp);letter-spacing:-.035em;line-height:1.1;font-weight:800;}
+a{color:inherit;text-decoration:none;}
+.bg-field{position:fixed;inset:0;z-index:-1;pointer-events:none;}
+.bg-field::before{content:"";position:absolute;inset:0;background:radial-gradient(700px 450px at 78% -4%,rgba(255,90,31,.11),transparent 60%);}
+.wrap{max-width:960px;margin:0 auto;padding:0 28px;}
+.topbar{border-bottom:1px solid var(--line);background:rgba(10,10,12,.82);backdrop-filter:blur(14px);position:sticky;top:0;z-index:100;padding:14px 0;}
+.topbar-inner{display:flex;align-items:center;justify-content:space-between;}
+.logo{font-family:var(--font-disp);font-weight:800;font-size:18px;letter-spacing:-.04em;display:flex;align-items:center;gap:9px;}
+.logo .dot{color:var(--accent);}
+.back-link{font-size:13px;color:var(--steel);display:flex;align-items:center;gap:6px;transition:color .2s;}
+.back-link:hover{color:var(--text);}
+.hero{padding:56px 0 36px;text-align:center;}
+.kicker{display:inline-flex;align-items:center;gap:9px;font-size:11.5px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--steel);margin-bottom:18px;}
+.pip{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);}
+.hero h1{font-size:clamp(28px,4vw,48px);margin-bottom:12px;}
+.hero h1 .acc{color:var(--accent);}
+.hero p{font-size:clamp(14px,1.6vw,17px);color:var(--text-dim);max-width:52ch;margin:0 auto;}
+.actions-bar{display:flex;align-items:center;gap:12px;margin-bottom:28px;flex-wrap:wrap;}
+.btn{font-family:var(--font-body);font-size:14px;font-weight:600;padding:11px 26px;border-radius:var(--r-pill);background:var(--accent);color:#0A0A0C;border:none;cursor:pointer;transition:all .22s var(--ease);}
+.btn:hover{background:var(--ember);box-shadow:0 0 22px rgba(255,90,31,.35);}
+.btn-outline{background:transparent;border:1.5px solid var(--accent);color:#fff;}
+.btn-outline:hover{background:rgba(255,90,31,.1);}
+.progress-bar{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-pill);padding:12px 20px;margin-bottom:28px;display:flex;align-items:center;gap:14px;}
+.progress-label{font-size:13px;color:var(--steel);white-space:nowrap;}
+.progress-track{flex:1;height:6px;background:var(--surface-2);border-radius:3px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--ember));border-radius:3px;transition:width .4s var(--ease);}
+.progress-pct{font-family:var(--font-disp);font-size:13px;font-weight:700;color:var(--accent);white-space:nowrap;}
+.sections-list{display:flex;flex-direction:column;gap:18px;margin-bottom:56px;}
+.section-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden;transition:border-color .2s;}
+.section-card:hover{border-color:var(--line-2);}
+.section-card.filled{border-color:rgba(255,90,31,.3);}
+.sec-header{display:flex;align-items:center;gap:14px;padding:18px 22px;cursor:pointer;user-select:none;}
+.sec-num{font-family:var(--font-disp);font-size:12px;font-weight:700;letter-spacing:.14em;color:var(--accent);background:rgba(255,90,31,.1);border:1px solid rgba(255,90,31,.2);border-radius:6px;padding:3px 8px;flex-shrink:0;}
+.sec-title{font-family:var(--font-disp);font-size:17px;font-weight:700;flex:1;}
+.sec-subtitle{font-size:13px;color:var(--steel);}
+.sec-toggle{font-size:18px;color:var(--steel);transition:transform .25s;}
+.sec-toggle.open{transform:rotate(180deg);}
+.sec-body{padding:0 22px 22px;display:none;}
+.sec-body.open{display:block;}
+.sec-hint{font-size:13px;color:var(--steel);margin-bottom:12px;padding:10px 14px;background:rgba(255,90,31,.05);border:1px solid rgba(255,90,31,.15);border-radius:var(--r-sm);line-height:1.5;}
+.sec-textarea{width:100%;background:var(--surface-2);border:1px solid var(--line-2);border-radius:var(--r-sm);color:var(--text);font-family:var(--font-body);font-size:14px;line-height:1.65;padding:12px 14px;outline:none;resize:vertical;min-height:120px;transition:border-color .2s;}
+.sec-textarea:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(255,90,31,.15);}
+.char-count{font-size:11px;color:var(--steel);text-align:right;margin-top:6px;}
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surface-2);border:1px solid var(--line-2);border-radius:var(--r-pill);padding:12px 22px;font-size:14px;color:var(--text);transition:transform .3s var(--ease),opacity .3s;opacity:0;z-index:999;pointer-events:none;}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+.footer{border-top:1px solid var(--line);padding:24px 0;text-align:center;font-size:13px;color:var(--steel);}
+.footer a{color:var(--accent);}
+</style>
+</head>
+<body>
+<div class="bg-field"></div>
+<header class="topbar">
+  <div class="wrap">
+    <div class="topbar-inner">
+      <div class="logo">
+        <svg width="22" height="22" viewBox="0 0 32 32" fill="none" aria-hidden="true"><rect x="4" y="10" width="4" height="12" rx="2" fill="#FF5A1F"/><rect x="10" y="6" width="4" height="20" rx="2" fill="#FF5A1F" opacity=".85"/><rect x="16" y="2" width="4" height="28" rx="2" fill="#FF5A1F" opacity=".7"/><rect x="22" y="6" width="4" height="20" rx="2" fill="#FF5A1F" opacity=".55"/></svg>
+        CWI <span class="dot">·</span> Investor Pitch
+      </div>
+      <a class="back-link" href="../index.html">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 2L3 7l5 5"/><line x1="3" y1="7" x2="12" y2="7"/></svg>
+        Back to site
+      </a>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <div class="kicker"><span class="pip"></span> Fundraising</div>
+    <h1>Investor Pitch <span class="acc">Organizer</span></h1>
+    <p>Write and organize your pitch deck content section by section. Everything auto-saves to your browser.</p>
+  </div>
+</section>
+
+<main>
+  <div class="wrap">
+    <div class="actions-bar">
+      <button class="btn" id="btn-save">Save All</button>
+      <button class="btn btn-outline" id="btn-export">Export as Text</button>
+      <button class="btn btn-outline" id="btn-clear" style="border-color:rgba(248,113,113,.4);color:#f87171;">Clear All</button>
+    </div>
+    <div class="progress-bar">
+      <span class="progress-label">Deck completion</span>
+      <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+      <span class="progress-pct" id="progress-pct">0%</span>
+    </div>
+    <div class="sections-list" id="sections-list"></div>
+  </div>
+</main>
+
+<footer class="footer"><div class="wrap">Built by <a href="../index.html">CWI · Compute With Imagination</a> &nbsp;·&nbsp; Internal tool</div></footer>
+<div class="toast" id="toast">Saved</div>
+
+<script>
+const KEY='cwi-pitch-v1';
+const SECTIONS=[
+  {id:'problem',num:'01',title:'The Problem',subtitle:'What pain are you solving?',hint:'Describe the problem your customers face. Be specific — use data or anecdotes. Investors need to feel the pain before they care about the solution. Keep to 2–3 sentences max in the actual deck.'},
+  {id:'solution',num:'02',title:'Our Solution',subtitle:'How you uniquely solve it',hint:'Explain your product/service in plain language. Focus on what makes it different and better. Avoid jargon. A good test: could a smart 12-year-old understand this in 10 seconds?'},
+  {id:'market',num:'03',title:'Market Size',subtitle:'TAM / SAM / SOM',hint:'Show the total addressable market (TAM), serviceable addressable market (SAM), and your realistically obtainable market (SOM). Use credible sources. Investors want to see a big market with a clear wedge.'},
+  {id:'traction',num:'04',title:'Traction',subtitle:'Proof it\'s working',hint:'List your key metrics: MRR, ARR, customer count, growth rate, NPS, churn, revenue milestones. Show month-over-month growth if possible. Early traction is the most powerful slide in your deck.'},
+  {id:'business-model',num:'05',title:'Business Model',subtitle:'How you make money',hint:'Describe your pricing model, revenue streams, and unit economics. Include: avg deal size, CAC, LTV, gross margin. If B2B SaaS: monthly vs annual split, expansion revenue, churn rate.'},
+  {id:'team',num:'06',title:'The Team',subtitle:'Why you\'re the ones to build this',hint:'Highlight each founder\'s relevant experience, domain expertise, and why this team is uniquely positioned to win. Include notable past companies, domain experience, and any advisors.'},
+  {id:'competition',num:'07',title:'Competitive Landscape',subtitle:'Why you win',hint:'Name the main alternatives (including "do nothing"). Explain your competitive moat: technology, network effects, brand, switching costs, etc. Avoid dismissing competitors — show you understand the space.'},
+  {id:'ask',num:'08',title:'The Ask',subtitle:'What you need and why',hint:'State the raise amount, equity offered (if applicable), and use of proceeds. Break down exactly how the capital will be deployed: product, sales, hiring, etc. Include the milestone this round gets you to.'}
+];
+
+let data=JSON.parse(localStorage.getItem(KEY)||'{}');
+
+function save(){localStorage.setItem(KEY,JSON.stringify(data));showToast('Saved');}
+
+function updateProgress(){
+  const filled=SECTIONS.filter(s=>(data[s.id]||'').trim().length>30).length;
+  const pct=Math.round(filled/SECTIONS.length*100);
+  document.getElementById('progress-fill').style.width=pct+'%';
+  document.getElementById('progress-pct').textContent=pct+'%';
+  document.querySelectorAll('.section-card').forEach(c=>{
+    const id=c.dataset.id;
+    c.classList.toggle('filled',(data[id]||'').trim().length>30);
+  });
+}
+
+function renderSections(){
+  const list=document.getElementById('sections-list'); list.innerHTML='';
+  SECTIONS.forEach(s=>{
+    const card=document.createElement('div');
+    card.className='section-card'; card.dataset.id=s.id;
+    const val=data[s.id]||'';
+    card.innerHTML=`
+      <div class="sec-header">
+        <span class="sec-num">${s.num}</span>
+        <div style="flex:1"><div class="sec-title">${s.title}</div><div class="sec-subtitle">${s.subtitle}</div></div>
+        <span class="sec-toggle" aria-hidden="true">▾</span>
+      </div>
+      <div class="sec-body">
+        <div class="sec-hint">${s.hint}</div>
+        <textarea class="sec-textarea" data-id="${s.id}" placeholder="Write your ${s.title.toLowerCase()} content here...">${val}</textarea>
+        <div class="char-count" data-cc="${s.id}">${val.length} chars</div>
+      </div>`;
+    const header=card.querySelector('.sec-header');
+    const body=card.querySelector('.sec-body');
+    const toggle=card.querySelector('.sec-toggle');
+    header.addEventListener('click',()=>{
+      body.classList.toggle('open'); toggle.classList.toggle('open');
+    });
+    const ta=card.querySelector('.sec-textarea');
+    ta.addEventListener('input',()=>{
+      data[s.id]=ta.value;
+      card.querySelector('.char-count').textContent=ta.value.length+' chars';
+      updateProgress();
+    });
+    list.appendChild(card);
+  });
+  updateProgress();
+}
+
+document.getElementById('btn-save').addEventListener('click',save);
+
+document.getElementById('btn-export').addEventListener('click',()=>{
+  let text=`CWI — INVESTOR PITCH DECK\n${'='.repeat(40)}\n\n`;
+  SECTIONS.forEach(s=>{
+    text+=`${s.num}. ${s.title.toUpperCase()}\n${'-'.repeat(30)}\n${(data[s.id]||'(Not filled in yet)')}\n\n`;
+  });
+  const a=document.createElement('a');
+  a.href='data:text/plain;charset=utf-8,'+encodeURIComponent(text);
+  a.download='cwi-pitch-deck.txt'; a.click();
+  showToast('Exported');
+});
+
+document.getElementById('btn-clear').addEventListener('click',()=>{
+  if(!confirm('Clear all pitch content?'))return;
+  data={};save();renderSections();
+});
+
+let toastTimer;
+function showToast(msg){
+  const t=document.getElementById('toast'); t.textContent=msg;
+  t.classList.add('show'); clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),2400);
+}
+
+renderSections();
+</script>
+</body>
+</html>

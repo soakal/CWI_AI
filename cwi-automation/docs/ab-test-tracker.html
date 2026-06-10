@@ -1,1 +1,213 @@
-C:\Users\Brian\Documents\CWI AI\cwi-automation\docs\ab-test-tracker.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A/B Test Tracker — CWI</title>
+<meta name="description" content="Track A/B tests: add test name, variant results, and see winner with statistical significance.">
+<link rel="icon" type="image/png" href="../assets/cwi-favicon-64.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0A0A0C;--surface:#141418;--surface-2:#191920;--line:rgba(255,255,255,.09);--line-2:rgba(255,255,255,.14);--accent:#FF5A1F;--ember:#FF8A3D;--steel:#85858E;--text:#F4F4F6;--text-dim:#C2C2C8;--font-disp:'Sora',sans-serif;--font-body:'Instrument Sans',sans-serif;--r-sm:12px;--r-md:18px;--r-pill:999px;--ease:cubic-bezier(.22,.61,.36,1);}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:var(--font-body);background:var(--ink);color:var(--text);-webkit-font-smoothing:antialiased;line-height:1.6;min-height:100vh;}
+h1,h2,h3{font-family:var(--font-disp);letter-spacing:-.035em;line-height:1.1;font-weight:800;}
+a{color:inherit;text-decoration:none;}
+.bg-field{position:fixed;inset:0;z-index:-1;pointer-events:none;}
+.bg-field::before{content:"";position:absolute;inset:0;background:radial-gradient(720px 460px at 80% -4%,rgba(255,90,31,.11),transparent 60%);}
+.wrap{max-width:1100px;margin:0 auto;padding:0 28px;}
+.topbar{border-bottom:1px solid var(--line);background:rgba(10,10,12,.82);backdrop-filter:blur(14px);position:sticky;top:0;z-index:100;padding:14px 0;}
+.topbar-inner{display:flex;align-items:center;justify-content:space-between;}
+.logo{font-family:var(--font-disp);font-weight:800;font-size:18px;letter-spacing:-.04em;display:flex;align-items:center;gap:9px;}
+.logo .dot{color:var(--accent);}
+.back-link{font-size:13px;color:var(--steel);display:flex;align-items:center;gap:6px;transition:color .2s;}
+.back-link:hover{color:var(--text);}
+.hero{padding:56px 0 36px;text-align:center;}
+.kicker{display:inline-flex;align-items:center;gap:9px;font-size:11.5px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--steel);margin-bottom:18px;}
+.pip{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);}
+.hero h1{font-size:clamp(28px,4vw,48px);margin-bottom:12px;}
+.hero h1 .acc{color:var(--accent);}
+.hero p{font-size:clamp(14px,1.6vw,17px);color:var(--text-dim);max-width:52ch;margin:0 auto;}
+.add-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:26px 28px;margin-bottom:32px;}
+.add-card h2{font-size:17px;margin-bottom:18px;}
+.add-card h2 span{color:var(--accent);}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+.form-full{grid-column:1/-1;}
+label{display:block;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--steel);margin-bottom:6px;}
+input,select,textarea{width:100%;background:var(--surface-2);border:1px solid var(--line-2);border-radius:var(--r-sm);color:var(--text);font-family:var(--font-body);font-size:15px;padding:10px 13px;outline:none;transition:border-color .2s;}
+input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(255,90,31,.15);}
+.variant-row{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;}
+.btn{font-family:var(--font-body);font-size:14px;font-weight:600;padding:11px 26px;border-radius:var(--r-pill);background:var(--accent);color:#0A0A0C;border:none;cursor:pointer;transition:all .22s var(--ease);}
+.btn:hover{background:var(--ember);box-shadow:0 0 22px rgba(255,90,31,.35);}
+.tests-list{display:flex;flex-direction:column;gap:18px;margin-bottom:56px;}
+.test-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:22px 24px;animation:cardIn .3s var(--ease) both;}
+@keyframes cardIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.test-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:12px;flex-wrap:wrap;}
+.test-name{font-family:var(--font-disp);font-size:18px;font-weight:700;}
+.test-meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.badge{font-size:11px;font-weight:600;padding:4px 12px;border-radius:var(--r-pill);border:1px solid var(--line-2);color:var(--steel);}
+.badge.running{border-color:rgba(250,204,21,.4);color:#facc15;}
+.badge.done{border-color:rgba(74,222,128,.4);color:#4ade80;}
+.badge.paused{border-color:rgba(255,90,31,.3);color:var(--accent);}
+.variants-wrap{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+.variant-card{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:14px 16px;}
+.variant-card.winner{border-color:rgba(74,222,128,.5);background:rgba(74,222,128,.04);}
+.var-label{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--steel);margin-bottom:6px;}
+.var-rate{font-family:var(--font-disp);font-size:28px;font-weight:800;}
+.var-rate.win{color:#4ade80;}
+.var-sub{font-size:12px;color:var(--text-dim);margin-top:2px;}
+.sig-bar{height:6px;background:var(--surface-2);border-radius:3px;margin-top:10px;overflow:hidden;}
+.sig-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--ember));border-radius:3px;transition:width .5s var(--ease);}
+.sig-label{font-size:12px;color:var(--text-dim);margin-top:6px;}
+.test-footer{display:flex;align-items:center;justify-content:space-between;margin-top:14px;flex-wrap:wrap;gap:8px;}
+.btn-del{font-family:var(--font-body);font-size:12px;padding:6px 14px;border-radius:var(--r-pill);border:1px solid rgba(248,113,113,.3);background:transparent;color:#f87171;cursor:pointer;transition:all .2s;}
+.btn-del:hover{background:rgba(248,113,113,.1);}
+.empty{text-align:center;padding:64px 0;color:var(--steel);}
+.empty h3{font-size:20px;margin-bottom:8px;color:var(--text-dim);}
+.footer{border-top:1px solid var(--line);padding:24px 0;text-align:center;font-size:13px;color:var(--steel);}
+.footer a{color:var(--accent);}
+@media(max-width:640px){.form-grid{grid-template-columns:1fr;}.variant-row{grid-template-columns:1fr 1fr;}.variants-wrap{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="bg-field"></div>
+<header class="topbar">
+  <div class="wrap">
+    <div class="topbar-inner">
+      <div class="logo">
+        <svg width="22" height="22" viewBox="0 0 32 32" fill="none" aria-hidden="true"><rect x="4" y="10" width="4" height="12" rx="2" fill="#FF5A1F"/><rect x="10" y="6" width="4" height="20" rx="2" fill="#FF5A1F" opacity=".85"/><rect x="16" y="2" width="4" height="28" rx="2" fill="#FF5A1F" opacity=".7"/><rect x="22" y="6" width="4" height="20" rx="2" fill="#FF5A1F" opacity=".55"/></svg>
+        CWI <span class="dot">·</span> A/B Test Tracker
+      </div>
+      <a class="back-link" href="../index.html">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 2L3 7l5 5"/><line x1="3" y1="7" x2="12" y2="7"/></svg>
+        Back to site
+      </a>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <div class="kicker"><span class="pip"></span> Experimentation</div>
+    <h1>A/B Test <span class="acc">Tracker</span></h1>
+    <p>Log test variants, conversion data, and instantly see which variant wins with a statistical significance score.</p>
+  </div>
+</section>
+
+<main>
+  <div class="wrap">
+    <div class="add-card">
+      <h2>Add <span>New Test</span></h2>
+      <div class="form-grid">
+        <div class="form-full"><label for="t-name">Test Name / Hypothesis</label><input type="text" id="t-name" placeholder="e.g. Homepage headline — urgency vs benefit"></div>
+        <div><label for="t-metric">Primary Metric</label><input type="text" id="t-metric" placeholder="e.g. CTA click rate"></div>
+        <div><label for="t-status">Status</label>
+          <select id="t-status"><option value="running">Running</option><option value="done">Complete</option><option value="paused">Paused</option></select>
+        </div>
+      </div>
+      <div class="variant-row">
+        <div><label for="a-visitors">A — Visitors</label><input type="number" id="a-visitors" placeholder="1000" min="0"></div>
+        <div><label for="a-conv">A — Conversions</label><input type="number" id="a-conv" placeholder="45" min="0"></div>
+        <div><label for="b-visitors">B — Visitors</label><input type="number" id="b-visitors" placeholder="1000" min="0"></div>
+        <div><label for="b-conv">B — Conversions</label><input type="number" id="b-conv" placeholder="62" min="0"></div>
+      </div>
+      <div style="margin-top:16px;"><button class="btn" id="btn-add">Add Test</button></div>
+    </div>
+
+    <div id="tests-list"></div>
+  </div>
+</main>
+
+<footer class="footer"><div class="wrap">Built by <a href="../index.html">CWI · Compute With Imagination</a> &nbsp;·&nbsp; Internal tool</div></footer>
+
+<script>
+const KEY='cwi-abtests-v1';
+let tests=JSON.parse(localStorage.getItem(KEY)||'[]');
+function save(){localStorage.setItem(KEY,JSON.stringify(tests));}
+
+// approximate z-score p-value for two-proportion test
+function zTest(aV,aC,bV,bC){
+  if(!aV||!bV)return 0;
+  const pA=aC/aV, pB=bC/bV;
+  const pPool=(aC+bC)/(aV+bV);
+  const se=Math.sqrt(pPool*(1-pPool)*(1/aV+1/bV));
+  if(!se)return 0;
+  const z=Math.abs(pA-pB)/se;
+  // rough confidence from z-score
+  if(z>=2.576)return 99;
+  if(z>=1.960)return 95;
+  if(z>=1.645)return 90;
+  if(z>=1.282)return 80;
+  return Math.round(z/2.576*79);
+}
+
+function addTest(){
+  const name=document.getElementById('t-name').value.trim();
+  const metric=document.getElementById('t-metric').value.trim();
+  const status=document.getElementById('t-status').value;
+  const aV=parseInt(document.getElementById('a-visitors').value)||0;
+  const aC=parseInt(document.getElementById('a-conv').value)||0;
+  const bV=parseInt(document.getElementById('b-visitors').value)||0;
+  const bC=parseInt(document.getElementById('b-conv').value)||0;
+  if(!name){alert('Enter a test name.');return;}
+  tests.unshift({id:Date.now(),name,metric,status,aV,aC,bV,bC,date:new Date().toLocaleDateString()});
+  save(); renderTests();
+  ['t-name','t-metric','a-visitors','a-conv','b-visitors','b-conv'].forEach(id=>document.getElementById(id).value='');
+}
+
+function renderTests(){
+  const div=document.getElementById('tests-list');
+  if(!tests.length){div.innerHTML='<div class="empty"><h3>No tests yet</h3><p>Add your first A/B test above.</p></div>';return;}
+  div.innerHTML='';
+  tests.forEach((t,idx)=>{
+    const aRate=t.aV?((t.aC/t.aV)*100).toFixed(2):0;
+    const bRate=t.bV?((t.bC/t.bV)*100).toFixed(2):0;
+    const conf=zTest(t.aV,t.aC,t.bV,t.bC);
+    const winner=parseFloat(bRate)>parseFloat(aRate)?'B':parseFloat(aRate)>parseFloat(bRate)?'A':'TIE';
+    const lift=aRate>0?((bRate-aRate)/aRate*100).toFixed(1):0;
+    const card=document.createElement('div');
+    card.className='test-card';
+    card.innerHTML=`
+      <div class="test-header">
+        <div class="test-name">${escHtml(t.name)}</div>
+        <div class="test-meta">
+          ${t.metric?`<span class="badge">${escHtml(t.metric)}</span>`:''}
+          <span class="badge ${t.status}">${t.status.charAt(0).toUpperCase()+t.status.slice(1)}</span>
+          <span style="font-size:12px;color:var(--steel)">${t.date}</span>
+        </div>
+      </div>
+      <div class="variants-wrap">
+        <div class="variant-card${winner==='A'?' winner':''}">
+          <div class="var-label">Variant A ${winner==='A'?'🏆':''}</div>
+          <div class="var-rate${winner==='A'?' win':''}">${aRate}%</div>
+          <div class="var-sub">${t.aC.toLocaleString()} conversions / ${t.aV.toLocaleString()} visitors</div>
+        </div>
+        <div class="variant-card${winner==='B'?' winner':''}">
+          <div class="var-label">Variant B ${winner==='B'?'🏆':''}</div>
+          <div class="var-rate${winner==='B'?' win':''}">${bRate}%</div>
+          <div class="var-sub">${t.bC.toLocaleString()} conversions / ${t.bV.toLocaleString()} visitors</div>
+        </div>
+      </div>
+      <div class="sig-bar"><div class="sig-fill" style="width:${conf}%"></div></div>
+      <div class="sig-label">Statistical confidence: <strong>${conf}%</strong>${winner!=='TIE'?` — Variant <strong>${winner}</strong> wins with <strong>${Math.abs(lift)}%</strong> ${parseFloat(lift)>=0?'lift':'decrease'}`:' — No clear winner yet'}</div>
+      <div class="test-footer">
+        <span style="font-size:12px;color:var(--steel)">Confidence threshold: 95% for significance</span>
+        <button class="btn-del" data-idx="${idx}">Delete</button>
+      </div>`;
+    div.appendChild(card);
+  });
+  document.querySelectorAll('.btn-del').forEach(btn=>{
+    btn.addEventListener('click',()=>{tests.splice(parseInt(btn.dataset.idx),1);save();renderTests();});
+  });
+}
+
+function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+document.getElementById('btn-add').addEventListener('click',addTest);
+document.getElementById('t-name').addEventListener('keydown',e=>{if(e.key==='Enter')addTest();});
+renderTests();
+</script>
+</body>
+</html>

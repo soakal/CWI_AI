@@ -1,1 +1,226 @@
-C:\Users\Brian\Documents\CWI AI\cwi-automation\docs\launch-checklist.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Launch Checklist — CWI</title>
+<meta name="description" content="Product and feature launch checklist: pre-launch, launch day, and post-launch tasks with owner assignment and due dates.">
+<link rel="icon" type="image/png" href="../assets/cwi-favicon-64.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0A0A0C;--surface:#141418;--surface-2:#191920;--line:rgba(255,255,255,.09);--line-2:rgba(255,255,255,.14);--accent:#FF5A1F;--ember:#FF8A3D;--steel:#85858E;--text:#F4F4F6;--text-dim:#C2C2C8;--font-disp:'Sora',sans-serif;--font-body:'Instrument Sans',sans-serif;--r-sm:12px;--r-md:18px;--r-pill:999px;--ease:cubic-bezier(.22,.61,.36,1);}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:var(--font-body);background:var(--ink);color:var(--text);-webkit-font-smoothing:antialiased;line-height:1.6;min-height:100vh;}
+h1,h2,h3{font-family:var(--font-disp);letter-spacing:-.035em;line-height:1.1;font-weight:800;}
+a{color:inherit;text-decoration:none;}
+.bg-field{position:fixed;inset:0;z-index:-1;pointer-events:none;}
+.bg-field::before{content:"";position:absolute;inset:0;background:radial-gradient(700px 450px at 78% -4%,rgba(255,90,31,.11),transparent 60%);}
+.wrap{max-width:1000px;margin:0 auto;padding:0 28px;}
+.topbar{border-bottom:1px solid var(--line);background:rgba(10,10,12,.82);backdrop-filter:blur(14px);position:sticky;top:0;z-index:100;padding:14px 0;}
+.topbar-inner{display:flex;align-items:center;justify-content:space-between;}
+.logo{font-family:var(--font-disp);font-weight:800;font-size:18px;letter-spacing:-.04em;display:flex;align-items:center;gap:9px;}
+.logo .dot{color:var(--accent);}
+.back-link{font-size:13px;color:var(--steel);display:flex;align-items:center;gap:6px;transition:color .2s;}
+.back-link:hover{color:var(--text);}
+.hero{padding:56px 0 36px;text-align:center;}
+.kicker{display:inline-flex;align-items:center;gap:9px;font-size:11.5px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--steel);margin-bottom:18px;}
+.pip{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);}
+.hero h1{font-size:clamp(28px,4vw,48px);margin-bottom:12px;}
+.hero h1 .acc{color:var(--accent);}
+.hero p{font-size:clamp(14px,1.6vw,17px);color:var(--text-dim);max-width:52ch;margin:0 auto;}
+.toolbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:28px;}
+.launch-name-wrap{display:flex;align-items:center;gap:10px;flex:1;}
+.launch-name-wrap input{background:var(--surface);border:1px solid var(--line-2);border-radius:var(--r-sm);color:var(--text);font-family:var(--font-disp);font-size:18px;font-weight:700;padding:10px 14px;outline:none;transition:border-color .2s;flex:1;}
+.launch-name-wrap input:focus{border-color:var(--accent);}
+.btn{font-family:var(--font-body);font-size:13px;font-weight:600;padding:9px 20px;border-radius:var(--r-pill);background:var(--accent);color:#0A0A0C;border:none;cursor:pointer;transition:all .22s var(--ease);}
+.btn:hover{background:var(--ember);box-shadow:0 0 20px rgba(255,90,31,.35);}
+.btn-outline{background:transparent;border:1.5px solid var(--accent);color:#fff;}
+.btn-outline:hover{background:rgba(255,90,31,.1);}
+.progress-row{display:flex;align-items:center;gap:14px;margin-bottom:28px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:14px 18px;}
+.progress-label{font-size:13px;color:var(--steel);white-space:nowrap;}
+.progress-track{flex:1;height:8px;background:var(--surface-2);border-radius:4px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--ember));border-radius:4px;transition:width .4s var(--ease);}
+.progress-pct{font-family:var(--font-disp);font-size:14px;font-weight:800;color:var(--accent);min-width:42px;text-align:right;}
+.phase-block{margin-bottom:28px;}
+.phase-header{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+.phase-icon{font-size:20px;}
+.phase-title{font-family:var(--font-disp);font-size:18px;font-weight:700;}
+.phase-count{font-size:12px;font-weight:600;padding:3px 12px;border-radius:var(--r-pill);background:rgba(255,90,31,.1);border:1px solid rgba(255,90,31,.2);color:var(--accent);}
+.items-list{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden;}
+.item-row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line);transition:background .15s;}
+.item-row:last-child{border-bottom:none;}
+.item-row:hover{background:rgba(255,255,255,.02);}
+.item-row.done-row{opacity:.55;}
+.chk{appearance:none;-webkit-appearance:none;width:18px;height:18px;border-radius:5px;border:1.5px solid var(--line-2);background:transparent;cursor:pointer;flex-shrink:0;transition:all .18s;position:relative;}
+.chk:checked{background:var(--accent);border-color:var(--accent);}
+.chk:checked::after{content:"";position:absolute;left:4px;top:1px;width:6px;height:10px;border:2px solid #fff;border-top:none;border-left:none;transform:rotate(42deg);}
+.item-text{flex:1;font-size:14px;color:var(--text-dim);}
+.item-row.done-row .item-text{text-decoration:line-through;color:var(--steel);}
+.item-owner{font-size:12px;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-pill);padding:3px 10px;color:var(--steel);cursor:pointer;white-space:nowrap;outline:none;font-family:var(--font-body);}
+.item-owner:focus{border-color:var(--accent);}
+.item-date{font-size:12px;color:var(--steel);background:transparent;border:1px solid var(--line);border-radius:var(--r-sm);padding:3px 8px;outline:none;font-family:var(--font-body);cursor:pointer;}
+.item-date:focus{border-color:var(--accent);}
+.add-item-row{display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--line);background:rgba(255,255,255,.02);}
+.add-input{flex:1;background:transparent;border:1px solid var(--line-2);border-radius:var(--r-sm);color:var(--text);font-family:var(--font-body);font-size:13px;padding:7px 10px;outline:none;}
+.add-input:focus{border-color:var(--accent);}
+.btn-add-item{font-family:var(--font-body);font-size:12px;font-weight:600;padding:7px 14px;border-radius:var(--r-pill);background:rgba(255,90,31,.1);border:1px solid rgba(255,90,31,.25);color:var(--accent);cursor:pointer;transition:all .2s;white-space:nowrap;}
+.btn-add-item:hover{background:rgba(255,90,31,.2);}
+.footer{border-top:1px solid var(--line);padding:24px 0;text-align:center;font-size:13px;color:var(--steel);}
+.footer a{color:var(--accent);}
+</style>
+</head>
+<body>
+<div class="bg-field"></div>
+<header class="topbar">
+  <div class="wrap">
+    <div class="topbar-inner">
+      <div class="logo">
+        <svg width="22" height="22" viewBox="0 0 32 32" fill="none" aria-hidden="true"><rect x="4" y="10" width="4" height="12" rx="2" fill="#FF5A1F"/><rect x="10" y="6" width="4" height="20" rx="2" fill="#FF5A1F" opacity=".85"/><rect x="16" y="2" width="4" height="28" rx="2" fill="#FF5A1F" opacity=".7"/><rect x="22" y="6" width="4" height="20" rx="2" fill="#FF5A1F" opacity=".55"/></svg>
+        CWI <span class="dot">·</span> Launch Checklist
+      </div>
+      <a class="back-link" href="../index.html">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 2L3 7l5 5"/><line x1="3" y1="7" x2="12" y2="7"/></svg>
+        Back to site
+      </a>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <div class="kicker"><span class="pip"></span> Product Launch</div>
+    <h1>Launch <span class="acc">Checklist</span></h1>
+    <p>Pre-launch, launch day, and post-launch tasks. Assign owners, set due dates, track progress.</p>
+  </div>
+</section>
+
+<main>
+  <div class="wrap">
+    <div class="toolbar">
+      <div class="launch-name-wrap">
+        <input type="text" id="launch-name" placeholder="Launch name (e.g. AI Bot v2.0)" value="">
+      </div>
+      <button class="btn btn-outline" id="btn-reset">Reset Checks</button>
+      <button class="btn" id="btn-export">Export CSV</button>
+    </div>
+
+    <div class="progress-row">
+      <span class="progress-label">Overall progress</span>
+      <div class="progress-track"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+      <span class="progress-pct" id="prog-pct">0%</span>
+    </div>
+
+    <div id="phases-container"></div>
+  </div>
+</main>
+
+<footer class="footer"><div class="wrap">Built by <a href="../index.html">CWI · Compute With Imagination</a> &nbsp;·&nbsp; Internal tool</div></footer>
+
+<script>
+const KEY='cwi-launch-v2';
+const DEFAULT_PHASES=[
+  {id:'pre',icon:'🔧',title:'Pre-Launch',items:[
+    {id:'pl1',text:'Define success metrics and KPIs',done:false,owner:'',due:''},
+    {id:'pl2',text:'Complete QA testing across all devices',done:false,owner:'',due:''},
+    {id:'pl3',text:'Write launch announcement email copy',done:false,owner:'',due:''},
+    {id:'pl4',text:'Prepare social media posts (3 platforms)',done:false,owner:'',due:''},
+    {id:'pl5',text:'Set up tracking / analytics events',done:false,owner:'',due:''},
+    {id:'pl6',text:'Create support / FAQ documentation',done:false,owner:'',due:''},
+    {id:'pl7',text:'Notify key clients / beta users ahead of launch',done:false,owner:'',due:''},
+    {id:'pl8',text:'Run final staging review with stakeholders',done:false,owner:'',due:''},
+  ]},
+  {id:'day',icon:'🚀',title:'Launch Day',items:[
+    {id:'ld1',text:'Deploy to production at scheduled time',done:false,owner:'',due:''},
+    {id:'ld2',text:'Send launch announcement email',done:false,owner:'',due:''},
+    {id:'ld3',text:'Publish social media posts',done:false,owner:'',due:''},
+    {id:'ld4',text:'Post in community / Slack / Discord',done:false,owner:'',due:''},
+    {id:'ld5',text:'Monitor error logs and uptime for first 2 hours',done:false,owner:'',due:''},
+    {id:'ld6',text:'Confirm customer support is staffed',done:false,owner:'',due:''},
+    {id:'ld7',text:'Update website / changelog / docs',done:false,owner:'',due:''},
+  ]},
+  {id:'post',icon:'📊',title:'Post-Launch',items:[
+    {id:'po1',text:'Review analytics after 24 hours',done:false,owner:'',due:''},
+    {id:'po2',text:'Gather user feedback (survey or interviews)',done:false,owner:'',due:''},
+    {id:'po3',text:'Document any bugs found and prioritize fixes',done:false,owner:'',due:''},
+    {id:'po4',text:'Send follow-up email to launch list (day 3)',done:false,owner:'',due:''},
+    {id:'po5',text:'Share launch results with the team',done:false,owner:'',due:''},
+    {id:'po6',text:'Write a launch retrospective document',done:false,owner:'',due:''},
+  ]},
+];
+
+let data=JSON.parse(localStorage.getItem(KEY)||'null')||{name:'',phases:DEFAULT_PHASES};
+if(!data.phases)data.phases=DEFAULT_PHASES;
+
+function save(){localStorage.setItem(KEY,JSON.stringify(data));}
+
+function calcProgress(){
+  const all=data.phases.flatMap(p=>p.items);
+  const done=all.filter(i=>i.done).length;
+  return all.length>0?Math.round(done/all.length*100):0;
+}
+
+function updateProgress(){
+  const pct=calcProgress();
+  document.getElementById('prog-fill').style.width=pct+'%';
+  document.getElementById('prog-pct').textContent=pct+'%';
+}
+
+function render(){
+  document.getElementById('launch-name').value=data.name||'';
+  const container=document.getElementById('phases-container'); container.innerHTML='';
+  data.phases.forEach(phase=>{
+    const doneCount=phase.items.filter(i=>i.done).length;
+    const phaseDiv=document.createElement('div'); phaseDiv.className='phase-block';
+    phaseDiv.innerHTML=`<div class="phase-header"><span class="phase-icon">${phase.icon}</span><div class="phase-title">${phase.title}</div><span class="phase-count">${doneCount}/${phase.items.length}</span></div><div class="items-list" id="items-${phase.id}"></div>`;
+    container.appendChild(phaseDiv);
+    const itemsList=phaseDiv.querySelector(`#items-${phase.id}`);
+    phase.items.forEach(item=>{
+      const row=document.createElement('div'); row.className='item-row'+(item.done?' done-row':'');
+      const cid=`chk-${item.id}`;
+      row.innerHTML=`<input type="checkbox" class="chk" id="${cid}" ${item.done?'checked':''}><label class="item-text" for="${cid}">${escHtml(item.text)}</label><input type="text" class="item-owner" value="${escHtml(item.owner||'')}" placeholder="Owner" data-id="${item.id}"><input type="date" class="item-date" value="${item.due||''}" data-id="${item.id}"><button class="btn-add-item" data-del="${item.id}" style="background:transparent;border:none;color:#f87171;cursor:pointer;font-size:14px;padding:4px 8px;" title="Remove">✕</button>`;
+      const chk=row.querySelector('.chk');
+      chk.addEventListener('change',()=>{item.done=chk.checked;save();render();updateProgress();});
+      row.querySelector('.item-owner').addEventListener('input',e=>{item.owner=e.target.value;save();});
+      row.querySelector('.item-date').addEventListener('change',e=>{item.due=e.target.value;save();});
+      row.querySelector('[data-del]').addEventListener('click',()=>{phase.items=phase.items.filter(i=>i.id!==item.id);save();render();updateProgress();});
+      itemsList.appendChild(row);
+    });
+    // add item row
+    const addRow=document.createElement('div'); addRow.className='add-item-row';
+    addRow.innerHTML=`<input type="text" class="add-input" placeholder="Add task..."><button class="btn-add-item">+ Add</button>`;
+    const inp=addRow.querySelector('.add-input');
+    addRow.querySelector('.btn-add-item').addEventListener('click',()=>{
+      const txt=inp.value.trim(); if(!txt)return;
+      phase.items.push({id:'u'+Date.now(),text:txt,done:false,owner:'',due:''});
+      save(); render(); updateProgress();
+    });
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter')addRow.querySelector('.btn-add-item').click();});
+    itemsList.appendChild(addRow);
+  });
+  updateProgress();
+}
+
+document.getElementById('launch-name').addEventListener('input',e=>{data.name=e.target.value;save();});
+
+document.getElementById('btn-reset').addEventListener('click',()=>{
+  if(!confirm('Reset all checkboxes?'))return;
+  data.phases.forEach(p=>p.items.forEach(i=>i.done=false));
+  save(); render();
+});
+
+document.getElementById('btn-export').addEventListener('click',()=>{
+  const rows=[['Phase','Task','Done','Owner','Due Date']];
+  data.phases.forEach(p=>p.items.forEach(i=>rows.push([p.title,i.text,i.done?'Yes':'No',i.owner||'',i.due||''])));
+  const csv=rows.map(r=>r.map(c=>'"'+c+'"').join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download='cwi-launch-checklist.csv'; a.click();
+});
+
+function escHtml(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+render();
+</script>
+</body>
+</html>

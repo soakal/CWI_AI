@@ -1,1 +1,251 @@
-C:\Users\Brian\Documents\CWI AI\cwi-automation\docs\cold-call-script.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cold Call Script Builder — CWI</title>
+<meta name="description" content="Build and refine your cold call script, handle common objections, and track call outcomes.">
+<link rel="icon" type="image/png" href="../assets/cwi-favicon-64.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0A0A0C;--surface:#141418;--surface-2:#191920;--line:rgba(255,255,255,.09);--line-2:rgba(255,255,255,.14);--accent:#FF5A1F;--ember:#FF8A3D;--steel:#85858E;--text:#F4F4F6;--text-dim:#C2C2C8;--font-disp:'Sora',sans-serif;--font-body:'Instrument Sans',sans-serif;--r-sm:12px;--r-md:18px;--r-pill:999px;--ease:cubic-bezier(.22,.61,.36,1);}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:var(--font-body);background:var(--ink);color:var(--text);-webkit-font-smoothing:antialiased;line-height:1.6;min-height:100vh;}
+h1,h2,h3{font-family:var(--font-disp);letter-spacing:-.035em;line-height:1.1;font-weight:800;}
+a{color:inherit;text-decoration:none;}
+.bg-field{position:fixed;inset:0;z-index:-1;pointer-events:none;}
+.bg-field::before{content:"";position:absolute;inset:0;background:radial-gradient(700px 450px at 78% -4%,rgba(255,90,31,.11),transparent 60%);}
+.wrap{max-width:1100px;margin:0 auto;padding:0 28px;}
+.topbar{border-bottom:1px solid var(--line);background:rgba(10,10,12,.82);backdrop-filter:blur(14px);position:sticky;top:0;z-index:100;padding:14px 0;}
+.topbar-inner{display:flex;align-items:center;justify-content:space-between;}
+.logo{font-family:var(--font-disp);font-weight:800;font-size:18px;letter-spacing:-.04em;display:flex;align-items:center;gap:9px;}
+.logo .dot{color:var(--accent);}
+.back-link{font-size:13px;color:var(--steel);display:flex;align-items:center;gap:6px;transition:color .2s;}
+.back-link:hover{color:var(--text);}
+.hero{padding:56px 0 36px;text-align:center;}
+.kicker{display:inline-flex;align-items:center;gap:9px;font-size:11.5px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--steel);margin-bottom:18px;}
+.pip{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);}
+.hero h1{font-size:clamp(28px,4vw,48px);margin-bottom:12px;}
+.hero h1 .acc{color:var(--accent);}
+.hero p{font-size:clamp(14px,1.6vw,17px);color:var(--text-dim);max-width:52ch;margin:0 auto;}
+.tabs{display:flex;gap:0;margin-bottom:28px;border-bottom:1px solid var(--line);}
+.tab-btn{font-family:var(--font-body);font-size:14px;font-weight:600;padding:11px 22px;border:none;background:transparent;color:var(--steel);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .2s;}
+.tab-btn.active{color:var(--text);border-bottom-color:var(--accent);}
+.tab-pane{display:none;animation:fadeUp .3s var(--ease) both;}
+.tab-pane.active{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.script-list{display:flex;flex-direction:column;gap:18px;margin-bottom:48px;}
+.script-section{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden;}
+.script-header{display:flex;align-items:center;gap:14px;padding:16px 20px;border-bottom:1px solid var(--line);}
+.script-num{font-family:var(--font-disp);font-size:11px;font-weight:700;letter-spacing:.14em;color:var(--accent);background:rgba(255,90,31,.1);border:1px solid rgba(255,90,31,.2);border-radius:6px;padding:3px 8px;}
+.script-title{font-family:var(--font-disp);font-size:16px;font-weight:700;flex:1;}
+.script-hint{font-size:12px;color:var(--steel);}
+.script-body{padding:16px 20px;}
+.script-tip{font-size:12px;color:var(--steel);background:rgba(255,90,31,.05);border:1px solid rgba(255,90,31,.12);border-radius:var(--r-sm);padding:8px 12px;margin-bottom:10px;}
+textarea{width:100%;background:var(--surface-2);border:1px solid var(--line-2);border-radius:var(--r-sm);color:var(--text);font-family:var(--font-body);font-size:14px;line-height:1.65;padding:12px 14px;outline:none;resize:vertical;transition:border-color .2s;}
+textarea:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(255,90,31,.15);}
+.obj-grid{display:flex;flex-direction:column;gap:14px;margin-bottom:48px;}
+.obj-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden;}
+.obj-q{font-family:var(--font-disp);font-size:15px;font-weight:700;padding:14px 20px 10px;color:var(--text);}
+.obj-response{padding:0 20px 16px;}
+.obj-label{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:6px;}
+.tracker-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:24px 26px;margin-bottom:18px;}
+.tracker-card h2{font-size:17px;margin-bottom:16px;}
+.tracker-card h2 span{color:var(--accent);}
+.outcome-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;}
+.outcome-btn{font-family:var(--font-body);font-size:14px;font-weight:600;padding:10px 22px;border-radius:var(--r-pill);border:1px solid var(--line-2);background:var(--surface-2);color:var(--text-dim);cursor:pointer;transition:all .2s;}
+.outcome-btn:hover,.outcome-btn.active{border-color:var(--accent);background:rgba(255,90,31,.1);color:#fff;}
+.outcome-btn.booked{border-color:rgba(74,222,128,.5);background:rgba(74,222,128,.08);color:#4ade80;}
+.outcome-btn.no-answer{border-color:var(--line-2);}
+.outcome-btn.not-interested{border-color:rgba(248,113,113,.4);background:rgba(248,113,113,.06);color:#f87171;}
+.outcome-btn.callback{border-color:rgba(250,204,21,.4);background:rgba(250,204,21,.06);color:#facc15;}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;margin-bottom:18px;}
+.stat-box{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px 14px;text-align:center;}
+.stat-num{font-family:var(--font-disp);font-size:26px;font-weight:800;color:var(--accent);}
+.stat-lbl{font-size:11px;color:var(--steel);margin-top:2px;}
+.btn{font-family:var(--font-body);font-size:13px;font-weight:600;padding:8px 18px;border-radius:var(--r-pill);border:1px solid rgba(248,113,113,.3);background:transparent;color:#f87171;cursor:pointer;transition:all .2s;}
+.btn:hover{background:rgba(248,113,113,.1);}
+.btn-save{border-color:var(--accent);color:var(--accent);}
+.btn-save:hover{background:rgba(255,90,31,.1);}
+input{width:100%;background:var(--surface-2);border:1px solid var(--line-2);border-radius:var(--r-sm);color:var(--text);font-family:var(--font-body);font-size:14px;padding:9px 12px;outline:none;transition:border-color .2s;margin-bottom:10px;}
+input:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(255,90,31,.15);}
+label{display:block;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--steel);margin-bottom:6px;}
+.footer{border-top:1px solid var(--line);padding:24px 0;text-align:center;font-size:13px;color:var(--steel);}
+.footer a{color:var(--accent);}
+</style>
+</head>
+<body>
+<div class="bg-field"></div>
+<header class="topbar">
+  <div class="wrap">
+    <div class="topbar-inner">
+      <div class="logo">
+        <svg width="22" height="22" viewBox="0 0 32 32" fill="none" aria-hidden="true"><rect x="4" y="10" width="4" height="12" rx="2" fill="#FF5A1F"/><rect x="10" y="6" width="4" height="20" rx="2" fill="#FF5A1F" opacity=".85"/><rect x="16" y="2" width="4" height="28" rx="2" fill="#FF5A1F" opacity=".7"/><rect x="22" y="6" width="4" height="20" rx="2" fill="#FF5A1F" opacity=".55"/></svg>
+        CWI <span class="dot">·</span> Cold Call Script
+      </div>
+      <a class="back-link" href="../index.html">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 2L3 7l5 5"/><line x1="3" y1="7" x2="12" y2="7"/></svg>
+        Back to site
+      </a>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <div class="kicker"><span class="pip"></span> Sales Tools</div>
+    <h1>Cold Call <span class="acc">Script Builder</span></h1>
+    <p>Edit your call script section by section, prepare objection responses, and track call outcomes.</p>
+  </div>
+</section>
+
+<main>
+  <div class="wrap">
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="script">Script</button>
+      <button class="tab-btn" data-tab="objections">Objections</button>
+      <button class="tab-btn" data-tab="tracker">Call Tracker</button>
+    </div>
+
+    <div class="tab-pane active" id="tab-script">
+      <div class="script-list" id="script-list"></div>
+      <button class="btn btn-save" id="btn-save-script">Save Script</button>
+    </div>
+
+    <div class="tab-pane" id="tab-objections">
+      <div class="obj-grid" id="obj-grid"></div>
+    </div>
+
+    <div class="tab-pane" id="tab-tracker">
+      <div class="tracker-card">
+        <h2>Log <span>Call Outcome</span></h2>
+        <div><label for="tr-contact">Contact Name / Company</label><input type="text" id="tr-contact" placeholder="John Smith — ABC Plumbing"></div>
+        <div class="outcome-row" id="outcome-row">
+          <button class="outcome-btn booked" data-val="booked">Booked</button>
+          <button class="outcome-btn no-answer" data-val="no-answer">No Answer</button>
+          <button class="outcome-btn not-interested" data-val="not-interested">Not Interested</button>
+          <button class="outcome-btn callback" data-val="callback">Callback Scheduled</button>
+        </div>
+        <button class="btn btn-save" id="btn-log-call">Log Call</button>
+      </div>
+      <div class="stats-row" id="stats-row"></div>
+      <div id="call-log-list" style="display:flex;flex-direction:column;gap:10px;margin-bottom:48px"></div>
+    </div>
+  </div>
+</main>
+
+<footer class="footer"><div class="wrap">Built by <a href="../index.html">CWI · Compute With Imagination</a> &nbsp;·&nbsp; Internal tool</div></footer>
+
+<script>
+const KEY='cwi-coldcall-v1';
+const CALLS_KEY='cwi-coldcall-calls-v1';
+
+const DEFAULT_SCRIPT=[
+  {id:'opener',num:'01',title:'Opener',hint:'Short, confident, and non-salesy. State your name, company, and reason for calling in one breath.',text:'Hi [Name], this is [Your Name] from CWI — Compute With Imagination. I work with service businesses to make sure they never miss a customer call with AI. Is now a weird time, or do you have 90 seconds?'},
+  {id:'problem',num:'02',title:'Problem Hook',hint:'Lead with a problem they likely feel, not your product.',text:"Most [plumbers/HVAC techs/accountants] I talk to are losing 20–30% of inbound calls to voicemail — and a lot of those callers just move on to the next Google result. Does that ring true for your business?"},
+  {id:'value',num:'03',title:'Value Proposition',hint:'Keep it to one sentence. What do you do and what result does it create?',text:"We install an AI assistant that answers your phones, books jobs, and handles FAQs 24/7 — so you capture every lead, even at 2am on a Sunday."},
+  {id:'social',num:'04',title:'Social Proof',hint:'One specific result from a similar customer builds instant credibility.',text:"A plumbing company in [City] started using us last quarter. They went from missing about 40 calls a month to booking 90% of them — added about $11,000 in monthly revenue."},
+  {id:'ask',num:'05',title:'The Ask',hint:'One specific, low-friction next step. Never pitch on a cold call — get a meeting.',text:"I\'m not trying to sell you anything today. I\'d love to share 3 things that have worked for [their trade] businesses specifically. Do you have 20 minutes Thursday or Friday?"},
+  {id:'voicemail',num:'06',title:'Voicemail Script',hint:'15 seconds max. Create curiosity, not information overload.',text:"Hi [Name], this is [Your Name] at CWI — [phone number]. I help [trade] businesses capture calls they\'re currently losing to voicemail with AI. Worth a quick chat — [phone number]. Have a great day."}
+];
+
+const OBJECTIONS=[
+  {q:"I'm not interested.",r:"Totally fair — most people I call aren't interested at first. Can I ask: are you happy with how many inbound calls are being answered right now? If yes, I'll leave you alone. If not, it might be worth 10 minutes."},
+  {q:"I already have an answering service.",r:"Great — so you know how valuable coverage is. Our AI does the same thing but also books jobs in your calendar, answers FAQs, qualifies leads, and costs less than a traditional service. Mind if I show you the comparison?"},
+  {q:"We're too busy / don't need more calls.",r:"That's a great problem to have. If your volume is already maxed, our tool can actually help triage and qualify so your team only talks to serious, ready-to-buy customers. Still worth a look?"},
+  {q:"How much does it cost?",r:"Pricing is based on call volume and features — typically $297–$597/month, and most clients recover that in the first 2–3 bookings. I'd rather show you the ROI model first so you can decide if the numbers make sense for your business."},
+  {q:"I don't have time right now.",r:"No problem at all. When's a better time — would Thursday or Friday work for a 15-minute call? I'll send a calendar link and won't take more than that."},
+  {q:"We tried something like this before and it didn't work.",r:"That's really helpful to know. What specifically didn't work? [Listen] Got it — that's actually one of the things we built differently. Can I show you how we handle that specific issue?"},
+];
+
+const KEY_SCRIPT='cwi-coldcall-script-v1';
+let scriptData=JSON.parse(localStorage.getItem(KEY_SCRIPT)||'null')||DEFAULT_SCRIPT.map(s=>({...s}));
+let calls=JSON.parse(localStorage.getItem(CALLS_KEY)||'[]');
+let selectedOutcome='booked';
+
+function renderScript(){
+  const list=document.getElementById('script-list'); list.innerHTML='';
+  scriptData.forEach(s=>{
+    const div=document.createElement('div'); div.className='script-section';
+    div.innerHTML=`<div class="script-header"><span class="script-num">${s.num}</span><div><div class="script-title">${s.title}</div><div class="script-hint">${s.hint}</div></div></div><div class="script-body"><div class="script-tip">💡 ${s.hint}</div><textarea rows="4" data-id="${s.id}">${s.text}</textarea></div>`;
+    div.querySelector('textarea').addEventListener('input',e=>{const f=scriptData.find(x=>x.id===s.id);if(f)f.text=e.target.value;});
+    list.appendChild(div);
+  });
+}
+
+function renderObjections(){
+  const grid=document.getElementById('obj-grid'); grid.innerHTML='';
+  OBJECTIONS.forEach(o=>{
+    const div=document.createElement('div'); div.className='obj-card';
+    div.innerHTML=`<div class="obj-q">"${o.q}"</div><div class="obj-response"><div class="obj-label">Suggested Response</div><textarea rows="4">${o.r}</textarea></div>`;
+    grid.appendChild(div);
+  });
+}
+
+function renderTracker(){
+  const stats=document.getElementById('stats-row');
+  const counts={booked:0,'no-answer':0,'not-interested':0,callback:0};
+  calls.forEach(c=>counts[c.outcome]=(counts[c.outcome]||0)+1);
+  const labels={booked:'Booked',['no-answer']:'No Answer',['not-interested']:'Not Interested',callback:'Callbacks'};
+  stats.innerHTML='';
+  Object.entries(labels).forEach(([k,l])=>{
+    const d=document.createElement('div'); d.className='stat-box';
+    d.innerHTML=`<div class="stat-num">${counts[k]||0}</div><div class="stat-lbl">${l}</div>`;
+    stats.appendChild(d);
+  });
+  // rate
+  const total=calls.length;
+  const booked=counts.booked||0;
+  const rateBox=document.createElement('div'); rateBox.className='stat-box';
+  rateBox.innerHTML=`<div class="stat-num">${total>0?Math.round(booked/total*100):0}%</div><div class="stat-lbl">Book Rate</div>`;
+  stats.appendChild(rateBox);
+
+  const logList=document.getElementById('call-log-list'); logList.innerHTML='';
+  [...calls].reverse().slice(0,20).forEach((c,i)=>{
+    const colors={booked:'#4ade80','no-answer':'#85858E','not-interested':'#f87171',callback:'#facc15'};
+    const d=document.createElement('div');
+    d.style.cssText=`background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;`;
+    d.innerHTML=`<span style="font-size:14px;font-weight:600">${c.contact||'Unknown'}</span><span style="font-size:12px;color:${colors[c.outcome]};font-weight:600">${labels[c.outcome]}</span><span style="font-size:12px;color:var(--steel)">${c.date}</span>`;
+    logList.appendChild(d);
+  });
+  if(!calls.length)logList.innerHTML='<p style="color:var(--steel);font-size:14px;text-align:center;padding:32px 0">No calls logged yet.</p>';
+}
+
+document.getElementById('outcome-row').addEventListener('click',e=>{
+  const btn=e.target.closest('.outcome-btn'); if(!btn)return;
+  document.querySelectorAll('.outcome-btn').forEach(b=>b.style.outline='none');
+  btn.style.outline='2px solid var(--accent)';
+  selectedOutcome=btn.dataset.val;
+});
+
+document.getElementById('btn-log-call').addEventListener('click',()=>{
+  const contact=document.getElementById('tr-contact').value.trim();
+  calls.unshift({contact,outcome:selectedOutcome,date:new Date().toLocaleDateString()});
+  localStorage.setItem(CALLS_KEY,JSON.stringify(calls));
+  document.getElementById('tr-contact').value='';
+  renderTracker();
+});
+
+document.getElementById('btn-save-script').addEventListener('click',()=>{
+  localStorage.setItem(KEY_SCRIPT,JSON.stringify(scriptData));
+  alert('Script saved!');
+});
+
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
+    if(btn.dataset.tab==='tracker')renderTracker();
+  });
+});
+
+renderScript();
+renderObjections();
+renderTracker();
+</script>
+</body>
+</html>

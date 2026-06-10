@@ -1,1 +1,241 @@
-C:\Users\Brian\Documents\CWI AI\cwi-automation\docs\reporting-dashboard.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reporting Dashboard — CWI</title>
+<meta name="description" content="Track key business metrics: monthly leads, jobs booked, revenue, and calls handled. Edit metrics inline and export to CSV.">
+<link rel="icon" type="image/png" href="../assets/cwi-favicon-64.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0A0A0C;--ink-2:#0E0E11;--surface:#141418;--surface-2:#191920;--line:rgba(255,255,255,.09);--line-2:rgba(255,255,255,.14);--accent:#FF5A1F;--ember:#FF8A3D;--steel:#85858E;--text:#F4F4F6;--text-dim:#C2C2C8;--font-disp:'Sora',sans-serif;--font-body:'Instrument Sans',sans-serif;--r-sm:12px;--r-md:18px;--r-pill:999px;--ease:cubic-bezier(.22,.61,.36,1);}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:var(--font-body);background:var(--ink);color:var(--text);-webkit-font-smoothing:antialiased;line-height:1.6;min-height:100vh;}
+h1,h2,h3,h4{font-family:var(--font-disp);letter-spacing:-.035em;line-height:1.1;font-weight:800;}
+a{color:inherit;text-decoration:none;}
+.bg-field{position:fixed;inset:0;z-index:-1;pointer-events:none;}
+.bg-field::before{content:"";position:absolute;inset:0;background:radial-gradient(720px 460px at 82% -6%,rgba(255,90,31,.12),transparent 60%),radial-gradient(620px 520px at 6% 8%,rgba(255,90,31,.05),transparent 60%);}
+.wrap{max-width:1200px;margin:0 auto;padding:0 28px;}
+.topbar{border-bottom:1px solid var(--line);background:rgba(10,10,12,.82);backdrop-filter:blur(14px);position:sticky;top:0;z-index:100;padding:14px 0;}
+.topbar-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;}
+.logo{font-family:var(--font-disp);font-weight:800;font-size:18px;letter-spacing:-.04em;display:flex;align-items:center;gap:9px;}
+.logo .dot{color:var(--accent);}
+.back-link{font-size:13px;color:var(--steel);display:flex;align-items:center;gap:6px;transition:color .2s;}
+.back-link:hover{color:var(--text);}
+.hero{padding:56px 0 36px;text-align:center;}
+.kicker{display:inline-flex;align-items:center;gap:9px;font-size:11.5px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--steel);margin-bottom:18px;}
+.pip{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);}
+.hero h1{font-size:clamp(28px,4vw,48px);margin-bottom:12px;}
+.hero h1 .acc{color:var(--accent);}
+.hero p{font-size:clamp(14px,1.6vw,17px);color:var(--text-dim);max-width:52ch;margin:0 auto;}
+.toolbar-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:28px;}
+.period-tabs{display:flex;gap:8px;}
+.period-btn{font-family:var(--font-body);font-size:13px;font-weight:600;padding:8px 18px;border-radius:var(--r-pill);border:1px solid var(--line-2);background:var(--surface);color:var(--text-dim);cursor:pointer;transition:all .2s;}
+.period-btn.active{border-color:var(--accent);background:rgba(255,90,31,.1);color:#fff;}
+.btn{font-family:var(--font-body);font-size:14px;font-weight:600;padding:10px 22px;border-radius:var(--r-pill);border:1.5px solid var(--accent);background:rgba(255,90,31,.1);color:#fff;cursor:pointer;transition:all .22s var(--ease);display:inline-flex;align-items:center;gap:8px;}
+.btn:hover{background:var(--accent);box-shadow:0 0 22px rgba(255,90,31,.35);}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-bottom:36px;}
+.kpi-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:22px 24px;position:relative;transition:border-color .2s;}
+.kpi-card:hover{border-color:var(--line-2);}
+.kpi-label{font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--steel);margin-bottom:10px;}
+.kpi-value{font-family:var(--font-disp);font-size:34px;font-weight:800;line-height:1;margin-bottom:6px;outline:none;border-radius:6px;padding:2px 4px;display:inline-block;transition:background .18s;cursor:text;}
+.kpi-value:hover,.kpi-value:focus{background:rgba(255,255,255,.05);}
+.kpi-value:focus{box-shadow:0 0 0 1.5px rgba(255,90,31,.4);}
+.kpi-delta{font-size:13px;color:var(--steel);}
+.kpi-delta.up{color:#4ade80;}
+.kpi-delta.down{color:#f87171;}
+.kpi-icon{position:absolute;top:18px;right:18px;font-size:22px;opacity:.45;}
+.chart-wrap{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:24px 24px 16px;margin-bottom:36px;}
+.chart-title{font-family:var(--font-disp);font-size:17px;font-weight:700;margin-bottom:18px;}
+.chart-title span{color:var(--accent);}
+.bars-area{display:flex;align-items:flex-end;gap:5px;height:140px;margin-bottom:8px;}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.bar-val-top{font-size:9px;color:var(--steel);white-space:nowrap;}
+.bar-track{width:100%;border-radius:5px 5px 0 0;background:rgba(255,90,31,.15);flex:1;position:relative;}
+.bar-fill{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(0deg,var(--accent),var(--ember));border-radius:5px 5px 0 0;transition:height .5s var(--ease);}
+.bar-lbl{font-size:9px;color:var(--steel);font-weight:600;margin-top:4px;}
+.section-label{font-family:var(--font-disp);font-size:18px;font-weight:700;margin-bottom:16px;}
+.section-label span{color:var(--accent);}
+.table-wrap{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden;margin-bottom:56px;}
+table{width:100%;border-collapse:collapse;}
+thead{background:var(--surface-2);}
+th{font-family:var(--font-disp);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--steel);padding:13px 16px;text-align:left;border-bottom:1px solid var(--line);}
+td{font-size:14px;color:var(--text-dim);padding:12px 16px;border-bottom:1px solid var(--line);}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(255,255,255,.02);}
+td.num{font-family:var(--font-disp);font-weight:700;color:var(--text);}
+.badge-up{color:#4ade80;font-size:11px;}
+.badge-down{color:#f87171;font-size:11px;}
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surface-2);border:1px solid var(--line-2);border-radius:var(--r-pill);padding:12px 22px;font-size:14px;color:var(--text);transition:transform .3s var(--ease),opacity .3s;opacity:0;z-index:999;pointer-events:none;}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+.footer{border-top:1px solid var(--line);padding:24px 0;text-align:center;font-size:13px;color:var(--steel);}
+.footer a{color:var(--accent);}
+@media(max-width:640px){.toolbar-row{flex-direction:column;align-items:flex-start;}.kpi-grid{grid-template-columns:1fr 1fr;}.bars-area{gap:2px;}}
+</style>
+</head>
+<body>
+<div class="bg-field"></div>
+<header class="topbar">
+  <div class="wrap">
+    <div class="topbar-inner">
+      <div class="logo">
+        <svg width="22" height="22" viewBox="0 0 32 32" fill="none" aria-hidden="true"><rect x="4" y="10" width="4" height="12" rx="2" fill="#FF5A1F"/><rect x="10" y="6" width="4" height="20" rx="2" fill="#FF5A1F" opacity=".85"/><rect x="16" y="2" width="4" height="28" rx="2" fill="#FF5A1F" opacity=".7"/><rect x="22" y="6" width="4" height="20" rx="2" fill="#FF5A1F" opacity=".55"/></svg>
+        CWI <span class="dot">·</span> Reporting Dashboard
+      </div>
+      <a class="back-link" href="../index.html">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 2L3 7l5 5"/><line x1="3" y1="7" x2="12" y2="7"/></svg>
+        Back to site
+      </a>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <div class="kicker"><span class="pip"></span> Business Intelligence</div>
+    <h1>Reporting <span class="acc">Dashboard</span></h1>
+    <p>Track leads, jobs booked, revenue, and calls. Click any KPI value to edit it inline — changes persist in your browser.</p>
+  </div>
+</section>
+
+<main>
+  <div class="wrap">
+    <div class="toolbar-row">
+      <div class="period-tabs" id="period-tabs">
+        <button class="period-btn active" data-period="this-month">This Month</button>
+        <button class="period-btn" data-period="last-month">Last Month</button>
+        <button class="period-btn" data-period="ytd">YTD</button>
+      </div>
+      <button class="btn" id="btn-export">
+        <svg width="14" height="14" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7.5 1v9M4 7l3.5 3.5L11 7"/><path d="M2 11v1.5A1.5 1.5 0 003.5 14h8A1.5 1.5 0 0013 12.5V11"/></svg>
+        Export CSV
+      </button>
+    </div>
+    <div class="kpi-grid" id="kpi-grid"></div>
+    <div class="chart-wrap">
+      <div class="chart-title">Revenue — <span>12-Month Trend</span></div>
+      <div class="bars-area" id="bars-area"></div>
+    </div>
+    <div class="section-label">Monthly <span>Detail</span></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Month</th><th>Leads</th><th>Jobs</th><th>Conv%</th><th>Revenue</th><th>Calls</th><th>Avg Ticket</th></tr></thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<footer class="footer"><div class="wrap">Built by <a href="../index.html">CWI · Compute With Imagination</a> &nbsp;·&nbsp; Internal tool</div></footer>
+<div class="toast" id="toast">Saved</div>
+
+<script>
+const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const KEY='cwi-reporting-v2';
+function seed(){return MONTHS.map(m=>({month:m,leads:42+Math.floor(Math.random()*28),jobs:18+Math.floor(Math.random()*16),revenue:13000+Math.floor(Math.random()*14000),calls:78+Math.floor(Math.random()*55)}));}
+let data=JSON.parse(localStorage.getItem(KEY)||'null')||seed();
+let period='this-month';
+function save(){localStorage.setItem(KEY,JSON.stringify(data));}
+function $f(v,t){return t==='$'?'$'+v.toLocaleString():v.toLocaleString();}
+function nowIdx(){return new Date().getMonth();}
+
+function renderKpis(){
+  const grid=document.getElementById('kpi-grid'); grid.innerHTML='';
+  const mi=nowIdx();
+  let rows,prev;
+  if(period==='ytd'){rows=data.slice(0,mi+1);}
+  else if(period==='this-month'){rows=[data[mi]];prev=data[mi>0?mi-1:0];}
+  else{const li=mi>0?mi-1:11;rows=[data[li]];prev=data[li>0?li-1:0];}
+  const totals={leads:0,jobs:0,revenue:0,calls:0};
+  rows.forEach(r=>{totals.leads+=r.leads;totals.jobs+=r.jobs;totals.revenue+=r.revenue;totals.calls+=r.calls;});
+  const defs=[
+    {label:'Leads',key:'leads',icon:'🎯',fmt:'n'},
+    {label:'Jobs Booked',key:'jobs',icon:'📋',fmt:'n'},
+    {label:'Revenue',key:'revenue',icon:'💰',fmt:'$'},
+    {label:'Calls Handled',key:'calls',icon:'📞',fmt:'n'}
+  ];
+  defs.forEach(def=>{
+    const val=totals[def.key];
+    let deltaHtml='';
+    if(prev&&period!=='ytd'){
+      const p=Math.round((val-prev[def.key])/(prev[def.key]||1)*100);
+      deltaHtml=`<div class="kpi-delta ${p>=0?'up':'down'}">${p>=0?'▲':'▼'} ${Math.abs(p)}% vs prev period</div>`;
+    }
+    const card=document.createElement('div');
+    card.className='kpi-card';
+    const editable=period!=='ytd';
+    const idx=period==='this-month'?mi:(mi>0?mi-1:11);
+    card.innerHTML=`<div class="kpi-icon">${def.icon}</div><div class="kpi-label">${def.label}</div><div class="kpi-value" contenteditable="${editable}" data-key="${def.key}" data-idx="${idx}" spellcheck="false">${$f(val,def.fmt)}</div>${deltaHtml}`;
+    const ve=card.querySelector('.kpi-value');
+    if(editable){
+      ve.addEventListener('focus',()=>{ve.textContent=data[idx][def.key];});
+      ve.addEventListener('blur',()=>{
+        const raw=parseInt(ve.textContent.replace(/\D/g,''),10);
+        if(!isNaN(raw)&&raw>=0){data[idx][def.key]=raw;save();renderAll();showToast('Metric saved');}
+        else{ve.textContent=$f(val,def.fmt);}
+      });
+      ve.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();ve.blur();}});
+    }
+    grid.appendChild(card);
+  });
+}
+
+function renderBars(){
+  const area=document.getElementById('bars-area'); area.innerHTML='';
+  const max=Math.max(...data.map(d=>d.revenue),1);
+  data.forEach(d=>{
+    const pct=d.revenue/max*100;
+    const col=document.createElement('div');
+    col.className='bar-col';
+    col.innerHTML=`<div class="bar-val-top">$${Math.round(d.revenue/1000)}k</div><div class="bar-track"><div class="bar-fill" style="height:${pct}%"></div></div><div class="bar-lbl">${d.month}</div>`;
+    area.appendChild(col);
+  });
+}
+
+function renderTable(){
+  const tbody=document.getElementById('table-body'); tbody.innerHTML='';
+  data.forEach((d,i)=>{
+    const conv=d.leads>0?Math.round(d.jobs/d.leads*100):0;
+    const avg=d.jobs>0?Math.round(d.revenue/d.jobs):0;
+    const prev=i>0?data[i-1]:null;
+    const rd=prev?Math.round((d.revenue-prev.revenue)/(prev.revenue||1)*100):null;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${d.month}</td><td class="num">${d.leads}</td><td class="num">${d.jobs}</td><td class="num">${conv}%</td><td class="num">$${d.revenue.toLocaleString()}${rd!==null?` <span class="${rd>=0?'badge-up':'badge-down'}">${rd>=0?'▲':'▼'}${Math.abs(rd)}%</span>`:''}</td><td class="num">${d.calls}</td><td class="num">$${avg.toLocaleString()}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderAll(){renderKpis();renderBars();renderTable();}
+
+document.getElementById('period-tabs').addEventListener('click',e=>{
+  const b=e.target.closest('.period-btn'); if(!b)return;
+  document.querySelectorAll('.period-btn').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active'); period=b.dataset.period; renderKpis();
+});
+
+document.getElementById('btn-export').addEventListener('click',()=>{
+  const hdr=['Month','Leads','Jobs','Conv%','Revenue','Calls','Avg Ticket'];
+  const rows=data.map(d=>{
+    const conv=d.leads>0?Math.round(d.jobs/d.leads*100):0;
+    const avg=d.jobs>0?Math.round(d.revenue/d.jobs):0;
+    return[d.month,d.leads,d.jobs,conv+'%',d.revenue,d.calls,avg].join(',');
+  });
+  const csv=[hdr.join(','),...rows].join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download=`cwi-report-${Date.now()}.csv`; a.click();
+  showToast('CSV exported');
+});
+
+let toastTimer;
+function showToast(msg){
+  const t=document.getElementById('toast'); t.textContent=msg;
+  t.classList.add('show'); clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),2500);
+}
+renderAll();
+</script>
+</body>
+</html>

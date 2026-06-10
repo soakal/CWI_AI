@@ -1,1 +1,256 @@
-C:\Users\Brian\Documents\CWI AI\cwi-automation\docs\communication-log.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Communication Log — CWI</title>
+<meta name="description" content="Log calls, emails, and meetings with date, contact, type, summary, and follow-up tracking. Filter and search entries.">
+<link rel="icon" type="image/png" href="../assets/cwi-favicon-64.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0A0A0C;--surface:#141418;--surface-2:#191920;--line:rgba(255,255,255,.09);--line-2:rgba(255,255,255,.14);--accent:#FF5A1F;--ember:#FF8A3D;--steel:#85858E;--text:#F4F4F6;--text-dim:#C2C2C8;--font-disp:'Sora',sans-serif;--font-body:'Instrument Sans',sans-serif;--r-sm:12px;--r-md:18px;--r-pill:999px;--ease:cubic-bezier(.22,.61,.36,1);}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:var(--font-body);background:var(--ink);color:var(--text);-webkit-font-smoothing:antialiased;line-height:1.6;min-height:100vh;}
+h1,h2,h3{font-family:var(--font-disp);letter-spacing:-.035em;line-height:1.1;font-weight:800;}
+a{color:inherit;text-decoration:none;}
+.bg-field{position:fixed;inset:0;z-index:-1;pointer-events:none;}
+.bg-field::before{content:"";position:absolute;inset:0;background:radial-gradient(700px 450px at 78% -4%,rgba(255,90,31,.11),transparent 60%);}
+.wrap{max-width:1100px;margin:0 auto;padding:0 28px;}
+.topbar{border-bottom:1px solid var(--line);background:rgba(10,10,12,.82);backdrop-filter:blur(14px);position:sticky;top:0;z-index:100;padding:14px 0;}
+.topbar-inner{display:flex;align-items:center;justify-content:space-between;}
+.logo{font-family:var(--font-disp);font-weight:800;font-size:18px;letter-spacing:-.04em;display:flex;align-items:center;gap:9px;}
+.logo .dot{color:var(--accent);}
+.back-link{font-size:13px;color:var(--steel);display:flex;align-items:center;gap:6px;transition:color .2s;}
+.back-link:hover{color:var(--text);}
+.hero{padding:56px 0 36px;text-align:center;}
+.kicker{display:inline-flex;align-items:center;gap:9px;font-size:11.5px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--steel);margin-bottom:18px;}
+.pip{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);}
+.hero h1{font-size:clamp(28px,4vw,48px);margin-bottom:12px;}
+.hero h1 .acc{color:var(--accent);}
+.hero p{font-size:clamp(14px,1.6vw,17px);color:var(--text-dim);max-width:52ch;margin:0 auto;}
+.add-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:22px 24px;margin-bottom:24px;}
+.add-card h2{font-size:17px;margin-bottom:16px;}
+.add-card h2 span{color:var(--accent);}
+.form-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:12px;}
+label{display:block;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--steel);margin-bottom:6px;}
+input,select,textarea{width:100%;background:var(--surface-2);border:1px solid var(--line-2);border-radius:var(--r-sm);color:var(--text);font-family:var(--font-body);font-size:14px;padding:9px 12px;outline:none;transition:border-color .2s;}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(255,90,31,.15);}
+textarea{resize:vertical;min-height:60px;}
+.btn{font-family:var(--font-body);font-size:14px;font-weight:600;padding:10px 22px;border-radius:var(--r-pill);background:var(--accent);color:#0A0A0C;border:none;cursor:pointer;transition:all .22s var(--ease);}
+.btn:hover{background:var(--ember);box-shadow:0 0 20px rgba(255,90,31,.35);}
+.btn-outline{background:transparent;border:1.5px solid var(--accent);color:#fff;}
+.btn-outline:hover{background:rgba(255,90,31,.1);}
+.filter-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:20px;}
+.search-wrap{flex:1;min-width:200px;position:relative;}
+.search-wrap input{padding-left:36px;}
+.search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--steel);font-size:15px;pointer-events:none;}
+.filter-sel{background:var(--surface);border:1px solid var(--line-2);border-radius:var(--r-sm);color:var(--text);font-family:var(--font-body);font-size:14px;padding:9px 12px;outline:none;cursor:pointer;min-width:130px;}
+.count-label{font-size:13px;color:var(--steel);white-space:nowrap;}
+.count-label strong{color:var(--accent);}
+.log-list{display:flex;flex-direction:column;gap:12px;margin-bottom:56px;}
+.log-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:16px 20px;transition:border-color .2s;animation:cardIn .3s var(--ease) both;}
+.log-card:hover{border-color:var(--line-2);}
+.log-card.followup-needed{border-left:3px solid var(--accent);}
+@keyframes cardIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.log-header{display:flex;align-items:flex-start;gap:12px;justify-content:space-between;flex-wrap:wrap;margin-bottom:8px;}
+.log-contact{font-family:var(--font-disp);font-size:16px;font-weight:700;}
+.log-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.type-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:var(--r-pill);}
+.type-call{background:rgba(250,204,21,.08);border:1px solid rgba(250,204,21,.3);color:#facc15;}
+.type-email{background:rgba(74,222,128,.06);border:1px solid rgba(74,222,128,.25);color:#4ade80;}
+.type-meeting{background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.3);color:#a78bfa;}
+.type-other{background:var(--surface-2);border:1px solid var(--line-2);color:var(--steel);}
+.log-date{font-size:12px;color:var(--steel);}
+.log-summary{font-size:14px;color:var(--text-dim);margin-bottom:8px;line-height:1.5;}
+.log-footer{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.followup-tag{font-size:12px;font-weight:600;padding:3px 12px;border-radius:var(--r-pill);background:rgba(255,90,31,.1);border:1px solid rgba(255,90,31,.25);color:var(--accent);}
+.log-del{background:transparent;border:none;color:rgba(248,113,113,.5);cursor:pointer;font-size:13px;padding:3px 8px;border-radius:4px;margin-left:auto;transition:color .2s;}
+.log-del:hover{color:#f87171;}
+.empty{text-align:center;padding:64px 0;color:var(--steel);}
+.empty h3{font-size:20px;margin-bottom:8px;color:var(--text-dim);}
+.stats-strip{display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap;}
+.stat-chip{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:8px 14px;font-size:13px;color:var(--steel);}
+.stat-chip strong{color:var(--text);font-family:var(--font-disp);font-weight:700;}
+.footer{border-top:1px solid var(--line);padding:24px 0;text-align:center;font-size:13px;color:var(--steel);}
+.footer a{color:var(--accent);}
+@media(max-width:640px){.form-row{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="bg-field"></div>
+<header class="topbar">
+  <div class="wrap">
+    <div class="topbar-inner">
+      <div class="logo">
+        <svg width="22" height="22" viewBox="0 0 32 32" fill="none" aria-hidden="true"><rect x="4" y="10" width="4" height="12" rx="2" fill="#FF5A1F"/><rect x="10" y="6" width="4" height="20" rx="2" fill="#FF5A1F" opacity=".85"/><rect x="16" y="2" width="4" height="28" rx="2" fill="#FF5A1F" opacity=".7"/><rect x="22" y="6" width="4" height="20" rx="2" fill="#FF5A1F" opacity=".55"/></svg>
+        CWI <span class="dot">·</span> Communication Log
+      </div>
+      <a class="back-link" href="../index.html">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 2L3 7l5 5"/><line x1="3" y1="7" x2="12" y2="7"/></svg>
+        Back to site
+      </a>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <div class="kicker"><span class="pip"></span> CRM Lite</div>
+    <h1>Communication <span class="acc">Log</span></h1>
+    <p>Log every call, email, and meeting. Search, filter by type, and track follow-ups that need action.</p>
+  </div>
+</section>
+
+<main>
+  <div class="wrap">
+    <div class="add-card">
+      <h2>Log <span>New Entry</span></h2>
+      <div class="form-row">
+        <div><label for="l-contact">Contact / Company</label><input type="text" id="l-contact" placeholder="Jane Smith — ABC Plumbing"></div>
+        <div><label for="l-type">Type</label>
+          <select id="l-type"><option value="call">📞 Call</option><option value="email">✉️ Email</option><option value="meeting">🤝 Meeting</option><option value="other">📌 Other</option></select>
+        </div>
+        <div><label for="l-date">Date</label><input type="date" id="l-date"></div>
+        <div style="display:flex;align-items:flex-end;gap:8px">
+          <div style="flex:1"><label for="l-followup" style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="l-followup" style="width:auto;margin:0;accent-color:var(--accent)"> Follow-up needed</label></div>
+        </div>
+      </div>
+      <div style="margin-bottom:12px"><label for="l-summary">Summary / Notes</label><textarea id="l-summary" rows="3" placeholder="What was discussed, decided, or agreed upon..."></textarea></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn" id="btn-add">Log Entry</button>
+        <button class="btn btn-outline" id="btn-export">Export CSV</button>
+      </div>
+    </div>
+
+    <div class="filter-row">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="search-input" placeholder="Search by contact or summary...">
+      </div>
+      <select class="filter-sel" id="filter-type">
+        <option value="all">All Types</option>
+        <option value="call">Calls</option>
+        <option value="email">Emails</option>
+        <option value="meeting">Meetings</option>
+        <option value="other">Other</option>
+      </select>
+      <select class="filter-sel" id="filter-followup">
+        <option value="all">All Entries</option>
+        <option value="yes">Follow-up Needed</option>
+        <option value="no">No Follow-up</option>
+      </select>
+      <span class="count-label"><strong id="result-count">0</strong> entries</span>
+    </div>
+
+    <div class="stats-strip" id="stats-strip"></div>
+    <div class="log-list" id="log-list"></div>
+  </div>
+</main>
+
+<footer class="footer"><div class="wrap">Built by <a href="../index.html">CWI · Compute With Imagination</a> &nbsp;·&nbsp; Internal tool</div></footer>
+
+<script>
+const KEY='cwi-commlog-v1';
+let entries=JSON.parse(localStorage.getItem(KEY)||'[]');
+function save(){localStorage.setItem(KEY,JSON.stringify(entries));}
+
+// set today's date as default
+document.getElementById('l-date').value=new Date().toISOString().slice(0,10);
+
+function addEntry(){
+  const contact=document.getElementById('l-contact').value.trim();
+  if(!contact){alert('Enter a contact name.');return;}
+  entries.unshift({
+    id:Date.now(),
+    contact,
+    type:document.getElementById('l-type').value,
+    date:document.getElementById('l-date').value||new Date().toISOString().slice(0,10),
+    summary:document.getElementById('l-summary').value.trim(),
+    followup:document.getElementById('l-followup').checked
+  });
+  save();
+  document.getElementById('l-contact').value='';
+  document.getElementById('l-summary').value='';
+  document.getElementById('l-followup').checked=false;
+  renderAll();
+}
+
+function getFiltered(){
+  const q=document.getElementById('search-input').value.toLowerCase();
+  const ft=document.getElementById('filter-type').value;
+  const ff=document.getElementById('filter-followup').value;
+  return entries.filter(e=>{
+    if(q&&!e.contact.toLowerCase().includes(q)&&!e.summary.toLowerCase().includes(q))return false;
+    if(ft!=='all'&&e.type!==ft)return false;
+    if(ff==='yes'&&!e.followup)return false;
+    if(ff==='no'&&e.followup)return false;
+    return true;
+  });
+}
+
+const TYPE_LABELS={call:'Call',email:'Email',meeting:'Meeting',other:'Other'};
+const TYPE_ICONS={call:'📞',email:'✉️',meeting:'🤝',other:'📌'};
+
+function renderAll(){
+  const filtered=getFiltered();
+  document.getElementById('result-count').textContent=filtered.length;
+
+  // stats
+  const strip=document.getElementById('stats-strip'); strip.innerHTML='';
+  const counts={call:0,email:0,meeting:0,other:0,followup:0};
+  entries.forEach(e=>{counts[e.type]=(counts[e.type]||0)+1;if(e.followup)counts.followup++;});
+  [['Total Entries',entries.length],['Calls',counts.call],['Emails',counts.email],['Meetings',counts.meeting],['Follow-ups Needed',counts.followup]].forEach(([l,v])=>{
+    const c=document.createElement('div'); c.className='stat-chip';
+    c.innerHTML=`${l}: <strong>${v}</strong>`; strip.appendChild(c);
+  });
+
+  const list=document.getElementById('log-list');
+  if(!filtered.length){
+    list.innerHTML=`<div class="empty"><h3>${entries.length?'No matches':'No entries yet'}</h3><p>${entries.length?'Try clearing your filters.':'Log your first call, email, or meeting above.'}</p></div>`;
+    return;
+  }
+  list.innerHTML='';
+  filtered.forEach(e=>{
+    const card=document.createElement('div');
+    card.className='log-card'+(e.followup?' followup-needed':'');
+    const typeClass='type-'+e.type;
+    const dateStr=e.date?new Date(e.date+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'';
+    card.innerHTML=`
+      <div class="log-header">
+        <div class="log-contact">${escHtml(e.contact)}</div>
+        <div class="log-meta">
+          <span class="type-badge ${typeClass}">${TYPE_ICONS[e.type]} ${TYPE_LABELS[e.type]}</span>
+          <span class="log-date">${dateStr}</span>
+        </div>
+      </div>
+      ${e.summary?`<div class="log-summary">${escHtml(e.summary)}</div>`:''}
+      <div class="log-footer">
+        ${e.followup?`<span class="followup-tag">⚡ Follow-up needed</span>`:''}
+        <button class="log-del" data-id="${e.id}">✕ Remove</button>
+      </div>`;
+    card.querySelector('.log-del').addEventListener('click',()=>{
+      entries=entries.filter(x=>x.id!==e.id); save(); renderAll();
+    });
+    list.appendChild(card);
+  });
+}
+
+document.getElementById('btn-add').addEventListener('click',addEntry);
+document.getElementById('l-contact').addEventListener('keydown',e=>{if(e.key==='Enter')addEntry();});
+['search-input','filter-type','filter-followup'].forEach(id=>document.getElementById(id).addEventListener('input',renderAll));
+
+document.getElementById('btn-export').addEventListener('click',()=>{
+  const hdr=['Date','Contact','Type','Summary','Follow-up Needed'];
+  const rows=entries.map(e=>[e.date,e.contact,TYPE_LABELS[e.type],e.summary.replace(/"/g,"'"),e.followup?'Yes':'No'].map(v=>'"'+v+'"').join(','));
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent([hdr.join(','),...rows].join('\n'));
+  a.download='cwi-comm-log.csv'; a.click();
+});
+
+function escHtml(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+renderAll();
+</script>
+</body>
+</html>
