@@ -15,8 +15,8 @@ This is **not** a Next.js/React SaaS app. The actual project is:
 | `cwi-automation/` | PowerShell scripts + Make.com JSON blueprints | Make.com + local |
 
 - No `package.json`, `node_modules`, npm, TypeScript compiler, Prisma, or PostgreSQL.
-- No git repository yet — run `git init` before any git-based workflows apply.
-- `docs/ai-memory.md` does not exist yet — create it on first session.
+- Git repository is active on branch `master` — remote: https://github.com/soakal/CWI_AI
+- `docs/ai-memory.md` exists and is maintained.
 - Sections §4–§25 are **aspirational standards** for future features. Apply what fits; skip what doesn't.
 - §1 and §27 below reflect the actual detected stack.
 
@@ -175,7 +175,6 @@ Resume with: "Read RULES.md and docs/ai-memory.md, then continue."
 6. If NOT found → generate using the template in §40
 7. If git repo exists: git add CLAUDE.md RULES-COMPACT.md AGENTS.md
 8. If git repo exists: git commit -m "chore(claude): bootstrap bootloaders [agent]"
-   NOTE: This project has no git repo yet. Skip steps 7-8 and note it in session checklist.
 9. Continue with normal session start steps above
 ```
 

@@ -73,7 +73,7 @@
 - Hard Stop approval gate for: migrations, deploys, deletes (§38)
 
 ## Git Rules
-> **Note:** This project has no git repo yet. Run `git init` before any of the following apply.
+> **Note:** Git repo is active on branch `master`. Remote is live (see recent commits).
 - Conventional commits: `feat|fix|chore|docs|test|refactor(scope): message`
 - AI autonomous commits: `chore(ai): <message> [agent]`
 - Never commit directly to `main` — always branch + PR
