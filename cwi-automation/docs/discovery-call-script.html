@@ -1,0 +1,495 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CWI Discovery Call Script</title>
+<meta name="description" content="CWI internal tool: CWI Discovery Call Script. Internal use only — CWI Compute With Imagination.">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root { --say: #16a34a; --say-bg: #f0fdf4; --ask: #2563eb; --ask-bg: #eff6ff; --tip: #d97706; --tip-bg: #fffbeb; --do: #7c3aed; --do-bg: #f5f3ff; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; color: #1e293b; font-size: 14px; line-height: 1.5; }
+#page-header { position: sticky; top: 0; z-index: 100; background: #1e293b; color: #fff; padding: 0 20px; height: 72px; display: flex; align-items: center; gap: 14px; box-shadow: 0 2px 8px rgba(0,0,0,.35); }
+#page-header h1 { font-size: 17px; font-weight: 700; white-space: nowrap; margin-right: 6px; }
+#prospect-name { flex: 1; max-width: 280px; padding: 7px 12px; border-radius: 6px; border: none; font-size: 14px; background: #334155; color: #fff; }
+#prospect-name::placeholder { color: #94a3b8; }
+.hdr-btn { padding: 7px 16px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; }
+#btn-clear { background: #475569; color: #fff; }
+#btn-print { background: #3b82f6; color: #fff; }
+#tier-banner { background: #0f172a; color: #e2e8f0; padding: 10px 20px; display: flex; align-items: center; gap: 18px; flex-wrap: wrap; border-bottom: 3px solid #3b82f6; }
+#tier-banner label { font-size: 13px; color: #94a3b8; }
+#call-volume-input { width: 110px; padding: 5px 10px; border-radius: 5px; border: 1px solid #334155; background: #1e293b; color: #fff; font-size: 14px; }
+#tier-badge { padding: 4px 14px; border-radius: 20px; font-weight: 700; font-size: 13px; color: #fff; }
+#tier-badge.starter { background: #64748b; }
+#tier-badge.growth { background: #0284c7; }
+#tier-badge.pro { background: #7c3aed; }
+#tier-badge.enterprise { background: #b45309; }
+#tier-desc { font-size: 13px; color: #cbd5e1; }
+main { max-width: 960px; margin: 0 auto; padding: 20px 16px 60px; }
+.section-card { background: #fff; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,.1); margin-bottom: 16px; overflow: hidden; border: 1px solid #e2e8f0; }
+.section-header { display: flex; align-items: center; gap: 12px; padding: 14px 18px; cursor: pointer; background: #f8fafc; border-bottom: 1px solid #e2e8f0; user-select: none; }
+.section-header:hover { background: #f1f5f9; }
+.section-num { width: 28px; height: 28px; border-radius: 50%; background: #3b82f6; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0; }
+.section-num.complete { background: #16a34a; }
+.section-title { font-weight: 700; font-size: 15px; flex: 1; }
+.section-time { font-size: 12px; color: #64748b; }
+.chevron { font-size: 16px; color: #64748b; transition: transform .25s; }
+.section-card.open .chevron { transform: rotate(90deg); }
+.progress-bar-wrap { height: 4px; background: #e2e8f0; }
+.progress-bar-fill { height: 100%; width: 0%; background: #3b82f6; transition: width .5s; }
+.progress-bar-fill.complete { background: #16a34a; }
+.section-body { display: none; padding: 18px; }
+.section-card.open .section-body { display: block; }
+.timer-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; background: #f1f5f9; padding: 8px 14px; border-radius: 8px; }
+.timer-display { font-size: 22px; font-weight: 700; font-family: monospace; min-width: 70px; color: #1e293b; }
+.timer-display.warning { color: #dc2626; }
+.timer-btn { padding: 5px 14px; border-radius: 5px; border: none; cursor: pointer; font-size: 12px; font-weight: 600; }
+.btn-start { background: #22c55e; color: #fff; }
+.btn-pause { background: #f59e0b; color: #fff; }
+.btn-reset { background: #64748b; color: #fff; }
+.btn-done  { background: #3b82f6; color: #fff; margin-left: auto; }
+.timer-label { font-size: 12px; color: #64748b; }
+.script-item { display: flex; gap: 10px; margin-bottom: 10px; padding: 10px 14px; border-radius: 7px; align-items: flex-start; }
+.script-item.say { background: var(--say-bg); border-left: 3px solid var(--say); }
+.script-item.ask { background: var(--ask-bg); border-left: 3px solid var(--ask); }
+.script-item.tip { background: var(--tip-bg); border-left: 3px solid var(--tip); }
+.script-item.do  { background: var(--do-bg);  border-left: 3px solid var(--do); }
+.script-tag { font-size: 10px; font-weight: 800; letter-spacing: .5px; padding: 2px 7px; border-radius: 3px; flex-shrink: 0; margin-top: 2px; }
+.say .script-tag { background: var(--say); color: #fff; }
+.ask .script-tag { background: var(--ask); color: #fff; }
+.tip .script-tag { background: var(--tip); color: #fff; }
+.do  .script-tag { background: var(--do);  color: #fff; }
+.script-text { font-size: 14px; line-height: 1.55; }
+.script-text strong { font-weight: 700; }
+.capture-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin: 14px 0; }
+.capture-field label { display: block; font-size: 11px; font-weight: 700; color: #475569; margin-bottom: 3px; text-transform: uppercase; letter-spacing: .4px; }
+.capture-field input, .capture-field select { width: 100%; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 5px; font-size: 13px; background: #f8fafc; color: #1e293b; }
+.capture-field input:focus, .capture-field select:focus { outline: none; border-color: #3b82f6; background: #fff; }
+.notes-label { font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .4px; margin-bottom: 5px; margin-top: 12px; }
+.notes-area { width: 100%; min-height: 70px; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; resize: vertical; background: #fafafa; font-family: inherit; }
+.notes-area:focus { outline: none; border-color: #3b82f6; background: #fff; }
+.roi-box { background: #0f172a; color: #e2e8f0; border-radius: 8px; padding: 14px 18px; margin: 14px 0; }
+.roi-box h4 { font-size: 13px; text-transform: uppercase; letter-spacing: .5px; color: #94a3b8; margin-bottom: 10px; }
+.roi-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 14px; }
+.roi-row .label { color: #94a3b8; }
+.roi-row .value { font-weight: 700; color: #38bdf8; }
+.roi-total { border-top: 1px solid #334155; padding-top: 8px; margin-top: 8px; }
+.roi-total .value { color: #4ade80; font-size: 18px; }
+.tier-close { display: none; }
+.tier-close.active { display: block; }
+.divider { border: none; border-top: 1px solid #e2e8f0; margin: 14px 0; }
+@media print {
+  #page-header, #tier-banner { position: static; box-shadow: none; }
+  .hdr-btn, .timer-btn { display: none !important; }
+  .section-body { display: block !important; }
+  body { background: #fff; }
+  .section-card { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; }
+  .roi-box { background: #e2e8f0 !important; color: #1e293b !important; }
+  #tier-banner { background: #e2e8f0 !important; color: #1e293b !important; }
+}
+</style>
+</head>
+<body>
+<header id="page-header">
+  <h1>CWI Discovery Call</h1>
+  <input type="text" id="prospect-name" placeholder="Prospect / Company Name" autocomplete="off">
+  <button class="hdr-btn" id="btn-clear">Clear</button>
+  <button class="hdr-btn" id="btn-print">Print</button>
+</header>
+<div id="tier-banner">
+  <label for="call-volume-input">Monthly Call Volume:</label>
+  <input type="number" id="call-volume-input" placeholder="e.g. 400" min="0">
+  <span id="tier-badge" class="starter">Starter</span>
+  <span id="tier-desc">Enter call volume to auto-select tier</span>
+</div>
+<main>
+<!-- SECTION 1 -->
+<div class="section-card open" id="sec-1">
+  <div class="section-header" onclick="toggleSection('sec-1')">
+    <div class="section-num" id="num-1">1</div>
+    <div class="section-title">Warm Open &amp; Agenda Set</div>
+    <div class="section-time">~3 min</div>
+    <div class="chevron">&#9654;</div>
+  </div>
+  <div class="progress-bar-wrap"><div class="progress-bar-fill" id="prog-1"></div></div>
+  <div class="section-body">
+    <div class="timer-row">
+      <span class="timer-display" id="timer-1">3:00</span>
+      <span class="timer-label">/ 3:00</span>
+      <button class="timer-btn btn-start" onclick="startTimer('timer-1',180)">Start</button>
+      <button class="timer-btn btn-pause" onclick="pauseTimer('timer-1')">Pause</button>
+      <button class="timer-btn btn-reset" onclick="resetTimer('timer-1',180)">Reset</button>
+      <button class="timer-btn btn-done" onclick="markDone('sec-1','sec-2')">Mark Complete &#10003;</button>
+    </div>
+    <div class="script-item say"><span class="script-tag">SAY</span><p class="script-text">"Hey <strong>[First Name]</strong>, thanks for carving out time today. I've got us blocked for 30 minutes. Here's what I'm thinking: I'll ask you a handful of questions about how your phone calls are handled today, you tell me what's working and what's not, and then I'll show you exactly how CWI AI fits into that picture. Sound good?"</p></div>
+    <div class="script-item tip"><span class="script-tag">TIP</span><p class="script-text">Pause and wait for verbal confirmation before moving on. Silence after the agenda-set is normal &mdash; don't fill it.</p></div>
+    <div class="script-item say"><span class="script-tag">SAY</span><p class="script-text">"Before I jump in &mdash; just so I'm not throwing numbers at you that don't apply &mdash; how many inbound calls does <strong>[Business Name]</strong> handle in an average month?"</p></div>
+    <div class="capture-grid">
+      <div class="capture-field"><label>First Name</label><input type="text" data-key="s1_first_name" placeholder="Contact first name"></div>
+      <div class="capture-field"><label>Business Name</label><input type="text" data-key="s1_business_name" placeholder="Company"></div>
+      <div class="capture-field"><label>Monthly Calls</label><input type="number" data-key="s1_monthly_calls" placeholder="# calls / mo" oninput="syncCallVolume(this.value)"></div>
+      <div class="capture-field"><label>Decision Maker?</label><select data-key="s1_decision_maker"><option value="">--</option><option>Yes - sole decision</option><option>Yes - shared decision</option><option>No - influencer only</option><option>Unknown</option></select></div>
+    </div>
+    <div class="notes-label">Section Notes</div>
+    <textarea class="notes-area" data-key="s1_notes" placeholder="First impressions, tone, rapport notes..."></textarea>
+  </div>
+</div>
+
+<!-- SECTION 2 -->
+<div class="section-card" id="sec-2">
+  <div class="section-header" onclick="toggleSection('sec-2')">
+    <div class="section-num" id="num-2">2</div>
+    <div class="section-title">Current State &mdash; How Are Calls Handled Today?</div>
+    <div class="section-time">~5 min</div>
+    <div class="chevron">&#9654;</div>
+  </div>
+  <div class="progress-bar-wrap"><div class="progress-bar-fill" id="prog-2"></div></div>
+  <div class="section-body">
+    <div class="timer-row">
+      <span class="timer-display" id="timer-2">5:00</span>
+      <span class="timer-label">/ 5:00</span>
+      <button class="timer-btn btn-start" onclick="startTimer('timer-2',300)">Start</button>
+      <button class="timer-btn btn-pause" onclick="pauseTimer('timer-2')">Pause</button>
+      <button class="timer-btn btn-reset" onclick="resetTimer('timer-2',300)">Reset</button>
+      <button class="timer-btn btn-done" onclick="markDone('sec-2','sec-3')">Mark Complete &#10003;</button>
+    </div>
+    <div class="script-item ask"><span class="script-tag">ASK</span><p class="script-text">"Walk me through what happens right now when a customer calls in. Who picks up? What do they do with the call?"</p></div>
+    <div class="script-item ask"><span class="script-tag">ASK</span><p class="script-text">"How many people are handling inbound calls, and is that a dedicated role or are they juggling other responsibilities?"</p></div>
+    <div class="script-item ask"><span class="script-tag">ASK</span><p class="script-text">"What phone system are you on today &mdash; VoIP, traditional line, something cloud-based?"</p></div>
+    <div class="script-item tip"><span class="script-tag">TIP</span><p class="script-text">Listen for signs of overload: "we're slammed," "people wear a lot of hats," "we use an answering service." These are pain anchors &mdash; note them verbatim.</p></div>
+    <div class="script-item ask"><span class="script-tag">ASK</span><p class="script-text">"What would you say is the biggest frustration with the way calls are handled right now?"</p></div>
+    <div class="capture-grid">
+      <div class="capture-field"><label>Current Setup</label><select data-key="s2_setup"><option value="">--</option><option>In-house receptionist</option><option>Shared front-desk</option><option>Answering service</option><option>Owner / manager</option><option>Voicemail only</option><option>Mixed</option></select></div>
+      <div class="capture-field"><label>Staff on Calls</label><input type="number" data-key="s2_staff_count" placeholder="# people"></div>
+      <div class="capture-field"><label>Phone System</label><input type="text" data-key="s2_phone_system" placeholder="RingCentral, Vonage..."></div>
+      <div class="capture-field"><label>Primary Pain</label><input type="text" data-key="s2_pain" placeholder="Their words exactly"></div>
+    </div>
+    <div class="notes-label">Section Notes</div>
+    <textarea class="notes-area" data-key="s2_notes" placeholder="Verbatim frustrations, workflow details..."></textarea>
+  </div>
+</div>
+
+<!-- SECTION 3 -->
+<div class="section-card" id="sec-3">
+  <div class="section-header" onclick="toggleSection('sec-3')">
+    <div class="section-num" id="num-3">3</div>
+    <div class="section-title">Pain &amp; After-Hours Exposure</div>
+    <div class="section-time">~5 min</div>
+    <div class="chevron">&#9654;</div>
+  </div>
+  <div class="progress-bar-wrap"><div class="progress-bar-fill" id="prog-3"></div></div>
+  <div class="section-body">
+    <div class="timer-row">
+      <span class="timer-display" id="timer-3">5:00</span>
+      <span class="timer-label">/ 5:00</span>
+      <button class="timer-btn btn-start" onclick="startTimer('timer-3',300)">Start</button>
+      <button class="timer-btn btn-pause" onclick="pauseTimer('timer-3')">Pause</button>
+      <button class="timer-btn btn-reset" onclick="resetTimer('timer-3',300)">Reset</button>
+      <button class="timer-btn btn-done" onclick="markDone('sec-3','sec-4')">Mark Complete &#10003;</button>
+    </div>
+    <div class="script-item ask"><span class="script-tag">ASK</span><p class="script-text">"What happens to calls that come in after hours or when everyone's with a customer? Where do those go?"</p></div>
+    <div class="script-item ask"><span class="script-tag">ASK</span><p class="script-text">"Roughly how many of those after-hours or missed calls would you say you get in a week?"</p></div>
+    <div class="script-item ask"><span class="script-tag">ASK</span><p class="script-text">"Of those missed calls &mdash; do customers call back, leave a message, or just move on to a competitor?"</p></div>
+    <div class="script-item tip"><span class="script-tag">TIP</span><p class="script-text">Most prospects underestimate missed calls by 40-60%. If they say "not many," ask: "Have you ever checked your missed call log at the end of a week? What did you see?" This is the single most powerful ROI anchor in the call.</p></div>
+    <div class="script-item ask"><span class="script-tag">ASK</span><p class="script-text">"Are there specific call types &mdash; scheduling, quotes, follow-ups &mdash; that tend to fall through the cracks most?"</p></div>
+    <div class="capture-grid">
+      <div class="capture-field"><label>After-Hours Handling</label><select data-key="s3_afterhours"><option value="">--</option><option>Voicemail</option><option>Nothing / ring out</option><option>Forwarded to owner</option><option>Answering service</option><option>Some coverage</option></select></div>
+      <div class="capture-field"><label for="missed-calls-week">Missed Calls / Week</label><input type="number" id="missed-calls-week" data-key="s3_missed_week" placeholder="# / week" oninput="updateROI()"></div>
+      <div class="capture-field"><label>Caller Behavior</label><select data-key="s3_caller_behavior"><option value="">--</option><option>Most call back</option><option>Mixed</option><option>Most move on</option><option>Unknown</option></select></div>
+      <div class="capture-field"><label>Top Missed Call Types</label><input type="text" data-key="s3_missed_types" placeholder="Scheduling, quotes..."></div>
+    </div>
+    <div class="notes-label">Section Notes</div>
+    <textarea class="notes-area" data-key="s3_notes" placeholder="Verbatim quotes about missed calls, urgency signals..."></textarea>
+  </div>
+</div>
+<!-- SECTION 4 -->
+<div class="section-card" id="sec-4">
+  <div class="section-header" onclick="toggleSection('sec-4')">
+    <div class="section-num" id="num-4">4</div>
+    <div class="section-title">Revenue &amp; LTV Discovery</div>
+    <div class="section-time">~4 min</div>
+    <div class="chevron">&#9654;</div>
+  </div>
+  <div class="progress-bar-wrap"><div class="progress-bar-fill" id="prog-4"></div></div>
+  <div class="section-body">
+    <div class="timer-row">
+      <span class="timer-display" id="timer-4">4:00</span>
+      <span class="timer-label">/ 4:00</span>
+      <button class="timer-btn btn-start" onclick="startTimer('timer-4',240)">Start</button>
+      <button class="timer-btn btn-pause" onclick="pauseTimer('timer-4')">Pause</button>
+      <button class="timer-btn btn-reset" onclick="resetTimer('timer-4',240)">Reset</button>
+      <button class="timer-btn btn-done" onclick="markDone('sec-4','sec-5')">Mark Complete &#10003;</button>
+    </div>
+    <div class="script-item ask"><span class="script-tag">ASK</span><p class="script-text">"What's a typical new customer worth to you &mdash; just that first transaction? Ballpark is fine."</p></div>
+    <div class="script-item ask"><span class="script-tag">ASK</span><p class="script-text">"And do customers come back? What does a repeat customer look like over a year or two?"</p></div>
+    <div class="script-item tip"><span class="script-tag">TIP</span><p class="script-text">For LTV: (avg ticket) x (visits/yr) x (retention years). Don't force precision &mdash; a range is fine. The calculator below does the math.</p></div>
+    <div class="script-item ask"><span class="script-tag">ASK</span><p class="script-text">"What percentage of inbound calls from new leads actually convert to a paying customer?"</p></div>
+    <div class="script-item do"><span class="script-tag">DO</span><p class="script-text">Fill in the ROI calculator below. Show the monthly and annual missed revenue figure when you get to Section 7.</p></div>
+    <div class="capture-grid">
+      <div class="capture-field"><label for="avg-ticket">Avg First Transaction ($)</label><input type="number" id="avg-ticket" data-key="s4_avg_ticket" placeholder="$" oninput="updateROI()"></div>
+      <div class="capture-field"><label for="visits-yr">Visits / Year</label><input type="number" id="visits-yr" data-key="s4_visits_yr" placeholder="# visits" oninput="updateROI()"></div>
+      <div class="capture-field"><label for="retention-yrs">Retention (years)</label><input type="number" id="retention-yrs" data-key="s4_retention_yrs" placeholder="avg years" oninput="updateROI()"></div>
+      <div class="capture-field"><label for="conv-rate">Lead-to-Customer %</label><input type="number" id="conv-rate" data-key="s4_conv_rate" placeholder="e.g. 40" oninput="updateROI()"></div>
+    </div>
+    <div class="roi-box">
+      <h4>ROI Calculator &mdash; Missed Revenue Estimate</h4>
+      <div class="roi-row"><span class="label">Est. LTV per Customer</span><span class="value" id="roi-ltv">$--</span></div>
+      <div class="roi-row"><span class="label">Missed Calls / Month (x4.3)</span><span class="value" id="roi-missed-mo">--</span></div>
+      <div class="roi-row"><span class="label">Converted Leads Lost / Month</span><span class="value" id="roi-lost-leads">--</span></div>
+      <div class="roi-row roi-total"><span class="label">Monthly Missed Revenue</span><span class="value" id="roi-monthly">$--</span></div>
+      <div class="roi-row roi-total"><span class="label">Annual Missed Revenue</span><span class="value" id="roi-annual">$--</span></div>
+    </div>
+    <div class="notes-label">Section Notes</div>
+    <textarea class="notes-area" data-key="s4_notes" placeholder="Revenue context, seasonality, upsell patterns..."></textarea>
+  </div>
+</div>
+
+<!-- SECTION 5 -->
+<div class="section-card" id="sec-5">
+  <div class="section-header" onclick="toggleSection('sec-5')">
+    <div class="section-num" id="num-5">5</div>
+    <div class="section-title">Fit Check &mdash; Goals &amp; Ideal Outcome</div>
+    <div class="section-time">~4 min</div>
+    <div class="chevron">&#9654;</div>
+  </div>
+  <div class="progress-bar-wrap"><div class="progress-bar-fill" id="prog-5"></div></div>
+  <div class="section-body">
+    <div class="timer-row">
+      <span class="timer-display" id="timer-5">4:00</span>
+      <span class="timer-label">/ 4:00</span>
+      <button class="timer-btn btn-start" onclick="startTimer('timer-5',240)">Start</button>
+      <button class="timer-btn btn-pause" onclick="pauseTimer('timer-5')">Pause</button>
+      <button class="timer-btn btn-reset" onclick="resetTimer('timer-5',240)">Reset</button>
+      <button class="timer-btn btn-done" onclick="markDone('sec-5','sec-6')">Mark Complete &#10003;</button>
+    </div>
+    <div class="script-item ask"><span class="script-tag">ASK</span><p class="script-text">"If we could wave a magic wand and fix the phone situation &mdash; what would 'fixed' look like for you?"</p></div>
+    <div class="script-item ask"><span class="script-tag">ASK</span><p class="script-text">"Is improving call handling on your radar for this quarter, or is it more of a 'nice to have someday' thing?"</p></div>
+    <div class="script-item tip"><span class="script-tag">TIP</span><p class="script-text">Timing matters more than budget at this stage. A "Q3 priority" is a better signal than a large budget with no urgency.</p></div>
+    <div class="script-item ask"><span class="script-tag">ASK</span><p class="script-text">"Are you evaluating any other tools or vendors right now, or is this more exploratory?"</p></div>
+    <div class="script-item ask"><span class="script-tag">ASK</span><p class="script-text">"Besides yourself, who else would need to weigh in before you could move forward on something like this?"</p></div>
+    <div class="capture-grid">
+      <div class="capture-field"><label>Ideal Outcome</label><input type="text" data-key="s5_ideal_outcome" placeholder="Their words"></div>
+      <div class="capture-field"><label>Timeline</label><select data-key="s5_timeline"><option value="">--</option><option>ASAP / this month</option><option>This quarter</option><option>Next quarter</option><option>6+ months</option><option>No timeline set</option></select></div>
+      <div class="capture-field"><label>Competing Vendors</label><input type="text" data-key="s5_competitors" placeholder="Names if any"></div>
+      <div class="capture-field"><label>Other Stakeholders</label><input type="text" data-key="s5_stakeholders" placeholder="Names / roles"></div>
+    </div>
+    <div class="notes-label">Section Notes</div>
+    <textarea class="notes-area" data-key="s5_notes" placeholder="Urgency signals, objections surfaced, competitive intel..."></textarea>
+  </div>
+</div>
+
+<!-- SECTION 6 -->
+<div class="section-card" id="sec-6">
+  <div class="section-header" onclick="toggleSection('sec-6')">
+    <div class="section-num" id="num-6">6</div>
+    <div class="section-title">Solution Overview &amp; Demo Bridge</div>
+    <div class="section-time">~5 min</div>
+    <div class="chevron">&#9654;</div>
+  </div>
+  <div class="progress-bar-wrap"><div class="progress-bar-fill" id="prog-6"></div></div>
+  <div class="section-body">
+    <div class="timer-row">
+      <span class="timer-display" id="timer-6">5:00</span>
+      <span class="timer-label">/ 5:00</span>
+      <button class="timer-btn btn-start" onclick="startTimer('timer-6',300)">Start</button>
+      <button class="timer-btn btn-pause" onclick="pauseTimer('timer-6')">Pause</button>
+      <button class="timer-btn btn-reset" onclick="resetTimer('timer-6',300)">Reset</button>
+      <button class="timer-btn btn-done" onclick="markDone('sec-6','sec-7')">Mark Complete &#10003;</button>
+    </div>
+    <div class="script-item say"><span class="script-tag">SAY</span><p class="script-text">"Based on everything you've shared &mdash; the <strong>[missed calls / staffing challenge / after-hours gap]</strong> &mdash; here's where CWI AI comes in. Our AI receptionist answers every call instantly, 24/7, in your brand's voice. It can schedule, answer FAQs, qualify leads, and escalate the right calls to a real person. No hold times. No missed calls. No overhead."</p></div>
+    <div class="script-item tip"><span class="script-tag">TIP</span><p class="script-text">Name the specific pain they gave you in Sections 2-3. Don't use generic language &mdash; mirror their words back.</p></div>
+    <div class="script-item say"><span class="script-tag">SAY</span><p class="script-text">"The AI learns your business &mdash; your services, pricing, hours, FAQs &mdash; and handles the repetitive stuff so your team only touches calls that actually need a human."</p></div>
+    <div class="script-item ask"><span class="script-tag">ASK</span><p class="script-text">"Does that match what you described needing earlier, or is there a piece I should spend more time on?"</p></div>
+    <div class="script-item do"><span class="script-tag">DO</span><p class="script-text">Pause and let them respond. If they ask how it works technically, give a one-sentence answer and redirect to ROI: "The setup is straightforward &mdash; most businesses are live in under a week. The bigger question is what it's worth to you."</p></div>
+    <div class="capture-grid">
+      <div class="capture-field"><label>Top Feature Interest</label><select data-key="s6_feature"><option value="">--</option><option>24/7 answering</option><option>Scheduling</option><option>Lead qualification</option><option>FAQ handling</option><option>Overflow / after-hours</option><option>Reducing staff burden</option></select></div>
+      <div class="capture-field"><label>Engagement Level</label><select data-key="s6_engagement"><option value="">--</option><option>High - leaning in</option><option>Medium - curious</option><option>Low - polite skeptic</option><option>Objection raised</option></select></div>
+    </div>
+    <div class="notes-label">Objections / Questions Raised</div>
+    <textarea class="notes-area" data-key="s6_objections" placeholder="Log objections here with your responses..."></textarea>
+    <div class="notes-label">Section Notes</div>
+    <textarea class="notes-area" data-key="s6_notes" placeholder="Demo requests, feature questions, next step signals..."></textarea>
+  </div>
+</div>
+<!-- SECTION 7 -->
+<div class="section-card" id="sec-7">
+  <div class="section-header" onclick="toggleSection('sec-7')">
+    <div class="section-num" id="num-7">7</div>
+    <div class="section-title">Pricing, Close &amp; Next Steps</div>
+    <div class="section-time">~4 min</div>
+    <div class="chevron">&#9654;</div>
+  </div>
+  <div class="progress-bar-wrap"><div class="progress-bar-fill" id="prog-7"></div></div>
+  <div class="section-body">
+    <div class="timer-row">
+      <span class="timer-display" id="timer-7">4:00</span>
+      <span class="timer-label">/ 4:00</span>
+      <button class="timer-btn btn-start" onclick="startTimer('timer-7',240)">Start</button>
+      <button class="timer-btn btn-pause" onclick="pauseTimer('timer-7')">Pause</button>
+      <button class="timer-btn btn-reset" onclick="resetTimer('timer-7',240)">Reset</button>
+      <button class="timer-btn btn-done" onclick="markDone('sec-7',null)">Mark Complete &#10003;</button>
+    </div>
+    <div class="script-item do"><span class="script-tag">DO</span><p class="script-text">Reference the ROI figure before presenting pricing: "Based on what you shared, you're likely leaving roughly <strong id="roi-inline-monthly">$--</strong>/month on the table from missed calls alone."</p></div>
+
+    <div id="close-starter" class="tier-close">
+      <div class="script-item say"><span class="script-tag">SAY</span><p class="script-text">"For a business at your volume, our <strong>Starter plan</strong> is the right fit &mdash; designed for teams handling up to 200 calls a month. You get 24/7 AI answering, scheduling, and FAQ handling. It's <strong>$X/month</strong> &mdash; typically less than the cost of a single missed job."</p></div>
+      <div class="script-item ask"><span class="script-tag">ASK</span><p class="script-text">"Given what you told me about <strong>[their pain]</strong>, does the Starter plan make sense as a starting point, or would you want to walk through the details side by side?"</p></div>
+    </div>
+
+    <div id="close-growth" class="tier-close">
+      <div class="script-item say"><span class="script-tag">SAY</span><p class="script-text">"At your call volume, most clients land on our <strong>Growth plan</strong> &mdash; handles up to 500 calls/month with full scheduling, lead qualification, and CRM handoff. It's <strong>$X/month</strong>. Looking at the <strong id="roi-inline-annual-g">$--</strong> in annual missed revenue you described, the ROI pays for itself fast."</p></div>
+      <div class="script-item ask"><span class="script-tag">ASK</span><p class="script-text">"Does the Growth plan sound like it fits where you're headed, or should we talk through a custom scope?"</p></div>
+    </div>
+
+    <div id="close-pro" class="tier-close">
+      <div class="script-item say"><span class="script-tag">SAY</span><p class="script-text">"Given your volume and the complexity you described, I'd recommend our <strong>Pro plan</strong> &mdash; unlimited calls, advanced routing, multi-location support, and dedicated onboarding. Pricing is <strong>$X/month</strong>. For a business your size, that's a fraction of one receptionist and covers every call."</p></div>
+      <div class="script-item ask"><span class="script-tag">ASK</span><p class="script-text">"Would it be more helpful to set up a technical walkthrough with your team, or are you ready to look at the agreement today?"</p></div>
+    </div>
+
+    <div id="close-enterprise" class="tier-close">
+      <div class="script-item say"><span class="script-tag">SAY</span><p class="script-text">"For an operation at your scale, we'd put together a custom <strong>Enterprise proposal</strong> &mdash; white-glove onboarding, SLA guarantees, API integration, and dedicated support. Pricing is scoped to your specific call patterns and integrations. The fastest way forward is to get your ops lead on a 30-minute scoping call with our solutions team."</p></div>
+      <div class="script-item ask"><span class="script-tag">ASK</span><p class="script-text">"Who's the right person to pull into that scoping call &mdash; is that you, or someone on your operations side?"</p></div>
+    </div>
+
+    <hr class="divider">
+    <div class="script-item say"><span class="script-tag">SAY</span><p class="script-text">"So &mdash; two options for next steps: I can send over a proposal with everything we discussed today so you can review it on your own time, or if it makes sense, we could get the paperwork started right now. Which feels right?"</p></div>
+    <div class="script-item tip"><span class="script-tag">TIP</span><p class="script-text">Always offer a binary choice at close &mdash; never "let me know if you have questions." Silence after presenting options is their decision time. Do not fill it.</p></div>
+
+    <div class="capture-grid">
+      <div class="capture-field"><label>Outcome</label><select data-key="s7_outcome"><option value="">--</option><option>Closed - proposal sent</option><option>Closed - agreement started</option><option>Follow-up scheduled</option><option>Not a fit</option><option>No decision / ghosted</option></select></div>
+      <div class="capture-field"><label>Next Step Date</label><input type="date" data-key="s7_next_date"></div>
+      <div class="capture-field"><label>Follow-Up Owner</label><input type="text" data-key="s7_followup_owner" placeholder="Name"></div>
+      <div class="capture-field"><label for="tier-proposed">Tier Proposed</label><input type="text" id="tier-proposed" data-key="s7_tier_proposed" placeholder="Auto-filled by tier"></div>
+    </div>
+    <div class="notes-label">Closing Notes / Next-Step Details</div>
+    <textarea class="notes-area" data-key="s7_notes" placeholder="What was agreed, what to send, objections to address..."></textarea>
+  </div>
+</div>
+
+</main><script>
+var timers = {};
+function fmtTime(s) { return Math.floor(s/60) + ':' + String(s%60).padStart(2,'0'); }
+function startTimer(id, total) {
+  if (timers[id] && timers[id].interval) return;
+  var el = document.getElementById(id);
+  if (!timers[id]) timers[id] = { remaining: total, total: total };
+  timers[id].interval = setInterval(function() {
+    if (timers[id].remaining <= 0) {
+      clearInterval(timers[id].interval); timers[id].interval = null;
+      el.textContent = '0:00'; el.classList.add('warning'); return;
+    }
+    timers[id].remaining--;
+    el.textContent = fmtTime(timers[id].remaining);
+    if (timers[id].remaining <= 30) el.classList.add('warning');
+    var n = id.split('-')[1], p = document.getElementById('prog-'+n);
+    if (p) p.style.width = ((timers[id].total - timers[id].remaining) / timers[id].total * 100) + '%';
+  }, 1000);
+}
+function pauseTimer(id) {
+  if (timers[id] && timers[id].interval) { clearInterval(timers[id].interval); timers[id].interval = null; }
+}
+function resetTimer(id, total) {
+  pauseTimer(id); timers[id] = { remaining: total, total: total };
+  var el = document.getElementById(id); el.textContent = fmtTime(total); el.classList.remove('warning');
+  var p = document.getElementById('prog-'+id.split('-')[1]); if (p) p.style.width = '0%';
+}
+function toggleSection(id) { document.getElementById(id).classList.toggle('open'); }
+function markDone(cur, nxt) {
+  var card = document.getElementById(cur); card.classList.remove('open');
+  var n = cur.split('-')[1];
+  var numEl = document.getElementById('num-'+n); if (numEl) numEl.classList.add('complete');
+  var p = document.getElementById('prog-'+n); if (p) { p.style.width = '100%'; p.classList.add('complete'); }
+  pauseTimer('timer-'+n);
+  if (nxt) { var next = document.getElementById(nxt); if (next) { next.classList.add('open'); next.scrollIntoView({behavior:'smooth',block:'start'}); } }
+  saveAll();
+}
+var TIERS = [
+  {name:'Starter',    cls:'starter',    min:0,    max:200,       desc:'Starter -- up to 200 calls/mo'},
+  {name:'Growth',     cls:'growth',     min:201,  max:500,       desc:'Growth -- 201-500 calls/mo'},
+  {name:'Pro',        cls:'pro',        min:501,  max:1500,      desc:'Pro -- 501-1,500 calls/mo'},
+  {name:'Enterprise', cls:'enterprise', min:1501, max:Infinity,  desc:'Enterprise -- 1,500+ calls/mo'}
+];
+function getTier(v) { return TIERS.find(function(t){return v>=t.min&&v<=t.max;})||TIERS[0]; }
+function applyTier(tier) {
+  var b = document.getElementById('tier-badge'); b.textContent = tier.name; b.className = tier.cls;
+  document.getElementById('tier-desc').textContent = tier.desc;
+  document.querySelectorAll('.tier-close').forEach(function(e){e.classList.remove('active');});
+  var c = document.getElementById('close-'+tier.cls); if (c) c.classList.add('active');
+  var pf = document.getElementById('tier-proposed'); if (pf && !pf.dataset.manualOverride) pf.value = tier.name;
+}
+function syncCallVolume(val) {
+  var n = parseInt(val,10);
+  if (!isNaN(n) && n >= 0) { document.getElementById('call-volume-input').value = n; applyTier(getTier(n)); }
+}
+document.getElementById('call-volume-input').addEventListener('input', function() {
+  var n = parseInt(this.value,10);
+  if (!isNaN(n) && n >= 0) {
+    applyTier(getTier(n));
+    var s1 = document.querySelector('[data-key="s1_monthly_calls"]'); if (s1) s1.value = n;
+  }
+});
+function fmtDollar(n) { return (isNaN(n)||n===0) ? '$--' : '$'+Math.round(n).toLocaleString(); }
+function updateROI() {
+  var ticket = parseFloat((document.getElementById('avg-ticket')||{}).value)||0;
+  var visits = parseFloat((document.getElementById('visits-yr')||{}).value)||1;
+  var ret    = parseFloat((document.getElementById('retention-yrs')||{}).value)||1;
+  var conv   = parseFloat((document.getElementById('conv-rate')||{}).value)||0;
+  var mwk    = parseFloat((document.getElementById('missed-calls-week')||{}).value)||0;
+  var ltv=ticket*visits*ret, mmo=mwk*4.3, lost=mmo*(conv/100), rmo=lost*ltv, rann=rmo*12;
+  document.getElementById('roi-ltv').textContent        = ltv>0  ? fmtDollar(ltv)  : '$--';
+  document.getElementById('roi-missed-mo').textContent  = mmo>0  ? Math.round(mmo)  : '--';
+  document.getElementById('roi-lost-leads').textContent = lost>0 ? lost.toFixed(1)  : '--';
+  document.getElementById('roi-monthly').textContent    = rmo>0  ? fmtDollar(rmo)  : '$--';
+  document.getElementById('roi-annual').textContent     = rann>0 ? fmtDollar(rann) : '$--';
+  var im = document.getElementById('roi-inline-monthly');    if (im) im.textContent = rmo>0  ? fmtDollar(rmo)  : '$--';
+  var ia = document.getElementById('roi-inline-annual-g');   if (ia) ia.textContent = rann>0 ? fmtDollar(rann) : '$--';
+}
+function storageKey() {
+  var n = document.getElementById('prospect-name').value.trim();
+  return n ? 'cwi_disc_'+n.toLowerCase().replace(/\s+/g,'_') : null;
+}
+function saveField(key, value) {
+  var sk = storageKey(); if (!sk) return;
+  var d = JSON.parse(localStorage.getItem(sk)||'{}'); d[key] = value; localStorage.setItem(sk, JSON.stringify(d));
+}
+function saveAll() {
+  var sk = storageKey(); if (!sk) return; var d = {};
+  document.querySelectorAll('[data-key]').forEach(function(el){ d[el.dataset.key] = el.value; });
+  d['__call_volume'] = document.getElementById('call-volume-input').value;
+  localStorage.setItem(sk, JSON.stringify(d));
+}
+function loadAll() {
+  var sk = storageKey(); if (!sk) return;
+  var d = JSON.parse(localStorage.getItem(sk)||'{}');
+  document.querySelectorAll('[data-key]').forEach(function(el){ if (d[el.dataset.key]!==undefined) el.value = d[el.dataset.key]; });
+  if (d['__call_volume']) { document.getElementById('call-volume-input').value = d['__call_volume']; applyTier(getTier(parseInt(d['__call_volume'],10))); }
+  updateROI();
+}
+document.addEventListener('input', function(e) {
+  var el = e.target;
+  if (el.dataset.key) saveField(el.dataset.key, el.value);
+  if (el.dataset.key === 's1_monthly_calls') syncCallVolume(el.value);
+});
+document.addEventListener('change', function(e) {
+  var el = e.target; if (el.dataset.key) saveField(el.dataset.key, el.value);
+});
+document.getElementById('prospect-name').addEventListener('input', function(){ loadAll(); });
+document.getElementById('btn-clear').addEventListener('click', function() {
+  if (!confirm('Clear all data for this prospect? This cannot be undone.')) return;
+  var sk = storageKey(); if (sk) localStorage.removeItem(sk);
+  document.querySelectorAll('[data-key]').forEach(function(el){ el.value = ''; });
+  document.getElementById('call-volume-input').value = '';
+  document.getElementById('prospect-name').value = '';
+  ['roi-ltv','roi-monthly','roi-annual','roi-inline-monthly','roi-inline-annual-g'].forEach(function(id){ var e=document.getElementById(id); if(e) e.textContent='$--'; });
+  ['roi-missed-mo','roi-lost-leads'].forEach(function(id){ var e=document.getElementById(id); if(e) e.textContent='--'; });
+  applyTier(TIERS[0]);
+});
+document.getElementById('btn-print').addEventListener('click', function() {
+  document.querySelectorAll('.section-card').forEach(function(c){ c.classList.add('open'); });
+  setTimeout(function(){ window.print(); }, 150);
+});
+applyTier(TIERS[0]);
+updateROI();
+</script>
+</body>
+</html>

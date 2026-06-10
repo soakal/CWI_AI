@@ -1,0 +1,1707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CWI AI LLC — Discovery Call Companion</title>
+  <meta name="description" content="CWI internal tool: CWI AI LLC — Discovery Call Companion. Internal use only — CWI Compute With Imagination.">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Reset & Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #0A0A0C;
+      --surface:      #0E0E11;
+      --surface2:     #141418;
+      --surface3:     #1C1C22;
+      --text:         #F2F2F4;
+      --muted:        #85858E;
+      --accent:       #FF5A1F;
+      --accent-hover: #FF8A3D;
+      --border:       rgba(255,255,255,0.09);
+      --border-soft:  rgba(255,255,255,0.06);
+      --radius:       16px;
+      --radius-sm:    10px;
+      --green:        #22C55E;
+      --yellow:       #EAB308;
+      --blue:         #3B82F6;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Instrument Sans', sans-serif;
+      font-size: 15px;
+      line-height: 1.65;
+      min-height: 100vh;
+    }
+
+    h1, h2, h3, h4, h5 {
+      font-family: 'Sora', sans-serif;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { color: var(--accent-hover); }
+
+    /* ── Layout ── */
+    .page-wrapper {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 0 24px 100px;
+    }
+
+    /* ── Header ── */
+    .site-header {
+      border-bottom: 1px solid var(--border);
+      padding: 36px 0 28px;
+      margin-bottom: 40px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .logo-mark {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+
+    .logo-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .logo-text {
+      font-family: 'Sora', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .header-title {
+      font-size: clamp(1.5rem, 4vw, 2.25rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-top: 4px;
+    }
+
+    .header-meta {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .badge-internal { background: rgba(255,90,31,0.15); color: var(--accent); border: 1px solid rgba(255,90,31,0.3); }
+
+    /* ── Nav Pills ── */
+    .nav-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 44px;
+    }
+
+    .nav-pill {
+      font-family: 'Sora', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      color: var(--muted);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 6px 14px;
+      text-decoration: none;
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
+    }
+
+    .nav-pill:hover {
+      color: var(--text);
+      border-color: rgba(255,90,31,0.4);
+      background: var(--surface2);
+    }
+
+    /* ── Section ── */
+    .section { margin-bottom: 60px; }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+
+    .section-title {
+      font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin-bottom: 6px;
+    }
+
+    .section-desc {
+      color: var(--muted);
+      max-width: 680px;
+      margin-bottom: 24px;
+      font-size: 14px;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 52px 0;
+    }
+
+    /* ── Call Phase Cards ── */
+    .phase-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .phase-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+
+    .phase-card[open] { border-color: rgba(255,90,31,0.35); }
+
+    .phase-summary {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 18px 22px;
+      cursor: pointer;
+      list-style: none;
+      user-select: none;
+      transition: background 0.15s;
+    }
+
+    .phase-summary::-webkit-details-marker { display: none; }
+    .phase-summary:hover { background: var(--surface2); }
+
+    .phase-time-badge {
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255,90,31,0.12);
+      border: 1px solid rgba(255,90,31,0.25);
+      color: var(--accent);
+      font-family: 'Sora', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      padding: 4px 10px;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+
+    .phase-title-group { flex: 1; min-width: 0; }
+
+    .phase-title {
+      font-family: 'Sora', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .phase-subtitle {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .phase-chevron {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      color: var(--muted);
+      transition: transform 0.25s ease;
+    }
+
+    .phase-card[open] .phase-chevron { transform: rotate(180deg); }
+
+    .phase-body {
+      padding: 0 22px 22px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ── Script Blocks ── */
+    .script-block {
+      background: var(--surface2);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      padding: 14px 18px;
+      margin: 16px 0;
+      font-style: italic;
+      font-size: 14.5px;
+      line-height: 1.7;
+      color: var(--text);
+    }
+
+    .script-block em {
+      font-style: normal;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .stage-note {
+      background: rgba(255,90,31,0.06);
+      border: 1px solid rgba(255,90,31,0.15);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      font-size: 13px;
+      color: var(--muted);
+      margin: 12px 0;
+    }
+
+    .stage-note strong { color: var(--text); font-style: normal; }
+
+    /* ── Prep Checklist ── */
+    .prep-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .prep-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .prep-list li::before {
+      content: '';
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255,90,31,0.5);
+      border-radius: 4px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    /* ── Discovery Questions ── */
+    .q-list {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      margin-top: 18px;
+    }
+
+    .q-item {
+      display: grid;
+      grid-template-columns: 40px 1fr;
+      gap: 14px;
+      align-items: flex-start;
+    }
+
+    .q-num {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(255,90,31,0.12);
+      border: 1.5px solid rgba(255,90,31,0.3);
+      color: var(--accent);
+      font-family: 'Sora', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .q-content { padding-top: 2px; }
+
+    .q-label {
+      font-family: 'Sora', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    /* ── Industry Pitches ── */
+    .pitch-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .pitch-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 18px 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .pitch-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--accent);
+    }
+
+    .pitch-industry {
+      font-family: 'Sora', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 10px;
+    }
+
+    .pitch-script {
+      font-size: 13.5px;
+      font-style: italic;
+      line-height: 1.65;
+      color: var(--text);
+    }
+
+    /* ── Objections Table ── */
+    .objections-table-wrap {
+      overflow-x: auto;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+    }
+
+    .objections-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    .objections-table thead tr {
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .objections-table th {
+      font-family: 'Sora', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 14px 18px;
+      text-align: left;
+    }
+
+    .objections-table td {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border-soft);
+      vertical-align: top;
+      line-height: 1.6;
+    }
+
+    .objections-table tr:last-child td { border-bottom: none; }
+    .objections-table tbody tr { background: var(--surface); transition: background 0.15s; }
+    .objections-table tbody tr:hover { background: var(--surface2); }
+
+    .objection-text {
+      font-family: 'Sora', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .response-text {
+      font-size: 13.5px;
+      color: var(--text);
+    }
+
+    .response-text em {
+      color: var(--muted);
+      font-size: 12.5px;
+    }
+
+    /* ── Email Template ── */
+    .email-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 32px;
+    }
+
+    .email-subject-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 16px;
+      margin-bottom: 20px;
+      font-size: 13px;
+    }
+
+    .email-label {
+      font-family: 'Sora', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+
+    .email-subject-text {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .email-body {
+      font-size: 14px;
+      line-height: 1.75;
+      color: var(--text);
+    }
+
+    .email-body p { margin-bottom: 12px; }
+
+    .email-placeholder {
+      display: inline-block;
+      background: rgba(255,90,31,0.12);
+      border: 1px solid rgba(255,90,31,0.25);
+      color: var(--accent);
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-size: 13px;
+      font-family: 'Sora', sans-serif;
+      font-weight: 600;
+      font-style: normal;
+    }
+
+    .email-section-label {
+      font-family: 'Sora', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin: 20px 0 8px;
+    }
+
+    .email-bullet {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin: 4px 0;
+      font-size: 14px;
+    }
+
+    .email-bullet::before {
+      content: '—';
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+
+    .email-sig {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.8;
+    }
+
+    .email-sig strong { color: var(--text); }
+
+    /* ── Call Notes Form ── */
+    .notes-form {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 32px;
+    }
+
+    .notes-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .notes-title {
+      font-family: 'Sora', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    .notes-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      border: none;
+      border-radius: 8px;
+      padding: 9px 18px;
+      font-family: 'Sora', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 0.02em;
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    .btn:active { transform: translateY(1px); }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-primary:hover { background: var(--accent-hover); }
+
+    .btn-ghost {
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover { background: var(--surface3); border-color: rgba(255,90,31,0.3); }
+
+    .btn-danger {
+      background: rgba(239,68,68,0.1);
+      color: #fca5a5;
+      border: 1px solid rgba(239,68,68,0.25);
+    }
+
+    .btn-danger:hover { background: rgba(239,68,68,0.18); }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group.full { grid-column: 1 / -1; }
+
+    .form-label {
+      font-family: 'Sora', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .form-input,
+    .form-textarea {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: 'Instrument Sans', sans-serif;
+      font-size: 14px;
+      padding: 10px 14px;
+      outline: none;
+      transition: border-color 0.15s;
+      width: 100%;
+      resize: vertical;
+    }
+
+    .form-input::placeholder,
+    .form-textarea::placeholder { color: var(--muted); opacity: 0.6; }
+
+    .form-input:focus,
+    .form-textarea:focus {
+      border-color: rgba(255,90,31,0.5);
+      background: var(--surface3);
+    }
+
+    .form-textarea { min-height: 70px; line-height: 1.55; }
+
+    .dm-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .dm-toggle {
+      display: flex;
+      gap: 8px;
+    }
+
+    .dm-btn {
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface2);
+      color: var(--muted);
+      font-family: 'Sora', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 14px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .dm-btn.active {
+      border-color: var(--accent);
+      background: rgba(255,90,31,0.12);
+      color: var(--accent);
+    }
+
+    .copy-feedback {
+      display: none;
+      font-size: 12px;
+      color: var(--green);
+      font-family: 'Sora', sans-serif;
+      font-weight: 600;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .copy-feedback.visible { display: flex; }
+
+    /* ── Pricing note strip ── */
+    .pricing-strip {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px 18px;
+      margin-top: 16px;
+      font-size: 14px;
+      line-height: 1.65;
+    }
+
+    .pricing-strip .label {
+      font-family: 'Sora', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    /* ── Close branches ── */
+    .branch-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .branch-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px 18px;
+    }
+
+    .branch-label {
+      font-family: 'Sora', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .branch-interested .branch-label { color: var(--green); }
+    .branch-hesitant .branch-label { color: var(--yellow); }
+    .branch-think .branch-label { color: var(--blue); }
+
+    .branch-interested { border-color: rgba(34,197,94,0.2); }
+    .branch-hesitant  { border-color: rgba(234,179,8,0.2); }
+    .branch-think     { border-color: rgba(59,130,246,0.2); }
+
+    /* ── Print button area ── */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+    }
+
+    /* ── Sticky timeline (desktop) ── */
+    .timeline-bar {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 40px;
+      padding: 6px 6px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      margin-bottom: 36px;
+    }
+
+    .timeline-bar::-webkit-scrollbar { display: none; }
+
+    .tl-item {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      flex-shrink: 0;
+    }
+
+    .tl-link {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 6px 14px;
+      border-radius: 30px;
+      text-decoration: none;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+
+    .tl-link:hover { background: var(--surface2); }
+
+    .tl-time {
+      font-family: 'Sora', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 0.06em;
+      line-height: 1;
+      margin-bottom: 2px;
+    }
+
+    .tl-name {
+      font-family: 'Sora', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    .tl-sep {
+      color: rgba(255,255,255,0.12);
+      font-size: 16px;
+      line-height: 1;
+      padding: 0 2px;
+    }
+
+    /* ── Total time display ── */
+    .total-time {
+      text-align: center;
+      padding: 8px 0 36px;
+    }
+
+    .total-time span {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'Sora', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 6px 16px;
+    }
+
+    .total-time strong { color: var(--accent); }
+
+    /* ── Footer ── */
+    .site-footer {
+      border-top: 1px solid var(--border);
+      padding-top: 24px;
+      margin-top: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* ── Print Styles ── */
+    @media print {
+      body {
+        background: #fff !important;
+        color: #111 !important;
+        font-size: 11pt;
+      }
+
+      .no-print { display: none !important; }
+
+      .page-wrapper { max-width: 100%; padding: 0 16px; }
+
+      .site-header {
+        border-bottom: 1px solid #ddd;
+        padding: 12px 0 8px;
+        margin-bottom: 16px;
+      }
+
+      .header-title { font-size: 18pt; color: #111; }
+      .logo-text, .section-label, .phase-time-badge, .branch-label,
+      .q-num { color: #FF5A1F !important; }
+
+      .phase-card {
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        margin-bottom: 8px;
+        break-inside: avoid;
+        display: block !important;
+      }
+
+      /* Force all phase details open for print */
+      details.phase-card { display: block; }
+      .phase-body { display: block !important; padding: 8px 14px 14px; border-top: 1px solid #eee; }
+      .phase-summary { padding: 10px 14px; background: #f8f8f8; }
+      .phase-chevron { display: none; }
+
+      .script-block {
+        background: #fff8f5;
+        border-left: 3px solid #FF5A1F;
+        color: #111;
+        padding: 8px 12px;
+        margin: 8px 0;
+        font-size: 10.5pt;
+      }
+
+      .pitch-card, .branch-card {
+        background: #f9f9f9;
+        border: 1px solid #ddd;
+        break-inside: avoid;
+      }
+
+      .pitch-card::before { display: none; }
+
+      .objections-table-wrap { border: 1px solid #ddd; }
+      .objections-table thead tr { background: #f5f5f5; }
+      .objections-table th, .objections-table td { padding: 8px 12px; }
+      .objections-table tbody tr { background: #fff; }
+
+      .email-card {
+        background: #fff;
+        border: 1px solid #ddd;
+        break-inside: avoid;
+      }
+
+      .email-subject-bar { background: #f5f5f5; border: 1px solid #ddd; }
+
+      .notes-form {
+        background: #fff;
+        border: 1px solid #ddd;
+        break-inside: avoid;
+      }
+
+      .form-input, .form-textarea {
+        background: #fff;
+        border: 1px solid #ccc;
+        color: #111;
+      }
+
+      .timeline-bar { display: none; }
+      .total-time { display: none; }
+      .nav-pills { display: none; }
+      .toolbar { display: none; }
+      .site-footer { display: none; }
+      .notes-actions { display: none; }
+      .badge { display: none; }
+
+      .form-grid { grid-template-columns: 1fr 1fr; }
+
+      h2 { page-break-after: avoid; }
+      .q-item { break-inside: avoid; }
+    }
+
+    /* ── Mobile ── */
+    @media (max-width: 640px) {
+      .pitch-grid { grid-template-columns: 1fr; }
+      .branch-grid { grid-template-columns: 1fr; }
+      .email-card, .notes-form { padding: 20px 18px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page-wrapper">
+
+  <!-- ── Site Header ── -->
+  <header class="site-header no-print">
+    <div>
+      <div class="logo-mark">
+        <div class="logo-dot"></div>
+        <span class="logo-text">CWI AI LLC</span>
+      </div>
+      <h1 class="header-title">Discovery Call Companion</h1>
+      <p class="header-meta">Sales reference &nbsp;·&nbsp; Keep to 20–30 min &nbsp;·&nbsp; Lead with their pain, close with a next step</p>
+    </div>
+    <div style="display:flex; gap:8px; align-items:flex-start; padding-top:4px; flex-wrap:wrap;">
+      <span class="badge badge-internal">Internal</span>
+    </div>
+  </header>
+
+  <!-- ── Toolbar ── -->
+  <div class="toolbar no-print">
+    <button class="btn btn-ghost" onclick="window.print()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      Print / Save PDF
+    </button>
+    <button class="btn btn-ghost" onclick="expandAll()">Expand All</button>
+    <button class="btn btn-ghost" onclick="collapseAll()">Collapse All</button>
+  </div>
+
+  <!-- ── Timeline Bar ── -->
+  <div class="timeline-bar no-print" role="navigation" aria-label="Call timeline">
+    <div class="tl-item">
+      <a class="tl-link" href="#phase-prep">
+        <span class="tl-time">2 MIN</span>
+        <span class="tl-name">Prep</span>
+      </a>
+    </div>
+    <span class="tl-sep">›</span>
+    <div class="tl-item">
+      <a class="tl-link" href="#phase-opening">
+        <span class="tl-time">2 MIN</span>
+        <span class="tl-name">Opening</span>
+      </a>
+    </div>
+    <span class="tl-sep">›</span>
+    <div class="tl-item">
+      <a class="tl-link" href="#phase-discovery">
+        <span class="tl-time">10 MIN</span>
+        <span class="tl-name">Discovery</span>
+      </a>
+    </div>
+    <span class="tl-sep">›</span>
+    <div class="tl-item">
+      <a class="tl-link" href="#phase-transition">
+        <span class="tl-time">1 MIN</span>
+        <span class="tl-name">Transition</span>
+      </a>
+    </div>
+    <span class="tl-sep">›</span>
+    <div class="tl-item">
+      <a class="tl-link" href="#phase-presentation">
+        <span class="tl-time">5 MIN</span>
+        <span class="tl-name">Presentation</span>
+      </a>
+    </div>
+    <span class="tl-sep">›</span>
+    <div class="tl-item">
+      <a class="tl-link" href="#phase-pricing">
+        <span class="tl-time">3 MIN</span>
+        <span class="tl-name">Pricing</span>
+      </a>
+    </div>
+    <span class="tl-sep">›</span>
+    <div class="tl-item">
+      <a class="tl-link" href="#phase-close">
+        <span class="tl-time">3 MIN</span>
+        <span class="tl-name">Close</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="total-time no-print">
+    <span>Total call target: <strong>20–25 min</strong> &nbsp;·&nbsp; Always end with a specific next step</span>
+  </div>
+
+  <!-- ── Nav Pills ── -->
+  <nav class="nav-pills no-print" aria-label="Jump to section">
+    <a class="nav-pill" href="#section-script">Call Script</a>
+    <a class="nav-pill" href="#section-objections">Objections</a>
+    <a class="nav-pill" href="#section-email">Follow-Up Email</a>
+    <a class="nav-pill" href="#section-notes">Call Notes</a>
+  </nav>
+
+
+  <!-- ══════════════════════════════════════════
+       SECTION 1 — THE CALL SCRIPT
+  ══════════════════════════════════════════ -->
+  <section class="section" id="section-script">
+    <p class="section-label">Section 1</p>
+    <h2 class="section-title">The Call Script</h2>
+    <p class="section-desc">
+      Work through each phase in order. Expand a section before you enter it. Only move on when they've fully answered — silence is fine.
+    </p>
+
+    <div class="phase-stack">
+
+      <!-- ── PHASE: Before the Call ── -->
+      <details class="phase-card" id="phase-prep" open>
+        <summary class="phase-summary">
+          <span class="phase-time-badge">2 MIN PREP</span>
+          <div class="phase-title-group">
+            <div class="phase-title">Before the Call</div>
+            <div class="phase-subtitle">Do this in the 2 minutes before they pick up</div>
+          </div>
+          <svg class="phase-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <div class="phase-body">
+          <ul class="prep-list">
+            <li>Review their industry and the outreach email they replied to</li>
+            <li>Note their business name, location, and estimated contact volume from Apollo</li>
+            <li>Have your pricing calculator open</li>
+            <li>Have your Calendly link ready</li>
+          </ul>
+        </div>
+      </details>
+
+      <!-- ── PHASE: Opening ── -->
+      <details class="phase-card" id="phase-opening">
+        <summary class="phase-summary">
+          <span class="phase-time-badge">2 MIN</span>
+          <div class="phase-title-group">
+            <div class="phase-title">Opening</div>
+            <div class="phase-subtitle">Set the frame, get them talking</div>
+          </div>
+          <svg class="phase-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <div class="phase-body">
+          <div class="script-block">
+            "Hey [name], thanks for making time. I'll keep this to about 20 minutes — I just want to make sure I understand what's going on in your business before I say anything about what we do. Sound good?"
+          </div>
+          <div class="stage-note"><em>(They say yes)</em></div>
+          <div class="script-block">
+            "Perfect. So tell me — what made you respond to my email? What's going on that caught your attention?"
+          </div>
+          <div class="stage-note"><strong>Listen. Don't interrupt. Let them talk.</strong></div>
+        </div>
+      </details>
+
+      <!-- ── PHASE: Discovery ── -->
+      <details class="phase-card" id="phase-discovery">
+        <summary class="phase-summary">
+          <span class="phase-time-badge">10 MIN</span>
+          <div class="phase-title-group">
+            <div class="phase-title">Discovery Questions</div>
+            <div class="phase-subtitle">Ask all 5 in order — only move on when they've fully answered</div>
+          </div>
+          <svg class="phase-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <div class="phase-body">
+          <div class="q-list">
+
+            <div class="q-item">
+              <div class="q-num">1</div>
+              <div class="q-content">
+                <div class="q-label">Volume &amp; Current Process</div>
+                <div class="script-block">
+                  "How many customer calls or messages are you getting on a typical week — and how are you handling those right now?"
+                </div>
+              </div>
+            </div>
+
+            <div class="q-item">
+              <div class="q-num">2</div>
+              <div class="q-content">
+                <div class="q-label">The Pain</div>
+                <div class="script-block">
+                  "What's the part of that process that's costing you the most time or causing the most headaches?"
+                </div>
+              </div>
+            </div>
+
+            <div class="q-item">
+              <div class="q-num">3</div>
+              <div class="q-content">
+                <div class="q-label">Impact</div>
+                <div class="script-block">
+                  "What does that actually cost you — either in time, missed jobs, or just stress?"
+                </div>
+                <div class="stage-note"><em>(Let them quantify it themselves — their number is more powerful than yours)</em></div>
+              </div>
+            </div>
+
+            <div class="q-item">
+              <div class="q-num">4</div>
+              <div class="q-content">
+                <div class="q-label">Timeline</div>
+                <div class="script-block">
+                  "Is this something you're looking to fix in the next month or two, or more of a 'someday' thing right now?"
+                </div>
+              </div>
+            </div>
+
+            <div class="q-item">
+              <div class="q-num">5</div>
+              <div class="q-content">
+                <div class="q-label">Decision Making</div>
+                <div class="script-block">
+                  "If we put something together that makes sense, is this something you could move on, or are there other people involved in the decision?"
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </details>
+
+      <!-- ── PHASE: Transition ── -->
+      <details class="phase-card" id="phase-transition">
+        <summary class="phase-summary">
+          <span class="phase-time-badge">1 MIN</span>
+          <div class="phase-title-group">
+            <div class="phase-title">Transition</div>
+            <div class="phase-subtitle">Bridge discovery to your solution</div>
+          </div>
+          <svg class="phase-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <div class="phase-body">
+          <div class="script-block">
+            "That's really helpful — thank you. Based on what you just told me, I think I can actually help you with that. Let me show you how."
+          </div>
+        </div>
+      </details>
+
+      <!-- ── PHASE: Presentation ── -->
+      <details class="phase-card" id="phase-presentation">
+        <summary class="phase-summary">
+          <span class="phase-time-badge">5 MIN</span>
+          <div class="phase-title-group">
+            <div class="phase-title">Presentation</div>
+            <div class="phase-subtitle">Tie solution directly to their specific pain — use the industry pitch that fits</div>
+          </div>
+          <svg class="phase-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <div class="phase-body">
+          <div class="script-block">
+            "You mentioned [their specific pain point]. Here's exactly how we solve that…"
+          </div>
+
+          <div style="margin-top: 20px; margin-bottom: 10px;">
+            <div class="q-label" style="font-family:'Sora',sans-serif; font-size:11px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted);">Choose the pitch that fits their industry</div>
+          </div>
+
+          <div class="pitch-grid">
+            <div class="pitch-card">
+              <div class="pitch-industry">Plumbers / HVAC</div>
+              <p class="pitch-script">"We set up an AI assistant on your website that answers calls and messages 24/7 — so when someone calls at 9pm about a leak, they get an instant response and can book a time right then. You wake up with appointments already on your calendar."</p>
+            </div>
+            <div class="pitch-card">
+              <div class="pitch-industry">Dentists</div>
+              <p class="pitch-script">"We set up automated appointment reminders that cut no-shows by 30–50%. Patients get a text and email 48 hours before, with a one-click confirm or reschedule. Most practices recover the cost in the first month from recaptured chair time alone."</p>
+            </div>
+            <div class="pitch-card">
+              <div class="pitch-industry">Accountants</div>
+              <p class="pitch-script">"We automate the repetitive back-and-forth — document requests, appointment scheduling, FAQ answers — so your team spends time on actual accounting instead of inbox management. Most firms save 5–7 hours per person per week."</p>
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <!-- ── PHASE: Pricing ── -->
+      <details class="phase-card" id="phase-pricing">
+        <summary class="phase-summary">
+          <span class="phase-time-badge">3 MIN</span>
+          <div class="phase-title-group">
+            <div class="phase-title">Pricing</div>
+            <div class="phase-subtitle">Run the numbers, pause, let them react</div>
+          </div>
+          <svg class="phase-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <div class="phase-body">
+          <div class="script-block">
+            "Let me run some numbers for your situation specifically."
+          </div>
+          <div class="stage-note"><em>(Open pricing calculator — plug in their numbers)</em></div>
+          <div class="script-block">
+            "Based on what you told me — [X contacts/week], [Y locations], [Z integrations needed] — you'd be looking at around [monthly price] per month, plus a one-time setup fee of [setup fee] to get everything built and tested."
+          </div>
+
+          <div class="pricing-strip">
+            <div class="label">Pause &amp; wait</div>
+            Let them respond first. Do not fill the silence.
+          </div>
+
+          <div style="margin-top: 18px;">
+            <div class="q-label" style="font-family:'Sora',sans-serif; font-size:11px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); margin-bottom:8px;">If they ask "Is that negotiable?"</div>
+            <div class="script-block">
+              "The setup fee covers my build time — that's fixed. The monthly rate is based on your specific setup. If we simplified the scope, it could come down — but what you described sounds like the [Starter/Growth/Pro] package."
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <!-- ── PHASE: Close ── -->
+      <details class="phase-card" id="phase-close">
+        <summary class="phase-summary">
+          <span class="phase-time-badge">3 MIN</span>
+          <div class="phase-title-group">
+            <div class="phase-title">Close</div>
+            <div class="phase-subtitle">Never end without a specific next step</div>
+          </div>
+          <svg class="phase-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <div class="phase-body">
+          <div class="branch-grid">
+
+            <div class="branch-card branch-interested">
+              <div class="branch-label">If They're Interested</div>
+              <div class="script-block">
+                "Here's what I'd suggest: I'll send you a one-page summary of exactly what we'd build, the price, and the timeline. If it makes sense, we sign a simple agreement and I get started within a week. Sound fair?"
+              </div>
+            </div>
+
+            <div class="branch-card branch-hesitant">
+              <div class="branch-label">If They're Hesitant</div>
+              <div class="script-block">
+                "What's the one thing that would need to be true for this to make sense for you?"
+              </div>
+              <div class="stage-note"><em>(Listen. Address the specific objection — don't pitch more.)</em></div>
+            </div>
+
+            <div class="branch-card branch-think">
+              <div class="branch-label">If They Need to Think</div>
+              <div class="script-block">
+                "Totally fine. When specifically would you want to have a decision by?"
+              </div>
+              <div class="stage-note"><em>(Get a date. Schedule a follow-up call before you hang up.)</em></div>
+            </div>
+
+          </div>
+
+          <div style="margin-top: 20px;">
+            <div class="q-label" style="font-family:'Sora',sans-serif; font-size:11px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent); margin-bottom:8px;">Always end with a specific next step</div>
+            <div class="script-block">
+              "So I'll send you the summary today, and we'll talk again on [specific date]. Does [time] work?"
+            </div>
+          </div>
+        </div>
+      </details>
+
+    </div><!-- /phase-stack -->
+  </section>
+
+  <hr class="divider" />
+
+  <!-- ══════════════════════════════════════════
+       SECTION 2 — COMMON OBJECTIONS
+  ══════════════════════════════════════════ -->
+  <section class="section" id="section-objections">
+    <p class="section-label">Section 2</p>
+    <h2 class="section-title">Common Objections</h2>
+    <p class="section-desc">
+      Use the exact responses below. Do not pitch more when they object — address the specific thing they said and move on.
+    </p>
+
+    <div class="objections-table-wrap">
+      <table class="objections-table">
+        <thead>
+          <tr>
+            <th>Objection</th>
+            <th>Response</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="objection-text">"Too expensive"</span></td>
+            <td><span class="response-text">"What would make the price make sense? Let's look at what you'd save — you mentioned [their pain]. What's an hour of your time worth?"</span></td>
+          </tr>
+          <tr>
+            <td><span class="objection-text">"We're not ready yet"</span></td>
+            <td><span class="response-text">"Totally understand. When would be the right time? I'll follow up then — I don't want to waste your time now."</span></td>
+          </tr>
+          <tr>
+            <td><span class="objection-text">"We already tried something like this"</span></td>
+            <td><span class="response-text">"What happened? What didn't work?" <em>(Listen — then address that specific failure point)</em></span></td>
+          </tr>
+          <tr>
+            <td><span class="objection-text">"I need to talk to my partner/wife/boss"</span></td>
+            <td><span class="response-text">"Makes sense. What's your take on it? What do you think they'll say?"</span></td>
+          </tr>
+          <tr>
+            <td><span class="objection-text">"Can you send me more info?"</span></td>
+            <td><span class="response-text">"Sure — what specifically do you want to understand better? I want to make sure I send you what's actually useful."</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- ══════════════════════════════════════════
+       SECTION 3 — AFTER THE CALL / FOLLOW-UP EMAIL
+  ══════════════════════════════════════════ -->
+  <section class="section" id="section-email">
+    <p class="section-label">Section 3</p>
+    <h2 class="section-title">After the Call — Follow-Up Email</h2>
+    <p class="section-desc">
+      Send within 2 hours of hanging up. Fill in every placeholder before sending.
+    </p>
+
+    <div class="email-card">
+
+      <div class="email-subject-bar">
+        <span class="email-label">Subject</span>
+        <span class="email-subject-text">
+          Summary — <span class="email-placeholder">[Their Business Name]</span> AI Setup
+        </span>
+      </div>
+
+      <div class="email-body">
+        <p>Hi <span class="email-placeholder">[name]</span>,</p>
+        <p>Great talking with you. Here's what we discussed:</p>
+
+        <div class="email-section-label">Your Situation</div>
+        <p><span class="email-placeholder">[1 sentence summarizing their pain point]</span></p>
+
+        <div class="email-section-label">What We'd Build</div>
+        <div class="email-bullet"><span class="email-placeholder">[Service 1]</span></div>
+        <div class="email-bullet"><span class="email-placeholder">[Service 2]</span></div>
+
+        <div class="email-section-label">Investment</div>
+        <p>
+          <span class="email-placeholder">[Monthly fee]</span>/month + <span class="email-placeholder">[Setup fee]</span> one-time setup
+        </p>
+
+        <div class="email-section-label">Timeline</div>
+        <p>Live within 2 weeks of kickoff</p>
+
+        <div class="email-section-label">Next Step</div>
+        <p><span class="email-placeholder">[Whatever you agreed on the call]</span></p>
+
+        <div class="email-sig">
+          <strong>Brian Kalsic</strong><br>
+          CWI AI LLC &nbsp;·&nbsp; Southgate, MI<br>
+          <a href="mailto:brian@cwiai.net">brian@cwiai.net</a> &nbsp;·&nbsp; (734) 812-9971<br>
+          <a href="https://cwiai.net" target="_blank" rel="noopener">cwiai.net</a>
+          &nbsp;·&nbsp;
+          <span class="email-placeholder">[Calendly link]</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- ══════════════════════════════════════════
+       SECTION 4 — CALL NOTES (FILLABLE FORM)
+  ══════════════════════════════════════════ -->
+  <section class="section" id="section-notes">
+    <p class="section-label">Section 4</p>
+    <h2 class="section-title">Call Notes</h2>
+    <p class="section-desc">
+      Fill in during or immediately after every call. Data saves automatically to your browser. Use "Copy Notes" to paste into email or CRM.
+    </p>
+
+    <div class="notes-form">
+      <div class="notes-header">
+        <div class="notes-title">Call Notes — <span id="notes-client-display">New Call</span></div>
+        <div class="notes-actions">
+          <span class="copy-feedback" id="copy-feedback">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Copied!
+          </span>
+          <button class="btn btn-primary" onclick="copyNotes()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy Notes
+          </button>
+          <button class="btn btn-ghost" onclick="clearNotes()">Clear</button>
+        </div>
+      </div>
+
+      <div class="form-grid" id="call-notes-form">
+
+        <div class="form-group">
+          <label class="form-label" for="n-date">Date</label>
+          <input class="form-input" type="date" id="n-date" data-key="n-date" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="n-client">Client Name</label>
+          <input class="form-input" type="text" id="n-client" data-key="n-client" placeholder="First Last" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="n-business">Business</label>
+          <input class="form-input" type="text" id="n-business" data-key="n-business" placeholder="Business name" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="n-industry">Industry</label>
+          <input class="form-input" type="text" id="n-industry" data-key="n-industry" placeholder="e.g. Plumber, Dentist, Accountant" />
+        </div>
+
+        <div class="form-group full">
+          <label class="form-label" for="n-pain">Pain Point (in their words)</label>
+          <textarea class="form-textarea" id="n-pain" data-key="n-pain" placeholder="Quote them directly if possible…"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="n-volume">Monthly Contact Volume</label>
+          <input class="form-input" type="text" id="n-volume" data-key="n-volume" placeholder="e.g. ~80 calls/week" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="n-process">Current Process</label>
+          <input class="form-input" type="text" id="n-process" data-key="n-process" placeholder="How are they handling it now?" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="n-timeline">Timeline</label>
+          <input class="form-input" type="text" id="n-timeline" data-key="n-timeline" placeholder="Next month / Someday / Specific date" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="n-dm-who">Decision Maker?</label>
+          <div class="dm-row">
+            <div class="dm-toggle">
+              <button type="button" class="dm-btn" id="dm-yes" onclick="setDM('yes')">Yes</button>
+              <button type="button" class="dm-btn" id="dm-no" onclick="setDM('no')">No</button>
+            </div>
+            <input class="form-input" type="text" id="n-dm-who" data-key="n-dm-who" placeholder="Who else?" style="flex:1; min-width:0;" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="n-price">Price Quoted</label>
+          <input class="form-input" type="text" id="n-price" data-key="n-price" placeholder="e.g. $497/mo" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="n-setup">Setup Fee Quoted</label>
+          <input class="form-input" type="text" id="n-setup" data-key="n-setup" placeholder="e.g. $800 one-time" />
+        </div>
+
+        <div class="form-group full">
+          <label class="form-label" for="n-objections">Objections Raised</label>
+          <textarea class="form-textarea" id="n-objections" data-key="n-objections" placeholder="List any objections they brought up and how you responded…"></textarea>
+        </div>
+
+        <div class="form-group full">
+          <label class="form-label" for="n-nextstep">Next Step Agreed</label>
+          <input class="form-input" type="text" id="n-nextstep" data-key="n-nextstep" placeholder="e.g. Brian sends summary email, follow-up call Thursday 2pm" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="n-followup">Follow-Up Date</label>
+          <input class="form-input" type="date" id="n-followup" data-key="n-followup" />
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Footer ── -->
+  <footer class="site-footer no-print">
+    <span>CWI AI LLC &nbsp;·&nbsp; Discovery Call Companion &nbsp;·&nbsp; June 2026</span>
+    <span>Brian Kalsic &nbsp;·&nbsp; <a href="mailto:brian@cwiai.net">brian@cwiai.net</a> &nbsp;·&nbsp; (734) 812-9971</span>
+  </footer>
+
+</div><!-- /page-wrapper -->
+
+<script>
+  /* ── localStorage persistence ── */
+  const STORAGE_KEY = 'cwi-call-notes-v1';
+  const DM_KEY      = 'cwi-call-dm-v1';
+
+  function loadNotes() {
+    try {
+      const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+      document.querySelectorAll('[data-key]').forEach(function(el) {
+        const v = data[el.dataset.key];
+        if (v !== undefined) el.value = v;
+      });
+      const dm = localStorage.getItem(DM_KEY);
+      if (dm) setDM(dm, true);
+      updateClientDisplay();
+    } catch (e) {}
+  }
+
+  function saveNotes() {
+    try {
+      const data = {};
+      document.querySelectorAll('[data-key]').forEach(function(el) {
+        data[el.dataset.key] = el.value;
+      });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch (e) {}
+    updateClientDisplay();
+  }
+
+  function updateClientDisplay() {
+    const client   = document.getElementById('n-client').value.trim();
+    const business = document.getElementById('n-business').value.trim();
+    const display  = document.getElementById('notes-client-display');
+    if (client && business)  { display.textContent = client + ' · ' + business; }
+    else if (client)         { display.textContent = client; }
+    else if (business)       { display.textContent = business; }
+    else                     { display.textContent = 'New Call'; }
+  }
+
+  document.querySelectorAll('[data-key]').forEach(function(el) {
+    el.addEventListener('input', saveNotes);
+    el.addEventListener('change', saveNotes);
+  });
+
+  loadNotes();
+
+  /* ── Decision maker toggle ── */
+  let dmValue = '';
+
+  function setDM(val, suppressSave) {
+    dmValue = val;
+    document.getElementById('dm-yes').classList.toggle('active', val === 'yes');
+    document.getElementById('dm-no').classList.toggle('active', val === 'no');
+    if (!suppressSave) {
+      localStorage.setItem(DM_KEY, val);
+    }
+  }
+
+  /* ── Copy Notes ── */
+  function copyNotes() {
+    const date     = document.getElementById('n-date').value;
+    const client   = document.getElementById('n-client').value;
+    const business = document.getElementById('n-business').value;
+    const industry = document.getElementById('n-industry').value;
+    const pain     = document.getElementById('n-pain').value;
+    const volume   = document.getElementById('n-volume').value;
+    const process  = document.getElementById('n-process').value;
+    const timeline = document.getElementById('n-timeline').value;
+    const dm       = dmValue ? (dmValue === 'yes' ? 'Yes' : 'No') : '';
+    const dmWho    = document.getElementById('n-dm-who').value;
+    const price    = document.getElementById('n-price').value;
+    const setup    = document.getElementById('n-setup').value;
+    const objs     = document.getElementById('n-objections').value;
+    const next     = document.getElementById('n-nextstep').value;
+    const followup = document.getElementById('n-followup').value;
+
+    const dmLine = dm ? dm + (dmWho ? ' — ' + dmWho : '') : '';
+
+    const text = [
+      '=== CWI AI — CALL NOTES ===',
+      '',
+      'Date:                  ' + date,
+      'Client name:           ' + client,
+      'Business:              ' + business,
+      'Industry:              ' + industry,
+      '',
+      'Pain point (their words):',
+      pain,
+      '',
+      'Monthly contact volume: ' + volume,
+      'Current process:        ' + process,
+      'Timeline:               ' + timeline,
+      'Decision maker:         ' + dmLine,
+      '',
+      'Price quoted:           ' + price,
+      'Setup fee quoted:       ' + setup,
+      '',
+      'Objections raised:',
+      objs,
+      '',
+      'Next step agreed:       ' + next,
+      'Follow-up date:         ' + followup,
+      '',
+      '==========================='
+    ].join('\n');
+
+    navigator.clipboard.writeText(text).then(function() {
+      const fb = document.getElementById('copy-feedback');
+      fb.classList.add('visible');
+      setTimeout(function() { fb.classList.remove('visible'); }, 2500);
+    }).catch(function() {
+      // Fallback for older browsers
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity  = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      const fb = document.getElementById('copy-feedback');
+      fb.classList.add('visible');
+      setTimeout(function() { fb.classList.remove('visible'); }, 2500);
+    });
+  }
+
+  /* ── Clear Notes ── */
+  function clearNotes() {
+    if (!confirm('Clear all call notes? This cannot be undone.')) return;
+    document.querySelectorAll('[data-key]').forEach(function(el) { el.value = ''; });
+    dmValue = '';
+    document.getElementById('dm-yes').classList.remove('active');
+    document.getElementById('dm-no').classList.remove('active');
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(DM_KEY);
+    updateClientDisplay();
+  }
+
+  /* ── Expand / Collapse all phases ── */
+  function expandAll() {
+    document.querySelectorAll('details.phase-card').forEach(function(d) { d.open = true; });
+  }
+
+  function collapseAll() {
+    document.querySelectorAll('details.phase-card').forEach(function(d) { d.open = false; });
+  }
+
+  /* ── Set today's date as default if empty ── */
+  (function() {
+    const dateEl = document.getElementById('n-date');
+    if (!dateEl.value) {
+      const today = new Date();
+      const y = today.getFullYear();
+      const m = String(today.getMonth() + 1).padStart(2, '0');
+      const d = String(today.getDate()).padStart(2, '0');
+      dateEl.value = y + '-' + m + '-' + d;
+      saveNotes();
+    }
+  })();
+</script>
+
+</body>
+</html>

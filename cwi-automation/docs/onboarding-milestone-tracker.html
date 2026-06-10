@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CWI AI — Onboarding Milestone Tracker</title>
+  <meta name="description" content="CWI internal tool: CWI AI — Onboarding Milestone Tracker. Internal use only — CWI Compute With Imagination.">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #0A0A0C;
+      --surface:     #13131A;
+      --surface2:    #1C1C26;
+      --border:      #2A2A3A;
+      --accent:      #FF5A1F;
+      --accent-dim:  #FF5A1F22;
+      --text:        #E8E8F0;
+      --muted:       #7A7A9A;
+      --green:       #22C55E;
+      --green-dim:   #22C55E18;
+      --yellow:      #FACC15;
+      --yellow-dim:  #FACC1518;
+      --red:         #EF4444;
+      --red-dim:     #EF444418;
+      --radius:      12px;
+      --radius-sm:   8px;
+    }
+
+    body {
+      font-family: 'Sora', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── TOP BAR ── */
+    .topbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 32px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .topbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: .3px;
+    }
+    .topbar-brand .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* ── MAIN ── */
+    .main {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 32px 24px 80px;
+    }
+
+    /* ── PAGE HEADER ── */
+    .page-header {
+      margin-bottom: 28px;
+    }
+    .page-header h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .page-header p {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* ── CLIENT SELECTOR ── */
+    .client-bar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .client-bar label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      white-space: nowrap;
+    }
+    .client-bar select {
+      flex: 1;
+      min-width: 200px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: 'Sora', sans-serif;
+      font-size: 14px;
+      padding: 8px 12px;
+      cursor: pointer;
+      outline: none;
+    }
+    .client-bar select:focus {
+      border-color: var(--accent);
+    }
+
+    /* ── BUTTONS ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      font-family: 'Sora', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: opacity .15s, transform .1s;
+      white-space: nowrap;
+    }
+    .btn:hover { opacity: .88; }
+    .btn:active { transform: scale(.97); }
+    .btn-accent {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-ghost {
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-danger {
+      background: var(--red-dim);
+      color: var(--red);
+      border: 1px solid #EF444430;
+    }
+
+    /* ── STATS ROW ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+    }
+    .stat-card .stat-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      margin-bottom: 6px;
+    }
+    .stat-card .stat-value {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .stat-card .stat-sub {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    /* ── PROGRESS BAR ── */
+    .progress-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      margin-bottom: 24px;
+    }
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .progress-header span {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .progress-header .pct {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .progress-track {
+      height: 10px;
+      background: var(--surface2);
+      border-radius: 99px;
+      overflow: hidden;
+      position: relative;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent) 0%, #FF8A50 100%);
+      border-radius: 99px;
+      transition: width .5s ease;
+    }
+    .progress-legend {
+      display: flex;
+      gap: 16px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .legend-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+    }
+
+    /* ── TIMELINE ── */
+    .timeline {
+      position: relative;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 30px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--border);
+    }
+
+    .milestone-card {
+      position: relative;
+      margin-left: 60px;
+      margin-bottom: 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      transition: border-color .2s;
+    }
+    .milestone-card.status-done-ontime {
+      border-left: 3px solid var(--green);
+      background: linear-gradient(135deg, var(--green-dim) 0%, var(--surface) 60%);
+    }
+    .milestone-card.status-done-late {
+      border-left: 3px solid var(--yellow);
+      background: linear-gradient(135deg, var(--yellow-dim) 0%, var(--surface) 60%);
+    }
+    .milestone-card.status-overdue {
+      border-left: 3px solid var(--red);
+      background: linear-gradient(135deg, var(--red-dim) 0%, var(--surface) 60%);
+    }
+    .milestone-card.status-pending {
+      border-left: 3px solid var(--border);
+    }
+
+    /* Node on timeline */
+    .timeline-node {
+      position: absolute;
+      left: -44px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--surface2);
+      border: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+      transition: all .2s;
+      z-index: 1;
+    }
+    .milestone-card.status-done-ontime .timeline-node {
+      background: var(--green-dim);
+      border-color: var(--green);
+      color: var(--green);
+    }
+    .milestone-card.status-done-late .timeline-node {
+      background: var(--yellow-dim);
+      border-color: var(--yellow);
+      color: var(--yellow);
+    }
+    .milestone-card.status-overdue .timeline-node {
+      background: var(--red-dim);
+      border-color: var(--red);
+      color: var(--red);
+    }
+
+    .milestone-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .milestone-checkbox {
+      width: 20px;
+      height: 20px;
+      border-radius: 5px;
+      border: 2px solid var(--border);
+      background: var(--surface2);
+      cursor: pointer;
+      flex-shrink: 0;
+      appearance: none;
+      -webkit-appearance: none;
+      position: relative;
+      margin-top: 2px;
+      transition: all .15s;
+    }
+    .milestone-checkbox:checked {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+    .milestone-checkbox:checked::after {
+      content: '✓';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 12px;
+      color: #fff;
+      font-weight: 700;
+    }
+    .milestone-info {
+      flex: 1;
+    }
+    .milestone-title-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 6px;
+    }
+    .milestone-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .milestone-day-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 99px;
+      background: var(--accent-dim);
+      color: var(--accent);
+      border: 1px solid #FF5A1F30;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+    }
+    .milestone-status-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 99px;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+    }
+    .badge-ontime { background: var(--green-dim); color: var(--green); border: 1px solid #22C55E30; }
+    .badge-late   { background: var(--yellow-dim); color: var(--yellow); border: 1px solid #FACC1530; }
+    .badge-overdue{ background: var(--red-dim); color: var(--red); border: 1px solid #EF444430; }
+    .badge-pending{ background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
+
+    .milestone-fields {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .field-group label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+    .field-group input[type="date"],
+    .field-group input[type="text"],
+    .field-group textarea {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: 'Sora', sans-serif;
+      font-size: 13px;
+      padding: 6px 10px;
+      outline: none;
+      transition: border-color .15s;
+    }
+    .field-group input[type="date"]:focus,
+    .field-group input[type="text"]:focus,
+    .field-group textarea:focus {
+      border-color: var(--accent);
+    }
+    .field-group input[type="date"] { min-width: 150px; }
+    .field-group textarea {
+      min-width: 300px;
+      resize: vertical;
+      min-height: 56px;
+    }
+
+    /* ── MODAL ── */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      padding: 20px;
+    }
+    .modal-backdrop.hidden { display: none; }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 28px 24px;
+      width: 100%;
+      max-width: 420px;
+    }
+    .modal h2 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 18px;
+      color: var(--text);
+    }
+    .modal-field {
+      margin-bottom: 14px;
+    }
+    .modal-field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-bottom: 6px;
+    }
+    .modal-field input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: 'Sora', sans-serif;
+      font-size: 14px;
+      padding: 9px 12px;
+      outline: none;
+    }
+    .modal-field input:focus { border-color: var(--accent); }
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 20px;
+    }
+
+    /* ── EMPTY STATE ── */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+    }
+    .empty-state .empty-icon { font-size: 40px; margin-bottom: 14px; }
+    .empty-state h3 { font-size: 17px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+    .empty-state p { font-size: 13px; }
+
+    /* ── PRINT ── */
+    @media print {
+      .topbar, .client-bar, .no-print { display: none !important; }
+      body { background: #fff; color: #111; }
+      .main { max-width: 100%; padding: 20px; }
+      .milestone-card {
+        background: #f9f9f9 !important;
+        border: 1px solid #ccc !important;
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+      .timeline::before { background: #ccc; }
+      .stat-card { background: #f0f0f0 !important; border: 1px solid #ccc !important; }
+      .progress-section { background: #f0f0f0 !important; border: 1px solid #ccc !important; }
+      .progress-track { background: #ddd !important; }
+      .field-group input, .field-group textarea {
+        background: #fff !important;
+        border: 1px solid #bbb !important;
+        color: #111 !important;
+      }
+      .milestone-title, .stat-card .stat-value, .stat-card .stat-label,
+      .progress-header span, .field-group label { color: #111 !important; }
+      .stat-card .stat-sub, .legend-item { color: #555 !important; }
+      .milestone-day-badge { color: #c44 !important; }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .milestone-card { animation: fadeIn .25s ease both; }
+  </style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-brand">
+    <div class="dot"></div>
+    CWI AI — Onboarding Milestone Tracker
+  </div>
+  <div class="topbar-right no-print">
+    <button class="btn btn-ghost" onclick="printTimeline()">&#128438; Print Timeline</button>
+    <button class="btn btn-accent" onclick="openAddClientModal()">+ Add Client</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <h1>First 30 Days Milestone Tracker</h1>
+    <p>Track onboarding progress for each client across 12 key milestones.</p>
+  </div>
+
+  <!-- CLIENT SELECTOR -->
+  <div class="client-bar no-print">
+    <label for="clientSelect">Client</label>
+    <select id="clientSelect" onchange="loadClient(this.value)">
+      <option value="">— Select a client —</option>
+    </select>
+    <button class="btn btn-danger" id="deleteClientBtn" onclick="deleteClient()" style="display:none;">&#128465; Delete Client</button>
+  </div>
+
+  <!-- CONTENT AREA -->
+  <div id="contentArea">
+    <div class="empty-state">
+      <div class="empty-icon">&#128203;</div>
+      <h3>No client selected</h3>
+      <p>Select a client from the dropdown or add a new one to begin tracking milestones.</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- ADD CLIENT MODAL -->
+<div class="modal-backdrop hidden" id="addClientModal">
+  <div class="modal">
+    <h2>Add New Client</h2>
+    <div class="modal-field">
+      <label for="newClientName">Client Name</label>
+      <input type="text" id="newClientName" placeholder="e.g. Acme Dental" onkeydown="if(event.key==='Enter')confirmAddClient()" />
+    </div>
+    <div class="modal-field">
+      <label for="newClientStartDate">Agreement Start Date (Day 0)</label>
+      <input type="date" id="newClientStartDate" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeAddClientModal()">Cancel</button>
+      <button class="btn btn-accent" onclick="confirmAddClient()">Add Client</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── MILESTONE DEFINITIONS ──────────────────────────────────────────────────
+const MILESTONES = [
+  { id: 'm01', day: 0,  title: 'Agreement signed' },
+  { id: 'm02', day: 0,  title: 'Setup fee paid' },
+  { id: 'm03', day: 1,  title: 'new-client.ps1 run, folder created' },
+  { id: 'm04', day: 1,  title: '.env credentials collected and filled' },
+  { id: 'm05', day: 2,  title: 'Make scenarios imported and active' },
+  { id: 'm06', day: 2,  title: 'Webhooks registered and tested' },
+  { id: 'm07', day: 3,  title: 'Freshchat bot deployed on client site' },
+  { id: 'm08', day: 3,  title: 'Test booking completed end-to-end' },
+  { id: 'm09', day: 5,  title: 'First automated email confirmed delivered' },
+  { id: 'm10', day: 7,  title: '7-day check-in call completed' },
+  { id: 'm11', day: 14, title: 'First monthly report reviewed with client' },
+  { id: 'm12', day: 30, title: '30-day results review + upsell conversation' },
+];
+
+// ── LOCAL STORAGE HELPERS ─────────────────────────────────────────────────
+const LS_KEY = 'cwi_onboarding_tracker_v2';
+
+function loadStore() {
+  try { return JSON.parse(localStorage.getItem(LS_KEY)) || { clients: {}, selectedClient: '' }; }
+  catch { return { clients: {}, selectedClient: '' }; }
+}
+
+function saveStore(store) {
+  localStorage.setItem(LS_KEY, JSON.stringify(store));
+}
+
+function blankMilestones() {
+  const obj = {};
+  MILESTONES.forEach(m => {
+    obj[m.id] = { done: false, completedDate: '', notes: '' };
+  });
+  return obj;
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+let store = loadStore();
+
+function init() {
+  rebuildClientSelect();
+  if (store.selectedClient && store.clients[store.selectedClient]) {
+    document.getElementById('clientSelect').value = store.selectedClient;
+    renderContent(store.selectedClient);
+    document.getElementById('deleteClientBtn').style.display = '';
+  }
+}
+
+// ── CLIENT SELECT ─────────────────────────────────────────────────────────
+function rebuildClientSelect() {
+  const sel = document.getElementById('clientSelect');
+  const current = sel.value;
+  sel.innerHTML = '<option value="">— Select a client —</option>';
+  const names = Object.keys(store.clients).sort((a, b) => a.localeCompare(b));
+  names.forEach(name => {
+    const opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = name;
+    sel.appendChild(opt);
+  });
+  if (current && store.clients[current]) sel.value = current;
+}
+
+function loadClient(name) {
+  store.selectedClient = name;
+  saveStore(store);
+  document.getElementById('deleteClientBtn').style.display = name ? '' : 'none';
+  if (name) {
+    renderContent(name);
+  } else {
+    document.getElementById('contentArea').innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">&#128203;</div>
+        <h3>No client selected</h3>
+        <p>Select a client from the dropdown or add a new one to begin tracking milestones.</p>
+      </div>`;
+  }
+}
+
+// ── ADD CLIENT ────────────────────────────────────────────────────────────
+function openAddClientModal() {
+  document.getElementById('newClientName').value = '';
+  document.getElementById('newClientStartDate').value = todayStr();
+  document.getElementById('addClientModal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('newClientName').focus(), 50);
+}
+
+function closeAddClientModal() {
+  document.getElementById('addClientModal').classList.add('hidden');
+}
+
+function confirmAddClient() {
+  const name = document.getElementById('newClientName').value.trim();
+  const startDate = document.getElementById('newClientStartDate').value;
+  if (!name) { document.getElementById('newClientName').focus(); return; }
+  if (store.clients[name]) { alert('A client with that name already exists.'); return; }
+  store.clients[name] = {
+    startDate: startDate || todayStr(),
+    milestones: blankMilestones(),
+  };
+  store.selectedClient = name;
+  saveStore(store);
+  closeAddClientModal();
+  rebuildClientSelect();
+  document.getElementById('clientSelect').value = name;
+  document.getElementById('deleteClientBtn').style.display = '';
+  renderContent(name);
+}
+
+// ── DELETE CLIENT ─────────────────────────────────────────────────────────
+function deleteClient() {
+  const name = store.selectedClient;
+  if (!name) return;
+  if (!confirm(`Delete all data for "${name}"? This cannot be undone.`)) return;
+  delete store.clients[name];
+  store.selectedClient = '';
+  saveStore(store);
+  rebuildClientSelect();
+  document.getElementById('clientSelect').value = '';
+  document.getElementById('deleteClientBtn').style.display = 'none';
+  loadClient('');
+}
+
+// ── RENDER CONTENT ────────────────────────────────────────────────────────
+function renderContent(clientName) {
+  const client = store.clients[clientName];
+  if (!client) return;
+
+  const startDate = new Date(client.startDate + 'T00:00:00');
+  const today = new Date(todayStr() + 'T00:00:00');
+  const elapsed = Math.max(0, Math.floor((today - startDate) / 86400000));
+  const daysLeft = Math.max(0, 30 - elapsed);
+
+  // Compute status for each milestone
+  const statuses = computeStatuses(client, startDate, today);
+
+  const done = statuses.filter(s => s.status === 'done-ontime' || s.status === 'done-late').length;
+  const overdue = statuses.filter(s => s.status === 'overdue').length;
+  const pct = Math.round((done / MILESTONES.length) * 100);
+
+  let html = `
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Days Elapsed</div>
+        <div class="stat-value">${elapsed}</div>
+        <div class="stat-sub">of 30 days</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Days Remaining</div>
+        <div class="stat-value">${daysLeft}</div>
+        <div class="stat-sub">${daysLeft === 0 ? 'Period complete' : 'until Day 30'}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Milestones Done</div>
+        <div class="stat-value">${done}</div>
+        <div class="stat-sub">of ${MILESTONES.length}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Overdue</div>
+        <div class="stat-value" style="color:${overdue > 0 ? 'var(--red)' : 'var(--green)'}">${overdue}</div>
+        <div class="stat-sub">not yet done</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Start Date</div>
+        <div class="stat-value" style="font-size:15px;padding-top:4px;">${formatDate(client.startDate)}</div>
+        <div class="stat-sub">Day 0</div>
+      </div>
+    </div>
+
+    <div class="progress-section">
+      <div class="progress-header">
+        <span>Overall Progress</span>
+        <span class="pct">${pct}%</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progressFill" style="width:${pct}%"></div>
+      </div>
+      <div class="progress-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Done on time</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--yellow)"></div>Done late</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div>Overdue</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--border)"></div>Pending</div>
+      </div>
+    </div>
+
+    <div class="timeline">`;
+
+  statuses.forEach((s, i) => {
+    const m = MILESTONES[i];
+    const data = client.milestones[m.id];
+    const statusClass = `status-${s.status}`;
+    const badgeClass = s.status === 'done-ontime' ? 'badge-ontime'
+                     : s.status === 'done-late'   ? 'badge-late'
+                     : s.status === 'overdue'     ? 'badge-overdue'
+                     : 'badge-pending';
+    const badgeLabel = s.status === 'done-ontime' ? 'On Time'
+                     : s.status === 'done-late'   ? 'Late'
+                     : s.status === 'overdue'     ? 'Overdue'
+                     : 'Pending';
+    const nodeSymbol = s.status === 'done-ontime' ? '&#10003;'
+                     : s.status === 'done-late'   ? '&#10003;'
+                     : s.status === 'overdue'     ? '!'
+                     : `${m.day}`;
+
+    html += `
+      <div class="milestone-card ${statusClass}" id="card_${m.id}" style="animation-delay:${i * 0.04}s">
+        <div class="timeline-node">${nodeSymbol}</div>
+        <div class="milestone-top">
+          <input type="checkbox" class="milestone-checkbox" id="chk_${m.id}"
+            ${data.done ? 'checked' : ''}
+            onchange="onCheckChange('${clientName}','${m.id}',this)" />
+          <div class="milestone-info">
+            <div class="milestone-title-row">
+              <span class="milestone-title">${m.title}</span>
+              <span class="milestone-day-badge">Day ${m.day}</span>
+              <span class="milestone-status-badge ${badgeClass}">${badgeLabel}</span>
+            </div>
+            <div class="milestone-fields">
+              <div class="field-group">
+                <label for="date_${m.id}">Completion Date</label>
+                <input type="date" id="date_${m.id}"
+                  value="${data.completedDate || ''}"
+                  onchange="onDateChange('${clientName}','${m.id}',this)" />
+              </div>
+              <div class="field-group">
+                <label for="notes_${m.id}">Notes</label>
+                <textarea id="notes_${m.id}"
+                  placeholder="Add notes..."
+                  onchange="onNotesChange('${clientName}','${m.id}',this)"
+                  oninput="onNotesChange('${clientName}','${m.id}',this)">${escHtml(data.notes || '')}</textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  });
+
+  html += `</div>`;
+  document.getElementById('contentArea').innerHTML = html;
+}
+
+// ── STATUS COMPUTATION ────────────────────────────────────────────────────
+function computeStatuses(client, startDate, today) {
+  return MILESTONES.map(m => {
+    const data = client.milestones[m.id];
+    const dueDate = addDays(startDate, m.day);
+
+    if (data.done) {
+      const completedDate = data.completedDate
+        ? new Date(data.completedDate + 'T00:00:00')
+        : today;
+      const status = completedDate <= dueDate ? 'done-ontime' : 'done-late';
+      return { status };
+    } else {
+      const status = today > dueDate ? 'overdue' : 'pending';
+      return { status };
+    }
+  });
+}
+
+// ── CHANGE HANDLERS ───────────────────────────────────────────────────────
+function onCheckChange(clientName, milestoneId, checkbox) {
+  const client = store.clients[clientName];
+  if (!client) return;
+  const data = client.milestones[milestoneId];
+  data.done = checkbox.checked;
+  if (checkbox.checked && !data.completedDate) {
+    data.completedDate = todayStr();
+    const dateInput = document.getElementById('date_' + milestoneId);
+    if (dateInput) dateInput.value = data.completedDate;
+  }
+  if (!checkbox.checked) {
+    data.completedDate = '';
+    const dateInput = document.getElementById('date_' + milestoneId);
+    if (dateInput) dateInput.value = '';
+  }
+  saveStore(store);
+  refreshCard(clientName, milestoneId);
+  refreshStats(clientName);
+}
+
+function onDateChange(clientName, milestoneId, input) {
+  const client = store.clients[clientName];
+  if (!client) return;
+  client.milestones[milestoneId].completedDate = input.value;
+  saveStore(store);
+  refreshCard(clientName, milestoneId);
+  refreshStats(clientName);
+}
+
+function onNotesChange(clientName, milestoneId, textarea) {
+  const client = store.clients[clientName];
+  if (!client) return;
+  client.milestones[milestoneId].notes = textarea.value;
+  saveStore(store);
+}
+
+// ── PARTIAL REFRESH ───────────────────────────────────────────────────────
+function refreshCard(clientName, milestoneId) {
+  const client = store.clients[clientName];
+  if (!client) return;
+  const startDate = new Date(client.startDate + 'T00:00:00');
+  const today = new Date(todayStr() + 'T00:00:00');
+  const mIdx = MILESTONES.findIndex(m => m.id === milestoneId);
+  const m = MILESTONES[mIdx];
+  const data = client.milestones[m.id];
+  const statuses = computeStatuses(client, startDate, today);
+  const s = statuses[mIdx];
+
+  const card = document.getElementById('card_' + m.id);
+  if (!card) return;
+
+  // Update status class
+  card.className = `milestone-card status-${s.status}`;
+
+  // Update node symbol
+  const node = card.querySelector('.timeline-node');
+  const nodeSymbol = s.status === 'done-ontime' ? '&#10003;'
+                   : s.status === 'done-late'   ? '&#10003;'
+                   : s.status === 'overdue'     ? '!'
+                   : `${m.day}`;
+  node.innerHTML = nodeSymbol;
+
+  // Update badge
+  const badge = card.querySelector('.milestone-status-badge');
+  if (badge) {
+    const badgeClass = s.status === 'done-ontime' ? 'badge-ontime'
+                     : s.status === 'done-late'   ? 'badge-late'
+                     : s.status === 'overdue'     ? 'badge-overdue'
+                     : 'badge-pending';
+    const badgeLabel = s.status === 'done-ontime' ? 'On Time'
+                     : s.status === 'done-late'   ? 'Late'
+                     : s.status === 'overdue'     ? 'Overdue'
+                     : 'Pending';
+    badge.className = `milestone-status-badge ${badgeClass}`;
+    badge.textContent = badgeLabel;
+  }
+}
+
+function refreshStats(clientName) {
+  const client = store.clients[clientName];
+  if (!client) return;
+  const startDate = new Date(client.startDate + 'T00:00:00');
+  const today = new Date(todayStr() + 'T00:00:00');
+  const elapsed = Math.max(0, Math.floor((today - startDate) / 86400000));
+  const statuses = computeStatuses(client, startDate, today);
+  const done = statuses.filter(s => s.status === 'done-ontime' || s.status === 'done-late').length;
+  const overdue = statuses.filter(s => s.status === 'overdue').length;
+  const pct = Math.round((done / MILESTONES.length) * 100);
+
+  const fill = document.getElementById('progressFill');
+  if (fill) fill.style.width = pct + '%';
+
+  const pctEl = document.querySelector('.pct');
+  if (pctEl) pctEl.textContent = pct + '%';
+
+  // Update stat cards
+  const statCards = document.querySelectorAll('.stat-card');
+  if (statCards.length >= 4) {
+    statCards[0].querySelector('.stat-value').textContent = elapsed;
+    statCards[2].querySelector('.stat-value').textContent = done;
+    const overdueEl = statCards[3].querySelector('.stat-value');
+    overdueEl.textContent = overdue;
+    overdueEl.style.color = overdue > 0 ? 'var(--red)' : 'var(--green)';
+  }
+}
+
+// ── PRINT ─────────────────────────────────────────────────────────────────
+function printTimeline() {
+  window.print();
+}
+
+// ── UTILITIES ─────────────────────────────────────────────────────────────
+function todayStr() {
+  const d = new Date();
+  return d.getFullYear() + '-' +
+    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+    String(d.getDate()).padStart(2, '0');
+}
+
+function addDays(date, days) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + days);
+  return d;
+}
+
+function formatDate(str) {
+  if (!str) return '—';
+  const [y, m, d] = str.split('-');
+  return `${m}/${d}/${y}`;
+}
+
+function escHtml(str) {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// ── BOOT ──────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>

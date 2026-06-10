@@ -1,0 +1,1587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="CWI internal tool: CWI AI LLC — Support Playbook. Internal use only — CWI Compute With Imagination.">
+  <title>CWI AI LLC — Support Playbook</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Reset & Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0A0A0C;
+      --surface:  #141418;
+      --surface2: #1C1C22;
+      --text:     #F4F4F6;
+      --muted:    #8888A0;
+      --accent:   #FF5A1F;
+      --accent-hover: #FF7A45;
+      --p1:       #EF4444;
+      --p2:       #F97316;
+      --p3:       #EAB308;
+      --p4:       #22C55E;
+      --border:   rgba(244,244,246,0.08);
+      --radius:   10px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Instrument Sans', sans-serif;
+      font-size: 15px;
+      line-height: 1.65;
+      min-height: 100vh;
+    }
+
+    h1, h2, h3, h4, h5 {
+      font-family: 'Sora', sans-serif;
+      font-weight: 600;
+      line-height: 1.25;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { color: var(--accent-hover); text-decoration: underline; }
+
+    /* ── Layout ── */
+    .page-wrapper {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+    }
+
+    /* ── Header ── */
+    .site-header {
+      border-bottom: 1px solid var(--border);
+      padding: 36px 0 28px;
+      margin-bottom: 48px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .logo-mark {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+
+    .logo-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .logo-text {
+      font-family: 'Sora', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .header-title {
+      font-size: clamp(1.5rem, 4vw, 2.25rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-top: 4px;
+    }
+
+    .header-meta {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .badge-internal { background: rgba(255,90,31,0.15); color: var(--accent); border: 1px solid rgba(255,90,31,0.3); }
+    .badge-client   { background: rgba(34,197,94,0.12); color: #4ade80;      border: 1px solid rgba(34,197,94,0.3); }
+
+    /* ── Section Wrappers ── */
+    .section { margin-bottom: 56px; }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+
+    .section-title {
+      font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin-bottom: 6px;
+    }
+
+    .section-desc {
+      color: var(--muted);
+      max-width: 680px;
+      margin-bottom: 28px;
+      font-size: 14px;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 48px 0;
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+
+    /* ── Tier Grid ── */
+    .tier-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .tier-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .tier-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+    }
+
+    .tier-card.t0::before { background: var(--p4); }
+    .tier-card.t1::before { background: var(--p3); }
+    .tier-card.t2::before { background: var(--accent); }
+
+    .tier-number {
+      font-family: 'Sora', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .tier-card.t0 .tier-number { color: var(--p4); }
+    .tier-card.t1 .tier-number { color: var(--p3); }
+    .tier-card.t2 .tier-number { color: var(--accent); }
+
+    .tier-name {
+      font-family: 'Sora', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .tier-desc {
+      font-size: 13.5px;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 14px;
+    }
+
+    .tier-examples {
+      list-style: none;
+      font-size: 13px;
+    }
+
+    .tier-examples li {
+      padding: 4px 0;
+      color: var(--text);
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .tier-examples li::before {
+      content: '→';
+      color: var(--muted);
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* ── SLA Table ── */
+    .sla-table-wrap {
+      overflow-x: auto;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+    }
+
+    .sla-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    .sla-table thead tr {
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sla-table th {
+      font-family: 'Sora', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 14px 18px;
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    .sla-table td {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    .sla-table tr:last-child td { border-bottom: none; }
+
+    .sla-table tbody tr { background: var(--surface); transition: background 0.15s; }
+    .sla-table tbody tr:hover { background: var(--surface2); }
+
+    .priority-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'Sora', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+
+    .chip-p1 { background: rgba(239,68,68,0.15);  color: #fca5a5; border: 1px solid rgba(239,68,68,0.35); }
+    .chip-p2 { background: rgba(249,115,22,0.15); color: #fdba74; border: 1px solid rgba(249,115,22,0.35); }
+    .chip-p3 { background: rgba(234,179,8,0.15);  color: #fde047; border: 1px solid rgba(234,179,8,0.35); }
+    .chip-p4 { background: rgba(34,197,94,0.12);  color: #86efac; border: 1px solid rgba(34,197,94,0.3); }
+
+    .sla-time {
+      font-family: 'Sora', sans-serif;
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    .time-p1 { color: #fca5a5; }
+    .time-p2 { color: #fdba74; }
+    .time-p3 { color: #fde047; }
+    .time-p4 { color: #86efac; }
+
+    /* ── Accordion ── */
+    .accordion { display: flex; flex-direction: column; gap: 8px; }
+
+    .accordion-group-label {
+      font-family: 'Sora', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 4px 0 8px;
+      border-bottom: 1px solid var(--border);
+      margin-top: 20px;
+      margin-bottom: 4px;
+    }
+
+    .accordion-group-label:first-of-type { margin-top: 0; }
+
+    details {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+
+    details[open] { border-color: rgba(255,90,31,0.3); }
+
+    summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px 20px;
+      cursor: pointer;
+      list-style: none;
+      user-select: none;
+      font-family: 'Sora', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      transition: background 0.15s;
+    }
+
+    summary::-webkit-details-marker { display: none; }
+
+    summary:hover { background: var(--surface2); }
+
+    .summary-left { display: flex; align-items: center; gap: 12px; }
+
+    .issue-code {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--accent);
+      background: rgba(255,90,31,0.1);
+      border: 1px solid rgba(255,90,31,0.2);
+      padding: 2px 8px;
+      border-radius: 6px;
+      flex-shrink: 0;
+    }
+
+    .chevron {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      color: var(--muted);
+      transition: transform 0.25s ease;
+    }
+
+    details[open] .chevron { transform: rotate(180deg); }
+
+    .accordion-body {
+      padding: 0 20px 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    .playbook-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 18px;
+    }
+
+    @media (max-width: 640px) { .playbook-grid { grid-template-columns: 1fr; } }
+
+    .playbook-col { display: flex; flex-direction: column; gap: 6px; }
+
+    .playbook-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .symptom-box {
+      background: var(--surface2);
+      border-left: 3px solid var(--p1);
+      border-radius: 0 6px 6px 0;
+      padding: 10px 14px;
+      font-size: 13.5px;
+    }
+
+    .cause-box {
+      background: var(--surface2);
+      border-left: 3px solid var(--p3);
+      border-radius: 0 6px 6px 0;
+      padding: 10px 14px;
+      font-size: 13.5px;
+    }
+
+    .steps-list {
+      list-style: none;
+      counter-reset: step-counter;
+      font-size: 13.5px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .steps-list li {
+      counter-increment: step-counter;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      line-height: 1.55;
+    }
+
+    .steps-list li::before {
+      content: counter(step-counter);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: rgba(255,90,31,0.15);
+      color: var(--accent);
+      font-family: 'Sora', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .escalate-box {
+      background: rgba(239,68,68,0.06);
+      border: 1px solid rgba(239,68,68,0.2);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #fca5a5;
+      margin-top: 14px;
+    }
+
+    .escalate-box strong {
+      font-family: 'Sora', sans-serif;
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      display: block;
+      margin-bottom: 4px;
+      color: #ef9090;
+    }
+
+    /* ── Escalation Requirements ── */
+    .req-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
+    }
+
+    .req-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+
+    .req-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: rgba(255,90,31,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 17px;
+    }
+
+    .req-text h4 {
+      font-family: 'Sora', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 3px;
+    }
+
+    .req-text p {
+      font-size: 12.5px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* ── Maintenance ── */
+    .routine-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+    }
+
+    .routine-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px 24px;
+    }
+
+    .routine-cadence {
+      font-family: 'Sora', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+
+    .routine-title {
+      font-family: 'Sora', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .routine-steps {
+      list-style: none;
+      font-size: 13px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .routine-steps li {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      line-height: 1.5;
+    }
+
+    .routine-steps li::before {
+      content: '✓';
+      color: var(--p4);
+      flex-shrink: 0;
+      font-weight: 700;
+      margin-top: 1px;
+    }
+
+    /* ── Quick Card ── */
+    .quick-card {
+      border: 2px solid var(--accent);
+      border-radius: 14px;
+      padding: 32px 36px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .quick-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--accent), #ff8c5a);
+    }
+
+    .quick-card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .quick-card-title {
+      font-family: 'Sora', sans-serif;
+      font-size: clamp(1rem, 2.5vw, 1.35rem);
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: -0.01em;
+    }
+
+    .quick-card-sub {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .checklist {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .checklist li {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .check-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: 2px solid var(--accent);
+      color: var(--accent);
+      font-family: 'Sora', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .checklist li strong { color: var(--text); }
+    .checklist li span { color: var(--muted); font-size: 13px; display: block; margin-top: 2px; }
+
+    .contact-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-top: 8px;
+      padding-top: 24px;
+      border-top: 1px solid rgba(255,90,31,0.2);
+    }
+
+    .contact-block h4 {
+      font-family: 'Sora', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .contact-block p {
+      font-size: 14px;
+      color: var(--text);
+    }
+
+    .contact-block a {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .urgency-note {
+      background: rgba(255,90,31,0.08);
+      border: 1px solid rgba(255,90,31,0.2);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--text);
+      margin-top: 20px;
+      line-height: 1.6;
+    }
+
+    .urgency-note strong { color: var(--accent); }
+
+    /* ── Print Button ── */
+    .btn-print {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-family: 'Sora', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 0.02em;
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    .btn-print:hover { background: var(--accent-hover); transform: translateY(-1px); }
+    .btn-print:active { transform: translateY(0); }
+
+    /* ── Nav Pills (top) ── */
+    .nav-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 40px;
+    }
+
+    .nav-pill {
+      font-family: 'Sora', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      color: var(--muted);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 6px 14px;
+      text-decoration: none;
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
+    }
+
+    .nav-pill:hover {
+      color: var(--text);
+      border-color: rgba(255,90,31,0.4);
+      background: var(--surface2);
+      text-decoration: none;
+    }
+
+    /* ── Footer ── */
+    .site-footer {
+      border-top: 1px solid var(--border);
+      padding-top: 24px;
+      margin-top: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* ── Print Styles ── */
+    @media print {
+      body { background: #fff; color: #111; }
+
+      .no-print { display: none !important; }
+
+      /* When printing quick card only, hide everything else */
+      body.print-quick-card > * { display: none !important; }
+      body.print-quick-card #quick-card-section { display: block !important; }
+
+      .quick-card {
+        border: 2px solid #FF5A1F;
+        color: #111;
+        page-break-inside: avoid;
+      }
+
+      .quick-card-title { color: #FF5A1F; }
+      .contact-block a { color: #FF5A1F; }
+      .urgency-note { background: #fff3ee; border-color: #FF5A1F; }
+      .check-num { border-color: #FF5A1F; color: #FF5A1F; }
+      .btn-print { display: none !important; }
+
+      .site-header,
+      .nav-pills,
+      .section:not(#quick-card-section),
+      hr,
+      .site-footer { display: none !important; }
+
+      #quick-card-section { display: block !important; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page-wrapper">
+
+  <!-- ── Site Header ── -->
+  <header class="site-header no-print">
+    <div>
+      <div class="logo-mark">
+        <div class="logo-dot"></div>
+        <span class="logo-text">CWI AI LLC</span>
+      </div>
+      <h1 class="header-title">Support Playbook</h1>
+      <p class="header-meta">Internal Reference + Client Quick Card &nbsp;·&nbsp; Last updated June 2026</p>
+    </div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:flex-start; padding-top:4px;">
+      <span class="badge badge-internal">Internal</span>
+      <span class="badge badge-client">Client-Facing</span>
+    </div>
+  </header>
+
+  <!-- ── Nav Pills ── -->
+  <nav class="nav-pills no-print" aria-label="Jump to section">
+    <a class="nav-pill" href="#section-tiers">Tiers</a>
+    <a class="nav-pill" href="#section-sla">SLA Table</a>
+    <a class="nav-pill" href="#section-playbooks">Playbooks</a>
+    <a class="nav-pill" href="#section-escalation">Escalation</a>
+    <a class="nav-pill" href="#section-maintenance">Maintenance</a>
+    <a class="nav-pill" href="#quick-card-section">Client Quick Card</a>
+  </nav>
+
+  <!-- ══════════════════════════════════════════
+       SECTION 1 — SUPPORT TIERS
+  ══════════════════════════════════════════ -->
+  <section class="section" id="section-tiers">
+    <p class="section-label">Section 1</p>
+    <h2 class="section-title">Support Tiers</h2>
+    <p class="section-desc">
+      CWI AI uses a three-tier support model to resolve issues at the lowest cost and fastest speed possible. Each tier attempts resolution before escalating upward.
+    </p>
+
+    <div class="tier-grid">
+
+      <div class="tier-card t0">
+        <div class="tier-number">Tier 0</div>
+        <div class="tier-name">AI / Self-Serve</div>
+        <p class="tier-desc">
+          The client handles it themselves using embedded documentation, chatbot help prompts, FAQ pages, or the onboarding quick card. No human involvement required.
+        </p>
+        <ul class="tier-examples">
+          <li>Refreshing or reopening the chat widget</li>
+          <li>Checking calendar sync settings</li>
+          <li>Reviewing the quick card checklist</li>
+          <li>Reading the bot FAQ or help prompts</li>
+        </ul>
+      </div>
+
+      <div class="tier-card t1">
+        <div class="tier-number">Tier 1</div>
+        <div class="tier-name">Client Admin</div>
+        <p class="tier-desc">
+          A designated admin at the client's business investigates and attempts the self-serve fix steps documented in this playbook before contacting CWI AI.
+        </p>
+        <ul class="tier-examples">
+          <li>Running through the 60-second checklist</li>
+          <li>Checking Calendly/Google Calendar permissions</li>
+          <li>Confirming Make scenario is active</li>
+          <li>Documenting what was tried before escalating</li>
+        </ul>
+      </div>
+
+      <div class="tier-card t2">
+        <div class="tier-number">Tier 2</div>
+        <div class="tier-name">Brian — CWI AI</div>
+        <p class="tier-desc">
+          Brian investigates and resolves the issue. Triggered only when Tier 0 and Tier 1 steps are exhausted. Clients email brian@cwiai.net with a complete ticket including all required fields.
+        </p>
+        <ul class="tier-examples">
+          <li>API key rotation or quota issues</li>
+          <li>Make/automation flow repairs</li>
+          <li>Bot retraining or knowledge base update</li>
+          <li>Calendar or webhook configuration fix</li>
+        </ul>
+      </div>
+
+    </div>
+  </section>
+
+  <hr class="divider no-print" />
+
+  <!-- ══════════════════════════════════════════
+       SECTION 2 — SLA TABLE
+  ══════════════════════════════════════════ -->
+  <section class="section" id="section-sla">
+    <p class="section-label">Section 2</p>
+    <h2 class="section-title">Service Level Agreements</h2>
+    <p class="section-desc">
+      Priority levels apply from the moment a complete ticket (all required fields) is received at brian@cwiai.net. Response times are best-effort for a solo operator; P1/P2 are treated as drop-everything events.
+    </p>
+
+    <div class="sla-table-wrap">
+      <table class="sla-table">
+        <thead>
+          <tr>
+            <th>Priority</th>
+            <th>What it means</th>
+            <th>Example</th>
+            <th>First Response</th>
+            <th>Target Fix</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="priority-chip chip-p1">P1 Critical</span></td>
+            <td>Total system outage — core AI/automation completely non-functional for all users</td>
+            <td>Chatbot widget gone, all bookings failing, OpenRouter returning no responses</td>
+            <td><span class="sla-time time-p1">Within 2 hours</span></td>
+            <td><span class="sla-time time-p1">Same day / 4 hrs</span></td>
+          </tr>
+          <tr>
+            <td><span class="priority-chip chip-p2">P2 High</span></td>
+            <td>Major function broken — significant impact on business operations</td>
+            <td>Calendar not saving bookings, double-bookings occurring, automation stopped silently</td>
+            <td><span class="sla-time time-p2">Within 4 hours</span></td>
+            <td><span class="sla-time time-p2">Same day / 8 hrs</span></td>
+          </tr>
+          <tr>
+            <td><span class="priority-chip chip-p3">P3 Medium</span></td>
+            <td>Partial degradation — system works but with noticeable issues</td>
+            <td>Bot giving occasional wrong answers, field mapping off, no human handoff path</td>
+            <td><span class="sla-time time-p3">Within 24 hours</span></td>
+            <td><span class="sla-time time-p3">2–3 business days</span></td>
+          </tr>
+          <tr>
+            <td><span class="priority-chip chip-p4">P4 Low</span></td>
+            <td>Minor cosmetic or non-urgent issue — no operational impact</td>
+            <td>Widget color mismatch, FAQ outdated, flow text typo, general questions</td>
+            <td><span class="sla-time time-p4">Within 48 hours</span></td>
+            <td><span class="sla-time time-p4">Next sprint / 5–7 days</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <hr class="divider no-print" />
+
+  <!-- ══════════════════════════════════════════
+       SECTION 3 — ISSUE PLAYBOOKS
+  ══════════════════════════════════════════ -->
+  <section class="section" id="section-playbooks">
+    <p class="section-label">Section 3</p>
+    <h2 class="section-title">Issue Playbooks</h2>
+    <p class="section-desc">
+      Expand any issue below for a complete runbook: symptom, likely cause, numbered self-serve steps, and escalation trigger. Work top-to-bottom before contacting Brian.
+    </p>
+
+    <div class="accordion">
+
+      <!-- ── GROUP A: Chatbot ── -->
+      <div class="accordion-group-label">A — Chatbot Issues</div>
+
+      <!-- A1 -->
+      <details>
+        <summary>
+          <div class="summary-left">
+            <span class="issue-code">A1</span>
+            Chatbot Not Responding
+          </div>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <div class="accordion-body">
+          <div class="playbook-grid">
+            <div class="playbook-col">
+              <div class="playbook-label">Symptom</div>
+              <div class="symptom-box">Chat widget loads but sends no reply, or spins indefinitely after user message is submitted.</div>
+              <div class="playbook-label" style="margin-top:14px;">Likely Cause</div>
+              <div class="cause-box">OpenRouter API quota exceeded or key invalid; Voiceflow/Botpress project unpublished; network block on embed domain.</div>
+            </div>
+            <div class="playbook-col">
+              <div class="playbook-label">Self-Serve Fix Steps</div>
+              <ol class="steps-list">
+                <li>Hard-refresh the page (Ctrl+Shift+R / Cmd+Shift+R) and test again.</li>
+                <li>Open browser DevTools → Network tab. Send a message and look for any 401, 403, or 429 error on the API call.</li>
+                <li>Log into OpenRouter dashboard. Check usage vs. quota limit. If near limit, add credits.</li>
+                <li>Log into Voiceflow or Botpress. Confirm the project is Published (not Draft).</li>
+                <li>Check if the embed domain is on an allowlist — add it if missing.</li>
+                <li>Test on a different browser or incognito window to rule out extension conflicts.</li>
+              </ol>
+            </div>
+          </div>
+          <div class="escalate-box">
+            <strong>Escalate to Tier 2 if</strong>
+            Steps 1–6 did not resolve it, API shows no errors but bot still silent, or the issue is affecting multiple clients simultaneously.
+          </div>
+        </div>
+      </details>
+
+      <!-- A2 -->
+      <details>
+        <summary>
+          <div class="summary-left">
+            <span class="issue-code">A2</span>
+            Wrong Answers / Hallucinations
+          </div>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <div class="accordion-body">
+          <div class="playbook-grid">
+            <div class="playbook-col">
+              <div class="playbook-label">Symptom</div>
+              <div class="symptom-box">Bot confidently states incorrect pricing, hours, services, or invents information not in the knowledge base.</div>
+              <div class="playbook-label" style="margin-top:14px;">Likely Cause</div>
+              <div class="cause-box">Knowledge base outdated; system prompt missing guard-rails; model temperature set too high; no fallback instruction for unknown questions.</div>
+            </div>
+            <div class="playbook-col">
+              <div class="playbook-label">Self-Serve Fix Steps</div>
+              <ol class="steps-list">
+                <li>Screenshot the exact question and wrong answer (needed for ticket).</li>
+                <li>Log into Voiceflow/Botpress. Navigate to the Knowledge Base or FAQ block that should cover this topic.</li>
+                <li>Verify the correct information is present and up to date.</li>
+                <li>Check the system prompt — confirm it says "Only answer from the provided knowledge base. If unsure, say you don't know."</li>
+                <li>Test the same question again in the bot preview after saving.</li>
+              </ol>
+            </div>
+          </div>
+          <div class="escalate-box">
+            <strong>Escalate to Tier 2 if</strong>
+            Knowledge base is correct but bot still hallucinates, or the wrong answers are appearing on topics that were never in scope. Include the screenshot and exact phrasing.
+          </div>
+        </div>
+      </details>
+
+      <!-- A3 -->
+      <details>
+        <summary>
+          <div class="summary-left">
+            <span class="issue-code">A3</span>
+            Chatbot Too Rigid / Stuck on Script
+          </div>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <div class="accordion-body">
+          <div class="playbook-grid">
+            <div class="playbook-col">
+              <div class="playbook-label">Symptom</div>
+              <div class="symptom-box">Bot repeats the same menu options regardless of what the user types, ignores freeform input, or loops back to start.</div>
+              <div class="playbook-label" style="margin-top:14px;">Likely Cause</div>
+              <div class="cause-box">Flow is button-only with no NLP/intent fallback; AI step is missing or bypassed; "else" path not configured.</div>
+            </div>
+            <div class="playbook-col">
+              <div class="playbook-label">Self-Serve Fix Steps</div>
+              <ol class="steps-list">
+                <li>Open the flow in Voiceflow/Botpress and inspect the main menu step.</li>
+                <li>Check whether there is an "Other / I typed something" branch or AI fallback step.</li>
+                <li>If the flow is button-only with no else path, note this for the ticket — it requires a flow redesign.</li>
+                <li>If an AI step exists, verify it's connected (not orphaned) and has a valid model selected.</li>
+                <li>Add a simple fallback message: "I didn't quite get that. Can you choose one of the options above or type your question?"</li>
+              </ol>
+            </div>
+          </div>
+          <div class="escalate-box">
+            <strong>Escalate to Tier 2 if</strong>
+            The flow needs an NLP redesign or new AI intent step added — this is a configuration task beyond client admin scope.
+          </div>
+        </div>
+      </details>
+
+      <!-- A4 -->
+      <details>
+        <summary>
+          <div class="summary-left">
+            <span class="issue-code">A4</span>
+            No Human Handoff Path
+          </div>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <div class="accordion-body">
+          <div class="playbook-grid">
+            <div class="playbook-col">
+              <div class="playbook-label">Symptom</div>
+              <div class="symptom-box">Users cannot reach a human; bot has no "Talk to a person" option or the escalation button does nothing.</div>
+              <div class="playbook-label" style="margin-top:14px;">Likely Cause</div>
+              <div class="cause-box">Human handoff step was never built, webhook is misconfigured, or the step is present but not reachable from the main flow paths.</div>
+            </div>
+            <div class="playbook-col">
+              <div class="playbook-label">Self-Serve Fix Steps</div>
+              <ol class="steps-list">
+                <li>Search the flow for a "Speak to human", "Live agent", or escalation block.</li>
+                <li>If it exists, trace the path — is it reachable from the main menu? Add a button if not.</li>
+                <li>Test the button. It should either send an email notification or trigger a Make webhook.</li>
+                <li>Check that the destination email or Make webhook URL is still valid.</li>
+                <li>If no handoff exists at all, document this as a feature request in the ticket.</li>
+              </ol>
+            </div>
+          </div>
+          <div class="escalate-box">
+            <strong>Escalate to Tier 2 if</strong>
+            The handoff block is present but the webhook is broken, or no handoff was ever configured and one needs to be built.
+          </div>
+        </div>
+      </details>
+
+      <!-- A5 -->
+      <details>
+        <summary>
+          <div class="summary-left">
+            <span class="issue-code">A5</span>
+            Chat Widget Not Appearing on Website
+          </div>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <div class="accordion-body">
+          <div class="playbook-grid">
+            <div class="playbook-col">
+              <div class="playbook-label">Symptom</div>
+              <div class="symptom-box">The chat bubble or iframe does not appear on the live website even though it worked before.</div>
+              <div class="playbook-label" style="margin-top:14px;">Likely Cause</div>
+              <div class="cause-box">Embed script removed during a site update; Content Security Policy blocking the script domain; browser caching old version without the script.</div>
+            </div>
+            <div class="playbook-col">
+              <div class="playbook-label">Self-Serve Fix Steps</div>
+              <ol class="steps-list">
+                <li>View page source (Ctrl+U) and search for "voiceflow" or "botpress" — confirm the embed script is still present.</li>
+                <li>If missing: your website editor may have removed it during a theme update. Re-paste the embed code into the site's header or footer section.</li>
+                <li>Open DevTools → Console. Look for CSP errors mentioning a blocked script domain.</li>
+                <li>If CSP is blocking it, add the chatbot domain to your site's allowed script sources.</li>
+                <li>Clear browser cache and test in a private window.</li>
+                <li>Test on mobile to confirm it's not a desktop-only CSS hide rule.</li>
+              </ol>
+            </div>
+          </div>
+          <div class="escalate-box">
+            <strong>Escalate to Tier 2 if</strong>
+            Embed script is present, no CSP errors, widget still invisible — may need a CSS/z-index fix or domain allowlist change in Voiceflow/Botpress settings.
+          </div>
+        </div>
+      </details>
+
+      <!-- ── GROUP B: Scheduling ── -->
+      <div class="accordion-group-label">B — Scheduling / Calendar</div>
+
+      <!-- B1 -->
+      <details>
+        <summary>
+          <div class="summary-left">
+            <span class="issue-code">B1</span>
+            Booking Not Appearing in Calendar
+          </div>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <div class="accordion-body">
+          <div class="playbook-grid">
+            <div class="playbook-col">
+              <div class="playbook-label">Symptom</div>
+              <div class="symptom-box">Client or customer books via Calendly/booking link but the event never appears in Google Calendar or the business's calendar app.</div>
+              <div class="playbook-label" style="margin-top:14px;">Likely Cause</div>
+              <div class="cause-box">Calendly–Google Calendar integration disconnected (token expired); wrong calendar selected; Make webhook not forwarding the booking event.</div>
+            </div>
+            <div class="playbook-col">
+              <div class="playbook-label">Self-Serve Fix Steps</div>
+              <ol class="steps-list">
+                <li>Log into Calendly → Integrations → Calendar. Confirm Google Calendar shows "Connected."</li>
+                <li>If it shows "Reconnect needed," click reconnect and authorize again.</li>
+                <li>Confirm the correct calendar is selected under "Add to Calendar" and "Check for Conflicts."</li>
+                <li>Make a test booking using a personal email and wait 2 minutes. Check the target calendar.</li>
+                <li>If using Make: open the scenario, check the last run, and look for errors in the Google Calendar module.</li>
+              </ol>
+            </div>
+          </div>
+          <div class="escalate-box">
+            <strong>Escalate to Tier 2 if</strong>
+            Calendly shows connected but events still don't appear after a test booking, or Make scenario is throwing a Google API error.
+          </div>
+        </div>
+      </details>
+
+      <!-- B2 -->
+      <details>
+        <summary>
+          <div class="summary-left">
+            <span class="issue-code">B2</span>
+            Double-Bookings Occurring
+          </div>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <div class="accordion-body">
+          <div class="playbook-grid">
+            <div class="playbook-col">
+              <div class="playbook-label">Symptom</div>
+              <div class="symptom-box">Two or more customers are booked for the same time slot, or staff member shows occupied on personal calendar but available in Calendly.</div>
+              <div class="playbook-label" style="margin-top:14px;">Likely Cause</div>
+              <div class="cause-box">Calendly "Check for Conflicts" not reading all required calendars; personal calendar not connected; buffer times not set; multiple event types sharing the same availability pool.</div>
+            </div>
+            <div class="playbook-col">
+              <div class="playbook-label">Self-Serve Fix Steps</div>
+              <ol class="steps-list">
+                <li>Calendly → Integrations → Calendar Connections. Confirm all calendars used by this staff member are listed under "Check for Conflicts."</li>
+                <li>Add any missing personal/work calendar to the conflict check list.</li>
+                <li>Go to the event type → Availability → confirm buffer time before/after is set.</li>
+                <li>If multiple event types share one host, confirm "Limit new events per day" is configured.</li>
+                <li>Make a test booking to a previously affected time slot and verify it now blocks correctly.</li>
+              </ol>
+            </div>
+          </div>
+          <div class="escalate-box">
+            <strong>Escalate to Tier 2 if</strong>
+            All calendars are connected and conflict-checked but double-bookings persist — may require Calendly team scheduling or API-level review.
+          </div>
+        </div>
+      </details>
+
+      <!-- B3 -->
+      <details>
+        <summary>
+          <div class="summary-left">
+            <span class="issue-code">B3</span>
+            Calendar Permission Errors
+          </div>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <div class="accordion-body">
+          <div class="playbook-grid">
+            <div class="playbook-col">
+              <div class="playbook-label">Symptom</div>
+              <div class="symptom-box">"Insufficient permissions," "Access denied," or "403" errors when Calendly or Make tries to write to Google Calendar.</div>
+              <div class="playbook-label" style="margin-top:14px;">Likely Cause</div>
+              <div class="cause-box">OAuth token expired or revoked; Google account password changed invalidating the token; calendar sharing permissions changed by IT/admin.</div>
+            </div>
+            <div class="playbook-col">
+              <div class="playbook-label">Self-Serve Fix Steps</div>
+              <ol class="steps-list">
+                <li>Calendly → Integrations. Disconnect the Google Calendar connection completely.</li>
+                <li>Go to Google Account → Security → Third-party apps. Revoke Calendly access.</li>
+                <li>Return to Calendly and reconnect — sign in fresh and grant all requested permissions.</li>
+                <li>If using Make: open the Google Calendar module, click the connection, and re-authorize.</li>
+                <li>Run a test scenario in Make to confirm the 403 is resolved.</li>
+              </ol>
+            </div>
+          </div>
+          <div class="escalate-box">
+            <strong>Escalate to Tier 2 if</strong>
+            Re-authorization still returns 403, or the Google Workspace admin has restricted OAuth app access and it needs to be whitelisted at the domain level.
+          </div>
+        </div>
+      </details>
+
+      <!-- ── GROUP C: Make/Automation ── -->
+      <div class="accordion-group-label">C — Make / Automation</div>
+
+      <!-- C1 -->
+      <details>
+        <summary>
+          <div class="summary-left">
+            <span class="issue-code">C1</span>
+            Automation Stopped Running
+          </div>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <div class="accordion-body">
+          <div class="playbook-grid">
+            <div class="playbook-col">
+              <div class="playbook-label">Symptom</div>
+              <div class="symptom-box">A Make scenario that previously ran automatically has stopped triggering. No emails sent, no calendar events created, no CRM updates.</div>
+              <div class="playbook-label" style="margin-top:14px;">Likely Cause</div>
+              <div class="cause-box">Scenario deactivated after consecutive errors; Make operations quota exhausted; trigger webhook URL changed; a module's connection expired.</div>
+            </div>
+            <div class="playbook-col">
+              <div class="playbook-label">Self-Serve Fix Steps</div>
+              <ol class="steps-list">
+                <li>Log into Make. Find the scenario. Check the toggle — is it ON (blue) or OFF?</li>
+                <li>Click "History" — look at the last 10 runs. Are they all showing errors?</li>
+                <li>Click the most recent error run. Identify which module failed and what the error message says.</li>
+                <li>Check your Make plan's operation count for the month — confirm you have remaining operations.</li>
+                <li>Click the failing module → the connection (usually a key icon). Click "Verify" or re-authorize.</li>
+                <li>Run the scenario manually using "Run once" to confirm it works, then re-activate.</li>
+              </ol>
+            </div>
+          </div>
+          <div class="escalate-box">
+            <strong>Escalate to Tier 2 if</strong>
+            All connections verify OK, scenario is active, but it still won't trigger — or the error is in a custom webhook or HTTP module with a non-obvious cause.
+          </div>
+        </div>
+      </details>
+
+      <!-- C2 -->
+      <details>
+        <summary>
+          <div class="summary-left">
+            <span class="issue-code">C2</span>
+            Wrong Field Mapping / Data in Wrong Place
+          </div>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <div class="accordion-body">
+          <div class="playbook-grid">
+            <div class="playbook-col">
+              <div class="playbook-label">Symptom</div>
+              <div class="symptom-box">Data is being created but in the wrong fields — e.g., customer name appears in the notes field, phone number goes to email, or CRM record is blank.</div>
+              <div class="playbook-label" style="margin-top:14px;">Likely Cause</div>
+              <div class="cause-box">The source app changed its field structure (common after app updates); a Make module was re-mapped incorrectly; the input form added/renamed a field.</div>
+            </div>
+            <div class="playbook-col">
+              <div class="playbook-label">Self-Serve Fix Steps</div>
+              <ol class="steps-list">
+                <li>Open the scenario in Make. Click the destination module (CRM, Google Sheets, etc.).</li>
+                <li>Review each field mapping. The left side is the destination field; the right side is the source variable.</li>
+                <li>Submit a fresh test entry through the trigger (form, webhook, etc.).</li>
+                <li>In Make, go to History → the test run → expand the destination module output. Compare expected vs. actual values.</li>
+                <li>Correct any mismatched mappings and run again manually to confirm.</li>
+              </ol>
+            </div>
+          </div>
+          <div class="escalate-box">
+            <strong>Escalate to Tier 2 if</strong>
+            The source data structure changed significantly (e.g., a form was rebuilt) and the entire scenario needs remapping, or variables are missing from the available data bundle.
+          </div>
+        </div>
+      </details>
+
+      <!-- ── GROUP D: OpenRouter ── -->
+      <div class="accordion-group-label">D — AI Backend / OpenRouter</div>
+
+      <!-- D1 -->
+      <details>
+        <summary>
+          <div class="summary-left">
+            <span class="issue-code">D1</span>
+            AI Responses Stopped / API Errors
+          </div>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <div class="accordion-body">
+          <div class="playbook-grid">
+            <div class="playbook-col">
+              <div class="playbook-label">Symptom</div>
+              <div class="symptom-box">Bot sends a message but never gets an AI response. OpenRouter returning 401, 402, 429, or 500 status codes in network requests.</div>
+              <div class="playbook-label" style="margin-top:14px;">Likely Cause</div>
+              <div class="cause-box">
+                <strong>401</strong> — API key invalid or revoked<br/>
+                <strong>402</strong> — Account out of credits<br/>
+                <strong>429</strong> — Rate limit hit (too many requests/min)<br/>
+                <strong>500</strong> — OpenRouter or model provider outage
+              </div>
+            </div>
+            <div class="playbook-col">
+              <div class="playbook-label">Self-Serve Fix Steps</div>
+              <ol class="steps-list">
+                <li>Check <a href="https://status.openrouter.ai" target="_blank" rel="noopener">status.openrouter.ai</a> — confirm no active incident.</li>
+                <li>Log into OpenRouter → Keys. Verify the key used by the bot is active (not deleted or rotated).</li>
+                <li>Check your OpenRouter credit balance. If $0 or negative, add credits.</li>
+                <li>If 429: check if the bot has a rate limiting setting. Add a delay or reduce concurrent requests.</li>
+                <li>If 401 after confirming key is correct: regenerate the key, update it in Voiceflow/Botpress, and test.</li>
+                <li>If 500 and status page shows an incident: wait 15–30 minutes and retest.</li>
+              </ol>
+            </div>
+          </div>
+          <div class="escalate-box">
+            <strong>Escalate to Tier 2 if</strong>
+            Credits are sufficient, key is valid, no status incident, but 401/500 persists — key may need to be rotated at the CWI AI account level, or the model being used has been deprecated.
+          </div>
+        </div>
+      </details>
+
+    </div><!-- /accordion -->
+  </section>
+
+  <hr class="divider no-print" />
+
+  <!-- ══════════════════════════════════════════
+       SECTION 4 — ESCALATION REQUIREMENTS
+  ══════════════════════════════════════════ -->
+  <section class="section" id="section-escalation">
+    <p class="section-label">Section 4</p>
+    <h2 class="section-title">Escalation Requirements</h2>
+    <p class="section-desc">
+      Every ticket sent to brian@cwiai.net must include all six fields below. Incomplete tickets will be returned asking for the missing information, which delays resolution.
+    </p>
+
+    <div class="req-grid">
+
+      <div class="req-item">
+        <div class="req-icon">🏢</div>
+        <div class="req-text">
+          <h4>Business Name</h4>
+          <p>Your full business name as registered with CWI AI. Helps identify your bot config instantly.</p>
+        </div>
+      </div>
+
+      <div class="req-item">
+        <div class="req-icon">🔍</div>
+        <div class="req-text">
+          <h4>What Broke</h4>
+          <p>Plain-language description. "The chat widget stopped responding after we updated our website." Be specific.</p>
+        </div>
+      </div>
+
+      <div class="req-item">
+        <div class="req-icon">🚨</div>
+        <div class="req-text">
+          <h4>Priority (P1–P4)</h4>
+          <p>Self-assess using the SLA table. State why you chose this priority if P1 or P2.</p>
+        </div>
+      </div>
+
+      <div class="req-item">
+        <div class="req-icon">🔧</div>
+        <div class="req-text">
+          <h4>Steps Already Tried</h4>
+          <p>List each step from the playbook you completed. "Tried A1 steps 1–5. Step 3 showed a 429 error."</p>
+        </div>
+      </div>
+
+      <div class="req-item">
+        <div class="req-icon">📸</div>
+        <div class="req-text">
+          <h4>Screenshot or Screen Recording</h4>
+          <p>Attach the error message, broken UI state, or DevTools console output. No screenshot = slower diagnosis.</p>
+        </div>
+      </div>
+
+      <div class="req-item">
+        <div class="req-icon">🕐</div>
+        <div class="req-text">
+          <h4>When It Started</h4>
+          <p>Approximate date and time (with timezone). "Started failing around 2pm CST on June 7th." Any changes made just before?</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <hr class="divider no-print" />
+
+  <!-- ══════════════════════════════════════════
+       SECTION 5 — MAINTENANCE ROUTINES
+  ══════════════════════════════════════════ -->
+  <section class="section" id="section-maintenance">
+    <p class="section-label">Section 5</p>
+    <h2 class="section-title">Maintenance Routines</h2>
+    <p class="section-desc">
+      Proactive maintenance catches issues before clients notice. These routines apply across all CWI AI managed deployments.
+    </p>
+
+    <div class="routine-grid">
+
+      <div class="routine-card">
+        <div class="routine-cadence">As Needed</div>
+        <div class="routine-title">Bot Retraining</div>
+        <ul class="routine-steps">
+          <li>Client submits updated FAQs, pricing, or service list</li>
+          <li>Open Voiceflow/Botpress knowledge base</li>
+          <li>Update or replace outdated content blocks</li>
+          <li>Update system prompt if scope changed</li>
+          <li>Run 10 test questions covering changed topics</li>
+          <li>Publish updated flow</li>
+          <li>Confirm widget reflects changes on live site</li>
+          <li>Notify client retraining is complete</li>
+        </ul>
+      </div>
+
+      <div class="routine-card">
+        <div class="routine-cadence">Weekly — 5 min</div>
+        <div class="routine-title">Weekly Health Check</div>
+        <ul class="routine-steps">
+          <li>Open each client's bot and send 2–3 test messages</li>
+          <li>Confirm responses are accurate and fast (&lt;3 sec)</li>
+          <li>Check Make scenario history — 0 errors this week?</li>
+          <li>Glance at OpenRouter credit balance — add if under $10</li>
+          <li>Confirm Calendly is still connected to calendar</li>
+          <li>Log any anomalies in client notes</li>
+        </ul>
+      </div>
+
+      <div class="routine-card">
+        <div class="routine-cadence">Monthly</div>
+        <div class="routine-title">Monthly Review</div>
+        <ul class="routine-steps">
+          <li>Review OpenRouter usage report — note top models used</li>
+          <li>Check Make operation usage vs. plan limits</li>
+          <li>Review Calendly booking volume per client</li>
+          <li>Rotate API keys if any are 90+ days old</li>
+          <li>Update this playbook with any new issue types found</li>
+          <li>Send client a brief "your AI this month" summary</li>
+          <li>Check for platform updates (Voiceflow, Botpress, Make)</li>
+          <li>Schedule any pending bot retraining sessions</li>
+        </ul>
+      </div>
+
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- ══════════════════════════════════════════
+       SECTION 6 — CLIENT QUICK CARD
+  ══════════════════════════════════════════ -->
+  <section class="section" id="quick-card-section">
+    <p class="section-label no-print">Section 6 — Client-Facing</p>
+    <h2 class="section-title no-print">Client Quick Card</h2>
+    <p class="section-desc no-print">The box below is a standalone print card. Share it with clients or use the print button to produce a one-page handout.</p>
+
+    <div style="display:flex; justify-content:flex-end; margin-bottom:16px;" class="no-print">
+      <button class="btn-print" onclick="printQuickCard()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Print Quick Card
+      </button>
+    </div>
+
+    <div class="quick-card" id="quick-card-content">
+
+      <div class="quick-card-header">
+        <div>
+          <div class="logo-mark">
+            <div class="logo-dot"></div>
+            <span class="logo-text">CWI AI LLC</span>
+          </div>
+          <div class="quick-card-title">Before You Contact Us — 60-Second Checklist</div>
+          <div class="quick-card-sub">Run through these 4 steps first. Most issues resolve without a support ticket.</div>
+        </div>
+        <span class="badge badge-client">Client Card</span>
+      </div>
+
+      <ul class="checklist">
+        <li>
+          <span class="check-num">1</span>
+          <div>
+            <strong>Refresh and retry</strong>
+            <span>Hard-refresh the page (Ctrl+Shift+R on Windows, Cmd+Shift+R on Mac) and try your action again. Browser cache causes roughly 30% of reported issues.</span>
+          </div>
+        </li>
+        <li>
+          <span class="check-num">2</span>
+          <div>
+            <strong>Check your calendar integration</strong>
+            <span>If bookings aren't showing up, log into Calendly and confirm Google Calendar shows "Connected" under Integrations. Tap Reconnect if it doesn't.</span>
+          </div>
+        </li>
+        <li>
+          <span class="check-num">3</span>
+          <div>
+            <strong>Try a different browser or private window</strong>
+            <span>If the chatbot loads in incognito but not normally, a browser extension is likely blocking it. Disable ad-blockers or privacy extensions for your site domain.</span>
+          </div>
+        </li>
+        <li>
+          <span class="check-num">4</span>
+          <div>
+            <strong>Note the exact error and when it started</strong>
+            <span>Take a screenshot of any error message. Write down the approximate date and time the issue first appeared. You'll need this if you contact us.</span>
+          </div>
+        </li>
+      </ul>
+
+      <div class="contact-row">
+        <div class="contact-block">
+          <h4>Support Email</h4>
+          <p><a href="mailto:brian@cwiai.net">brian@cwiai.net</a></p>
+          <p style="font-size:12px; color:var(--muted); margin-top:4px;">Include all 4 checklist notes in your email</p>
+        </div>
+        <div class="contact-block">
+          <h4>Response Times</h4>
+          <p style="font-size:13.5px;">P1 Critical: <strong style="color:#fca5a5;">2 hours</strong></p>
+          <p style="font-size:13.5px;">P2 High: <strong style="color:#fdba74;">4 hours</strong></p>
+          <p style="font-size:13.5px;">P3 Medium: <strong style="color:#fde047;">24 hours</strong></p>
+          <p style="font-size:13.5px;">P4 Low: <strong style="color:#86efac;">48 hours</strong></p>
+        </div>
+        <div class="contact-block">
+          <h4>Hours of Coverage</h4>
+          <p style="font-size:13.5px;">Mon–Fri, 9am–6pm CST</p>
+          <p style="font-size:12px; color:var(--muted); margin-top:4px;">P1 issues acknowledged outside business hours on best-effort basis</p>
+        </div>
+      </div>
+
+      <div class="urgency-note">
+        <strong>For urgent issues (chatbot completely down, all bookings failing):</strong> Email with subject line starting with <strong>[P1]</strong> or <strong>[P2]</strong> so it is flagged immediately. Include your business name, what stopped working, and when. Do not send multiple emails — this delays response queuing.
+      </div>
+
+    </div><!-- /quick-card -->
+
+  </section>
+
+  <!-- ── Footer ── -->
+  <footer class="site-footer no-print">
+    <span>CWI AI LLC &nbsp;·&nbsp; Internal Support Playbook &nbsp;·&nbsp; June 2026</span>
+    <span>brian@cwiai.net</span>
+  </footer>
+
+</div><!-- /page-wrapper -->
+
+<script>
+  function printQuickCard() {
+    // Add print class to body, print, then remove
+    document.body.classList.add('print-quick-card');
+    window.print();
+    document.body.classList.remove('print-quick-card');
+  }
+
+  // Ensure only one accordion open per group (optional UX enhancement)
+  // Remove this block if you want multiple items open simultaneously
+  document.querySelectorAll('details').forEach(function(detail) {
+    detail.addEventListener('toggle', function() {
+      // No auto-close behavior — allow multiple open for reference use
+    });
+  });
+</script>
+
+</body>
+</html>

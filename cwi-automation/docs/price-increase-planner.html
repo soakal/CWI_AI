@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CWI AI — Price Increase Planner</title>
+<meta name="description" content="CWI internal tool: CWI AI — Price Increase Planner. Internal use only — CWI Compute With Imagination.">
+<style>
+  :root {
+    --accent: #FF5A1F;
+    --accent-dark: #cc4718;
+    --accent-light: #fff1ec;
+    --bg: #f8f9fa;
+    --card: #ffffff;
+    --border: #e2e8f0;
+    --text: #1a202c;
+    --text-muted: #718096;
+    --success: #38a169;
+    --warning: #d69e2e;
+    --radius: 10px;
+    --shadow: 0 2px 12px rgba(0,0,0,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.6;
+  }
+  header {
+    background: #1a202c;
+    color: white;
+    padding: 24px 32px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  .logo-dot {
+    width: 36px; height: 36px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 18px;
+  }
+  header h1 { font-size: 22px; font-weight: 700; }
+  header span { font-size: 13px; color: #a0aec0; margin-left: 4px; }
+  .container { max-width: 960px; margin: 0 auto; padding: 32px 20px 60px; }
+  .section {
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    margin-bottom: 28px;
+    overflow: hidden;
+  }
+  .section-header {
+    background: #1a202c;
+    color: white;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-num {
+    width: 28px; height: 28px;
+    background: var(--accent);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 13px;
+    flex-shrink: 0;
+  }
+  .section-header h2 { font-size: 16px; font-weight: 600; }
+  .section-body { padding: 24px; }
+
+  /* Checklist */
+  .checklist { list-style: none; }
+  .checklist li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .checklist li:last-child { border-bottom: none; }
+  .checklist li.checked .check-text { text-decoration: line-through; color: var(--text-muted); }
+  .check-box {
+    width: 22px; height: 22px; border-radius: 6px;
+    border: 2px solid var(--border);
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+    margin-top: 1px;
+  }
+  .checklist li.checked .check-box {
+    background: var(--success);
+    border-color: var(--success);
+  }
+  .check-box svg { display: none; }
+  .checklist li.checked .check-box svg { display: block; }
+  .check-label { font-weight: 600; font-size: 14px; }
+  .check-desc { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+  .readiness-bar-wrap { margin-top: 20px; }
+  .readiness-bar-wrap label { font-weight: 600; font-size: 13px; margin-bottom: 8px; display: block; }
+  .readiness-bar {
+    background: var(--border);
+    border-radius: 99px;
+    height: 12px;
+    overflow: hidden;
+  }
+  .readiness-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), #ff8c5a);
+    border-radius: 99px;
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+  .readiness-pct { font-size: 13px; color: var(--text-muted); margin-top: 6px; }
+
+  /* Calculator */
+  .calc-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  @media(max-width:600px){ .calc-grid { grid-template-columns: 1fr; } }
+  .tier-card {
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    transition: border-color 0.2s;
+  }
+  .tier-card:hover { border-color: var(--accent); }
+  .tier-name {
+    font-weight: 700;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+  .price-row { display: flex; flex-direction: column; gap: 10px; }
+  .price-row label { font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+  .price-row input[type="number"] {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    background: var(--bg);
+    transition: border-color 0.15s;
+  }
+  .price-row input:focus { outline: none; border-color: var(--accent); }
+  .pct-badge {
+    display: inline-block;
+    background: var(--accent-light);
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 13px;
+    padding: 4px 10px;
+    border-radius: 99px;
+    margin-top: 4px;
+  }
+  .client-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  @media(max-width:600px){ .client-row { grid-template-columns: 1fr; } }
+  .client-input-wrap label {
+    font-size: 12px; color: var(--text-muted); font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.04em;
+    display: block; margin-bottom: 6px;
+  }
+  .client-input-wrap input {
+    width: 100%; padding: 8px 10px;
+    border: 1.5px solid var(--border); border-radius: 6px;
+    font-size: 15px; font-weight: 600;
+    background: var(--bg); color: var(--text);
+  }
+  .client-input-wrap input:focus { outline: none; border-color: var(--accent); }
+  .toggle-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px;
+    background: var(--accent-light);
+    border-radius: var(--radius);
+    margin-bottom: 20px;
+  }
+  .toggle-label { font-weight: 600; font-size: 14px; }
+  .toggle-desc { font-size: 13px; color: var(--text-muted); margin-left: auto; }
+  .toggle {
+    position: relative; width: 46px; height: 26px;
+    flex-shrink: 0;
+  }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .slider {
+    position: absolute; cursor: pointer; inset: 0;
+    background: #cbd5e0; border-radius: 99px;
+    transition: background 0.2s;
+  }
+  .slider:before {
+    content: '';
+    position: absolute;
+    width: 20px; height: 20px;
+    left: 3px; top: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.2s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  }
+  input:checked + .slider { background: var(--accent); }
+  input:checked + .slider:before { transform: translateX(20px); }
+  .mrr-result {
+    background: #1a202c;
+    color: white;
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+  }
+  @media(max-width:600px){ .mrr-result { grid-template-columns: 1fr; } }
+  .mrr-stat { text-align: center; }
+  .mrr-stat .val { font-size: 24px; font-weight: 700; color: var(--accent); }
+  .mrr-stat .lbl { font-size: 12px; color: #a0aec0; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+  /* Timeline */
+  .timeline { position: relative; padding-left: 32px; }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 10px; top: 8px; bottom: 8px;
+    width: 2px;
+    background: linear-gradient(180deg, var(--accent), #ff8c5a);
+  }
+  .tl-item {
+    position: relative;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    cursor: pointer;
+  }
+  .tl-item:last-child { margin-bottom: 0; }
+  .tl-dot {
+    position: absolute;
+    left: -27px; top: 4px;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    border: 3px solid var(--accent);
+    background: white;
+    transition: background 0.2s;
+    flex-shrink: 0;
+  }
+  .tl-item.done .tl-dot { background: var(--accent); }
+  .tl-check {
+    width: 20px; height: 20px; flex-shrink: 0;
+    border: 2px solid var(--border); border-radius: 5px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s; margin-top: 2px;
+  }
+  .tl-item.done .tl-check { background: var(--success); border-color: var(--success); }
+  .tl-check svg { display: none; }
+  .tl-item.done .tl-check svg { display: block; }
+  .tl-content .tl-day {
+    font-weight: 700; font-size: 13px;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .tl-content .tl-action { font-weight: 600; font-size: 14px; margin: 2px 0; }
+  .tl-content .tl-note { font-size: 13px; color: var(--text-muted); }
+  .tl-item.done .tl-action { text-decoration: line-through; color: var(--text-muted); }
+
+  /* Email generator */
+  .email-inputs { display: grid; grid-template-columns: 1fr 1fr auto; gap: 12px; align-items: end; margin-bottom: 16px; }
+  @media(max-width:600px){ .email-inputs { grid-template-columns: 1fr; } }
+  .input-group label { font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; display: block; margin-bottom: 6px; }
+  .input-group input {
+    width: 100%; padding: 9px 12px;
+    border: 1.5px solid var(--border); border-radius: 6px;
+    font-size: 14px; background: var(--bg); color: var(--text);
+  }
+  .input-group input:focus { outline: none; border-color: var(--accent); }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 9px 18px;
+    background: var(--accent);
+    color: white;
+    border: none; border-radius: 7px;
+    font-size: 14px; font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    white-space: nowrap;
+  }
+  .btn:hover { background: var(--accent-dark); }
+  .btn:active { transform: scale(0.98); }
+  .btn-ghost {
+    background: transparent; color: var(--accent);
+    border: 2px solid var(--accent);
+  }
+  .btn-ghost:hover { background: var(--accent-light); }
+  .btn-sm { padding: 6px 12px; font-size: 13px; }
+  .email-output {
+    display: none;
+    margin-top: 4px;
+  }
+  .email-output.visible { display: block; }
+  .email-preview {
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    font-size: 14px;
+    line-height: 1.8;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-family: Georgia, serif;
+    color: var(--text);
+    min-height: 200px;
+  }
+  .email-actions { display: flex; gap: 10px; margin-top: 12px; }
+  .copy-feedback {
+    font-size: 13px; color: var(--success); font-weight: 600;
+    opacity: 0; transition: opacity 0.3s;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .copy-feedback.show { opacity: 1; }
+
+  /* Tracker */
+  .tracker-actions { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  .tracker-table-wrap { overflow-x: auto; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  th {
+    background: #f1f5f9;
+    font-weight: 600; font-size: 12px;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--text-muted);
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 2px solid var(--border);
+  }
+  td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #f8f9fa; }
+  .client-name-input, .tier-select, .date-input, .price-input-sm {
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 8px;
+    font-size: 13px;
+    background: white;
+    color: var(--text);
+    width: 100%;
+    min-width: 80px;
+  }
+  .client-name-input:focus, .tier-select:focus, .date-input:focus, .price-input-sm:focus {
+    outline: none; border-color: var(--accent);
+  }
+  .tag {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 99px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .tag-grand { background: #e6fffa; color: #2c7a7b; }
+  .tag-new { background: var(--accent-light); color: var(--accent); }
+  .new-price-cell { font-weight: 700; }
+  .new-price-cell.grand { color: var(--text-muted); text-decoration: line-through; font-weight: 400; }
+  .del-btn {
+    background: none; border: none; cursor: pointer;
+    color: #e53e3e; font-size: 16px; padding: 4px;
+    border-radius: 4px;
+    transition: background 0.15s;
+  }
+  .del-btn:hover { background: #fff5f5; }
+  .grand-toggle {
+    position: relative; width: 38px; height: 22px;
+  }
+  .grand-toggle input { opacity: 0; width: 0; height: 0; }
+  .gt-slider {
+    position: absolute; cursor: pointer; inset: 0;
+    background: #cbd5e0; border-radius: 99px;
+    transition: background 0.2s;
+  }
+  .gt-slider:before {
+    content: '';
+    position: absolute;
+    width: 16px; height: 16px;
+    left: 3px; top: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  .grand-toggle input:checked + .gt-slider { background: var(--success); }
+  .grand-toggle input:checked + .gt-slider:before { transform: translateX(16px); }
+  .save-indicator {
+    font-size: 12px; color: var(--text-muted);
+    display: flex; align-items: center; gap: 5px;
+    margin-left: auto;
+  }
+  .save-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--success);
+  }
+  @media print {
+    header, .tracker-actions, .email-inputs, .btn, .del-btn, .section:not(:last-child) {
+      display: none !important;
+    }
+    .section:last-child .section-header { background: #333 !important; }
+    body { background: white; }
+    .container { padding: 0; }
+    table { font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-dot">C</div>
+  <div>
+    <h1>Price Increase Planner <span>— CWI AI</span></h1>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- SECTION 1: Readiness Checklist -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">1</div>
+      <h2>When to Raise Prices — Readiness Checklist</h2>
+    </div>
+    <div class="section-body">
+      <ul class="checklist" id="readiness-list">
+        <li onclick="toggleCheck(this)">
+          <div class="check-box"><svg width="13" height="10" viewBox="0 0 13 10" fill="none"><path d="M1.5 5L5 8.5L11.5 1.5" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="check-text">
+            <div class="check-label">6+ months of consistent delivery</div>
+            <div class="check-desc">You have reliably delivered results to clients for at least 6 consecutive months with no major service gaps.</div>
+          </div>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <div class="check-box"><svg width="13" height="10" viewBox="0 0 13 10" fill="none"><path d="M1.5 5L5 8.5L11.5 1.5" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="check-text">
+            <div class="check-label">90%+ client retention rate</div>
+            <div class="check-desc">At least 9 out of 10 clients are renewing each cycle, demonstrating strong satisfaction and perceived value.</div>
+          </div>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <div class="check-box"><svg width="13" height="10" viewBox="0 0 13 10" fill="none"><path d="M1.5 5L5 8.5L11.5 1.5" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="check-text">
+            <div class="check-label">New features or capabilities added</div>
+            <div class="check-desc">You have launched new automations, integrations, reports, or service improvements since the last pricing update.</div>
+          </div>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <div class="check-box"><svg width="13" height="10" viewBox="0 0 13 10" fill="none"><path d="M1.5 5L5 8.5L11.5 1.5" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="check-text">
+            <div class="check-label">Operating costs have increased</div>
+            <div class="check-desc">API costs, software subscriptions, team time, or infrastructure expenses have risen enough to affect margins.</div>
+          </div>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <div class="check-box"><svg width="13" height="10" viewBox="0 0 13 10" fill="none"><path d="M1.5 5L5 8.5L11.5 1.5" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="check-text">
+            <div class="check-label">Waitlist or demand is forming</div>
+            <div class="check-desc">Prospects are waiting to onboard, or you are turning away leads — a clear market signal that prices are below demand.</div>
+          </div>
+        </li>
+      </ul>
+      <div class="readiness-bar-wrap">
+        <label>Readiness Score: <span id="ready-pct-label">0 / 5 criteria met</span></label>
+        <div class="readiness-bar"><div class="readiness-fill" id="ready-fill"></div></div>
+        <div class="readiness-pct" id="ready-msg">Check off criteria as they apply to your current situation.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 2: Calculator -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">2</div>
+      <h2>Price Increase Calculator</h2>
+    </div>
+    <div class="section-body">
+      <div class="calc-grid">
+        <div class="tier-card">
+          <div class="tier-name">Starter Tier</div>
+          <div class="price-row">
+            <div>
+              <label for="cur-1">Current Price / mo (Starter Tier)</label>
+              <input type="number" id="cur-1" value="197" min="0" step="1" oninput="calcMRR()">
+            </div>
+            <div>
+              <label for="new-1">New Price / mo (Starter Tier)</label>
+              <input type="number" id="new-1" value="247" min="0" step="1" oninput="calcMRR()">
+            </div>
+            <div>
+              <label>Increase</label>
+              <span class="pct-badge" id="pct-1">+25.4%</span>
+            </div>
+          </div>
+        </div>
+        <div class="tier-card">
+          <div class="tier-name">Growth Tier</div>
+          <div class="price-row">
+            <div>
+              <label for="cur-2">Current Price / mo (Growth Tier)</label>
+              <input type="number" id="cur-2" value="397" min="0" step="1" oninput="calcMRR()">
+            </div>
+            <div>
+              <label for="new-2">New Price / mo (Growth Tier)</label>
+              <input type="number" id="new-2" value="497" min="0" step="1" oninput="calcMRR()">
+            </div>
+            <div>
+              <label>Increase</label>
+              <span class="pct-badge" id="pct-2">+25.2%</span>
+            </div>
+          </div>
+        </div>
+        <div class="tier-card">
+          <div class="tier-name">Pro Tier</div>
+          <div class="price-row">
+            <div>
+              <label for="cur-3">Current Price / mo (Pro Tier)</label>
+              <input type="number" id="cur-3" value="597" min="0" step="1" oninput="calcMRR()">
+            </div>
+            <div>
+              <label for="new-3">New Price / mo (Pro Tier)</label>
+              <input type="number" id="new-3" value="747" min="0" step="1" oninput="calcMRR()">
+            </div>
+            <div>
+              <label>Increase</label>
+              <span class="pct-badge" id="pct-3">+25.1%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="client-row">
+        <div class="client-input-wrap">
+          <label for="clients-1">Starter Clients</label>
+          <input type="number" id="clients-1" value="5" min="0" step="1" oninput="calcMRR()">
+        </div>
+        <div class="client-input-wrap">
+          <label for="clients-2">Growth Clients</label>
+          <input type="number" id="clients-2" value="3" min="0" step="1" oninput="calcMRR()">
+        </div>
+        <div class="client-input-wrap">
+          <label for="clients-3">Pro Clients</label>
+          <input type="number" id="clients-3" value="2" min="0" step="1" oninput="calcMRR()">
+        </div>
+      </div>
+
+      <div class="toggle-row">
+        <label class="toggle">
+          <input type="checkbox" id="grandfather-toggle" checked onchange="calcMRR()">
+          <span class="slider"></span>
+        </label>
+        <div>
+          <div class="toggle-label">Grandfather Existing Clients</div>
+          <div style="font-size:13px;color:var(--text-muted);">Existing clients keep their current price for 90 days before moving to new pricing.</div>
+        </div>
+      </div>
+
+      <div class="mrr-result">
+        <div class="mrr-stat">
+          <div class="val" id="mrr-current">$0</div>
+          <div class="lbl">Current MRR</div>
+        </div>
+        <div class="mrr-stat">
+          <div class="val" id="mrr-projected">$0</div>
+          <div class="lbl">Projected MRR</div>
+        </div>
+        <div class="mrr-stat">
+          <div class="val" id="mrr-delta">+$0</div>
+          <div class="lbl">Monthly Increase</div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);margin-top:10px;" id="grandfather-note"></div>
+    </div>
+  </div>
+
+  <!-- SECTION 3: Communication Timeline -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">3</div>
+      <h2>Communication Timeline</h2>
+    </div>
+    <div class="section-body">
+      <div class="timeline" id="timeline">
+        <div class="tl-item" onclick="toggleTL(this)">
+          <div class="tl-dot"></div>
+          <div class="tl-check"><svg width="12" height="9" viewBox="0 0 12 9" fill="none"><path d="M1 4.5L4.5 8L11 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="tl-content">
+            <div class="tl-day">Day -30</div>
+            <div class="tl-action">Send initial price increase announcement email</div>
+            <div class="tl-note">Give clients 30 days notice. Be warm, grateful, and clear about the new pricing and effective date. Link to value delivered.</div>
+          </div>
+        </div>
+        <div class="tl-item" onclick="toggleTL(this)">
+          <div class="tl-dot"></div>
+          <div class="tl-check"><svg width="12" height="9" viewBox="0 0 12 9" fill="none"><path d="M1 4.5L4.5 8L11 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="tl-content">
+            <div class="tl-day">Day -14</div>
+            <div class="tl-action">Send friendly reminder email</div>
+            <div class="tl-note">Remind clients of the upcoming change. Highlight any new features or improvements added. Invite questions or a call.</div>
+          </div>
+        </div>
+        <div class="tl-item" onclick="toggleTL(this)">
+          <div class="tl-dot"></div>
+          <div class="tl-check"><svg width="12" height="9" viewBox="0 0 12 9" fill="none"><path d="M1 4.5L4.5 8L11 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="tl-content">
+            <div class="tl-day">Day -7</div>
+            <div class="tl-action">Send final reminder — one week out</div>
+            <div class="tl-note">Short, direct message. Confirm the new price, the effective date, and reassure grandfathered clients about their timeline.</div>
+          </div>
+        </div>
+        <div class="tl-item" onclick="toggleTL(this)">
+          <div class="tl-dot"></div>
+          <div class="tl-check"><svg width="12" height="9" viewBox="0 0 12 9" fill="none"><path d="M1 4.5L4.5 8L11 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="tl-content">
+            <div class="tl-day">Day 0</div>
+            <div class="tl-action">Price change goes live — update all materials</div>
+            <div class="tl-note">Update website, proposal templates, onboarding docs, and payment links. Send a brief "it's live" note to new prospects.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 4: Email Generator -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">4</div>
+      <h2>Price Increase Email Draft Generator</h2>
+    </div>
+    <div class="section-body">
+      <div class="email-inputs">
+        <div class="input-group">
+          <label for="email-price">New Monthly Price ($)</label>
+          <input type="number" id="email-price" placeholder="e.g. 247" min="0" step="1">
+        </div>
+        <div class="input-group">
+          <label for="email-date">Effective Date</label>
+          <input type="date" id="email-date">
+        </div>
+        <button class="btn" onclick="generateEmail()">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 8h12M8 2l6 6-6 6" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Generate Email
+        </button>
+      </div>
+      <div class="email-output" id="email-output">
+        <div class="email-preview" id="email-preview"></div>
+        <div class="email-actions">
+          <button class="btn" onclick="copyEmail()">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="5" y="5" width="8" height="8" rx="1.5" stroke="white" stroke-width="1.6"/><path d="M3 10V3a1 1 0 011-1h7" stroke="white" stroke-width="1.6" stroke-linecap="round"/></svg>
+            Copy to Clipboard
+          </button>
+          <span class="copy-feedback" id="copy-feedback">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 3" stroke="#38a169" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Copied!
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 5: Grandfathering Tracker -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">5</div>
+      <h2>Grandfathering Tracker</h2>
+    </div>
+    <div class="section-body">
+      <div class="tracker-actions">
+        <button class="btn" onclick="addClient()">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+          Add Client
+        </button>
+        <button class="btn btn-ghost" onclick="window.print()">
+          <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="3" y="10" width="9" height="4" rx="1" stroke="var(--accent)" stroke-width="1.6"/><path d="M3 10V3a1 1 0 011-1h7a1 1 0 011 1v7" stroke="var(--accent)" stroke-width="1.6"/><path d="M3 7H1a1 1 0 00-1 1v4a1 1 0 001 1h13a1 1 0 001-1V8a1 1 0 00-1-1h-2" stroke="var(--accent)" stroke-width="1.6"/></svg>
+          Print
+        </button>
+        <span class="save-indicator"><div class="save-dot"></div> Auto-saved to browser</span>
+      </div>
+      <div class="tracker-table-wrap">
+        <table id="tracker-table">
+          <thead>
+            <tr>
+              <th>Client Name</th>
+              <th>Tier</th>
+              <th>Current Price</th>
+              <th>New Price</th>
+              <th>Grandfathered</th>
+              <th>Effective Date</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="tracker-body">
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ─── Checklist ───────────────────────────────────────────────────────────────
+function toggleCheck(el) {
+  el.classList.toggle('checked');
+  updateReadiness();
+}
+function updateReadiness() {
+  const items = document.querySelectorAll('#readiness-list li');
+  const done = document.querySelectorAll('#readiness-list li.checked').length;
+  const pct = Math.round((done / items.length) * 100);
+  document.getElementById('ready-fill').style.width = pct + '%';
+  document.getElementById('ready-pct-label').textContent = done + ' / ' + items.length + ' criteria met';
+  const msgs = ['Check off criteria as they apply to your current situation.',
+    'Getting started — most businesses need 3+ criteria before raising prices.',
+    'Making progress — you\'re building toward a strong case.',
+    'Good foundation — consider timing and client communication.',
+    'Strong readiness — your pricing increase is well-justified.',
+    'All criteria met — you are fully ready to raise your prices.'];
+  document.getElementById('ready-msg').textContent = msgs[done] || msgs[done > 5 ? 5 : 0];
+}
+
+// ─── Calculator ──────────────────────────────────────────────────────────────
+function fmt(n) { return '$' + Math.round(n).toLocaleString(); }
+function calcMRR() {
+  const tiers = [1, 2, 3];
+  let curMRR = 0, newMRR = 0;
+  tiers.forEach(t => {
+    const cur = parseFloat(document.getElementById('cur-' + t).value) || 0;
+    const nw = parseFloat(document.getElementById('new-' + t).value) || 0;
+    const cl = parseInt(document.getElementById('clients-' + t).value) || 0;
+    const pct = cur > 0 ? (((nw - cur) / cur) * 100).toFixed(1) : '0.0';
+    const sign = (nw - cur) >= 0 ? '+' : '';
+    document.getElementById('pct-' + t).textContent = sign + pct + '%';
+    document.getElementById('pct-' + t).style.background = (nw >= cur) ? 'var(--accent-light)' : '#fff5f5';
+    document.getElementById('pct-' + t).style.color = (nw >= cur) ? 'var(--accent)' : '#e53e3e';
+    curMRR += cur * cl;
+    newMRR += nw * cl;
+  });
+  const grand = document.getElementById('grandfather-toggle').checked;
+  const delta = newMRR - curMRR;
+  document.getElementById('mrr-current').textContent = fmt(curMRR);
+  document.getElementById('mrr-projected').textContent = grand ? fmt(curMRR) + ' → ' + fmt(newMRR) : fmt(newMRR);
+  document.getElementById('mrr-delta').textContent = (delta >= 0 ? '+' : '') + fmt(delta);
+  document.getElementById('grandfather-note').textContent = grand
+    ? 'With grandfathering: existing clients stay at current pricing for 90 days. Projected MRR shown is after the grandfathering period ends.'
+    : 'No grandfathering: all clients move to new pricing on the effective date.';
+  updateTrackerPrices();
+}
+calcMRR();
+
+// ─── Timeline ────────────────────────────────────────────────────────────────
+function toggleTL(el) {
+  el.classList.toggle('done');
+  saveTLState();
+}
+function saveTLState() {
+  const items = document.querySelectorAll('.tl-item');
+  const state = Array.from(items).map(i => i.classList.contains('done'));
+  localStorage.setItem('cwi-tl', JSON.stringify(state));
+}
+function loadTLState() {
+  const s = localStorage.getItem('cwi-tl');
+  if (!s) return;
+  const state = JSON.parse(s);
+  const items = document.querySelectorAll('.tl-item');
+  items.forEach((el, i) => { if (state[i]) el.classList.add('done'); });
+}
+loadTLState();
+
+// ─── Email Generator ─────────────────────────────────────────────────────────
+function generateEmail() {
+  const price = document.getElementById('email-price').value;
+  const dateVal = document.getElementById('email-date').value;
+  if (!price || !dateVal) {
+    alert('Please enter both a new price and an effective date.');
+    return;
+  }
+  const d = new Date(dateVal + 'T12:00:00');
+  const dateStr = d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const email = `Subject: A Note About Our Pricing — And What We've Built Together
+
+Hi [First Name],
+
+I wanted to reach out personally before you hear anything through the grapevine — because you deserve to hear it from me first.
+
+Starting ${dateStr}, CWI AI's monthly pricing will be moving to $${price}/month for new clients.
+
+If you've been with us from the early days, thank you. Genuinely. You took a chance on us when we were still proving ourselves, and that trust has meant everything to the growth of this company. Because of that, you'll keep your current pricing for 90 days from the effective date — no action needed on your part.
+
+Here's what has changed since you first signed on:
+
+  • We've added new AI-powered automations that save clients an average of 8+ hours per week
+  • Our reporting and dashboards have been completely rebuilt for clarity and speed
+  • We've expanded our support coverage and response times
+  • New integrations have been added based directly on client feedback — including yours
+
+Pricing is never an easy conversation, but I want to be straightforward with you: our costs have grown alongside our capabilities, and this adjustment allows us to keep delivering at the level you expect — and keep investing in what comes next.
+
+If you have any questions, want to hop on a quick call, or just want to talk through what this means for your account, my calendar is always open. Just reply to this email and we'll find time.
+
+Thank you for being one of the clients who helped shape what CWI AI has become. I don't take that lightly.
+
+Warm regards,
+
+Brian
+Founder, CWI AI
+cwi-ai.com`;
+
+  document.getElementById('email-preview').textContent = email;
+  document.getElementById('email-output').classList.add('visible');
+}
+function copyEmail() {
+  const text = document.getElementById('email-preview').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const fb = document.getElementById('copy-feedback');
+    fb.classList.add('show');
+    setTimeout(() => fb.classList.remove('show'), 2500);
+  });
+}
+
+// ─── Grandfathering Tracker ──────────────────────────────────────────────────
+let clients = [];
+const TIER_PRICES = { 'Starter': [197, 247], 'Growth': [397, 497], 'Pro': [597, 747] };
+
+function getTierPrices(tier) {
+  const cur1 = parseFloat(document.getElementById('cur-1').value) || 197;
+  const new1 = parseFloat(document.getElementById('new-1').value) || 247;
+  const cur2 = parseFloat(document.getElementById('cur-2').value) || 397;
+  const new2 = parseFloat(document.getElementById('new-2').value) || 497;
+  const cur3 = parseFloat(document.getElementById('cur-3').value) || 597;
+  const new3 = parseFloat(document.getElementById('new-3').value) || 747;
+  if (tier === 'Starter') return [cur1, new1];
+  if (tier === 'Growth') return [cur2, new2];
+  if (tier === 'Pro') return [cur3, new3];
+  return [0, 0];
+}
+
+function addClient() {
+  const today = new Date();
+  const grand = new Date(today);
+  grand.setDate(grand.getDate() + 90);
+  const dateStr = grand.toISOString().split('T')[0];
+  clients.push({ name: 'New Client', tier: 'Starter', grandfathered: true, effectiveDate: dateStr });
+  renderTracker();
+  saveClients();
+}
+
+function renderTracker() {
+  const tbody = document.getElementById('tracker-body');
+  tbody.innerHTML = '';
+  clients.forEach((c, i) => {
+    const prices = getTierPrices(c.tier);
+    const curPrice = prices[0];
+    const newPrice = prices[1];
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td><input class="client-name-input" value="${escHtml(c.name)}" onchange="clients[${i}].name=this.value;saveClients()"></td>
+      <td>
+        <select class="tier-select" onchange="clients[${i}].tier=this.value;renderTracker();saveClients()">
+          <option${c.tier==='Starter'?' selected':''}>Starter</option>
+          <option${c.tier==='Growth'?' selected':''}>Growth</option>
+          <option${c.tier==='Pro'?' selected':''}>Pro</option>
+        </select>
+      </td>
+      <td style="font-weight:600">$${curPrice}/mo</td>
+      <td class="new-price-cell${c.grandfathered?' grand':''}">
+        ${c.grandfathered ? `<span style="color:var(--text-muted);font-size:13px">Grandfathered</span>` : `$${newPrice}/mo`}
+      </td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <label class="grand-toggle">
+            <input type="checkbox" ${c.grandfathered?'checked':''} onchange="clients[${i}].grandfathered=this.checked;renderTracker();saveClients()">
+            <span class="gt-slider"></span>
+          </label>
+          <span class="tag ${c.grandfathered?'tag-grand':'tag-new'}">${c.grandfathered?'Grand':'New'}</span>
+        </div>
+      </td>
+      <td><input type="date" class="date-input" value="${c.effectiveDate}" onchange="clients[${i}].effectiveDate=this.value;saveClients()"></td>
+      <td><button class="del-btn" onclick="removeClient(${i})" title="Remove">&#10005;</button></td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+function removeClient(i) {
+  clients.splice(i, 1);
+  renderTracker();
+  saveClients();
+}
+
+function updateTrackerPrices() {
+  renderTracker();
+}
+
+function saveClients() {
+  localStorage.setItem('cwi-clients', JSON.stringify(clients));
+}
+
+function loadClients() {
+  const s = localStorage.getItem('cwi-clients');
+  if (s) {
+    clients = JSON.parse(s);
+  } else {
+    const today = new Date();
+    const g = new Date(today); g.setDate(g.getDate() + 90);
+    const gStr = g.toISOString().split('T')[0];
+    clients = [
+      { name: 'Sample Client A', tier: 'Starter', grandfathered: true, effectiveDate: gStr },
+      { name: 'Sample Client B', tier: 'Growth', grandfathered: true, effectiveDate: gStr },
+      { name: 'Sample Client C', tier: 'Pro', grandfathered: false, effectiveDate: today.toISOString().split('T')[0] },
+    ];
+  }
+  renderTracker();
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+loadClients();
+
+// Set default email date to 30 days from now
+const d30 = new Date(); d30.setDate(d30.getDate() + 30);
+document.getElementById('email-date').value = d30.toISOString().split('T')[0];
+</script>
+</body>
+</html>

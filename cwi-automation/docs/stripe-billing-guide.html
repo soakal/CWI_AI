@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CWI AI — Stripe Billing Setup Guide</title>
+  <meta name="description" content="CWI internal tool: CWI AI — Stripe Billing Setup Guide. Internal use only — CWI Compute With Imagination.">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0A0A0C;
+      --bg-card:   #111114;
+      --bg-hover:  #18181C;
+      --accent:    #FF5A1F;
+      --accent-dim:#cc4718;
+      --text:      #E8E8EC;
+      --text-muted:#888896;
+      --border:    #252530;
+      --success:   #22C55E;
+      --warn:      #F59E0B;
+      --info:      #3B82F6;
+      --radius:    10px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Sora', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      font-size: 15px;
+    }
+
+    /* ── TOP BAR ── */
+    .topbar {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .topbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .topbar-logo {
+      width: 32px; height: 32px;
+      background: var(--accent);
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 14px; color: #fff; letter-spacing: -0.5px;
+    }
+    .topbar-title { font-weight: 600; font-size: 15px; color: var(--text); }
+    .topbar-sub { font-size: 12px; color: var(--text-muted); }
+    .btn-print {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 18px;
+      font-family: 'Sora', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-print:hover { background: var(--accent-dim); }
+
+    /* ── LAYOUT ── */
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      text-align: center;
+      margin-bottom: 48px;
+      padding: 48px 24px 40px;
+      background: linear-gradient(135deg, #111114 0%, #16161a 100%);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -60px; right: -60px;
+      width: 220px; height: 220px;
+      background: radial-gradient(circle, rgba(255,90,31,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-tag {
+      display: inline-block;
+      background: rgba(255,90,31,0.15);
+      color: var(--accent);
+      border: 1px solid rgba(255,90,31,0.3);
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 4px 14px;
+      margin-bottom: 16px;
+    }
+    .hero h1 {
+      font-size: 30px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 10px;
+      letter-spacing: -0.5px;
+    }
+    .hero h1 span { color: var(--accent); }
+    .hero p {
+      font-size: 14px;
+      color: var(--text-muted);
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    /* ── SECTION CARDS ── */
+    .section {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-card);
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 24px;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.15s;
+    }
+    .section-header:hover { background: var(--bg-hover); }
+
+    .section-header-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .step-badge {
+      width: 34px; height: 34px;
+      border-radius: 8px;
+      background: rgba(255,90,31,0.15);
+      border: 1px solid rgba(255,90,31,0.3);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+    .overview-badge {
+      background: rgba(59,130,246,0.15);
+      border-color: rgba(59,130,246,0.3);
+      color: var(--info);
+    }
+    .checklist-badge {
+      background: rgba(34,197,94,0.15);
+      border-color: rgba(34,197,94,0.3);
+      color: var(--success);
+    }
+
+    .section-header h2 {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .section-header .section-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    .chevron {
+      color: var(--text-muted);
+      transition: transform 0.25s;
+      font-size: 18px;
+      line-height: 1;
+    }
+    .section.open .chevron { transform: rotate(180deg); }
+
+    .section-body {
+      display: none;
+      padding: 0 24px 24px;
+      border-top: 1px solid var(--border);
+    }
+    .section.open .section-body { display: block; }
+
+    /* ── BODY CONTENT ── */
+    .section-body p { color: var(--text-muted); margin-bottom: 10px; font-size: 14px; }
+    .section-body p strong { color: var(--text); }
+
+    .section-body ul, .section-body ol {
+      padding-left: 22px;
+      margin: 10px 0 14px;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+    .section-body li { margin-bottom: 6px; }
+    .section-body li strong { color: var(--text); }
+
+    h3.sub {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin: 20px 0 10px;
+    }
+
+    /* ── PRICING TABLE ── */
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin: 16px 0;
+    }
+    .price-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+    }
+    .price-card .plan-name {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+    .price-card .monthly {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.2;
+    }
+    .price-card .monthly span { font-size: 13px; font-weight: 400; color: var(--text-muted); }
+    .price-card .setup {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* ── STEPS LIST ── */
+    .steps {
+      counter-reset: step;
+      list-style: none;
+      padding: 0;
+      margin: 14px 0;
+    }
+    .steps li {
+      counter-increment: step;
+      display: flex;
+      gap: 12px;
+      margin-bottom: 12px;
+      align-items: flex-start;
+    }
+    .steps li::before {
+      content: counter(step);
+      min-width: 24px;
+      height: 24px;
+      background: rgba(255,90,31,0.15);
+      border: 1px solid rgba(255,90,31,0.3);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent);
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .steps li p { margin: 0; }
+
+    /* ── CODE / ENV BLOCKS ── */
+    .code-block {
+      background: #0D0D10;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 14px 16px;
+      font-family: 'Courier New', monospace;
+      font-size: 12.5px;
+      color: #b0b8d0;
+      margin: 12px 0;
+      overflow-x: auto;
+      line-height: 1.8;
+    }
+    .code-block .key { color: #60A5FA; }
+    .code-block .val { color: #86EFAC; }
+    .code-block .comment { color: #555565; }
+
+    /* ── INFO / WARN BOXES ── */
+    .callout {
+      border-radius: 7px;
+      padding: 12px 16px;
+      margin: 14px 0;
+      font-size: 13.5px;
+      border-left: 3px solid;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .callout-icon { flex-shrink: 0; font-size: 16px; margin-top: 1px; }
+    .callout.info {
+      background: rgba(59,130,246,0.08);
+      border-color: var(--info);
+      color: #93C5FD;
+    }
+    .callout.warn {
+      background: rgba(245,158,11,0.08);
+      border-color: var(--warn);
+      color: #FCD34D;
+    }
+    .callout.success {
+      background: rgba(34,197,94,0.08);
+      border-color: var(--success);
+      color: #86EFAC;
+    }
+
+    /* ── WEBHOOK EVENT PILLS ── */
+    .event-pills { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+    .pill {
+      background: rgba(255,90,31,0.12);
+      border: 1px solid rgba(255,90,31,0.25);
+      border-radius: 4px;
+      color: var(--accent);
+      font-size: 11.5px;
+      font-weight: 500;
+      padding: 3px 10px;
+      font-family: 'Courier New', monospace;
+    }
+
+    /* ── CHECKLIST ── */
+    .checklist {
+      list-style: none;
+      padding: 0;
+      margin: 14px 0;
+    }
+    .checklist li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 14px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      margin-bottom: 8px;
+      font-size: 14px;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .checklist li:hover { background: var(--bg-hover); }
+    .checklist li input[type="checkbox"] {
+      width: 17px; height: 17px;
+      accent-color: var(--accent);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .checklist li.checked {
+      background: rgba(34,197,94,0.06);
+      border-color: rgba(34,197,94,0.25);
+    }
+    .checklist li.checked span { text-decoration: line-through; color: #555565; }
+    .checklist li .tag {
+      margin-left: auto;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 2px 8px;
+      border-radius: 3px;
+    }
+    .tag-stripe { background: rgba(99,91,255,0.15); color: #a5b4fc; }
+    .tag-env    { background: rgba(245,158,11,0.15); color: #FCD34D; }
+    .tag-make   { background: rgba(34,197,94,0.15);  color: #86EFAC; }
+    .tag-test   { background: rgba(255,90,31,0.15);  color: var(--accent); }
+
+    /* ── DIVIDER ── */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 18px 0;
+    }
+
+    /* ── PRINT ── */
+    @media print {
+      .topbar, .btn-print { display: none !important; }
+      body { background: #fff; color: #111; }
+      .hero, .section { background: #fff; border-color: #ccc; }
+      .section-body { display: block !important; }
+      .chevron { display: none; }
+      .code-block { background: #f5f5f5; color: #222; border-color: #ddd; }
+      .price-card { background: #f9f9f9; border-color: #ddd; }
+      .checklist li { background: #fafafa; border-color: #ddd; }
+      .callout.info { background: #eff6ff; color: #1d4ed8; }
+      .callout.warn { background: #fffbeb; color: #92400e; }
+      .callout.success { background: #f0fdf4; color: #166534; }
+      .pill { background: #f5e6e0; color: #c2410c; border-color: #fbd5c5; }
+      .topbar-title, .hero h1 span, .step-badge, .plan-name, .monthly { color: #c2410c !important; }
+      a { color: #c2410c; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-brand">
+    <div class="topbar-logo">CWI</div>
+    <div>
+      <div class="topbar-title">CWI AI — Stripe Billing Setup Guide</div>
+      <div class="topbar-sub">Internal Operations Reference</div>
+    </div>
+  </div>
+  <button class="btn-print" onclick="window.print()">Print / Save PDF</button>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="container">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-tag">Billing Ops</div>
+    <h1>Stripe <span>Billing</span> Setup Guide</h1>
+    <p>Step-by-step instructions for setting up recurring monthly subscriptions, webhooks, and client billing inside the CWI AI system.</p>
+  </div>
+
+  <!-- ── SECTION: OVERVIEW ── -->
+  <div class="section open" id="s-overview">
+    <div class="section-header" onclick="toggleSection('s-overview')">
+      <div class="section-header-left">
+        <div class="step-badge overview-badge">&#9432;</div>
+        <div>
+          <h2>Overview</h2>
+          <div class="section-subtitle">How Stripe fits into the CWI AI billing stack</div>
+        </div>
+      </div>
+      <div class="chevron">&#8964;</div>
+    </div>
+    <div class="section-body">
+      <p><strong>Stripe</strong> is the payment processor used for all CWI AI client billing. Every active client is billed monthly via a Stripe subscription.</p>
+      <ul>
+        <li><strong>Recurring billing</strong> — Stripe charges clients monthly on their billing anchor date. No manual invoicing required after setup.</li>
+        <li><strong>Dunning management</strong> — Stripe automatically retries failed charges on a configurable schedule (default: 4 retries over 8 days) before marking a subscription as past-due.</li>
+        <li><strong>Failed payment alerts</strong> — <strong>Scenario I</strong> (Make.com) listens to Stripe webhook events for <code>invoice.payment_failed</code> and sends the client an automated email with a portal link to update their card.</li>
+        <li><strong>Scenario F</strong> (Make.com) logs successful payments and triggers onboarding or fulfillment steps as configured.</li>
+      </ul>
+      <div class="callout info">
+        <span class="callout-icon">&#9432;</span>
+        <div>Always test with Stripe test mode cards before going live with a real client. Test card: <strong>4242 4242 4242 4242</strong>, any future date, any CVC.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STEP 1: CREATE PRODUCTS ── -->
+  <div class="section" id="s-step1">
+    <div class="section-header" onclick="toggleSection('s-step1')">
+      <div class="section-header-left">
+        <div class="step-badge">1</div>
+        <div>
+          <h2>Create Products &amp; Prices</h2>
+          <div class="section-subtitle">Starter / Growth / Pro plans in the Stripe Dashboard</div>
+        </div>
+      </div>
+      <div class="chevron">&#8964;</div>
+    </div>
+    <div class="section-body">
+      <div class="pricing-grid">
+        <div class="price-card">
+          <div class="plan-name">Starter</div>
+          <div class="monthly">$197<span>/mo</span></div>
+          <div class="setup">+ $499 setup fee</div>
+        </div>
+        <div class="price-card">
+          <div class="plan-name">Growth</div>
+          <div class="monthly">$397<span>/mo</span></div>
+          <div class="setup">+ $499 setup fee</div>
+        </div>
+        <div class="price-card">
+          <div class="plan-name">Pro</div>
+          <div class="monthly">$597<span>/mo</span></div>
+          <div class="setup">+ $749 setup fee</div>
+        </div>
+      </div>
+
+      <h3 class="sub">Steps — Create Each Recurring Product</h3>
+      <ol class="steps">
+        <li><p>In the Stripe Dashboard, go to <strong>Product catalog</strong> (left sidebar) then click <strong>+ Add product</strong>.</p></li>
+        <li><p>Enter the <strong>Product name</strong> (e.g. "CWI AI Starter Plan").</p></li>
+        <li><p>Under <strong>Pricing</strong>, set the model to <strong>Recurring</strong>.</p></li>
+        <li><p>Enter the <strong>price</strong> (e.g. <code>197.00</code>) and set the currency to <strong>USD</strong>.</p></li>
+        <li><p>Set the billing period to <strong>Monthly</strong>.</p></li>
+        <li><p>Click <strong>Save product</strong>. Repeat for Growth ($397/mo) and Pro ($597/mo).</p></li>
+      </ol>
+
+      <h3 class="sub">Steps — Create Setup Fee Products (One-Time)</h3>
+      <ol class="steps">
+        <li><p>Create another product: name it <strong>"CWI AI Setup Fee — Starter/Growth"</strong>, pricing model <strong>One-time</strong>, price <strong>$499</strong>.</p></li>
+        <li><p>Create a second one-time product: <strong>"CWI AI Setup Fee — Pro"</strong>, price <strong>$749</strong>.</p></li>
+      </ol>
+
+      <div class="callout warn">
+        <span class="callout-icon">&#9888;</span>
+        <div>Do not mix recurring and one-time prices on the same product. Keep them as separate products so subscriptions stay clean.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STEP 2: GET PRICE IDs ── -->
+  <div class="section" id="s-step2">
+    <div class="section-header" onclick="toggleSection('s-step2')">
+      <div class="section-header-left">
+        <div class="step-badge">2</div>
+        <div>
+          <h2>Get Price IDs</h2>
+          <div class="section-subtitle">Copy price_xxx IDs for use in .env files</div>
+        </div>
+      </div>
+      <div class="chevron">&#8964;</div>
+    </div>
+    <div class="section-body">
+      <p>After creating each product, Stripe generates a unique <strong>Price ID</strong> in the format <code>price_xxxxxxxxxxxxxxxxxxxxxxxx</code>. These are referenced by client automations.</p>
+
+      <h3 class="sub">How to Copy a Price ID</h3>
+      <ol class="steps">
+        <li><p>Go to <strong>Product catalog</strong> → click on the product name.</p></li>
+        <li><p>Scroll to the <strong>Pricing</strong> section on the product detail page.</p></li>
+        <li><p>Find the price row and click the <strong>copy icon</strong> next to the Price ID (e.g. <code>price_1Abc...</code>).</p></li>
+        <li><p>Paste it into the relevant client <code>.env</code> file.</p></li>
+      </ol>
+
+      <h3 class="sub">Client .env Variables</h3>
+      <div class="code-block">
+<span class="comment"># Recurring subscription price IDs</span>
+<span class="key">STRIPE_MONTHLY_PRICE_ID_STARTER</span>=<span class="val">price_xxxxxxxxxxxxxxxxxxxx</span>
+<span class="key">STRIPE_MONTHLY_PRICE_ID_GROWTH</span>=<span class="val">price_xxxxxxxxxxxxxxxxxxxx</span>
+<span class="key">STRIPE_MONTHLY_PRICE_ID_PRO</span>=<span class="val">price_xxxxxxxxxxxxxxxxxxxx</span>
+
+<span class="comment"># For a specific client, set the plan they're on:</span>
+<span class="key">STRIPE_MONTHLY_PRICE_ID</span>=<span class="val">price_xxxxxxxxxxxxxxxxxxxx</span>
+      </div>
+
+      <div class="callout info">
+        <span class="callout-icon">&#9432;</span>
+        <div>Stripe has separate price IDs for <strong>test mode</strong> and <strong>live mode</strong>. Make sure to use the correct set when deploying a client to production.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STEP 3: CUSTOMER PORTAL ── -->
+  <div class="section" id="s-step3">
+    <div class="section-header" onclick="toggleSection('s-step3')">
+      <div class="section-header-left">
+        <div class="step-badge">3</div>
+        <div>
+          <h2>Create the Customer Portal</h2>
+          <div class="section-subtitle">Self-service card update &amp; subscription management</div>
+        </div>
+      </div>
+      <div class="chevron">&#8964;</div>
+    </div>
+    <div class="section-body">
+      <p>The Stripe Customer Portal lets clients update their payment method on their own — no need to contact you. The portal URL is embedded in failed-payment emails sent by <strong>Scenario I</strong>.</p>
+
+      <h3 class="sub">Enable the Customer Portal</h3>
+      <ol class="steps">
+        <li><p>In the Stripe Dashboard go to <strong>Settings</strong> (gear icon) → <strong>Billing</strong> → <strong>Customer portal</strong>.</p></li>
+        <li><p>Toggle the portal to <strong>Active / Enabled</strong>.</p></li>
+        <li><p>Under <strong>Functionality</strong>, enable at minimum: <em>Update payment methods</em> and <em>View billing history</em>.</p></li>
+        <li><p>Optionally configure your business branding (logo, colors) so the portal matches CWI AI style.</p></li>
+        <li><p>Click <strong>Save changes</strong>.</p></li>
+        <li><p>Copy the <strong>portal link</strong> shown at the top of the page (format: <code>https://billing.stripe.com/p/login/...</code>).</p></li>
+      </ol>
+
+      <h3 class="sub">.env Variable</h3>
+      <div class="code-block">
+<span class="key">STRIPE_CUSTOMER_PORTAL_URL</span>=<span class="val">https://billing.stripe.com/p/login/xxxxxxxxxxxx</span>
+      </div>
+
+      <div class="callout success">
+        <span class="callout-icon">&#10003;</span>
+        <div>Scenario I uses this URL in the body of failed-payment alert emails so clients can self-serve without calling you.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STEP 4: SETUP FEE ── -->
+  <div class="section" id="s-step4">
+    <div class="section-header" onclick="toggleSection('s-step4')">
+      <div class="section-header-left">
+        <div class="step-badge">4</div>
+        <div>
+          <h2>Charge the Setup Fee</h2>
+          <div class="section-subtitle">Collect one-time onboarding fee before work begins</div>
+        </div>
+      </div>
+      <div class="chevron">&#8964;</div>
+    </div>
+    <div class="section-body">
+      <p>Setup fees are collected <strong>before</strong> subscription creation. Use a Stripe Payment Link for the easiest client experience — they click, pay, done.</p>
+
+      <h3 class="sub">Option A — Payment Links (Recommended)</h3>
+      <ol class="steps">
+        <li><p>Go to <strong>Payment Links</strong> in the Stripe sidebar → click <strong>+ New</strong>.</p></li>
+        <li><p>Click <strong>+ Add a product</strong> → select your setup fee product (e.g. "CWI AI Setup Fee — Starter/Growth").</p></li>
+        <li><p>Set quantity to <strong>1</strong>. Optionally add a custom success message.</p></li>
+        <li><p>Click <strong>Create link</strong>. Copy the URL and send it to the client via email or SMS.</p></li>
+        <li><p>Do not start work until the payment shows as <strong>Succeeded</strong> in the Stripe Dashboard.</p></li>
+      </ol>
+
+      <h3 class="sub">Option B — One-Time Invoice</h3>
+      <ol class="steps">
+        <li><p>Go to <strong>Customers</strong> → find or create the client → click <strong>+ Create invoice</strong>.</p></li>
+        <li><p>Add the setup fee product as a line item.</p></li>
+        <li><p>Set <strong>Due date</strong> to immediately or a short window (e.g. 3 days).</p></li>
+        <li><p>Click <strong>Send invoice</strong>. Stripe emails the client directly.</p></li>
+      </ol>
+
+      <div class="callout warn">
+        <span class="callout-icon">&#9888;</span>
+        <div>Always collect the setup fee <strong>before</strong> creating the subscription or starting any build work. The subscription creation in Step 5 comes after payment is confirmed.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STEP 5: CREATE SUBSCRIPTION ── -->
+  <div class="section" id="s-step5">
+    <div class="section-header" onclick="toggleSection('s-step5')">
+      <div class="section-header-left">
+        <div class="step-badge">5</div>
+        <div>
+          <h2>Create Subscription for New Client</h2>
+          <div class="section-subtitle">Customer record, payment method, and recurring plan</div>
+        </div>
+      </div>
+      <div class="chevron">&#8964;</div>
+    </div>
+    <div class="section-body">
+
+      <h3 class="sub">A — Create the Customer</h3>
+      <ol class="steps">
+        <li><p>Go to <strong>Customers</strong> in the sidebar → click <strong>+ Add customer</strong>.</p></li>
+        <li><p>Enter the client's <strong>name</strong> and <strong>email address</strong>. Add their business name in the description field.</p></li>
+        <li><p>Click <strong>Add customer</strong>.</p></li>
+      </ol>
+
+      <h3 class="sub">B — Attach a Payment Method</h3>
+      <ol class="steps">
+        <li><p>On the customer record, scroll to <strong>Payment methods</strong> → click <strong>+ Add</strong>.</p></li>
+        <li><p>Enter the card details manually, <strong>or</strong> send the client a <strong>Setup link</strong> (Stripe generates a secure URL for them to enter their own card — preferred for remote clients).</p></li>
+      </ol>
+
+      <h3 class="sub">C — Create the Subscription</h3>
+      <ol class="steps">
+        <li><p>On the customer record, click <strong>+ Create subscription</strong>.</p></li>
+        <li><p>Click <strong>Add a product</strong> and select the correct plan (Starter $197, Growth $397, or Pro $597).</p></li>
+        <li><p>Set the <strong>Billing cycle anchor</strong> to the <strong>1st of the month</strong> for simplicity (all clients bill on the 1st).</p></li>
+        <li><p>Review the proration charge if starting mid-month — adjust or waive as needed.</p></li>
+        <li><p>Click <strong>Start subscription</strong>.</p></li>
+      </ol>
+
+      <div class="callout info">
+        <span class="callout-icon">&#9432;</span>
+        <div>Using the 1st of the month as the billing anchor keeps all subscriptions on the same cycle, making monthly revenue tracking simple. Stripe will prorate the first charge for the current month.</div>
+      </div>
+
+      <hr class="divider" />
+      <p>After the subscription is created, copy the <strong>Customer ID</strong> (<code>cus_xxx</code>) and <strong>Subscription ID</strong> (<code>sub_xxx</code>) into the client's record in your CRM or onboarding doc.</p>
+      <div class="code-block">
+<span class="key">STRIPE_CUSTOMER_ID</span>=<span class="val">cus_xxxxxxxxxxxxxxxxxxxx</span>
+<span class="key">STRIPE_SUBSCRIPTION_ID</span>=<span class="val">sub_xxxxxxxxxxxxxxxxxxxx</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STEP 6: CONFIGURE WEBHOOKS ── -->
+  <div class="section" id="s-step6">
+    <div class="section-header" onclick="toggleSection('s-step6')">
+      <div class="section-header-left">
+        <div class="step-badge">6</div>
+        <div>
+          <h2>Configure Webhooks</h2>
+          <div class="section-subtitle">Connect Stripe events to Scenario F and Scenario I in Make.com</div>
+        </div>
+      </div>
+      <div class="chevron">&#8964;</div>
+    </div>
+    <div class="section-body">
+      <p>Webhooks let Stripe push real-time events to Make.com so your scenarios fire automatically when payments succeed or fail.</p>
+
+      <h3 class="sub">Add the Webhook Endpoint</h3>
+      <ol class="steps">
+        <li><p>In the Stripe Dashboard go to <strong>Developers</strong> → <strong>Webhooks</strong> → click <strong>+ Add endpoint</strong>.</p></li>
+        <li><p>In the <strong>Endpoint URL</strong> field, paste the <strong>Scenario F webhook URL</strong> from Make.com (found in the scenario's Webhook trigger module).</p></li>
+        <li><p>Under <strong>Select events</strong>, add the following events:</p></li>
+      </ol>
+
+      <div class="event-pills">
+        <span class="pill">payment_intent.succeeded</span>
+        <span class="pill">payment_intent.payment_failed</span>
+        <span class="pill">invoice.payment_succeeded</span>
+        <span class="pill">invoice.payment_failed</span>
+        <span class="pill">customer.subscription.updated</span>
+        <span class="pill">customer.subscription.deleted</span>
+      </div>
+
+      <ol class="steps" style="counter-reset: step 3;">
+        <li><p>Click <strong>Add endpoint</strong> to save.</p></li>
+        <li><p>On the endpoint detail page, click <strong>Reveal signing secret</strong> and copy it.</p></li>
+        <li><p>Paste it into your <code>.env</code> file and into the Make.com webhook settings for signature verification.</p></li>
+      </ol>
+
+      <h3 class="sub">.env Variable</h3>
+      <div class="code-block">
+<span class="key">STRIPE_WEBHOOK_SECRET</span>=<span class="val">whsec_xxxxxxxxxxxxxxxxxxxxxxxxxxxx</span>
+      </div>
+
+      <div class="callout warn">
+        <span class="callout-icon">&#9888;</span>
+        <div>The webhook signing secret is different from your Stripe API keys. Never share it publicly. Stripe uses it to verify that webhook payloads are genuinely from Stripe, not a spoofed request.</div>
+      </div>
+
+      <h3 class="sub">Scenario Routing</h3>
+      <ul>
+        <li><strong>Scenario F</strong> — Triggered by <code>payment_intent.succeeded</code> / <code>invoice.payment_succeeded</code>. Logs the payment, updates the CRM, and fires fulfillment steps.</li>
+        <li><strong>Scenario I</strong> — Triggered by <code>invoice.payment_failed</code>. Sends the client a payment failure alert email with their Customer Portal link (<code>STRIPE_CUSTOMER_PORTAL_URL</code>) so they can update their card.</li>
+      </ul>
+
+      <div class="callout success">
+        <span class="callout-icon">&#10003;</span>
+        <div>After adding the endpoint, use <strong>Stripe CLI</strong> or the <strong>Send test webhook</strong> button in the dashboard to fire a test event and confirm Make.com receives it before going live.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CHECKLIST ── -->
+  <div class="section" id="s-checklist">
+    <div class="section-header" onclick="toggleSection('s-checklist')">
+      <div class="section-header-left">
+        <div class="step-badge checklist-badge">&#10003;</div>
+        <div>
+          <h2>Monthly Billing Checklist</h2>
+          <div class="section-subtitle">Run this checklist for every new CWI AI client</div>
+        </div>
+      </div>
+      <div class="chevron">&#8964;</div>
+    </div>
+    <div class="section-body">
+      <p>Click each item to mark it complete. This checklist resets when you reload the page.</p>
+
+      <ul class="checklist" id="checklist">
+        <li onclick="toggleCheck(this)">
+          <input type="checkbox" onclick="event.stopPropagation(); toggleCheck(this.parentElement)" />
+          <span>All three plan products created in Stripe (Starter, Growth, Pro) with correct recurring prices</span>
+          <span class="tag tag-stripe">Stripe</span>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <input type="checkbox" onclick="event.stopPropagation(); toggleCheck(this.parentElement)" />
+          <span>Setup fee products created as one-time products ($499 Starter/Growth, $749 Pro)</span>
+          <span class="tag tag-stripe">Stripe</span>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <input type="checkbox" onclick="event.stopPropagation(); toggleCheck(this.parentElement)" />
+          <span>Price IDs copied and added to client .env as <code>STRIPE_MONTHLY_PRICE_ID</code></span>
+          <span class="tag tag-env">.env</span>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <input type="checkbox" onclick="event.stopPropagation(); toggleCheck(this.parentElement)" />
+          <span>Customer Portal enabled in Stripe Settings → Billing → Customer portal</span>
+          <span class="tag tag-stripe">Stripe</span>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <input type="checkbox" onclick="event.stopPropagation(); toggleCheck(this.parentElement)" />
+          <span>Portal URL copied and set as <code>STRIPE_CUSTOMER_PORTAL_URL</code> in .env and Scenario I</span>
+          <span class="tag tag-env">.env</span>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <input type="checkbox" onclick="event.stopPropagation(); toggleCheck(this.parentElement)" />
+          <span>Setup fee payment link sent and payment confirmed as Succeeded before work begins</span>
+          <span class="tag tag-stripe">Stripe</span>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <input type="checkbox" onclick="event.stopPropagation(); toggleCheck(this.parentElement)" />
+          <span>New customer created in Stripe with correct name and email</span>
+          <span class="tag tag-stripe">Stripe</span>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <input type="checkbox" onclick="event.stopPropagation(); toggleCheck(this.parentElement)" />
+          <span>Payment method attached (card on file or secure setup link sent)</span>
+          <span class="tag tag-stripe">Stripe</span>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <input type="checkbox" onclick="event.stopPropagation(); toggleCheck(this.parentElement)" />
+          <span>Subscription created with correct plan and billing anchor set to 1st of month</span>
+          <span class="tag tag-stripe">Stripe</span>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <input type="checkbox" onclick="event.stopPropagation(); toggleCheck(this.parentElement)" />
+          <span>Customer ID and Subscription ID recorded in CRM / client onboarding doc</span>
+          <span class="tag tag-stripe">Stripe</span>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <input type="checkbox" onclick="event.stopPropagation(); toggleCheck(this.parentElement)" />
+          <span>Webhook endpoint added in Stripe Developers → Webhooks pointing to Scenario F URL</span>
+          <span class="tag tag-make">Make</span>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <input type="checkbox" onclick="event.stopPropagation(); toggleCheck(this.parentElement)" />
+          <span>Webhook events selected: payment_intent.succeeded, payment_intent.payment_failed, invoice.payment_failed</span>
+          <span class="tag tag-stripe">Stripe</span>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <input type="checkbox" onclick="event.stopPropagation(); toggleCheck(this.parentElement)" />
+          <span>Webhook signing secret copied and set as <code>STRIPE_WEBHOOK_SECRET</code> in .env</span>
+          <span class="tag tag-env">.env</span>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <input type="checkbox" onclick="event.stopPropagation(); toggleCheck(this.parentElement)" />
+          <span>Scenario I tested end-to-end using Stripe test card 4000 0000 0000 0341 (always declines) — client receives failed-payment email with portal link</span>
+          <span class="tag tag-test">Test</span>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <input type="checkbox" onclick="event.stopPropagation(); toggleCheck(this.parentElement)" />
+          <span>Scenario F tested — successful payment event received and logged correctly in Make.com</span>
+          <span class="tag tag-test">Test</span>
+        </li>
+      </ul>
+
+      <div class="callout info" style="margin-top: 18px;">
+        <span class="callout-icon">&#9432;</span>
+        <div>For Scenario I testing, use Stripe test card <strong>4000 0000 0000 0341</strong> which always fails with <em>insufficient_funds</em>, triggering the <code>invoice.payment_failed</code> webhook event.</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+  function toggleSection(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('open');
+  }
+
+  function toggleCheck(li) {
+    li.classList.toggle('checked');
+    const cb = li.querySelector('input[type="checkbox"]');
+    if (cb) cb.checked = li.classList.contains('checked');
+  }
+
+  // Open all sections on print
+  window.addEventListener('beforeprint', function () {
+    document.querySelectorAll('.section').forEach(s => s.classList.add('open'));
+  });
+</script>
+</body>
+</html>

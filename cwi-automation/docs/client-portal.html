@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="CWI internal tool: CWI AI Client Setup Tracker. Internal use only — CWI Compute With Imagination.">
+  <title>CWI AI Client Setup Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg:          #0A0A0C;
+      --bg-surface:  #13131A;
+      --bg-card:     #1A1A24;
+      --bg-input:    #0F0F16;
+      --accent:      #FF5A1F;
+      --accent-dim:  #CC4718;
+      --accent-glow: rgba(255, 90, 31, 0.18);
+      --border:      #2A2A38;
+      --text:        #E8E8F0;
+      --text-muted:  #7A7A9A;
+      --text-faint:  #45455A;
+      --green:       #22C55E;
+      --yellow:      #F59E0B;
+      --blue:        #3B82F6;
+      --red:         #EF4444;
+      --radius:      10px;
+      --radius-sm:   6px;
+      --shadow:      0 4px 24px rgba(0,0,0,0.5);
+    }
+
+    body {
+      font-family: 'Sora', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 0 0 60px;
+    }
+
+    /* ── Header ─────────────────────────────────────── */
+    header {
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -1px;
+      flex-shrink: 0;
+    }
+
+    .logo h1 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.2;
+    }
+
+    .logo h1 span {
+      display: block;
+      font-size: 0.7rem;
+      font-weight: 400;
+      color: var(--text-muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    /* ── Buttons ─────────────────────────────────────── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 9px 18px;
+      border-radius: var(--radius-sm);
+      font-family: 'Sora', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      transition: background 0.18s, transform 0.1s, box-shadow 0.18s;
+      white-space: nowrap;
+      text-decoration: none;
+    }
+
+    .btn:active { transform: scale(0.97); }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-primary:hover { background: var(--accent-dim); box-shadow: 0 0 16px var(--accent-glow); }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { background: var(--bg-card); color: var(--text); border-color: #3A3A50; }
+
+    .btn-danger {
+      background: rgba(239,68,68,0.12);
+      color: var(--red);
+      border: 1px solid rgba(239,68,68,0.25);
+    }
+    .btn-danger:hover { background: rgba(239,68,68,0.22); }
+
+    .btn-success {
+      background: rgba(34,197,94,0.12);
+      color: var(--green);
+      border: 1px solid rgba(34,197,94,0.25);
+    }
+    .btn-success:hover { background: rgba(34,197,94,0.22); }
+
+    /* ── Main layout ─────────────────────────────────── */
+    main {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 32px 24px;
+    }
+
+    /* ── Add Client Form ─────────────────────────────── */
+    .form-panel {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 28px 24px;
+      margin-bottom: 36px;
+      box-shadow: var(--shadow);
+    }
+
+    .form-panel-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 22px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .form-panel-title svg {
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 14px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group.full {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    input, select, textarea {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: 'Sora', sans-serif;
+      font-size: 0.875rem;
+      padding: 10px 13px;
+      outline: none;
+      transition: border-color 0.18s, box-shadow 0.18s;
+      width: 100%;
+    }
+
+    input::placeholder, textarea::placeholder { color: var(--text-faint); }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    select option { background: #1A1A24; }
+
+    textarea {
+      resize: vertical;
+      min-height: 72px;
+    }
+
+    .form-footer {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 18px;
+    }
+
+    /* ── Toolbar ─────────────────────────────────────── */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+
+    .toolbar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .section-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .count-badge {
+      background: var(--accent);
+      color: #fff;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 2px 9px;
+      line-height: 1.6;
+    }
+
+    .filter-pills {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .pill-filter {
+      padding: 5px 13px;
+      border-radius: 20px;
+      font-family: 'Sora', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-muted);
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+
+    .pill-filter:hover { background: var(--bg-card); color: var(--text); }
+
+    .pill-filter.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    /* ── Client Cards Grid ───────────────────────────── */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 18px;
+    }
+
+    .client-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px 20px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      box-shadow: var(--shadow);
+      transition: border-color 0.2s, box-shadow 0.2s;
+      animation: fadeIn 0.25s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .client-card:hover {
+      border-color: #3A3A50;
+      box-shadow: 0 6px 30px rgba(0,0,0,0.6);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .card-name {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.3;
+    }
+
+    .card-domain {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      margin-top: 3px;
+      word-break: break-all;
+    }
+
+    .tier-badge {
+      border-radius: 6px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 3px 9px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .tier-starter { background: rgba(59,130,246,0.15); color: #60A5FA; border: 1px solid rgba(59,130,246,0.3); }
+    .tier-growth  { background: rgba(245,158,11,0.15); color: #FCD34D; border: 1px solid rgba(245,158,11,0.3); }
+    .tier-pro     { background: rgba(255,90,31,0.15);  color: #FF8C5A; border: 1px solid rgba(255,90,31,0.3); }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 500;
+      padding: 3px 10px;
+      letter-spacing: 0.03em;
+    }
+
+    .status-pill::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .status-onboarding { background: rgba(245,158,11,0.12); color: #FCD34D; border: 1px solid rgba(245,158,11,0.25); }
+    .status-onboarding::before { background: #F59E0B; box-shadow: 0 0 4px #F59E0B; }
+
+    .status-active { background: rgba(34,197,94,0.12); color: #6EE7B7; border: 1px solid rgba(34,197,94,0.25); }
+    .status-active::before { background: var(--green); box-shadow: 0 0 4px var(--green); animation: pulse 2s infinite; }
+
+    .status-paused { background: rgba(122,122,154,0.12); color: var(--text-muted); border: 1px solid rgba(122,122,154,0.25); }
+    .status-paused::before { background: var(--text-faint); }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.4; }
+    }
+
+    .card-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .card-notes {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 9px 11px;
+      min-height: 44px;
+    }
+
+    .card-notes:empty::before {
+      content: 'No notes.';
+      color: var(--text-faint);
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: auto;
+    }
+
+    .card-actions .btn {
+      flex: 1;
+      justify-content: center;
+      padding: 8px 10px;
+    }
+
+    .card-date {
+      font-size: 0.7rem;
+      color: var(--text-faint);
+      margin-top: 2px;
+    }
+
+    /* ── Empty State ─────────────────────────────────── */
+    .empty-state {
+      grid-column: 1 / -1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 64px 24px;
+      text-align: center;
+      gap: 12px;
+      color: var(--text-muted);
+    }
+
+    .empty-icon {
+      font-size: 3rem;
+      opacity: 0.3;
+      margin-bottom: 6px;
+    }
+
+    .empty-state h3 { font-size: 1rem; font-weight: 600; color: var(--text-faint); }
+    .empty-state p  { font-size: 0.82rem; }
+
+    /* ── Toast ───────────────────────────────────────── */
+    #toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 12px 22px;
+      border-radius: 30px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+      opacity: 0;
+      transition: opacity 0.25s, transform 0.25s;
+      pointer-events: none;
+      z-index: 9999;
+      white-space: nowrap;
+    }
+
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ── Responsive ──────────────────────────────────── */
+    @media (max-width: 640px) {
+      header { padding: 16px 18px; }
+      main   { padding: 20px 14px; }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .cards-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .toolbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .logo h1 { font-size: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ──────────────────────────────────────────────── -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">CW</div>
+    <h1>
+      CWI AI
+      <span>Client Setup Tracker</span>
+    </h1>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-ghost" onclick="exportClients()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Export JSON
+    </button>
+  </div>
+</header>
+
+<!-- ── Main ────────────────────────────────────────────────── -->
+<main>
+
+  <!-- Add Client Form -->
+  <div class="form-panel">
+    <div class="form-panel-title">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      Add New Client
+    </div>
+
+    <form id="clientForm" onsubmit="addClient(event)">
+      <div class="form-grid">
+
+        <div class="form-group">
+          <label for="clientName">Client Name</label>
+          <input type="text" id="clientName" placeholder="Acme Corp" required />
+        </div>
+
+        <div class="form-group">
+          <label for="clientDomain">Domain</label>
+          <input type="text" id="clientDomain" placeholder="acmecorp.com" />
+        </div>
+
+        <div class="form-group">
+          <label for="clientTier">Tier</label>
+          <select id="clientTier" required>
+            <option value="" disabled selected>Select tier...</option>
+            <option value="Starter">Starter — $197/mo</option>
+            <option value="Growth">Growth — $397/mo</option>
+            <option value="Pro">Pro — $597/mo</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="clientStatus">Status</label>
+          <select id="clientStatus" required>
+            <option value="" disabled selected>Select status...</option>
+            <option value="Onboarding">Onboarding</option>
+            <option value="Active">Active</option>
+            <option value="Paused">Paused</option>
+          </select>
+        </div>
+
+        <div class="form-group full">
+          <label for="clientNotes">Notes</label>
+          <textarea id="clientNotes" placeholder="Setup notes, special requirements, follow-up items..."></textarea>
+        </div>
+
+      </div>
+
+      <div class="form-footer">
+        <button type="submit" class="btn btn-primary">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Client
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Clients Toolbar -->
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <span class="section-title">Clients</span>
+      <span class="count-badge" id="clientCount">0</span>
+      <div class="filter-pills">
+        <button class="pill-filter active" data-filter="All" onclick="setFilter('All', this)">All</button>
+        <button class="pill-filter" data-filter="Onboarding" onclick="setFilter('Onboarding', this)">Onboarding</button>
+        <button class="pill-filter" data-filter="Active" onclick="setFilter('Active', this)">Active</button>
+        <button class="pill-filter" data-filter="Paused" onclick="setFilter('Paused', this)">Paused</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cards Grid -->
+  <div class="cards-grid" id="cardsGrid"></div>
+
+</main>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+  const STORAGE_KEY = 'cwi_clients_v1';
+  let currentFilter = 'All';
+
+  /* ── Storage helpers ────────────────────────────────── */
+  function loadClients() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+    catch { return []; }
+  }
+
+  function saveClients(clients) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(clients));
+  }
+
+  /* ── Add client ─────────────────────────────────────── */
+  function addClient(e) {
+    e.preventDefault();
+    const name   = document.getElementById('clientName').value.trim();
+    const domain = document.getElementById('clientDomain').value.trim();
+    const tier   = document.getElementById('clientTier').value;
+    const status = document.getElementById('clientStatus').value;
+    const notes  = document.getElementById('clientNotes').value.trim();
+
+    if (!name || !tier || !status) return;
+
+    const clients = loadClients();
+    clients.unshift({
+      id:      Date.now().toString(),
+      name,
+      domain,
+      tier,
+      status,
+      notes,
+      createdAt: new Date().toISOString()
+    });
+    saveClients(clients);
+    document.getElementById('clientForm').reset();
+    renderCards();
+    showToast('Client added successfully.');
+  }
+
+  /* ── Mark active ────────────────────────────────────── */
+  function markActive(id) {
+    const clients = loadClients().map(c =>
+      c.id === id ? { ...c, status: 'Active' } : c
+    );
+    saveClients(clients);
+    renderCards();
+    showToast('Client marked as Active.');
+  }
+
+  /* ── Delete client ──────────────────────────────────── */
+  function deleteClient(id) {
+    if (!confirm('Delete this client? This cannot be undone.')) return;
+    const clients = loadClients().filter(c => c.id !== id);
+    saveClients(clients);
+    renderCards();
+    showToast('Client deleted.');
+  }
+
+  /* ── Filter ─────────────────────────────────────────── */
+  function setFilter(filter, btn) {
+    currentFilter = filter;
+    document.querySelectorAll('.pill-filter').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    renderCards();
+  }
+
+  /* ── Tier helpers ───────────────────────────────────── */
+  function tierClass(tier) {
+    const map = { Starter: 'tier-starter', Growth: 'tier-growth', Pro: 'tier-pro' };
+    return map[tier] || '';
+  }
+
+  function tierLabel(tier) {
+    const map = { Starter: 'Starter $197', Growth: 'Growth $397', Pro: 'Pro $597' };
+    return map[tier] || tier;
+  }
+
+  function statusClass(status) {
+    const map = { Onboarding: 'status-onboarding', Active: 'status-active', Paused: 'status-paused' };
+    return map[status] || '';
+  }
+
+  /* ── Format date ────────────────────────────────────── */
+  function fmtDate(iso) {
+    try {
+      return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    } catch { return ''; }
+  }
+
+  /* ── Render cards ───────────────────────────────────── */
+  function renderCards() {
+    const all     = loadClients();
+    const shown   = currentFilter === 'All' ? all : all.filter(c => c.status === currentFilter);
+    const grid    = document.getElementById('cardsGrid');
+    const counter = document.getElementById('clientCount');
+
+    counter.textContent = all.length;
+
+    if (shown.length === 0) {
+      grid.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">📋</div>
+          <h3>${all.length === 0 ? 'No clients yet' : 'No clients match this filter'}</h3>
+          <p>${all.length === 0 ? 'Add your first client using the form above.' : 'Try a different status filter.'}</p>
+        </div>`;
+      return;
+    }
+
+    grid.innerHTML = shown.map(c => `
+      <div class="client-card" id="card-${c.id}">
+        <div class="card-header">
+          <div>
+            <div class="card-name">${escHtml(c.name)}</div>
+            <div class="card-domain">${c.domain ? escHtml(c.domain) : '<span style="color:var(--text-faint)">No domain</span>'}</div>
+          </div>
+          <span class="tier-badge ${tierClass(c.tier)}">${tierLabel(c.tier)}</span>
+        </div>
+
+        <div class="card-meta">
+          <span class="status-pill ${statusClass(c.status)}">${escHtml(c.status)}</span>
+        </div>
+
+        <div class="card-notes">${c.notes ? escHtml(c.notes) : ''}</div>
+
+        <div class="card-date">Added ${fmtDate(c.createdAt)}</div>
+
+        <div class="card-actions">
+          ${c.status !== 'Active'
+            ? `<button class="btn btn-success" onclick="markActive('${c.id}')">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Mark Active
+              </button>`
+            : `<div style="flex:1"></div>`
+          }
+          <button class="btn btn-danger" onclick="deleteClient('${c.id}')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+            Delete
+          </button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  /* ── Export ─────────────────────────────────────────── */
+  function exportClients() {
+    const clients = loadClients();
+    if (clients.length === 0) { showToast('No clients to export.'); return; }
+    const blob = new Blob([JSON.stringify(clients, null, 2)], { type: 'application/json' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `cwi-clients-${new Date().toISOString().slice(0,10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast(`Exported ${clients.length} client${clients.length !== 1 ? 's' : ''}.`);
+  }
+
+  /* ── Sanitize HTML ──────────────────────────────────── */
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  /* ── Toast ──────────────────────────────────────────── */
+  let toastTimer;
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+  }
+
+  /* ── Init ───────────────────────────────────────────── */
+  renderCards();
+</script>
+</body>
+</html>

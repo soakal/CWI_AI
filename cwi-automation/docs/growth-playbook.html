@@ -1,0 +1,1328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CWI AI — 90-Day Growth Playbook</title>
+  <meta name="description" content="CWI internal tool: CWI AI — 90-Day Growth Playbook. Internal use only — CWI Compute With Imagination.">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent: #FF5A1F;
+      --accent-light: #FF7A45;
+      --accent-dark: #D94A15;
+      --bg: #0F1117;
+      --bg-card: #1A1D27;
+      --bg-card2: #20232F;
+      --border: #2E3247;
+      --text: #E8EAF0;
+      --text-muted: #8B8FA8;
+      --text-dim: #5C6080;
+      --green: #22C55E;
+      --blue: #3B82F6;
+      --purple: #A855F7;
+      --phase1: #3B82F6;
+      --phase2: #A855F7;
+      --phase3: #FF5A1F;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* ── Header ── */
+    header {
+      background: linear-gradient(135deg, #0F1117 0%, #1A1D27 50%, #0F1117 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 32px 24px 28px;
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: '';
+      position: absolute;
+      top: -60px; right: -60px;
+      width: 280px; height: 280px;
+      background: radial-gradient(circle, rgba(255,90,31,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .header-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .brand-logo {
+      width: 40px; height: 40px;
+      background: var(--accent);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 18px; color: #fff;
+    }
+    .brand-name { font-size: 18px; font-weight: 700; color: var(--text); }
+    h1 {
+      font-size: clamp(24px, 4vw, 36px);
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+    h1 span { color: var(--accent); }
+    .header-sub {
+      color: var(--text-muted);
+      font-size: 16px;
+      max-width: 600px;
+    }
+
+    /* ── Layout ── */
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px 24px 80px;
+    }
+
+    /* ── Dashboard Row ── */
+    .dashboard {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+    .dash-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px 22px;
+      position: relative;
+      overflow: hidden;
+    }
+    .dash-card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--accent);
+      border-radius: 14px 14px 0 0;
+    }
+    .dash-card.blue::after { background: var(--blue); }
+    .dash-card.purple::after { background: var(--purple); }
+    .dash-card.green::after { background: var(--green); }
+    .dash-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+    }
+    .dash-value {
+      font-size: 32px;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1;
+    }
+    .dash-value.accent { color: var(--accent); }
+    .dash-value.blue { color: var(--blue); }
+    .dash-value.purple { color: var(--purple); }
+    .dash-value.green { color: var(--green); }
+    .dash-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    /* Progress bar */
+    .progress-wrap {
+      margin-top: 12px;
+    }
+    .progress-bar-bg {
+      height: 6px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-light));
+      transition: width 0.6s ease;
+    }
+    .progress-pct {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 5px;
+    }
+
+    /* ── MRR Calculator ── */
+    .mrr-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 40px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 24px;
+      align-items: center;
+    }
+    @media (max-width: 640px) {
+      .mrr-card { grid-template-columns: 1fr; }
+    }
+    .mrr-card-title {
+      grid-column: 1 / -1;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: -8px;
+    }
+    .mrr-card-title .icon {
+      width: 28px; height: 28px;
+      background: rgba(255,90,31,0.15);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+    }
+    .mrr-input-group label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+    }
+    .mrr-input-wrap {
+      position: relative;
+    }
+    .mrr-input-wrap span {
+      position: absolute;
+      left: 12px; top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 15px;
+    }
+    .mrr-input-wrap input {
+      width: 100%;
+      background: var(--bg-card2);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 10px 12px 10px 28px;
+      font-size: 20px;
+      font-weight: 700;
+      color: #fff;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .mrr-input-wrap input:focus { border-color: var(--accent); }
+    .mrr-input-wrap input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+    .mrr-projected {
+      text-align: center;
+    }
+    .mrr-projected-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+    }
+    .mrr-projected-value {
+      font-size: 36px;
+      font-weight: 800;
+      color: var(--green);
+    }
+    .mrr-projected-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .mrr-multiplier {
+      text-align: center;
+    }
+    .mrr-multiplier-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+    }
+    .mrr-multiplier-value {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--accent);
+    }
+    .mrr-multiplier-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+    .mrr-slider {
+      width: 100%;
+      margin-top: 10px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    /* ── Phase Headers ── */
+    .phase-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .phase-badge {
+      padding: 6px 14px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .phase-badge.p1 { background: rgba(59,130,246,0.15); color: var(--blue); border: 1px solid rgba(59,130,246,0.3); }
+    .phase-badge.p2 { background: rgba(168,85,247,0.15); color: var(--purple); border: 1px solid rgba(168,85,247,0.3); }
+    .phase-badge.p3 { background: rgba(255,90,31,0.15); color: var(--accent); border: 1px solid rgba(255,90,31,0.3); }
+
+    .phase-title {
+      font-size: clamp(18px, 2.5vw, 22px);
+      font-weight: 800;
+      color: #fff;
+    }
+    .phase-days {
+      margin-left: auto;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    /* ── Timeline ── */
+    .phase-section { margin-bottom: 56px; }
+
+    .timeline {
+      position: relative;
+      padding-left: 32px;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 7px; top: 0; bottom: 0;
+      width: 2px;
+      background: linear-gradient(to bottom, var(--border), transparent);
+    }
+
+    .week-card {
+      position: relative;
+      margin-bottom: 20px;
+    }
+    .week-card::before {
+      content: '';
+      position: absolute;
+      left: -28px; top: 20px;
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: var(--bg-card2);
+      border: 2px solid var(--border);
+      transition: border-color 0.3s, background 0.3s;
+    }
+    .week-card.complete::before {
+      background: var(--green);
+      border-color: var(--green);
+    }
+
+    .week-inner {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .week-inner:hover {
+      border-color: #3a3e52;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+    }
+    .week-card.complete .week-inner {
+      border-color: rgba(34,197,94,0.25);
+    }
+
+    .week-top {
+      padding: 16px 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      user-select: none;
+    }
+    .week-num {
+      min-width: 38px; height: 38px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .p1 .week-num { background: rgba(59,130,246,0.12); color: var(--blue); }
+    .p2 .week-num { background: rgba(168,85,247,0.12); color: var(--purple); }
+    .p3 .week-num { background: rgba(255,90,31,0.12); color: var(--accent); }
+
+    .week-meta { flex: 1; }
+    .week-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 3px;
+    }
+    .week-days {
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    .week-toggle {
+      color: var(--text-dim);
+      font-size: 18px;
+      transition: transform 0.25s;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .week-card.open .week-toggle { transform: rotate(180deg); }
+
+    .week-complete-badge {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--green);
+      background: rgba(34,197,94,0.1);
+      border: 1px solid rgba(34,197,94,0.2);
+      border-radius: 99px;
+      padding: 2px 10px;
+      white-space: nowrap;
+      align-self: center;
+    }
+
+    /* Collapsible body */
+    .week-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.35s ease, padding 0.35s ease;
+    }
+    .week-card.open .week-body {
+      max-height: 600px;
+      padding-bottom: 4px;
+    }
+    .week-body-inner {
+      padding: 0 20px 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* Tasks */
+    .tasks { margin: 16px 0 20px; }
+    .task-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+    }
+    .task-item:last-child { border-bottom: none; }
+    .task-item input[type="checkbox"] {
+      width: 17px; height: 17px;
+      flex-shrink: 0;
+      margin-top: 2px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+    .task-text {
+      font-size: 14px;
+      color: var(--text);
+      transition: color 0.2s;
+      line-height: 1.5;
+    }
+    .task-item.checked .task-text {
+      color: var(--text-dim);
+      text-decoration: line-through;
+    }
+
+    /* Outcome + Metric */
+    .week-meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 520px) {
+      .week-meta-grid { grid-template-columns: 1fr; }
+    }
+    .meta-box {
+      background: var(--bg-card2);
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+    .meta-box-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+    .meta-box-label.outcome { color: var(--green); }
+    .meta-box-label.metric { color: var(--accent); }
+    .meta-box-text {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* ── Summary Bar ── */
+    .summary-bar {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+      align-items: center;
+      margin-bottom: 40px;
+    }
+    .summary-item { text-align: center; flex: 1; min-width: 120px; }
+    .summary-val {
+      font-size: 28px;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1;
+    }
+    .summary-val.accent { color: var(--accent); }
+    .summary-val.green { color: var(--green); }
+    .summary-lbl {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 5px;
+    }
+    .summary-divider {
+      width: 1px; height: 48px;
+      background: var(--border);
+    }
+    @media (max-width: 600px) {
+      .summary-divider { display: none; }
+    }
+
+    /* ── Reset Button ── */
+    .actions-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 40px;
+    }
+    .btn {
+      padding: 10px 20px;
+      border-radius: 9px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      outline: none;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-accent {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-accent:hover { background: var(--accent-light); }
+    .btn-ghost {
+      background: var(--bg-card2);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { border-color: #4a4e66; color: var(--text); }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 24px;
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 13px;
+    }
+    footer span { color: var(--accent); font-weight: 600; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="brand">
+      <div class="brand-logo">CWI</div>
+      <div class="brand-name">CWI AI</div>
+    </div>
+    <h1>90-Day <span>Growth Playbook</span></h1>
+    <p class="header-sub">Three phases. Twelve weeks. One goal: predictable, recurring revenue from AI automation.</p>
+  </div>
+</header>
+
+<main>
+
+  <!-- Dashboard Row -->
+  <div class="dashboard">
+    <div class="dash-card">
+      <div class="dash-label">Overall Progress</div>
+      <div class="dash-value accent" id="pct-complete">0%</div>
+      <div class="dash-sub" id="tasks-done">0 of 0 tasks completed</div>
+      <div class="progress-wrap">
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="main-progress" style="width:0%"></div>
+        </div>
+        <div class="progress-pct" id="weeks-done">0 of 12 weeks complete</div>
+      </div>
+    </div>
+    <div class="dash-card blue">
+      <div class="dash-label">Days Elapsed</div>
+      <div class="dash-value blue" id="days-elapsed">—</div>
+      <div class="dash-sub" id="days-remaining">Set start date below</div>
+      <div style="margin-top:12px; display:flex; gap:8px; align-items:center;">
+        <input type="date" id="start-date" style="background:var(--bg-card2);border:1px solid var(--border);border-radius:7px;padding:6px 10px;color:var(--text);font-size:12px;outline:none;flex:1;" />
+      </div>
+    </div>
+    <div class="dash-card purple">
+      <div class="dash-label">Phase Progress</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px;">
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:4px;"><span>Foundation</span><span id="p1-pct">0%</span></div>
+          <div class="progress-bar-bg"><div class="progress-bar-fill" id="p1-bar" style="width:0%;background:var(--blue)"></div></div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:4px;"><span>Traction</span><span id="p2-pct">0%</span></div>
+          <div class="progress-bar-bg"><div class="progress-bar-fill" id="p2-bar" style="width:0%;background:var(--purple)"></div></div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:4px;"><span>Scale</span><span id="p3-pct">0%</span></div>
+          <div class="progress-bar-bg"><div class="progress-bar-fill" id="p3-bar" style="width:0%;background:var(--accent)"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="dash-card green">
+      <div class="dash-label">Weeks Complete</div>
+      <div class="dash-value green" id="weeks-complete-count">0</div>
+      <div class="dash-sub">of 12 weeks finished</div>
+      <div class="progress-wrap">
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="weeks-progress" style="width:0%;background:var(--green)"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MRR Calculator -->
+  <div class="mrr-card">
+    <div class="mrr-card-title">
+      <div class="icon">$</div>
+      Revenue Target Tracker
+    </div>
+    <div class="mrr-input-group">
+      <label for="current-mrr">Current MRR</label>
+      <div class="mrr-input-wrap">
+        <span>$</span>
+        <input type="number" id="current-mrr" value="0" min="0" step="100" placeholder="0" />
+      </div>
+    </div>
+    <div class="mrr-multiplier">
+      <div class="mrr-multiplier-label">Growth Multiplier</div>
+      <div class="mrr-multiplier-value" id="multiplier-val">3x</div>
+      <div class="mrr-multiplier-sub">by Day 90</div>
+      <input type="range" class="mrr-slider" id="mrr-slider" min="1.5" max="10" step="0.5" value="3" />
+    </div>
+    <div class="mrr-projected">
+      <div class="mrr-projected-label">Projected Day-90 MRR</div>
+      <div class="mrr-projected-value" id="projected-mrr">$0</div>
+      <div class="mrr-projected-sub" id="mrr-delta">+$0 added revenue</div>
+    </div>
+  </div>
+
+  <!-- Actions Row -->
+  <div class="actions-row">
+    <button class="btn btn-accent" onclick="expandAll()">Expand All Weeks</button>
+    <button class="btn btn-ghost" onclick="collapseAll()">Collapse All</button>
+    <button class="btn btn-ghost" onclick="resetProgress()">Reset Progress</button>
+  </div>
+
+  <!-- ─── PHASE 1 ─── -->
+  <div class="phase-section" id="phase-1">
+    <div class="phase-header">
+      <div class="phase-badge p1">Phase 1</div>
+      <div class="phase-title">Foundation</div>
+      <div class="phase-days">Days 1–30</div>
+    </div>
+    <div class="timeline" id="timeline-p1">
+
+      <!-- Week 1 -->
+      <div class="week-card p1" id="week-1">
+        <div class="week-inner">
+          <div class="week-top" onclick="toggleWeek('week-1')">
+            <div class="week-num">W1</div>
+            <div class="week-meta">
+              <div class="week-title">Complete Launch Checklist</div>
+              <div class="week-days">Days 1–7</div>
+            </div>
+            <span class="week-complete-badge" style="display:none">Complete</span>
+            <div class="week-toggle">&#8964;</div>
+          </div>
+          <div class="week-body">
+            <div class="week-body-inner">
+              <div class="tasks" id="tasks-week-1">
+                <label class="task-item"><input type="checkbox" data-week="week-1" /> <span class="task-text">Work through the full launch checklist top to bottom — no skips</span></label>
+                <label class="task-item"><input type="checkbox" data-week="week-1" /> <span class="task-text">Get your first automation scenario live in Make.com (or n8n)</span></label>
+                <label class="task-item"><input type="checkbox" data-week="week-1" /> <span class="task-text">Test every webhook end-to-end with a real trigger and verify delivery</span></label>
+                <label class="task-item"><input type="checkbox" data-week="week-1" /> <span class="task-text">Confirm CRM, billing, and client portal are connected and functional</span></label>
+                <label class="task-item"><input type="checkbox" data-week="week-1" /> <span class="task-text">Send a "we're live" update to your warm list of 10–20 prospects</span></label>
+              </div>
+              <div class="week-meta-grid">
+                <div class="meta-box">
+                  <div class="meta-box-label outcome">Expected Outcome</div>
+                  <div class="meta-box-text">Fully operational infrastructure ready to serve a paying client without friction.</div>
+                </div>
+                <div class="meta-box">
+                  <div class="meta-box-label metric">Key Metric</div>
+                  <div class="meta-box-text">100% of webhooks tested and passing; at least 1 scenario live.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Week 2 -->
+      <div class="week-card p1" id="week-2">
+        <div class="week-inner">
+          <div class="week-top" onclick="toggleWeek('week-2')">
+            <div class="week-num">W2</div>
+            <div class="week-meta">
+              <div class="week-title">Onboard First Paying Client</div>
+              <div class="week-days">Days 8–14</div>
+            </div>
+            <span class="week-complete-badge" style="display:none">Complete</span>
+            <div class="week-toggle">&#8964;</div>
+          </div>
+          <div class="week-body">
+            <div class="week-body-inner">
+              <div class="tasks" id="tasks-week-2">
+                <label class="task-item"><input type="checkbox" data-week="week-2" /> <span class="task-text">Close and sign your first paying client (even at a discounted pilot rate)</span></label>
+                <label class="task-item"><input type="checkbox" data-week="week-2" /> <span class="task-text">Run them through your onboarding workflow and note every friction point</span></label>
+                <label class="task-item"><input type="checkbox" data-week="week-2" /> <span class="task-text">Document every question they asked that you weren't ready for</span></label>
+                <label class="task-item"><input type="checkbox" data-week="week-2" /> <span class="task-text">Fix or improve at least two pain points before their first check-in call</span></label>
+              </div>
+              <div class="week-meta-grid">
+                <div class="meta-box">
+                  <div class="meta-box-label outcome">Expected Outcome</div>
+                  <div class="meta-box-text">First client delivering live, paying revenue and a clear onboarding gap list.</div>
+                </div>
+                <div class="meta-box">
+                  <div class="meta-box-label metric">Key Metric</div>
+                  <div class="meta-box-text">MRR > $0; friction log with at least 5 documented items.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Week 3 -->
+      <div class="week-card p1" id="week-3">
+        <div class="week-inner">
+          <div class="week-top" onclick="toggleWeek('week-3')">
+            <div class="week-num">W3</div>
+            <div class="week-meta">
+              <div class="week-title">Collect First Testimonial</div>
+              <div class="week-days">Days 15–21</div>
+            </div>
+            <span class="week-complete-badge" style="display:none">Complete</span>
+            <div class="week-toggle">&#8964;</div>
+          </div>
+          <div class="week-body">
+            <div class="week-body-inner">
+              <div class="tasks" id="tasks-week-3">
+                <label class="task-item"><input type="checkbox" data-week="week-3" /> <span class="task-text">Ask client for a written or video testimonial (use a simple 3-question template)</span></label>
+                <label class="task-item"><input type="checkbox" data-week="week-3" /> <span class="task-text">Post the testimonial on LinkedIn with a brief story behind the win</span></label>
+                <label class="task-item"><input type="checkbox" data-week="week-3" /> <span class="task-text">Add the testimonial to your website's social proof section</span></label>
+                <label class="task-item"><input type="checkbox" data-week="week-3" /> <span class="task-text">Ask client for 2 referrals in exchange for a month's service credit</span></label>
+              </div>
+              <div class="week-meta-grid">
+                <div class="meta-box">
+                  <div class="meta-box-label outcome">Expected Outcome</div>
+                  <div class="meta-box-text">Published social proof that accelerates trust with cold prospects.</div>
+                </div>
+                <div class="meta-box">
+                  <div class="meta-box-label metric">Key Metric</div>
+                  <div class="meta-box-text">1 testimonial live on site and LinkedIn; 50+ post impressions.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Week 4 -->
+      <div class="week-card p1" id="week-4">
+        <div class="week-inner">
+          <div class="week-top" onclick="toggleWeek('week-4')">
+            <div class="week-num">W4</div>
+            <div class="week-meta">
+              <div class="week-title">Review Metrics &amp; Double Down</div>
+              <div class="week-days">Days 22–30</div>
+            </div>
+            <span class="week-complete-badge" style="display:none">Complete</span>
+            <div class="week-toggle">&#8964;</div>
+          </div>
+          <div class="week-body">
+            <div class="week-body-inner">
+              <div class="tasks" id="tasks-week-4">
+                <label class="task-item"><input type="checkbox" data-week="week-4" /> <span class="task-text">Pull all lead source data: where did your first client come from?</span></label>
+                <label class="task-item"><input type="checkbox" data-week="week-4" /> <span class="task-text">Identify your single best-performing lead channel this month</span></label>
+                <label class="task-item"><input type="checkbox" data-week="week-4" /> <span class="task-text">Allocate 80% of next month's outreach effort to that top channel</span></label>
+                <label class="task-item"><input type="checkbox" data-week="week-4" /> <span class="task-text">Write a 30-day retrospective (wins, losses, open questions) — share with a mentor</span></label>
+                <label class="task-item"><input type="checkbox" data-week="week-4" /> <span class="task-text">Set concrete targets for Phase 2 (# outreach contacts, # demos, # closes)</span></label>
+              </div>
+              <div class="week-meta-grid">
+                <div class="meta-box">
+                  <div class="meta-box-label outcome">Expected Outcome</div>
+                  <div class="meta-box-text">Clear data-driven direction heading into Phase 2 with no guesswork.</div>
+                </div>
+                <div class="meta-box">
+                  <div class="meta-box-label metric">Key Metric</div>
+                  <div class="meta-box-text">Top lead source identified; Phase 2 targets written and committed.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /timeline-p1 -->
+  </div><!-- /phase-1 -->
+
+  <!-- ─── PHASE 2 ─── -->
+  <div class="phase-section" id="phase-2">
+    <div class="phase-header">
+      <div class="phase-badge p2">Phase 2</div>
+      <div class="phase-title">Traction</div>
+      <div class="phase-days">Days 31–60</div>
+    </div>
+    <div class="timeline" id="timeline-p2">
+
+      <!-- Week 5 -->
+      <div class="week-card p2" id="week-5">
+        <div class="week-inner">
+          <div class="week-top" onclick="toggleWeek('week-5')">
+            <div class="week-num">W5</div>
+            <div class="week-meta">
+              <div class="week-title">Launch Apollo Cold Outreach — Plumbing</div>
+              <div class="week-days">Days 31–37</div>
+            </div>
+            <span class="week-complete-badge" style="display:none">Complete</span>
+            <div class="week-toggle">&#8964;</div>
+          </div>
+          <div class="week-body">
+            <div class="week-body-inner">
+              <div class="tasks" id="tasks-week-5">
+                <label class="task-item"><input type="checkbox" data-week="week-5" /> <span class="task-text">Build plumbing company list in Apollo (50–200 contacts, verified emails)</span></label>
+                <label class="task-item"><input type="checkbox" data-week="week-5" /> <span class="task-text">Write a 4-step sequence: initial email → value follow-up → case study → breakup</span></label>
+                <label class="task-item"><input type="checkbox" data-week="week-5" /> <span class="task-text">Launch sequence — target 20 sends/day, track open and reply rates daily</span></label>
+                <label class="task-item"><input type="checkbox" data-week="week-5" /> <span class="task-text">Book at least 2 discovery calls from the sequence by end of week</span></label>
+                <label class="task-item"><input type="checkbox" data-week="week-5" /> <span class="task-text">A/B test subject lines: pain-point vs. curiosity-gap vs. referral framing</span></label>
+              </div>
+              <div class="week-meta-grid">
+                <div class="meta-box">
+                  <div class="meta-box-label outcome">Expected Outcome</div>
+                  <div class="meta-box-text">Active outbound pipeline with at least 2 discovery calls on the calendar.</div>
+                </div>
+                <div class="meta-box">
+                  <div class="meta-box-label metric">Key Metric</div>
+                  <div class="meta-box-text">Open rate ≥ 35%; reply rate ≥ 5%; 2+ calls booked.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Week 6 -->
+      <div class="week-card p2" id="week-6">
+        <div class="week-inner">
+          <div class="week-top" onclick="toggleWeek('week-6')">
+            <div class="week-num">W6</div>
+            <div class="week-meta">
+              <div class="week-title">Run First Paid Ad — Free Audit Offer</div>
+              <div class="week-days">Days 38–44</div>
+            </div>
+            <span class="week-complete-badge" style="display:none">Complete</span>
+            <div class="week-toggle">&#8964;</div>
+          </div>
+          <div class="week-body">
+            <div class="week-body-inner">
+              <div class="tasks" id="tasks-week-6">
+                <label class="task-item"><input type="checkbox" data-week="week-6" /> <span class="task-text">Create a simple landing page for a "Free AI Audit" offer (15-min call)</span></label>
+                <label class="task-item"><input type="checkbox" data-week="week-6" /> <span class="task-text">Launch a Google Search ad at $10/day targeting "[trade] + automation" keywords</span></label>
+                <label class="task-item"><input type="checkbox" data-week="week-6" /> <span class="task-text">Set up a Facebook/Meta retargeting ad for anyone who visited your site</span></label>
+                <label class="task-item"><input type="checkbox" data-week="week-6" /> <span class="task-text">Track cost-per-click and cost-per-lead daily; cut what isn't converting by Day 5</span></label>
+              </div>
+              <div class="week-meta-grid">
+                <div class="meta-box">
+                  <div class="meta-box-label outcome">Expected Outcome</div>
+                  <div class="meta-box-text">Paid acquisition channel live with baseline CPC and CPL data established.</div>
+                </div>
+                <div class="meta-box">
+                  <div class="meta-box-label metric">Key Metric</div>
+                  <div class="meta-box-text">At least 3 audit requests; CPL under $50 target.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Week 7 -->
+      <div class="week-card p2" id="week-7">
+        <div class="week-inner">
+          <div class="week-top" onclick="toggleWeek('week-7')">
+            <div class="week-num">W7</div>
+            <div class="week-meta">
+              <div class="week-title">Onboard Clients 2 &amp; 3</div>
+              <div class="week-days">Days 45–51</div>
+            </div>
+            <span class="week-complete-badge" style="display:none">Complete</span>
+            <div class="week-toggle">&#8964;</div>
+          </div>
+          <div class="week-body">
+            <div class="week-body-inner">
+              <div class="tasks" id="tasks-week-7">
+                <label class="task-item"><input type="checkbox" data-week="week-7" /> <span class="task-text">Close clients 2 and 3 from the plumbing outreach or ad leads</span></label>
+                <label class="task-item"><input type="checkbox" data-week="week-7" /> <span class="task-text">Onboard both using your updated (friction-reduced) onboarding process</span></label>
+                <label class="task-item"><input type="checkbox" data-week="week-7" /> <span class="task-text">Measure time-to-first-value for each: how long until automation runs itself?</span></label>
+                <label class="task-item"><input type="checkbox" data-week="week-7" /> <span class="task-text">Write a new onboarding SOP based on lessons from all three clients so far</span></label>
+              </div>
+              <div class="week-meta-grid">
+                <div class="meta-box">
+                  <div class="meta-box-label outcome">Expected Outcome</div>
+                  <div class="meta-box-text">3 paying clients active; repeatable onboarding process fully documented.</div>
+                </div>
+                <div class="meta-box">
+                  <div class="meta-box-label metric">Key Metric</div>
+                  <div class="meta-box-text">3 active clients; time-to-first-value &lt; 48 hours.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Week 8 -->
+      <div class="week-card p2" id="week-8">
+        <div class="week-inner">
+          <div class="week-top" onclick="toggleWeek('week-8')">
+            <div class="week-num">W8</div>
+            <div class="week-meta">
+              <div class="week-title">Create First Case Study</div>
+              <div class="week-days">Days 52–60</div>
+            </div>
+            <span class="week-complete-badge" style="display:none">Complete</span>
+            <div class="week-toggle">&#8964;</div>
+          </div>
+          <div class="week-body">
+            <div class="week-body-inner">
+              <div class="tasks" id="tasks-week-8">
+                <label class="task-item"><input type="checkbox" data-week="week-8" /> <span class="task-text">Choose best-performing client; gather before/after data (time saved, leads captured)</span></label>
+                <label class="task-item"><input type="checkbox" data-week="week-8" /> <span class="task-text">Write a 400–600 word case study using the Problem / Solution / Result framework</span></label>
+                <label class="task-item"><input type="checkbox" data-week="week-8" /> <span class="task-text">Add the case study as a dedicated page on your website with real numbers</span></label>
+                <label class="task-item"><input type="checkbox" data-week="week-8" /> <span class="task-text">Post a condensed LinkedIn version; link to full case study for click-throughs</span></label>
+                <label class="task-item"><input type="checkbox" data-week="week-8" /> <span class="task-text">Embed case study in Apollo sequence step 3 for social proof at scale</span></label>
+              </div>
+              <div class="week-meta-grid">
+                <div class="meta-box">
+                  <div class="meta-box-label outcome">Expected Outcome</div>
+                  <div class="meta-box-text">Credible, specific proof asset that closes skeptical prospects faster.</div>
+                </div>
+                <div class="meta-box">
+                  <div class="meta-box-label metric">Key Metric</div>
+                  <div class="meta-box-text">Case study published; LinkedIn post with 100+ impressions; 1 inbound inquiry.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /timeline-p2 -->
+  </div><!-- /phase-2 -->
+
+  <!-- ─── PHASE 3 ─── -->
+  <div class="phase-section" id="phase-3">
+    <div class="phase-header">
+      <div class="phase-badge p3">Phase 3</div>
+      <div class="phase-title">Scale</div>
+      <div class="phase-days">Days 61–90</div>
+    </div>
+    <div class="timeline" id="timeline-p3">
+
+      <!-- Week 9 -->
+      <div class="week-card p3" id="week-9">
+        <div class="week-inner">
+          <div class="week-top" onclick="toggleWeek('week-9')">
+            <div class="week-num">W9</div>
+            <div class="week-meta">
+              <div class="week-title">Launch HVAC Outreach Sequence</div>
+              <div class="week-days">Days 61–67</div>
+            </div>
+            <span class="week-complete-badge" style="display:none">Complete</span>
+            <div class="week-toggle">&#8964;</div>
+          </div>
+          <div class="week-body">
+            <div class="week-body-inner">
+              <div class="tasks" id="tasks-week-9">
+                <label class="task-item"><input type="checkbox" data-week="week-9" /> <span class="task-text">Build HVAC company list in Apollo using same methodology as plumbing</span></label>
+                <label class="task-item"><input type="checkbox" data-week="week-9" /> <span class="task-text">Adapt best-performing plumbing sequence with HVAC-specific pain points (seasonal demand, dispatch, follow-up)</span></label>
+                <label class="task-item"><input type="checkbox" data-week="week-9" /> <span class="task-text">Reference the plumbing case study as social proof in Step 2 of sequence</span></label>
+                <label class="task-item"><input type="checkbox" data-week="week-9" /> <span class="task-text">Launch sequence at 25 sends/day; track metrics vs. plumbing baseline</span></label>
+              </div>
+              <div class="week-meta-grid">
+                <div class="meta-box">
+                  <div class="meta-box-label outcome">Expected Outcome</div>
+                  <div class="meta-box-text">Second vertical actively in pipeline; reusable outreach playbook validated.</div>
+                </div>
+                <div class="meta-box">
+                  <div class="meta-box-label metric">Key Metric</div>
+                  <div class="meta-box-text">3+ HVAC discovery calls booked by end of week.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Week 10 -->
+      <div class="week-card p3" id="week-10">
+        <div class="week-inner">
+          <div class="week-top" onclick="toggleWeek('week-10')">
+            <div class="week-num">W10</div>
+            <div class="week-meta">
+              <div class="week-title">Set Up Referral Program &amp; First Affiliate</div>
+              <div class="week-days">Days 68–74</div>
+            </div>
+            <span class="week-complete-badge" style="display:none">Complete</span>
+            <div class="week-toggle">&#8964;</div>
+          </div>
+          <div class="week-body">
+            <div class="week-body-inner">
+              <div class="tasks" id="tasks-week-10">
+                <label class="task-item"><input type="checkbox" data-week="week-10" /> <span class="task-text">Define referral program terms: 10–20% revenue share or flat per-close bounty</span></label>
+                <label class="task-item"><input type="checkbox" data-week="week-10" /> <span class="task-text">Build a simple affiliate sign-up page with tracking link generation</span></label>
+                <label class="task-item"><input type="checkbox" data-week="week-10" /> <span class="task-text">Activate first affiliate partner: business coach, bookkeeper, or trade contractor friend</span></label>
+                <label class="task-item"><input type="checkbox" data-week="week-10" /> <span class="task-text">Send referral program announcement to all 3 current clients</span></label>
+                <label class="task-item"><input type="checkbox" data-week="week-10" /> <span class="task-text">Track first referral click and conversion within 30 days</span></label>
+              </div>
+              <div class="week-meta-grid">
+                <div class="meta-box">
+                  <div class="meta-box-label outcome">Expected Outcome</div>
+                  <div class="meta-box-text">Referral engine live with 1 active affiliate driving warm introductions.</div>
+                </div>
+                <div class="meta-box">
+                  <div class="meta-box-label metric">Key Metric</div>
+                  <div class="meta-box-text">1 affiliate activated; 1 referral lead received within 14 days.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Week 11 -->
+      <div class="week-card p3" id="week-11">
+        <div class="week-inner">
+          <div class="week-top" onclick="toggleWeek('week-11')">
+            <div class="week-num">W11</div>
+            <div class="week-meta">
+              <div class="week-title">Accounting Industry Outreach</div>
+              <div class="week-days">Days 75–81</div>
+            </div>
+            <span class="week-complete-badge" style="display:none">Complete</span>
+            <div class="week-toggle">&#8964;</div>
+          </div>
+          <div class="week-body">
+            <div class="week-body-inner">
+              <div class="tasks" id="tasks-week-11">
+                <label class="task-item"><input type="checkbox" data-week="week-11" /> <span class="task-text">Build list of 100–200 small accounting firms and bookkeeping practices in Apollo</span></label>
+                <label class="task-item"><input type="checkbox" data-week="week-11" /> <span class="task-text">Write accounting-specific sequence (client intake automation, document collection, follow-up)</span></label>
+                <label class="task-item"><input type="checkbox" data-week="week-11" /> <span class="task-text">Identify 2–3 accounting-specific AI use cases and build a quick demo or explainer video</span></label>
+                <label class="task-item"><input type="checkbox" data-week="week-11" /> <span class="task-text">Launch sequence; target 3 discovery calls booked by end of the week</span></label>
+              </div>
+              <div class="week-meta-grid">
+                <div class="meta-box">
+                  <div class="meta-box-label outcome">Expected Outcome</div>
+                  <div class="meta-box-text">Third vertical in pipeline — now operating 3 simultaneous outbound sequences.</div>
+                </div>
+                <div class="meta-box">
+                  <div class="meta-box-label metric">Key Metric</div>
+                  <div class="meta-box-text">3+ accounting discovery calls booked; 1 proposal sent.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Week 12 -->
+      <div class="week-card p3" id="week-12">
+        <div class="week-inner">
+          <div class="week-top" onclick="toggleWeek('week-12')">
+            <div class="week-num">W12</div>
+            <div class="week-meta">
+              <div class="week-title">90-Day Review &amp; Set Q2 Targets</div>
+              <div class="week-days">Days 82–90</div>
+            </div>
+            <span class="week-complete-badge" style="display:none">Complete</span>
+            <div class="week-toggle">&#8964;</div>
+          </div>
+          <div class="week-body">
+            <div class="week-body-inner">
+              <div class="tasks" id="tasks-week-12">
+                <label class="task-item"><input type="checkbox" data-week="week-12" /> <span class="task-text">Pull final 90-day numbers: MRR, clients, leads, close rate, CAC, churn</span></label>
+                <label class="task-item"><input type="checkbox" data-week="week-12" /> <span class="task-text">Write a full retrospective: what drove growth, what slowed it, what to stop doing</span></label>
+                <label class="task-item"><input type="checkbox" data-week="week-12" /> <span class="task-text">Set Q2 targets with specific numbers (MRR goal, client count, new verticals)</span></label>
+                <label class="task-item"><input type="checkbox" data-week="week-12" /> <span class="task-text">Identify which channel produced the best ROI — 2x investment there in Q2</span></label>
+                <label class="task-item"><input type="checkbox" data-week="week-12" /> <span class="task-text">Share 90-day results post on LinkedIn — momentum builds credibility</span></label>
+              </div>
+              <div class="week-meta-grid">
+                <div class="meta-box">
+                  <div class="meta-box-label outcome">Expected Outcome</div>
+                  <div class="meta-box-text">Clear Q2 roadmap with data-backed bets; first 90 days fully documented.</div>
+                </div>
+                <div class="meta-box">
+                  <div class="meta-box-label metric">Key Metric</div>
+                  <div class="meta-box-text">Q2 targets written; MRR vs. Day 1 measured; LinkedIn post published.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /timeline-p3 -->
+  </div><!-- /phase-3 -->
+
+</main>
+
+<footer>
+  <span>CWI AI</span> &mdash; 90-Day Growth Playbook &mdash; Built to win.
+</footer>
+
+<script>
+  // ── State Keys ──
+  const STORAGE_KEY = 'cwi-playbook-v1';
+  const START_DATE_KEY = 'cwi-playbook-start';
+  const MRR_KEY = 'cwi-playbook-mrr';
+  const MULTIPLIER_KEY = 'cwi-playbook-multiplier';
+
+  const ALL_WEEKS = ['week-1','week-2','week-3','week-4','week-5','week-6','week-7','week-8','week-9','week-10','week-11','week-12'];
+  const PHASE_WEEKS = { 'phase-1': ['week-1','week-2','week-3','week-4'], 'phase-2': ['week-5','week-6','week-7','week-8'], 'phase-3': ['week-9','week-10','week-11','week-12'] };
+
+  // ── Load saved state ──
+  function getState() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch(e) { return {}; }
+  }
+  function saveState(state) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  // ── Init checkboxes from state ──
+  function initCheckboxes() {
+    const state = getState();
+    document.querySelectorAll('input[type="checkbox"][data-week]').forEach(cb => {
+      const week = cb.dataset.week;
+      const idx = Array.from(document.querySelectorAll(`input[data-week="${week}"]`)).indexOf(cb);
+      const key = `${week}-${idx}`;
+      if (state[key]) {
+        cb.checked = true;
+        cb.closest('.task-item').classList.add('checked');
+      }
+      cb.addEventListener('change', function() {
+        const s = getState();
+        s[key] = this.checked;
+        saveState(s);
+        this.closest('.task-item').classList.toggle('checked', this.checked);
+        updateAll();
+      });
+    });
+  }
+
+  // ── Week completion ──
+  function isWeekComplete(weekId) {
+    const cbs = document.querySelectorAll(`input[data-week="${weekId}"]`);
+    if (!cbs.length) return false;
+    return Array.from(cbs).every(cb => cb.checked);
+  }
+
+  function getWeekProgress(weekId) {
+    const cbs = document.querySelectorAll(`input[data-week="${weekId}"]`);
+    if (!cbs.length) return { done: 0, total: 0 };
+    const done = Array.from(cbs).filter(cb => cb.checked).length;
+    return { done, total: cbs.length };
+  }
+
+  // ── Update all displays ──
+  function updateAll() {
+    let totalTasks = 0, doneTasks = 0, completeWeeks = 0;
+
+    ALL_WEEKS.forEach(wId => {
+      const { done, total } = getWeekProgress(wId);
+      totalTasks += total;
+      doneTasks += done;
+      const complete = isWeekComplete(wId);
+      if (complete) completeWeeks++;
+      const card = document.getElementById(wId);
+      if (card) {
+        card.classList.toggle('complete', complete);
+        const badge = card.querySelector('.week-complete-badge');
+        if (badge) badge.style.display = complete ? 'inline-flex' : 'none';
+        // dot already handled by CSS class
+      }
+    });
+
+    // Overall progress
+    const overallPct = totalTasks ? Math.round(doneTasks / totalTasks * 100) : 0;
+    document.getElementById('pct-complete').textContent = overallPct + '%';
+    document.getElementById('tasks-done').textContent = `${doneTasks} of ${totalTasks} tasks completed`;
+    document.getElementById('main-progress').style.width = overallPct + '%';
+    document.getElementById('weeks-done').textContent = `${completeWeeks} of 12 weeks complete`;
+    document.getElementById('weeks-complete-count').textContent = completeWeeks;
+    document.getElementById('weeks-progress').style.width = Math.round(completeWeeks / 12 * 100) + '%';
+
+    // Phase bars
+    ['phase-1','phase-2','phase-3'].forEach((ph, i) => {
+      const pId = `p${i+1}`;
+      const weeks = PHASE_WEEKS[ph];
+      let pDone = 0, pTotal = 0;
+      weeks.forEach(wId => {
+        const p = getWeekProgress(wId);
+        pDone += p.done; pTotal += p.total;
+      });
+      const pct = pTotal ? Math.round(pDone / pTotal * 100) : 0;
+      document.getElementById(`${pId}-pct`).textContent = pct + '%';
+      document.getElementById(`${pId}-bar`).style.width = pct + '%';
+    });
+
+    updateDaysCounter();
+    updateMRR();
+  }
+
+  // ── Days elapsed ──
+  function updateDaysCounter() {
+    const startVal = localStorage.getItem(START_DATE_KEY);
+    const el = document.getElementById('days-elapsed');
+    const sub = document.getElementById('days-remaining');
+    if (!startVal) {
+      el.textContent = '—';
+      sub.textContent = 'Set start date below';
+      return;
+    }
+    const start = new Date(startVal);
+    const now = new Date();
+    const diff = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+    if (diff < 0) {
+      el.textContent = '0';
+      sub.textContent = 'Not started yet';
+    } else {
+      el.textContent = Math.min(diff, 90);
+      const remaining = Math.max(0, 90 - diff);
+      sub.textContent = remaining > 0 ? `${remaining} days remaining` : 'Day 90 reached!';
+    }
+  }
+
+  // ── Start date input ──
+  function initDatePicker() {
+    const input = document.getElementById('start-date');
+    const saved = localStorage.getItem(START_DATE_KEY);
+    if (saved) input.value = saved;
+    input.addEventListener('change', function() {
+      localStorage.setItem(START_DATE_KEY, this.value);
+      updateDaysCounter();
+    });
+  }
+
+  // ── MRR Calculator ──
+  function updateMRR() {
+    const currentVal = parseFloat(document.getElementById('current-mrr').value) || 0;
+    const multiplier = parseFloat(document.getElementById('mrr-slider').value) || 3;
+    const projected = Math.round(currentVal * multiplier);
+    const delta = projected - currentVal;
+
+    document.getElementById('multiplier-val').textContent = multiplier.toFixed(1).replace('.0','') + 'x';
+    document.getElementById('projected-mrr').textContent = '$' + projected.toLocaleString();
+    document.getElementById('mrr-delta').textContent = '+$' + delta.toLocaleString() + ' added revenue';
+
+    localStorage.setItem(MRR_KEY, currentVal);
+    localStorage.setItem(MULTIPLIER_KEY, multiplier);
+  }
+
+  function initMRR() {
+    const savedMrr = localStorage.getItem(MRR_KEY);
+    const savedMul = localStorage.getItem(MULTIPLIER_KEY);
+    if (savedMrr) document.getElementById('current-mrr').value = savedMrr;
+    if (savedMul) document.getElementById('mrr-slider').value = savedMul;
+    document.getElementById('current-mrr').addEventListener('input', updateMRR);
+    document.getElementById('mrr-slider').addEventListener('input', updateMRR);
+    updateMRR();
+  }
+
+  // ── Toggle week open/close ──
+  function toggleWeek(weekId) {
+    const card = document.getElementById(weekId);
+    card.classList.toggle('open');
+  }
+
+  function expandAll() {
+    ALL_WEEKS.forEach(wId => document.getElementById(wId).classList.add('open'));
+  }
+
+  function collapseAll() {
+    ALL_WEEKS.forEach(wId => document.getElementById(wId).classList.remove('open'));
+  }
+
+  // ── Reset ──
+  function resetProgress() {
+    if (!confirm('Reset all checkbox progress? This cannot be undone.')) return;
+    localStorage.removeItem(STORAGE_KEY);
+    document.querySelectorAll('input[type="checkbox"][data-week]').forEach(cb => {
+      cb.checked = false;
+      cb.closest('.task-item').classList.remove('checked');
+    });
+    updateAll();
+  }
+
+  // ── Boot ──
+  initCheckboxes();
+  initDatePicker();
+  initMRR();
+  updateAll();
+
+  // Open first week by default if nothing is open
+  if (!document.querySelector('.week-card.open')) {
+    document.getElementById('week-1').classList.add('open');
+  }
+</script>
+</body>
+</html>

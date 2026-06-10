@@ -1,0 +1,1567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="CWI internal tool: CWI AI LLC — HubSpot CRM Setup Guide. Internal use only — CWI Compute With Imagination.">
+  <title>CWI AI LLC — HubSpot CRM Setup Guide</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Reset & Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #0A0A0C;
+      --surface:      #0E0E11;
+      --surface2:     #151518;
+      --surface3:     #1C1C22;
+      --text:         #F2F2F4;
+      --muted:        #85858E;
+      --accent:       #FF5A1F;
+      --accent-hover: #FF8A3D;
+      --border:       rgba(255,255,255,0.09);
+      --border-accent:rgba(255,90,31,0.3);
+      --radius:       16px;
+      --radius-sm:    10px;
+      --shadow:       0 4px 24px rgba(0,0,0,0.5);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Instrument Sans', sans-serif;
+      font-size: 15px;
+      line-height: 1.7;
+      min-height: 100vh;
+    }
+
+    h1, h2, h3, h4 {
+      font-family: 'Sora', sans-serif;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { color: var(--accent-hover); text-decoration: underline; }
+
+    /* ── Layout ── */
+    .page-wrapper {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 0 24px 100px;
+    }
+
+    /* ── Header ── */
+    .site-header {
+      border-bottom: 1px solid var(--border);
+      padding: 36px 0 28px;
+      margin-bottom: 56px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .logo-lockup { display: flex; flex-direction: column; gap: 4px; }
+
+    .logo-mark {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Sora', sans-serif;
+      font-weight: 800;
+      font-size: 18px;
+      letter-spacing: -0.3px;
+    }
+
+    .logo-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .logo-sub {
+      font-size: 12px;
+      color: var(--muted);
+      margin-left: 20px;
+      font-family: 'Instrument Sans', sans-serif;
+    }
+
+    .header-meta {
+      text-align: right;
+      font-size: 12.5px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .header-meta a { color: var(--muted); }
+    .header-meta a:hover { color: var(--accent-hover); }
+
+    /* ── Hero ── */
+    .hero {
+      margin-bottom: 64px;
+    }
+
+    .hero-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+
+    .hero-label::before {
+      content: '';
+      display: block;
+      width: 20px;
+      height: 2px;
+      background: var(--accent);
+      border-radius: 2px;
+    }
+
+    .hero h1 {
+      font-size: clamp(28px, 5vw, 44px);
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 16px;
+      color: var(--text);
+    }
+
+    .hero h1 span { color: var(--accent); }
+
+    .hero-desc {
+      font-size: 16px;
+      color: var(--muted);
+      max-width: 640px;
+      line-height: 1.7;
+    }
+
+    /* ── Progress bar ── */
+    .progress-bar-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      margin-bottom: 48px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .progress-label {
+      font-family: 'Sora', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      color: var(--text);
+    }
+
+    .progress-track {
+      flex: 1;
+      min-width: 160px;
+      height: 6px;
+      background: var(--surface3);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 99px;
+      transition: width 0.4s ease;
+    }
+
+    .progress-pct {
+      font-family: 'Sora', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent);
+      white-space: nowrap;
+      min-width: 36px;
+      text-align: right;
+    }
+
+    .btn-reset {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--muted);
+      font-family: 'Instrument Sans', sans-serif;
+      font-size: 12px;
+      padding: 6px 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-reset:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* ── Section headings ── */
+    .section {
+      margin-bottom: 64px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+
+    .section-num {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-family: 'Sora', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .section-header h2 {
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 32px;
+      box-shadow: var(--shadow);
+    }
+
+    .card + .card { margin-top: 16px; }
+
+    /* ── Rationale bullets ── */
+    .rationale-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+    }
+
+    .rationale-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 18px 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+
+    .rationale-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: rgba(255,90,31,0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+
+    .rationale-item h4 {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 3px;
+      color: var(--text);
+    }
+
+    .rationale-item p {
+      font-size: 12.5px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .upgrade-note {
+      margin-top: 18px;
+      background: rgba(255,90,31,0.07);
+      border: 1px solid var(--border-accent);
+      border-radius: var(--radius-sm);
+      padding: 14px 18px;
+      font-size: 13.5px;
+      color: var(--muted);
+    }
+
+    .upgrade-note strong { color: var(--accent); }
+
+    /* ── Tables ── */
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+    }
+
+    thead tr {
+      background: var(--surface2);
+    }
+
+    thead th {
+      padding: 13px 18px;
+      text-align: left;
+      font-family: 'Sora', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--muted);
+      white-space: nowrap;
+      border-bottom: 1px solid var(--border);
+    }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+
+    tbody tr:last-child { border-bottom: none; }
+
+    tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+    tbody td {
+      padding: 13px 18px;
+      vertical-align: top;
+      color: var(--text);
+      line-height: 1.55;
+    }
+
+    .stage-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .stage-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .prob-pill {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 99px;
+      font-family: 'Sora', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .type-pill {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      background: var(--surface2);
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+
+    /* ── Checklist steps ── */
+    .checklist {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .check-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 14px 18px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+      user-select: none;
+    }
+
+    .check-item:hover { background: var(--surface2); }
+
+    .check-item.done {
+      border-color: rgba(34,197,94,0.25);
+      background: rgba(34,197,94,0.04);
+    }
+
+    .check-item.done .check-label {
+      text-decoration: line-through;
+      color: var(--muted);
+    }
+
+    .check-box {
+      width: 20px;
+      height: 20px;
+      border-radius: 6px;
+      border: 2px solid var(--border);
+      background: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .check-item.done .check-box {
+      border-color: #22C55E;
+      background: #22C55E;
+    }
+
+    .check-box svg {
+      width: 12px;
+      height: 12px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .check-item.done .check-box svg { opacity: 1; }
+
+    .check-label {
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.55;
+      transition: color 0.2s;
+    }
+
+    .check-sublabel {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    /* ── Step blocks ── */
+    .step-block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+
+    .step-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 22px 28px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+    }
+
+    .step-num {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2px solid var(--accent);
+      color: var(--accent);
+      font-family: 'Sora', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .step-header h3 {
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    .step-header .step-progress {
+      margin-left: auto;
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .step-body {
+      padding: 24px 28px;
+    }
+
+    /* ── Scenario cards ── */
+    .scenario-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 14px;
+    }
+
+    .scenario-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px 22px 18px;
+    }
+
+    .scenario-card h4 {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: var(--text);
+    }
+
+    .scenario-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 12.5px;
+      margin-bottom: 6px;
+      color: var(--muted);
+    }
+
+    .scenario-row .lbl {
+      font-weight: 600;
+      color: var(--text);
+      min-width: 54px;
+      flex-shrink: 0;
+    }
+
+    .scenario-exists {
+      margin-top: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #22C55E;
+      background: rgba(34,197,94,0.08);
+      border: 1px solid rgba(34,197,94,0.2);
+      border-radius: 99px;
+      padding: 3px 10px;
+    }
+
+    .scenario-pending {
+      margin-top: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #EAB308;
+      background: rgba(234,179,8,0.08);
+      border: 1px solid rgba(234,179,8,0.2);
+      border-radius: 99px;
+      padding: 3px 10px;
+    }
+
+    /* ── Company record list ── */
+    .prop-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 10px;
+    }
+
+    .prop-chip {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      font-size: 13px;
+    }
+
+    .prop-chip span {
+      display: block;
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    /* ── Weekly habits ── */
+    .habit-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .habit-row:last-child { border-bottom: none; }
+
+    .habit-day {
+      min-width: 80px;
+      font-family: 'Sora', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--accent);
+    }
+
+    .habit-text {
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.55;
+    }
+
+    /* ── Footer ── */
+    .site-footer {
+      border-top: 1px solid var(--border);
+      padding: 32px 0 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 12.5px;
+      color: var(--muted);
+    }
+
+    .site-footer a { color: var(--muted); }
+    .site-footer a:hover { color: var(--accent-hover); text-decoration: none; }
+
+    /* ── Divider ── */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 40px 0;
+    }
+
+    /* ── Nav TOC ── */
+    .toc {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px 28px;
+      margin-bottom: 56px;
+    }
+
+    .toc h3 {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 14px;
+    }
+
+    .toc-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      list-style: none;
+    }
+
+    .toc-list a {
+      display: inline-block;
+      padding: 5px 14px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      font-size: 12.5px;
+      color: var(--text);
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .toc-list a:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    /* ── Print ── */
+    @media print {
+      body { background: #fff; color: #111; font-size: 12px; }
+      .site-header, .toc, .btn-reset, .progress-bar-wrap { display: none; }
+      .card, .step-block, .table-wrap { border: 1px solid #ddd; box-shadow: none; }
+      .check-item { border: 1px solid #ddd; background: transparent; }
+      .check-item.done { background: #f0fdf4; }
+      .section { page-break-inside: avoid; }
+      h2, h3 { page-break-after: avoid; }
+      a { color: #FF5A1F; }
+      .rationale-icon, .section-num, .step-num { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+      .page-wrapper { padding: 0 16px 80px; }
+      .card { padding: 20px 20px; }
+      .step-header { padding: 16px 20px; gap: 12px; }
+      .step-body { padding: 18px 20px; }
+      .site-header { padding: 24px 0 20px; margin-bottom: 36px; }
+      .header-meta { display: none; }
+      thead th, tbody td { padding: 10px 12px; }
+      .scenario-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page-wrapper">
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="logo-lockup">
+      <div class="logo-mark">
+        <div class="logo-dot"></div>
+        CWI AI LLC
+      </div>
+      <div class="logo-sub">HubSpot CRM Setup Guide</div>
+    </div>
+    <div class="header-meta">
+      Brian Kalsic &nbsp;|&nbsp; Southgate, MI<br>
+      <a href="mailto:brian@cwiai.net">brian@cwiai.net</a> &nbsp;|&nbsp;
+      <a href="tel:7348129971">(734) 812-9971</a> &nbsp;|&nbsp;
+      <a href="https://cwiai.net" target="_blank">cwiai.net</a>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-label">CRM Operations</div>
+    <h1>HubSpot <span>Free CRM</span><br>Setup Guide</h1>
+    <p class="hero-desc">Complete step-by-step instructions to configure HubSpot as the central hub for lead tracking, client management, and Make.com automation — built for the CWI AI local-business automation service.</p>
+  </div>
+
+  <!-- Progress bar -->
+  <div class="progress-bar-wrap" id="progressWrap">
+    <span class="progress-label">Setup Progress</span>
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill" style="width:0%"></div>
+    </div>
+    <span class="progress-pct" id="progressPct">0%</span>
+    <button class="btn-reset" id="btnReset">Reset All</button>
+  </div>
+
+  <!-- TOC -->
+  <nav class="toc">
+    <h3>Jump to Section</h3>
+    <ul class="toc-list">
+      <li><a href="#tool-choice">Tool Choice</a></li>
+      <li><a href="#pipeline">Pipeline Stages</a></li>
+      <li><a href="#properties">Contact Properties</a></li>
+      <li><a href="#setup-steps">Setup Steps</a></li>
+      <li><a href="#client-mgmt">Client Management</a></li>
+      <li><a href="#scenarios">Make Scenarios</a></li>
+      <li><a href="#habits">Weekly Habits</a></li>
+    </ul>
+  </nav>
+
+  <!-- ─────────────────────────────────────────
+       Section 1 — Tool Choice
+  ───────────────────────────────────────── -->
+  <section class="section" id="tool-choice">
+    <div class="section-header">
+      <div class="section-num">1</div>
+      <h2>Tool Choice: HubSpot Free CRM</h2>
+    </div>
+
+    <div class="rationale-grid">
+      <div class="rationale-item">
+        <div class="rationale-icon">🆓</div>
+        <div>
+          <h4>Free Forever</h4>
+          <p>Core CRM features — contacts, deals, pipeline, activity — with no credit card and no time limit.</p>
+        </div>
+      </div>
+      <div class="rationale-item">
+        <div class="rationale-icon">📊</div>
+        <div>
+          <h4>Native Pipeline</h4>
+          <p>Drag-and-drop Kanban board for deals. All 10 stages visible at a glance, no config needed.</p>
+        </div>
+      </div>
+      <div class="rationale-item">
+        <div class="rationale-icon">📧</div>
+        <div>
+          <h4>Email Tracking</h4>
+          <p>Built-in open and click tracking when you connect Gmail. Know the moment a prospect reads your proposal.</p>
+        </div>
+      </div>
+      <div class="rationale-item">
+        <div class="rationale-icon">⚙️</div>
+        <div>
+          <h4>Apollo + Make Sync</h4>
+          <p>Connects to Apollo.io via Make.com. New leads auto-populate HubSpot without manual data entry.</p>
+        </div>
+      </div>
+      <div class="rationale-item">
+        <div class="rationale-icon">🤖</div>
+        <div>
+          <h4>Deal Stage Automation</h4>
+          <p>Automate stage moves on reply, Calendly booking, contract send, and payment received events.</p>
+        </div>
+      </div>
+      <div class="rationale-item">
+        <div class="rationale-icon">📱</div>
+        <div>
+          <h4>Mobile App</h4>
+          <p>Full iOS/Android app for on-the-go deal updates, call logging, and contact lookup from any location.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="upgrade-note">
+      <strong>When to upgrade:</strong> Stay on the free tier through Phase 1 and 2. Only consider a paid plan when you reach <strong>5+ active clients</strong> and need sequences, advanced reporting, or team seats.
+    </div>
+  </section>
+
+  <!-- ─────────────────────────────────────────
+       Section 2 — Pipeline Structure
+  ───────────────────────────────────────── -->
+  <section class="section" id="pipeline">
+    <div class="section-header">
+      <div class="section-num">2</div>
+      <h2>Pipeline Structure — "AI Automation Sales"</h2>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Stage</th>
+            <th>Probability</th>
+            <th>Definition</th>
+            <th>Next Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="color:var(--muted);font-size:12px;">01</td>
+            <td>
+              <span class="stage-badge">
+                <span class="stage-dot" style="background:#6366F1;"></span>
+                New Lead
+              </span>
+            </td>
+            <td><span class="prob-pill" style="background:rgba(99,102,241,0.15);color:#818CF8;">5%</span></td>
+            <td>Scraped from Google Maps, added to Apollo sequence</td>
+            <td>Apollo sequence starts automatically</td>
+          </tr>
+          <tr>
+            <td style="color:var(--muted);font-size:12px;">02</td>
+            <td>
+              <span class="stage-badge">
+                <span class="stage-dot" style="background:#3B82F6;"></span>
+                Replied
+              </span>
+            </td>
+            <td><span class="prob-pill" style="background:rgba(59,130,246,0.15);color:#60A5FA;">20%</span></td>
+            <td>Responded to cold email (positive or neutral)</td>
+            <td>Respond within 2 hours, send calendar link</td>
+          </tr>
+          <tr>
+            <td style="color:var(--muted);font-size:12px;">03</td>
+            <td>
+              <span class="stage-badge">
+                <span class="stage-dot" style="background:#06B6D4;"></span>
+                Call Booked
+              </span>
+            </td>
+            <td><span class="prob-pill" style="background:rgba(6,182,212,0.15);color:#22D3EE;">40%</span></td>
+            <td>Discovery call scheduled in Calendly</td>
+            <td>Prep qualification notes before call</td>
+          </tr>
+          <tr>
+            <td style="color:var(--muted);font-size:12px;">04</td>
+            <td>
+              <span class="stage-badge">
+                <span class="stage-dot" style="background:#F59E0B;"></span>
+                Proposal Sent
+              </span>
+            </td>
+            <td><span class="prob-pill" style="background:rgba(245,158,11,0.15);color:#FCD34D;">60%</span></td>
+            <td>Pricing and scope delivered post-call</td>
+            <td>Follow up in 3 days if no response</td>
+          </tr>
+          <tr>
+            <td style="color:var(--muted);font-size:12px;">05</td>
+            <td>
+              <span class="stage-badge">
+                <span class="stage-dot" style="background:#F97316;"></span>
+                Negotiating
+              </span>
+            </td>
+            <td><span class="prob-pill" style="background:rgba(249,115,22,0.15);color:#FB923C;">75%</span></td>
+            <td>Client has questions or wants changes to scope</td>
+            <td>Address all questions within 24 hours</td>
+          </tr>
+          <tr>
+            <td style="color:var(--muted);font-size:12px;">06</td>
+            <td>
+              <span class="stage-badge">
+                <span class="stage-dot" style="background:#22C55E;"></span>
+                Closed Won
+              </span>
+            </td>
+            <td><span class="prob-pill" style="background:rgba(34,197,94,0.15);color:#4ADE80;">100%</span></td>
+            <td>Contract signed, setup fee received</td>
+            <td>Begin onboarding immediately</td>
+          </tr>
+          <tr>
+            <td style="color:var(--muted);font-size:12px;">07</td>
+            <td>
+              <span class="stage-badge">
+                <span class="stage-dot" style="background:#EF4444;"></span>
+                Closed Lost
+              </span>
+            </td>
+            <td><span class="prob-pill" style="background:rgba(239,68,68,0.15);color:#F87171;">0%</span></td>
+            <td>Did not close — said no or went cold</td>
+            <td>Move to nurture sequence in Apollo</td>
+          </tr>
+          <tr>
+            <td style="color:var(--muted);font-size:12px;">08</td>
+            <td>
+              <span class="stage-badge">
+                <span class="stage-dot" style="background:#FF5A1F;"></span>
+                Active Client
+              </span>
+            </td>
+            <td><span class="prob-pill" style="background:rgba(255,90,31,0.12);color:#FF8A3D;">—</span></td>
+            <td>Live, paying monthly client</td>
+            <td>Monthly check-in, track support tickets</td>
+          </tr>
+          <tr>
+            <td style="color:var(--muted);font-size:12px;">09</td>
+            <td>
+              <span class="stage-badge">
+                <span class="stage-dot" style="background:#EAB308;"></span>
+                At Risk
+              </span>
+            </td>
+            <td><span class="prob-pill" style="background:rgba(234,179,8,0.12);color:#FDE047;">—</span></td>
+            <td>Signs of churn — complaints, late payment, NPS &lt;7</td>
+            <td>Call within 24 hours, escalate immediately</td>
+          </tr>
+          <tr>
+            <td style="color:var(--muted);font-size:12px;">10</td>
+            <td>
+              <span class="stage-badge">
+                <span class="stage-dot" style="background:#6B7280;"></span>
+                Churned
+              </span>
+            </td>
+            <td><span class="prob-pill" style="background:rgba(107,114,128,0.12);color:#9CA3AF;">—</span></td>
+            <td>Cancelled the service</td>
+            <td>Exit interview, update pricing/offer templates</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────────────────────
+       Section 3 — Contact Properties
+  ───────────────────────────────────────── -->
+  <section class="section" id="properties">
+    <div class="section-header">
+      <div class="section-num">3</div>
+      <h2>Contact Properties to Track</h2>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Property Name</th>
+            <th>Type</th>
+            <th>Values / Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Industry</strong></td>
+            <td><span class="type-pill">Dropdown</span></td>
+            <td style="color:var(--muted);">Plumber, HVAC, Dentist, Accountant, Retail, Salon, Other</td>
+          </tr>
+          <tr>
+            <td><strong>City</strong></td>
+            <td><span class="type-pill">Text</span></td>
+            <td style="color:var(--muted);">Southgate, Lincoln Park, Wyandotte, etc.</td>
+          </tr>
+          <tr>
+            <td><strong>Monthly Contacts Volume</strong></td>
+            <td><span class="type-pill">Number</span></td>
+            <td style="color:var(--muted);">Estimated inquiries/month</td>
+          </tr>
+          <tr>
+            <td><strong>Number of Locations</strong></td>
+            <td><span class="type-pill">Number</span></td>
+            <td style="color:var(--muted);">1, 2, 3+</td>
+          </tr>
+          <tr>
+            <td><strong>Current Software</strong></td>
+            <td><span class="type-pill">Text</span></td>
+            <td style="color:var(--muted);">What they currently use (Google Cal, Housecall Pro, etc.)</td>
+          </tr>
+          <tr>
+            <td><strong>Pricing Tier</strong></td>
+            <td><span class="type-pill">Dropdown</span></td>
+            <td style="color:var(--muted);">Starter, Growth, Pro, Custom</td>
+          </tr>
+          <tr>
+            <td><strong>Monthly Fee</strong></td>
+            <td><span class="type-pill">Currency</span></td>
+            <td style="color:var(--muted);">Actual monthly recurring charge</td>
+          </tr>
+          <tr>
+            <td><strong>Setup Fee Collected</strong></td>
+            <td><span class="type-pill">Checkbox</span></td>
+            <td style="color:var(--muted);">Yes / No</td>
+          </tr>
+          <tr>
+            <td><strong>Go-Live Date</strong></td>
+            <td><span class="type-pill">Date</span></td>
+            <td style="color:var(--muted);">When the chatbot / automation was launched for client</td>
+          </tr>
+          <tr>
+            <td><strong>NPS Score</strong></td>
+            <td><span class="type-pill">Number</span></td>
+            <td style="color:var(--muted);">0–10 (updated monthly)</td>
+          </tr>
+          <tr>
+            <td><strong>Last Check-In</strong></td>
+            <td><span class="type-pill">Date</span></td>
+            <td style="color:var(--muted);">Date of last monthly contact / call</td>
+          </tr>
+          <tr>
+            <td><strong>Support Tickets This Month</strong></td>
+            <td><span class="type-pill">Number</span></td>
+            <td style="color:var(--muted);">Rolling count — reset each month</td>
+          </tr>
+          <tr>
+            <td><strong>Containment Rate</strong></td>
+            <td><span class="type-pill">Percent</span></td>
+            <td style="color:var(--muted);">% of chats handled by bot without agent escalation (from Freshchat)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────────────────────
+       Section 4 — Setup Steps (interactive checklist)
+  ───────────────────────────────────────── -->
+  <section class="section" id="setup-steps">
+    <div class="section-header">
+      <div class="section-num">4</div>
+      <h2>Step-by-Step Setup</h2>
+    </div>
+
+    <!-- Step 1 -->
+    <div class="step-block">
+      <div class="step-header">
+        <div class="step-num">1</div>
+        <div>
+          <h3>Account Setup</h3>
+          <div style="font-size:12.5px;color:var(--muted);margin-top:3px;">Connect HubSpot to your email, calendar, and browser</div>
+        </div>
+        <div class="step-progress" id="prog-step1">0 / 4</div>
+      </div>
+      <div class="step-body">
+        <div class="checklist">
+          <div class="check-item" data-id="s1-1" onclick="toggleCheck(this)">
+            <div class="check-box"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div>
+              <div class="check-label">Sign up at <a href="https://www.hubspot.com/products/crm" target="_blank" onclick="event.stopPropagation()">hubspot.com/crm</a> — free, no credit card required</div>
+              <div class="check-sublabel">Use your business email: brian@cwiai.net</div>
+            </div>
+          </div>
+          <div class="check-item" data-id="s1-2" onclick="toggleCheck(this)">
+            <div class="check-box"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div>
+              <div class="check-label">Connect Gmail or your business email (Settings → Email → Connect inbox)</div>
+              <div class="check-sublabel">Enables open tracking + 1-click email from contact records</div>
+            </div>
+          </div>
+          <div class="check-item" data-id="s1-3" onclick="toggleCheck(this)">
+            <div class="check-box"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div>
+              <div class="check-label">Connect Google Calendar (Settings → Calendar → Connect)</div>
+              <div class="check-sublabel">Syncs meetings to contact activity feed automatically</div>
+            </div>
+          </div>
+          <div class="check-item" data-id="s1-4" onclick="toggleCheck(this)">
+            <div class="check-box"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div>
+              <div class="check-label">Install <a href="https://chrome.google.com/webstore/detail/hubspot-sales-hub/oiiaigjnkhngdbnpijketobfedmglnba" target="_blank" onclick="event.stopPropagation()">HubSpot Chrome Extension</a> for Gmail email tracking</div>
+              <div class="check-sublabel">Shows real-time open/click notifications in Chrome</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-block">
+      <div class="step-header">
+        <div class="step-num">2</div>
+        <div>
+          <h3>Create Your Pipeline</h3>
+          <div style="font-size:12.5px;color:var(--muted);margin-top:3px;">Build "AI Automation Sales" with all 10 stages and deal probabilities</div>
+        </div>
+        <div class="step-progress" id="prog-step2">0 / 7</div>
+      </div>
+      <div class="step-body">
+        <div class="checklist">
+          <div class="check-item" data-id="s2-1" onclick="toggleCheck(this)">
+            <div class="check-box"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div>
+              <div class="check-label">Navigate to CRM → Deals → click the pipeline dropdown → Manage Pipelines</div>
+            </div>
+          </div>
+          <div class="check-item" data-id="s2-2" onclick="toggleCheck(this)">
+            <div class="check-box"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div>
+              <div class="check-label">Click "Add pipeline" → name it <strong>AI Automation Sales</strong></div>
+            </div>
+          </div>
+          <div class="check-item" data-id="s2-3" onclick="toggleCheck(this)">
+            <div class="check-box"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div>
+              <div class="check-label">Add prospect stages in order: New Lead → Replied → Call Booked → Proposal Sent → Negotiating</div>
+            </div>
+          </div>
+          <div class="check-item" data-id="s2-4" onclick="toggleCheck(this)">
+            <div class="check-box"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div>
+              <div class="check-label">Add closed stages: Closed Won → Closed Lost</div>
+            </div>
+          </div>
+          <div class="check-item" data-id="s2-5" onclick="toggleCheck(this)">
+            <div class="check-box"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div>
+              <div class="check-label">Add client stages: Active Client → At Risk → Churned</div>
+            </div>
+          </div>
+          <div class="check-item" data-id="s2-6" onclick="toggleCheck(this)">
+            <div class="check-box"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div>
+              <div class="check-label">Set deal probability percentages on each stage (click the % field next to each stage name)</div>
+              <div class="check-sublabel">New Lead 5% · Replied 20% · Call Booked 40% · Proposal Sent 60% · Negotiating 75% · Closed Won 100% · Closed Lost 0%</div>
+            </div>
+          </div>
+          <div class="check-item" data-id="s2-7" onclick="toggleCheck(this)">
+            <div class="check-box"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div>
+              <div class="check-label">Save the pipeline and confirm all stages appear in the Deals Kanban view</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step-block">
+      <div class="step-header">
+        <div class="step-num">3</div>
+        <div>
+          <h3>Create Custom Contact Properties</h3>
+          <div style="font-size:12.5px;color:var(--muted);margin-top:3px;">Settings → Properties → Contact Properties</div>
+        </div>
+        <div class="step-progress" id="prog-step3">0 / 5</div>
+      </div>
+      <div class="step-body">
+        <div class="checklist">
+          <div class="check-item" data-id="s3-1" onclick="toggleCheck(this)">
+            <div class="check-box"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div>
+              <div class="check-label">Go to Settings (gear icon) → Properties → select "Contact properties" from the dropdown → click "Create property"</div>
+            </div>
+          </div>
+          <div class="check-item" data-id="s3-2" onclick="toggleCheck(this)">
+            <div class="check-box"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div>
+              <div class="check-label">Create dropdown properties: <strong>Industry</strong> (Plumber, HVAC, Dentist, Accountant, Retail, Salon, Other) and <strong>Pricing Tier</strong> (Starter, Growth, Pro, Custom)</div>
+            </div>
+          </div>
+          <div class="check-item" data-id="s3-3" onclick="toggleCheck(this)">
+            <div class="check-box"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div>
+              <div class="check-label">Create number properties: <strong>Monthly Contacts Volume, Number of Locations, NPS Score, Support Tickets This Month</strong></div>
+            </div>
+          </div>
+          <div class="check-item" data-id="s3-4" onclick="toggleCheck(this)">
+            <div class="check-box"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div>
+              <div class="check-label">Create remaining properties: City (text), Current Software (text), Monthly Fee (currency), Setup Fee Collected (checkbox), Go-Live Date (date), Last Check-In (date), Containment Rate (percent)</div>
+            </div>
+          </div>
+          <div class="check-item" data-id="s3-5" onclick="toggleCheck(this)">
+            <div class="check-box"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div>
+              <div class="check-label">Add all 13 custom properties to the contact record layout (Contacts → any contact → Customize → drag properties to the "About" section)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step-block">
+      <div class="step-header">
+        <div class="step-num">4</div>
+        <div>
+          <h3>Connect Apollo via Make</h3>
+          <div style="font-size:12.5px;color:var(--muted);margin-top:3px;">Auto-sync new Apollo leads into HubSpot as "New Lead" deals — scenario-d-apollo-hubspot.json exists</div>
+        </div>
+        <div class="step-progress" id="prog-step4">0 / 6</div>
+      </div>
+      <div class="step-body">
+        <div class="checklist">
+          <div class="check-item" data-id="s4-1" onclick="toggleCheck(this)">
+            <div class="check-box"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div>
+              <div class="check-label">In Make.com, create a new scenario and import <code style="font-size:11.5px;background:var(--surface2);padding:1px 6px;border-radius:4px;">make-scenarios/scenario-d-apollo-hubspot.json</code></div>
+              <div class="check-sublabel">File already exists in the cwi-automation repo</div>
+            </div>
+          </div>
+          <div class="check-item" data-id="s4-2" onclick="toggleCheck(this)">
+            <div class="check-box"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div>
+              <div class="check-label">Set the trigger: Apollo → "New contact added to sequence"</div>
+            </div>
+          </div>
+          <div class="check-item" data-id="s4-3" onclick="toggleCheck(this)">
+            <div class="check-box"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div>
+              <div class="check-label">Set the action: HubSpot → "Create or update contact"</div>
+            </div>
+          </div>
+          <div class="check-item" data-id="s4-4" onclick="toggleCheck(this)">
+            <div class="check-box"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div>
+              <div class="check-label">Map fields: First/Last Name, Email, Company Name, Industry → Industry property, City → City property</div>
+            </div>
+          </div>
+          <div class="check-item" data-id="s4-5" onclick="toggleCheck(this)">
+            <div class="check-box"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div>
+              <div class="check-label">Add a second HubSpot action to create a deal, set pipeline to "AI Automation Sales" and stage to "New Lead"</div>
+            </div>
+          </div>
+          <div class="check-item" data-id="s4-6" onclick="toggleCheck(this)">
+            <div class="check-box"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div>
+              <div class="check-label">Schedule scenario to run <strong>every hour</strong> and activate it — test with one Apollo contact before enabling</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step-block">
+      <div class="step-header">
+        <div class="step-num">5</div>
+        <div>
+          <h3>Set Up Deal Automation</h3>
+          <div style="font-size:12.5px;color:var(--muted);margin-top:3px;">Auto-move deals based on email reply, Calendly booking, contract, and payment events</div>
+        </div>
+        <div class="step-progress" id="prog-step5">0 / 5</div>
+      </div>
+      <div class="step-body">
+        <div class="checklist">
+          <div class="check-item" data-id="s5-1" onclick="toggleCheck(this)">
+            <div class="check-box"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div>
+              <div class="check-label">In HubSpot: Automation → Workflows → Create workflow → when "Contact replies to email" → move deal to <strong>Replied</strong></div>
+              <div class="check-sublabel">Free tier supports contact-based workflows</div>
+            </div>
+          </div>
+          <div class="check-item" data-id="s5-2" onclick="toggleCheck(this)">
+            <div class="check-box"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div>
+              <div class="check-label">In Make: import <code style="font-size:11.5px;background:var(--surface2);padding:1px 6px;border-radius:4px;">make-scenarios/scenario-g-calendly-hubspot.json</code> — Calendly new booking → find HubSpot contact → move deal to <strong>Call Booked</strong> + add booking note</div>
+              <div class="check-sublabel">scenario-g-calendly-hubspot.json already exists in the repo</div>
+            </div>
+          </div>
+          <div class="check-item" data-id="s5-3" onclick="toggleCheck(this)">
+            <div class="check-box"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div>
+              <div class="check-label">Manual trigger: when you send a contract (DocuSign) → manually move deal to <strong>Proposal Sent</strong> and log send date in notes</div>
+              <div class="check-sublabel">Or automate via Make DocuSign → HubSpot module when you add DocuSign</div>
+            </div>
+          </div>
+          <div class="check-item" data-id="s5-4" onclick="toggleCheck(this)">
+            <div class="check-box"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div>
+              <div class="check-label">In Make: create Payment Received scenario — Stripe payment confirmed → move deal to <strong>Closed Won</strong> + create Company record for Active Client</div>
+            </div>
+          </div>
+          <div class="check-item" data-id="s5-5" onclick="toggleCheck(this)">
+            <div class="check-box"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div>
+              <div class="check-label">Test all automation paths end-to-end with a dummy contact before going live</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────────────────────
+       Section 5 — Client Management
+  ───────────────────────────────────────── -->
+  <section class="section" id="client-mgmt">
+    <div class="section-header">
+      <div class="section-num">5</div>
+      <h2>Client Management in HubSpot</h2>
+    </div>
+
+    <p style="color:var(--muted);margin-bottom:24px;">Once a deal reaches <strong style="color:var(--text);">Closed Won</strong>, create a separate <strong style="color:var(--accent);">Company record</strong> for ongoing client management. This keeps your sales pipeline clean while tracking each client's health metrics over time.</p>
+
+    <div class="card" style="margin-bottom:24px;">
+      <h3 style="font-size:15px;margin-bottom:18px;color:var(--text);">Company Record Properties</h3>
+      <div class="prop-grid">
+        <div class="prop-chip">Business Name <span>Text</span></div>
+        <div class="prop-chip">Industry <span>Dropdown</span></div>
+        <div class="prop-chip">Monthly Fee <span>Currency</span></div>
+        <div class="prop-chip">Setup Fee Amount <span>Currency</span></div>
+        <div class="prop-chip">Go-Live Date <span>Date</span></div>
+        <div class="prop-chip">Contract Renewal Date <span>Date</span></div>
+        <div class="prop-chip">Pricing Tier <span>Dropdown</span></div>
+        <div class="prop-chip">Make Scenario URL <span>Text — link to their workflow</span></div>
+        <div class="prop-chip">Freshchat Bot URL <span>Text — link to their chatbot</span></div>
+        <div class="prop-chip">NPS Score <span>Number, updated monthly</span></div>
+        <div class="prop-chip">Support Ticket Count <span>Number, updated monthly</span></div>
+        <div class="prop-chip">Last Check-In Date <span>Date</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="font-size:15px;margin-bottom:18px;color:var(--text);">Monthly Client Review Process</h3>
+      <div class="checklist">
+        <div class="check-item" data-id="cm-1" onclick="toggleCheck(this)">
+          <div class="check-box"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div>
+            <div class="check-label">First week of month: open all Active Client company records</div>
+          </div>
+        </div>
+        <div class="check-item" data-id="cm-2" onclick="toggleCheck(this)">
+          <div class="check-box"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div>
+            <div class="check-label">Update NPS score, support ticket count, and containment rate for each client</div>
+          </div>
+        </div>
+        <div class="check-item" data-id="cm-3" onclick="toggleCheck(this)">
+          <div class="check-box"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div>
+            <div class="check-label">Flag any "At Risk" clients: NPS &lt;7, support tickets &gt;5, or late payment</div>
+          </div>
+        </div>
+        <div class="check-item" data-id="cm-4" onclick="toggleCheck(this)">
+          <div class="check-box"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div>
+            <div class="check-label">Schedule immediate call for any flagged "At Risk" clients</div>
+          </div>
+        </div>
+        <div class="check-item" data-id="cm-5" onclick="toggleCheck(this)">
+          <div class="check-box"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div>
+            <div class="check-label">Log check-in call notes in HubSpot activity feed, update Last Check-In date</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────────────────────
+       Section 6 — Make Scenarios
+  ───────────────────────────────────────── -->
+  <section class="section" id="scenarios">
+    <div class="section-header">
+      <div class="section-num">6</div>
+      <h2>Make Automation Scenarios</h2>
+    </div>
+
+    <p style="color:var(--muted);margin-bottom:24px;">Four scenarios handle all CRM automation. Scenarios D and G already exist as JSON files in the repo — import and activate them. Scenarios 3 and 4 need to be built.</p>
+
+    <div class="scenario-grid">
+      <div class="scenario-card">
+        <h4>Scenario D — Apollo → HubSpot</h4>
+        <div class="scenario-row"><span class="lbl">Trigger</span> New Apollo contact added to sequence</div>
+        <div class="scenario-row"><span class="lbl">Action</span> Create/update HubSpot contact + create deal at "New Lead"</div>
+        <div class="scenario-row"><span class="lbl">Schedule</span> Every hour</div>
+        <div class="scenario-row"><span class="lbl">File</span> <code style="font-size:11px;">make-scenarios/scenario-d-apollo-hubspot.json</code></div>
+        <div class="scenario-exists">&#10003; File exists — import &amp; activate</div>
+      </div>
+
+      <div class="scenario-card">
+        <h4>Scenario G — Calendly → HubSpot</h4>
+        <div class="scenario-row"><span class="lbl">Trigger</span> New Calendly booking created</div>
+        <div class="scenario-row"><span class="lbl">Action</span> Find HubSpot contact by email, move deal to "Call Booked", add booking note</div>
+        <div class="scenario-row"><span class="lbl">Schedule</span> Instant (webhook)</div>
+        <div class="scenario-row"><span class="lbl">File</span> <code style="font-size:11px;">make-scenarios/scenario-g-calendly-hubspot.json</code></div>
+        <div class="scenario-exists">&#10003; File exists — import &amp; activate</div>
+      </div>
+
+      <div class="scenario-card">
+        <h4>Scenario 3 — Monthly Client Report</h4>
+        <div class="scenario-row"><span class="lbl">Trigger</span> First Monday of each month (scheduled)</div>
+        <div class="scenario-row"><span class="lbl">Action</span> Pull Freshchat stats per client, update HubSpot company record (containment rate, ticket count), flag if below benchmark</div>
+        <div class="scenario-row"><span class="lbl">Schedule</span> Monthly</div>
+        <div class="scenario-pending">&#9711; Needs to be built</div>
+      </div>
+
+      <div class="scenario-card">
+        <h4>Scenario 4 — Payment → HubSpot</h4>
+        <div class="scenario-row"><span class="lbl">Trigger</span> Stripe payment confirmed</div>
+        <div class="scenario-row"><span class="lbl">Action</span> Move deal to "Closed Won" OR log monthly payment as activity on Company record</div>
+        <div class="scenario-row"><span class="lbl">Schedule</span> On payment event (webhook)</div>
+        <div class="scenario-pending">&#9711; Needs to be built (add Stripe first)</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────────────────────
+       Section 7 — Weekly Habits
+  ───────────────────────────────────────── -->
+  <section class="section" id="habits">
+    <div class="section-header">
+      <div class="section-num">7</div>
+      <h2>Weekly CRM Habits</h2>
+    </div>
+
+    <div class="card">
+      <p style="font-size:13.5px;color:var(--muted);margin-bottom:20px;">5 minutes a day keeps your pipeline accurate and your clients healthy. These three touchpoints are all you need.</p>
+
+      <div class="habit-row">
+        <div class="habit-day">Monday</div>
+        <div class="habit-text">Check the pipeline — identify any deals stalled in the same stage for more than 7 days. Follow up or move to Closed Lost to keep the board clean.</div>
+      </div>
+      <div class="habit-row">
+        <div class="habit-day">Wednesday</div>
+        <div class="habit-text">Check the "At Risk" stage on active clients. If any client has been flagged, call them before end of day. Don't wait for churn to happen.</div>
+      </div>
+      <div class="habit-row">
+        <div class="habit-day">Friday</div>
+        <div class="habit-text">Log any client conversations, support interactions, or check-in calls as notes in HubSpot. Update Last Check-In date on Company records.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div>
+      <strong style="color:var(--text);">CWI AI LLC</strong> — Brian Kalsic &nbsp;|&nbsp; Southgate, MI<br>
+      <a href="mailto:brian@cwiai.net">brian@cwiai.net</a> &nbsp;&middot;&nbsp;
+      <a href="tel:7348129971">(734) 812-9971</a> &nbsp;&middot;&nbsp;
+      <a href="https://cwiai.net" target="_blank">cwiai.net</a>
+    </div>
+    <div style="text-align:right;">
+      HubSpot CRM Setup Guide<br>
+      Generated 2026-06-08 &nbsp;|&nbsp; Internal use only
+    </div>
+  </footer>
+
+</div><!-- /.page-wrapper -->
+
+<script>
+  // ── Storage key prefix ──
+  const STORE_KEY = 'cwi-crm-checks';
+
+  // ── Load state ──
+  function loadState() {
+    try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; }
+    catch(e) { return {}; }
+  }
+
+  function saveState(state) {
+    localStorage.setItem(STORE_KEY, JSON.stringify(state));
+  }
+
+  // ── Toggle a single check item ──
+  function toggleCheck(el) {
+    const id = el.dataset.id;
+    const state = loadState();
+    state[id] = !state[id];
+    saveState(state);
+    applyState(el, state[id]);
+    updateProgress();
+  }
+
+  function applyState(el, checked) {
+    if (checked) {
+      el.classList.add('done');
+    } else {
+      el.classList.remove('done');
+    }
+  }
+
+  // ── Restore all checks on load ──
+  function restoreChecks() {
+    const state = loadState();
+    document.querySelectorAll('.check-item').forEach(function(el) {
+      if (state[el.dataset.id]) {
+        el.classList.add('done');
+      }
+    });
+    updateProgress();
+  }
+
+  // ── Update progress bar and per-step counters ──
+  function updateProgress() {
+    const all = document.querySelectorAll('.check-item');
+    const done = document.querySelectorAll('.check-item.done');
+    const pct = all.length ? Math.round((done.length / all.length) * 100) : 0;
+
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressPct').textContent = pct + '%';
+
+    // Per-step counters
+    const steps = ['step1','step2','step3','step4','step5'];
+    steps.forEach(function(step) {
+      const prog = document.getElementById('prog-' + step);
+      if (!prog) return;
+      const block = prog.closest('.step-block');
+      const stepAll = block.querySelectorAll('.check-item');
+      const stepDone = block.querySelectorAll('.check-item.done');
+      prog.textContent = stepDone.length + ' / ' + stepAll.length;
+      if (stepDone.length === stepAll.length && stepAll.length > 0) {
+        prog.style.color = '#22C55E';
+      } else {
+        prog.style.color = 'var(--muted)';
+      }
+    });
+  }
+
+  // ── Reset button ──
+  document.getElementById('btnReset').addEventListener('click', function() {
+    if (!confirm('Reset all checkboxes? Your progress will be cleared.')) return;
+    localStorage.removeItem(STORE_KEY);
+    document.querySelectorAll('.check-item').forEach(function(el) {
+      el.classList.remove('done');
+    });
+    updateProgress();
+  });
+
+  // ── Init ──
+  restoreChecks();
+</script>
+
+</body>
+</html>

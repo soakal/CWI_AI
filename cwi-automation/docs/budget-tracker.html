@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CWI AI LLC — Monthly Budget & Revenue Tracker</title>
+<meta name="description" content="CWI internal tool: CWI AI LLC — Monthly Budget & Revenue Tracker. Internal use only — CWI Compute With Imagination.">
+<style>
+  :root {
+    --accent: #FF5A1F;
+    --accent-dark: #d94a16;
+    --accent-light: #ff7a47;
+    --bg: #0f0f0f;
+    --surface: #1a1a1a;
+    --surface2: #242424;
+    --surface3: #2e2e2e;
+    --border: #333;
+    --text: #f0f0f0;
+    --text-muted: #888;
+    --green: #22c55e;
+    --yellow: #eab308;
+    --red: #ef4444;
+    --green-bg: rgba(34,197,94,0.12);
+    --yellow-bg: rgba(234,179,8,0.12);
+    --red-bg: rgba(239,68,68,0.12);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  header {
+    background: var(--surface);
+    border-bottom: 2px solid var(--accent);
+    padding: 18px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.4);
+  }
+  .header-left { display: flex; align-items: center; gap: 16px; }
+  .logo-mark {
+    width: 38px; height: 38px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 16px; color: #fff;
+    letter-spacing: -1px;
+  }
+  header h1 { font-size: 18px; font-weight: 700; color: var(--text); }
+  header p { font-size: 12px; color: var(--text-muted); }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .month-selector {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 32px;
+    transition: border-color 0.2s;
+  }
+  .month-selector:hover { border-color: var(--accent); }
+  .btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.2s;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+  }
+  .btn-primary:hover { background: var(--accent-dark); transform: translateY(-1px); }
+  .btn-secondary {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-danger {
+    background: transparent;
+    color: var(--red);
+    border: 1px solid transparent;
+    padding: 4px 8px;
+    font-size: 13px;
+    border-radius: 6px;
+  }
+  .btn-danger:hover { background: rgba(239,68,68,0.1); border-color: var(--red); }
+  .btn-add {
+    background: transparent;
+    color: var(--accent);
+    border: 1px dashed var(--accent);
+    padding: 6px 14px;
+    font-size: 13px;
+    border-radius: 8px;
+    width: 100%;
+    justify-content: center;
+    margin-top: 8px;
+  }
+  .btn-add:hover { background: rgba(255,90,31,0.08); }
+
+  main { max-width: 1100px; margin: 0 auto; padding: 32px 24px 64px; }
+
+  /* Summary Cards */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .summary-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s;
+  }
+  .summary-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--accent);
+    border-radius: 12px 12px 0 0;
+  }
+  .summary-card.green::before { background: var(--green); }
+  .summary-card.yellow::before { background: var(--yellow); }
+  .summary-card.red::before { background: var(--red); }
+  .card-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 8px; }
+  .card-value { font-size: 28px; font-weight: 800; color: var(--text); }
+  .card-value.green { color: var(--green); }
+  .card-value.yellow { color: var(--yellow); }
+  .card-value.red { color: var(--red); }
+  .card-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+  /* Profit margin indicator */
+  .margin-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    margin-top: 6px;
+  }
+  .margin-badge.green { background: var(--green-bg); color: var(--green); }
+  .margin-badge.yellow { background: var(--yellow-bg); color: var(--yellow); }
+  .margin-badge.red { background: var(--red-bg); color: var(--red); }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+  /* Sections */
+  .section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 24px;
+    overflow: hidden;
+  }
+  .section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+  .section-title {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 15px; font-weight: 700;
+  }
+  .section-icon {
+    width: 28px; height: 28px;
+    border-radius: 7px;
+    background: rgba(255,90,31,0.15);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+  }
+  .section-total {
+    font-size: 18px; font-weight: 800;
+    color: var(--accent);
+  }
+  .section-body { padding: 16px 20px; }
+
+  /* Table */
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text-muted);
+    padding: 0 10px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  thead th:last-child { text-align: right; }
+  tbody tr { border-bottom: 1px solid rgba(255,255,255,0.04); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(255,255,255,0.02); }
+  tbody td { padding: 8px 10px; vertical-align: middle; }
+
+  /* Inputs */
+  .cell-input {
+    background: var(--surface3);
+    border: 1px solid transparent;
+    color: var(--text);
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 14px;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .cell-input:focus { border-color: var(--accent); background: var(--surface2); }
+  .cell-input:hover:not(:focus) { border-color: var(--border); }
+  .cell-input[readonly] {
+    background: transparent;
+    border-color: transparent;
+    color: var(--text-muted);
+    cursor: default;
+  }
+  .tier-select {
+    background: var(--surface3);
+    border: 1px solid transparent;
+    color: var(--text);
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    width: 100%;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .tier-select:focus { border-color: var(--accent); }
+  .tier-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .tier-starter { background: rgba(100,200,255,0.12); color: #64c8ff; }
+  .tier-growth { background: rgba(255,90,31,0.15); color: var(--accent-light); }
+  .tier-scale { background: rgba(168,85,247,0.15); color: #c084fc; }
+  .tier-enterprise { background: rgba(234,179,8,0.15); color: var(--yellow); }
+  .tier-custom { background: rgba(34,197,94,0.12); color: var(--green); }
+
+  .amount-display {
+    text-align: right;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--text);
+    white-space: nowrap;
+  }
+  .amount-input-wrap { position: relative; }
+  .amount-input-wrap .currency {
+    position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+    color: var(--text-muted); font-size: 13px; pointer-events: none;
+  }
+  .amount-input-wrap .cell-input { padding-left: 22px; }
+
+  .actions-col { width: 48px; text-align: right; }
+
+  /* Fixed row label */
+  .fixed-label { color: var(--text); font-weight: 500; }
+  .fixed-label small { display: block; font-size: 11px; color: var(--text-muted); font-weight: 400; }
+
+  /* Profit bar */
+  .profit-bar-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 24px;
+  }
+  .profit-bar-label {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 10px;
+    font-size: 13px; font-weight: 600;
+  }
+  .profit-bar-bg {
+    background: var(--surface3);
+    border-radius: 100px;
+    height: 12px;
+    overflow: hidden;
+  }
+  .profit-bar-fill {
+    height: 100%;
+    border-radius: 100px;
+    background: var(--green);
+    transition: width 0.5s cubic-bezier(0.4,0,0.2,1), background 0.3s;
+    min-width: 0;
+  }
+  .thresholds {
+    display: flex; justify-content: space-between;
+    font-size: 11px; color: var(--text-muted); margin-top: 6px;
+  }
+
+  /* Empty state */
+  .empty-row td {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 20px;
+    font-size: 13px;
+    font-style: italic;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--green);
+    color: var(--text);
+    padding: 12px 18px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+    z-index: 9999;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  @media (max-width: 768px) {
+    .summary-grid { grid-template-columns: repeat(2, 1fr); }
+    header { flex-direction: column; gap: 12px; align-items: flex-start; }
+    .header-right { flex-wrap: wrap; }
+    main { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="logo-mark">CWI</div>
+    <div>
+      <h1>Budget &amp; Revenue Tracker</h1>
+      <p>CWI AI LLC &mdash; Monthly Financial Overview</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <select class="month-selector" id="monthSelector"></select>
+    <button class="btn btn-secondary" onclick="exportCSV()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Export CSV
+    </button>
+  </div>
+</header>
+
+<main>
+
+  <!-- Summary Cards -->
+  <div class="summary-grid">
+    <div class="summary-card" id="cardRevenue">
+      <div class="card-label">Gross Revenue</div>
+      <div class="card-value" id="summaryRevenue">$0</div>
+      <div class="card-sub" id="summaryClientCount">0 active clients</div>
+    </div>
+    <div class="summary-card" id="cardCosts">
+      <div class="card-label">Total Costs</div>
+      <div class="card-value red" id="summaryCosts">$0</div>
+      <div class="card-sub" id="summaryCostBreakdown">Fixed + Variable</div>
+    </div>
+    <div class="summary-card" id="cardProfit">
+      <div class="card-label">Net Profit</div>
+      <div class="card-value" id="summaryProfit">$0</div>
+      <div class="card-sub">After all costs</div>
+    </div>
+    <div class="summary-card" id="cardMargin">
+      <div class="card-label">Profit Margin</div>
+      <div class="card-value" id="summaryMargin">—</div>
+      <div><span class="margin-badge" id="marginBadge"><span class="dot"></span><span id="marginLabel">No revenue</span></span></div>
+    </div>
+  </div>
+
+  <!-- Profit Bar -->
+  <div class="profit-bar-wrap">
+    <div class="profit-bar-label">
+      <span>Profit Margin</span>
+      <span id="barPct" style="font-weight:800; font-size:15px;">—</span>
+    </div>
+    <div class="profit-bar-bg">
+      <div class="profit-bar-fill" id="profitBarFill" style="width:0%"></div>
+    </div>
+    <div class="thresholds">
+      <span>0%</span>
+      <span style="color:var(--red)">40% threshold</span>
+      <span style="color:var(--yellow)">60% threshold</span>
+      <span>100%</span>
+    </div>
+  </div>
+
+  <!-- SECTION 1: Revenue -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">
+        <div class="section-icon">💰</div>
+        Revenue — Active Clients
+      </div>
+      <div class="section-total" id="revenueTotal">$0</div>
+    </div>
+    <div class="section-body">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:35%">Client Name</th>
+            <th style="width:22%">Tier</th>
+            <th style="width:22%">Monthly Fee</th>
+            <th style="width:12%">Status</th>
+            <th class="actions-col"></th>
+          </tr>
+        </thead>
+        <tbody id="clientRows"></tbody>
+      </table>
+      <button class="btn btn-add" onclick="addClientRow()">+ Add Client</button>
+    </div>
+  </div>
+
+  <!-- SECTION 2: Fixed Costs -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">
+        <div class="section-icon">📌</div>
+        Fixed Costs
+      </div>
+      <div class="section-total" id="fixedTotal">$0</div>
+    </div>
+    <div class="section-body">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:40%">Service</th>
+            <th style="width:30%">Plan / Notes</th>
+            <th>Monthly Cost</th>
+            <th class="actions-col"></th>
+          </tr>
+        </thead>
+        <tbody id="fixedRows"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SECTION 3: Variable Costs -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">
+        <div class="section-icon">📊</div>
+        Variable Costs
+      </div>
+      <div class="section-total" id="variableTotal">$0</div>
+    </div>
+    <div class="section-body">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:40%">Description</th>
+            <th style="width:30%">Category</th>
+            <th>Amount</th>
+            <th class="actions-col"></th>
+          </tr>
+        </thead>
+        <tbody id="variableRows"></tbody>
+      </table>
+      <button class="btn btn-add" onclick="addVariableRow()">+ Add Variable Cost</button>
+    </div>
+  </div>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =============================================
+   DATA MODEL
+   ============================================= */
+
+const MONTHS = [
+  'January 2026','February 2026','March 2026','April 2026',
+  'May 2026','June 2026','July 2026','August 2026',
+  'September 2026','October 2026','November 2026','December 2026'
+];
+
+const TIERS = {
+  starter: { label: 'Starter', price: 500, cls: 'tier-starter' },
+  growth: { label: 'Growth', price: 1500, cls: 'tier-growth' },
+  scale: { label: 'Scale', price: 3000, cls: 'tier-scale' },
+  enterprise: { label: 'Enterprise', price: 5000, cls: 'tier-enterprise' },
+  custom: { label: 'Custom', price: 0, cls: 'tier-custom' }
+};
+
+const FIXED_DEFAULTS = [
+  { name: 'Make.com', plan: 'Core Plan', amount: 29, editable: false },
+  { name: 'Resend', plan: 'Pro Plan', amount: 20, editable: false },
+  { name: 'OpenRouter', plan: 'Usage-based', amount: 0, editable: true },
+  { name: 'Freshchat', plan: 'Free Tier', amount: 0, editable: false },
+  { name: 'HubSpot', plan: 'Free CRM', amount: 0, editable: false },
+  { name: 'Calendly', plan: 'Free Tier', amount: 0, editable: false },
+  { name: 'Netlify', plan: 'Free Tier', amount: 0, editable: false },
+  { name: 'Domain', plan: '~$24/yr amortized', amount: 2, editable: false }
+];
+
+const VAR_CATS = ['Advertising','Tools & Software','Contractors','Design','Marketing','Other'];
+
+let currentMonth = 5; // 0-indexed, default June 2026
+let data = {}; // { [monthIdx]: { clients: [], fixedAmounts: {}, variables: [] } }
+
+/* =============================================
+   STORAGE
+   ============================================= */
+const SK = 'cwi_budget_v2';
+
+function loadAll() {
+  try {
+    const raw = localStorage.getItem(SK);
+    if (raw) data = JSON.parse(raw);
+  } catch(e) { data = {}; }
+}
+
+function saveAll() {
+  try { localStorage.setItem(SK, JSON.stringify(data)); } catch(e) {}
+}
+
+function getMonthData(m) {
+  if (!data[m]) {
+    data[m] = {
+      clients: [],
+      fixedAmounts: {},
+      variables: []
+    };
+    // seed fixed amounts from defaults
+    FIXED_DEFAULTS.forEach((fd, i) => {
+      data[m].fixedAmounts[i] = fd.amount;
+    });
+  }
+  // ensure fixedAmounts keys exist for all defaults
+  FIXED_DEFAULTS.forEach((fd, i) => {
+    if (data[m].fixedAmounts[i] === undefined) {
+      data[m].fixedAmounts[i] = fd.amount;
+    }
+  });
+  return data[m];
+}
+
+/* =============================================
+   MONTH SELECTOR
+   ============================================= */
+function initMonthSelector() {
+  const sel = document.getElementById('monthSelector');
+  MONTHS.forEach((m, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = m;
+    if (i === currentMonth) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  sel.addEventListener('change', () => {
+    currentMonth = parseInt(sel.value);
+    renderAll();
+  });
+}
+
+/* =============================================
+   RENDER
+   ============================================= */
+function renderAll() {
+  renderClients();
+  renderFixed();
+  renderVariables();
+  updateSummary();
+}
+
+/* --- Clients --- */
+function renderClients() {
+  const md = getMonthData(currentMonth);
+  const tbody = document.getElementById('clientRows');
+  tbody.innerHTML = '';
+
+  if (md.clients.length === 0) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="5">No clients yet. Add your first client below.</td></tr>';
+    return;
+  }
+
+  md.clients.forEach((c, i) => {
+    const tier = TIERS[c.tier] || TIERS.custom;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>
+        <input class="cell-input" value="${escHtml(c.name)}" placeholder="Client name"
+          onchange="updateClient(${i},'name',this.value)" />
+      </td>
+      <td>
+        <select class="tier-select" onchange="updateClient(${i},'tier',this.value)">
+          ${Object.entries(TIERS).map(([k,v])=>`<option value="${k}" ${c.tier===k?'selected':''}>${v.label} ${k!=='custom'?'($'+v.price+'/mo)':''}</option>`).join('')}
+        </select>
+      </td>
+      <td>
+        <div class="amount-input-wrap">
+          <span class="currency">$</span>
+          <input class="cell-input" type="number" min="0" step="50"
+            value="${c.fee}"
+            onchange="updateClient(${i},'fee',parseFloat(this.value)||0)" />
+        </div>
+      </td>
+      <td>
+        <span class="tier-badge ${tier.cls}">${tier.label}</span>
+      </td>
+      <td class="actions-col">
+        <button class="btn btn-danger" onclick="removeClient(${i})" title="Remove client">&#x2715;</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function addClientRow() {
+  const md = getMonthData(currentMonth);
+  md.clients.push({ name: '', tier: 'growth', fee: 1500, active: true });
+  saveAll();
+  renderAll();
+  // Focus new row name input
+  const inputs = document.querySelectorAll('#clientRows .cell-input');
+  if (inputs.length) inputs[inputs.length - 2].focus();
+}
+
+function removeClient(i) {
+  const md = getMonthData(currentMonth);
+  md.clients.splice(i, 1);
+  saveAll();
+  renderAll();
+}
+
+function updateClient(i, field, value) {
+  const md = getMonthData(currentMonth);
+  md.clients[i][field] = value;
+  if (field === 'tier' && value !== 'custom') {
+    md.clients[i].fee = TIERS[value].price;
+  }
+  saveAll();
+  renderAll();
+}
+
+/* --- Fixed Costs --- */
+function renderFixed() {
+  const md = getMonthData(currentMonth);
+  const tbody = document.getElementById('fixedRows');
+  tbody.innerHTML = '';
+
+  FIXED_DEFAULTS.forEach((fd, i) => {
+    const amount = md.fixedAmounts[i] !== undefined ? md.fixedAmounts[i] : fd.amount;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>
+        <span class="fixed-label">${escHtml(fd.name)}</span>
+      </td>
+      <td style="color:var(--text-muted); font-size:13px;">${escHtml(fd.plan)}</td>
+      <td>
+        <div class="amount-input-wrap">
+          <span class="currency">$</span>
+          <input class="cell-input" type="number" min="0" step="1"
+            value="${amount}"
+            ${fd.editable ? '' : 'readonly'}
+            ${fd.editable ? `onchange="updateFixed(${i}, parseFloat(this.value)||0)"` : ''}
+            style="${!fd.editable ? 'color:var(--text-muted);' : ''}" />
+        </div>
+      </td>
+      <td class="actions-col">
+        ${!fd.editable && amount === 0 ? '<span style="font-size:11px;color:var(--green);font-weight:700;">FREE</span>' : ''}
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function updateFixed(i, value) {
+  const md = getMonthData(currentMonth);
+  md.fixedAmounts[i] = value;
+  saveAll();
+  updateSummary();
+}
+
+/* --- Variables --- */
+function renderVariables() {
+  const md = getMonthData(currentMonth);
+  const tbody = document.getElementById('variableRows');
+  tbody.innerHTML = '';
+
+  if (md.variables.length === 0) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="4">No variable costs. Add ads, tools, contractors, etc.</td></tr>';
+    return;
+  }
+
+  md.variables.forEach((v, i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>
+        <input class="cell-input" value="${escHtml(v.desc)}" placeholder="Description"
+          onchange="updateVariable(${i},'desc',this.value)" />
+      </td>
+      <td>
+        <select class="tier-select" onchange="updateVariable(${i},'cat',this.value)">
+          ${VAR_CATS.map(c=>`<option value="${c}" ${v.cat===c?'selected':''}>${c}</option>`).join('')}
+        </select>
+      </td>
+      <td>
+        <div class="amount-input-wrap">
+          <span class="currency">$</span>
+          <input class="cell-input" type="number" min="0" step="10"
+            value="${v.amount}"
+            onchange="updateVariable(${i},'amount',parseFloat(this.value)||0)" />
+        </div>
+      </td>
+      <td class="actions-col">
+        <button class="btn btn-danger" onclick="removeVariable(${i})" title="Remove">&#x2715;</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function addVariableRow() {
+  const md = getMonthData(currentMonth);
+  md.variables.push({ desc: '', cat: 'Advertising', amount: 0 });
+  saveAll();
+  renderAll();
+  const inputs = document.querySelectorAll('#variableRows .cell-input');
+  if (inputs.length) inputs[inputs.length - 2].focus();
+}
+
+function removeVariable(i) {
+  const md = getMonthData(currentMonth);
+  md.variables.splice(i, 1);
+  saveAll();
+  renderAll();
+}
+
+function updateVariable(i, field, value) {
+  const md = getMonthData(currentMonth);
+  md.variables[i][field] = value;
+  saveAll();
+  updateSummary();
+}
+
+/* =============================================
+   SUMMARY
+   ============================================= */
+function updateSummary() {
+  const md = getMonthData(currentMonth);
+
+  // Revenue
+  const revenue = md.clients.reduce((s, c) => s + (parseFloat(c.fee) || 0), 0);
+
+  // Fixed
+  const fixedTotal = FIXED_DEFAULTS.reduce((s, fd, i) => {
+    return s + (parseFloat(md.fixedAmounts[i]) || 0);
+  }, 0);
+
+  // Variable
+  const varTotal = md.variables.reduce((s, v) => s + (parseFloat(v.amount) || 0), 0);
+
+  const totalCosts = fixedTotal + varTotal;
+  const netProfit = revenue - totalCosts;
+  const margin = revenue > 0 ? (netProfit / revenue) * 100 : null;
+
+  // Section totals
+  document.getElementById('revenueTotal').textContent = fmt(revenue);
+  document.getElementById('fixedTotal').textContent = fmt(fixedTotal);
+  document.getElementById('variableTotal').textContent = fmt(varTotal);
+
+  // Cards
+  document.getElementById('summaryRevenue').textContent = fmt(revenue);
+  document.getElementById('summaryClientCount').textContent = md.clients.length + ' active client' + (md.clients.length !== 1 ? 's' : '');
+  document.getElementById('summaryCosts').textContent = fmt(totalCosts);
+  document.getElementById('summaryCostBreakdown').textContent = `Fixed $${fixedTotal.toFixed(0)} + Variable $${varTotal.toFixed(0)}`;
+
+  const profitEl = document.getElementById('summaryProfit');
+  profitEl.textContent = (netProfit >= 0 ? '' : '-') + '$' + Math.abs(netProfit).toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0});
+  profitEl.className = 'card-value ' + (netProfit >= 0 ? 'green' : 'red');
+
+  const marginEl = document.getElementById('summaryMargin');
+  const badgeEl = document.getElementById('marginBadge');
+  const labelEl = document.getElementById('marginLabel');
+  const barFill = document.getElementById('profitBarFill');
+  const barPct = document.getElementById('barPct');
+
+  if (margin === null) {
+    marginEl.textContent = '—';
+    marginEl.className = 'card-value';
+    badgeEl.className = 'margin-badge';
+    labelEl.textContent = 'No revenue';
+    barFill.style.width = '0%';
+    barFill.style.background = 'var(--border)';
+    barPct.textContent = '—';
+    document.getElementById('cardMargin').className = 'summary-card';
+    document.getElementById('cardProfit').className = 'summary-card';
+  } else {
+    const pctStr = margin.toFixed(1) + '%';
+    marginEl.textContent = pctStr;
+    barPct.textContent = pctStr;
+    const clampedPct = Math.max(0, Math.min(100, margin));
+    barFill.style.width = clampedPct + '%';
+
+    let colorClass, colorLabel;
+    if (margin >= 60) {
+      colorClass = 'green'; colorLabel = 'Healthy';
+      barFill.style.background = 'var(--green)';
+    } else if (margin >= 40) {
+      colorClass = 'yellow'; colorLabel = 'Moderate';
+      barFill.style.background = 'var(--yellow)';
+    } else {
+      colorClass = 'red'; colorLabel = 'Needs Attention';
+      barFill.style.background = 'var(--red)';
+    }
+
+    marginEl.className = 'card-value ' + colorClass;
+    badgeEl.className = 'margin-badge ' + colorClass;
+    labelEl.textContent = colorLabel;
+    document.getElementById('cardMargin').className = 'summary-card ' + colorClass;
+    document.getElementById('cardProfit').className = 'summary-card ' + (netProfit >= 0 ? 'green' : 'red');
+  }
+}
+
+/* =============================================
+   EXPORT CSV
+   ============================================= */
+function exportCSV() {
+  const md = getMonthData(currentMonth);
+  const monthName = MONTHS[currentMonth];
+  let rows = [];
+
+  rows.push([`CWI AI LLC — Budget Tracker: ${monthName}`]);
+  rows.push([]);
+
+  rows.push(['REVENUE']);
+  rows.push(['Client Name', 'Tier', 'Monthly Fee']);
+  md.clients.forEach(c => {
+    rows.push([c.name, (TIERS[c.tier]||TIERS.custom).label, c.fee]);
+  });
+  const rev = md.clients.reduce((s,c)=>s+(parseFloat(c.fee)||0),0);
+  rows.push(['TOTAL REVENUE','',rev]);
+  rows.push([]);
+
+  rows.push(['FIXED COSTS']);
+  rows.push(['Service', 'Plan', 'Monthly Cost']);
+  FIXED_DEFAULTS.forEach((fd,i) => {
+    rows.push([fd.name, fd.plan, md.fixedAmounts[i] || 0]);
+  });
+  const fixed = FIXED_DEFAULTS.reduce((s,fd,i)=>s+(parseFloat(md.fixedAmounts[i])||0),0);
+  rows.push(['TOTAL FIXED COSTS','',fixed]);
+  rows.push([]);
+
+  rows.push(['VARIABLE COSTS']);
+  rows.push(['Description', 'Category', 'Amount']);
+  md.variables.forEach(v => {
+    rows.push([v.desc, v.cat, v.amount]);
+  });
+  const varT = md.variables.reduce((s,v)=>s+(parseFloat(v.amount)||0),0);
+  rows.push(['TOTAL VARIABLE COSTS','',varT]);
+  rows.push([]);
+
+  const totalCosts = fixed + varT;
+  const net = rev - totalCosts;
+  const margin = rev > 0 ? ((net/rev)*100).toFixed(1) : 'N/A';
+
+  rows.push(['SUMMARY']);
+  rows.push(['Gross Revenue','',rev]);
+  rows.push(['Total Costs','',totalCosts]);
+  rows.push(['Net Profit','',net]);
+  rows.push(['Profit Margin','',margin !== 'N/A' ? margin + '%' : 'N/A']);
+
+  const csv = rows.map(r => r.map(cell => {
+    const s = String(cell === undefined ? '' : cell);
+    return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s.replace(/"/g,'""')}"` : s;
+  }).join(',')).join('\r\n');
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `CWI-AI-Budget-${monthName.replace(' ','-')}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('CSV exported for ' + monthName);
+}
+
+/* =============================================
+   UTILITIES
+   ============================================= */
+function fmt(n) {
+  return '$' + (parseFloat(n)||0).toLocaleString('en-US', {minimumFractionDigits:0,maximumFractionDigits:0});
+}
+
+function escHtml(str) {
+  return String(str||'')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+/* =============================================
+   INIT
+   ============================================= */
+loadAll();
+initMonthSelector();
+renderAll();
+</script>
+</body>
+</html>

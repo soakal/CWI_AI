@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="CWI internal tool: Monthly AI Automation Report. Internal use only — CWI Compute With Imagination.">
+  <title>Monthly AI Automation Report</title>
+  <style>
+    /* ── Reset & Base ─────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f4f5f7;
+      color: #1a1a2e;
+      min-height: 100vh;
+      padding: 24px 16px 48px;
+    }
+
+    /* ── Page wrapper ─────────────────────────────────────────── */
+    .page {
+      max-width: 900px;
+      margin: 0 auto;
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 4px 24px rgba(0,0,0,.12);
+      overflow: hidden;
+    }
+
+    /* ── Header ───────────────────────────────────────────────── */
+    .report-header {
+      background: #FF5A1F;
+      color: #fff;
+      padding: 36px 40px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .header-left .business-name {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -.5px;
+      line-height: 1.15;
+      min-width: 180px;
+      outline: none;
+      border-bottom: 2px dashed rgba(255,255,255,.45);
+      display: inline-block;
+    }
+    .header-left .business-name:focus { border-bottom-color: #fff; }
+
+    .header-left .tagline {
+      margin-top: 6px;
+      font-size: .85rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      opacity: .85;
+    }
+
+    .header-right { text-align: right; }
+    .header-right .report-label {
+      font-size: .75rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      opacity: .75;
+      margin-bottom: 4px;
+    }
+    .header-right .report-month {
+      font-size: 1.5rem;
+      font-weight: 600;
+      outline: none;
+      border-bottom: 2px dashed rgba(255,255,255,.45);
+      display: inline-block;
+      min-width: 140px;
+      text-align: right;
+    }
+    .header-right .report-month:focus { border-bottom-color: #fff; }
+
+    /* ── Body padding wrapper ─────────────────────────────────── */
+    .report-body { padding: 36px 40px; }
+
+    /* ── Section titles ───────────────────────────────────────── */
+    .section { margin-bottom: 36px; }
+    .section-title {
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: #FF5A1F;
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #FF5A1F;
+    }
+
+    /* ── Executive Summary ────────────────────────────────────── */
+    .exec-summary {
+      font-size: 1rem;
+      line-height: 1.75;
+      color: #333;
+      outline: none;
+      width: 100%;
+      min-height: 72px;
+      padding: 10px 12px;
+      border: 1px dashed #ddd;
+      border-radius: 6px;
+      background: #fafafa;
+      transition: border-color .2s, background .2s;
+    }
+    .exec-summary:focus { border-color: #FF5A1F; background: #fff; }
+
+    /* ── Key Metrics ──────────────────────────────────────────── */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+    @media (max-width: 680px) { .metrics-grid { grid-template-columns: repeat(2, 1fr); } }
+
+    .metric-card {
+      border: 1px solid #e8e8e8;
+      border-radius: 10px;
+      padding: 20px 14px 16px;
+      text-align: center;
+      background: #fafbff;
+      transition: box-shadow .2s;
+    }
+    .metric-card:hover { box-shadow: 0 4px 14px rgba(255,90,31,.12); }
+
+    .metric-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #FF5A1F;
+      outline: none;
+      display: block;
+      min-width: 50px;
+      border-bottom: 2px dashed #f0c4b4;
+      margin: 0 auto 8px;
+      width: fit-content;
+    }
+    .metric-value:focus { border-bottom-color: #FF5A1F; }
+
+    .metric-label {
+      font-size: .78rem;
+      color: #666;
+      font-weight: 600;
+      letter-spacing: .4px;
+      line-height: 1.3;
+    }
+
+    /* ── Conversation Breakdown (CSS bar chart) ───────────────── */
+    .bar-chart { display: flex; flex-direction: column; gap: 12px; }
+
+    .bar-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .bar-label {
+      font-size: .82rem;
+      font-weight: 600;
+      color: #444;
+      width: 72px;
+      flex-shrink: 0;
+      text-align: right;
+    }
+
+    .bar-track {
+      flex: 1;
+      background: #f0f0f0;
+      border-radius: 6px;
+      height: 28px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      background: #FF5A1F;
+      border-radius: 6px;
+      transition: width .4s ease;
+      min-width: 4px;
+    }
+
+    .bar-pct-wrap {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      flex-shrink: 0;
+      width: 60px;
+    }
+
+    .bar-pct {
+      font-size: .82rem;
+      font-weight: 700;
+      color: #FF5A1F;
+      outline: none;
+      width: 36px;
+      text-align: right;
+      border-bottom: 1px dashed #f0c4b4;
+    }
+    .bar-pct:focus { border-bottom-color: #FF5A1F; }
+
+    .bar-pct-symbol { font-size: .78rem; color: #999; }
+
+    /* ── AI Performance ───────────────────────────────────────── */
+    .perf-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+    @media (max-width: 580px) { .perf-grid { grid-template-columns: 1fr; } }
+
+    .perf-card {
+      border-left: 4px solid #FF5A1F;
+      padding: 14px 16px;
+      background: #fff8f5;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .perf-val {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #FF5A1F;
+      outline: none;
+      display: inline-block;
+      border-bottom: 2px dashed #f0c4b4;
+      min-width: 40px;
+    }
+    .perf-val:focus { border-bottom-color: #FF5A1F; }
+
+    .perf-label {
+      margin-top: 5px;
+      font-size: .8rem;
+      color: #666;
+      font-weight: 600;
+      line-height: 1.3;
+    }
+
+    /* ── Wins & Goals ─────────────────────────────────────────── */
+    .bullet-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+
+    .bullet-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .bullet-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #FF5A1F;
+      flex-shrink: 0;
+      margin-top: 6px;
+    }
+
+    .bullet-text {
+      font-size: .95rem;
+      line-height: 1.6;
+      color: #333;
+      outline: none;
+      flex: 1;
+      border-bottom: 1px dashed #ddd;
+      min-width: 80px;
+      padding-bottom: 2px;
+    }
+    .bullet-text:focus { border-bottom-color: #FF5A1F; }
+
+    /* ── Footer ───────────────────────────────────────────────── */
+    .report-footer {
+      background: #1a1a2e;
+      color: rgba(255,255,255,.65);
+      text-align: center;
+      padding: 18px 24px;
+      font-size: .78rem;
+      letter-spacing: .5px;
+    }
+    .report-footer strong { color: rgba(255,255,255,.9); }
+
+    /* ── Print button ─────────────────────────────────────────── */
+    .print-bar {
+      max-width: 900px;
+      margin: 0 auto 18px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .btn-print {
+      background: #FF5A1F;
+      color: #fff;
+      border: none;
+      padding: 10px 22px;
+      border-radius: 6px;
+      font-size: .88rem;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: .4px;
+      box-shadow: 0 2px 8px rgba(255,90,31,.3);
+      transition: background .2s, box-shadow .2s;
+    }
+    .btn-print:hover { background: #e04c15; box-shadow: 0 4px 14px rgba(255,90,31,.4); }
+
+    .btn-clear {
+      background: #fff;
+      color: #888;
+      border: 1px solid #ddd;
+      padding: 10px 18px;
+      border-radius: 6px;
+      font-size: .88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: color .2s, border-color .2s;
+    }
+    .btn-clear:hover { color: #e04c15; border-color: #e04c15; }
+
+    /* ── Save indicator ───────────────────────────────────────── */
+    .save-indicator {
+      font-size: .72rem;
+      color: #aaa;
+      align-self: center;
+      transition: color .4s;
+    }
+    .save-indicator.saved { color: #4caf50; }
+
+    /* ── Print styles ─────────────────────────────────────────── */
+    @media print {
+      body {
+        background: #fff;
+        padding: 0;
+      }
+      .print-bar { display: none !important; }
+      .page {
+        box-shadow: none;
+        border-radius: 0;
+        max-width: 100%;
+      }
+      .exec-summary,
+      .metric-value,
+      .bar-pct,
+      .perf-val,
+      .bullet-text,
+      .business-name,
+      .report-month {
+        border: none !important;
+        background: transparent !important;
+      }
+      .bar-fill { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      .report-header { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      .metric-card { break-inside: avoid; }
+      .section { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Print / action bar (hidden on print) -->
+  <div class="print-bar">
+    <span class="save-indicator" id="saveIndicator">All changes auto-saved</span>
+    <button class="btn-clear" onclick="clearStorage()">Reset</button>
+    <button class="btn-print" onclick="window.print()">Print / Save PDF</button>
+  </div>
+
+  <div class="page">
+
+    <!-- ── Header ─────────────────────────────────────────────── -->
+    <header class="report-header">
+      <div class="header-left">
+        <div
+          class="business-name"
+          contenteditable="true"
+          data-key="businessName"
+          spellcheck="false"
+          title="Click to edit client name"
+        >Client Business Name</div>
+        <div class="tagline">Powered by AI Automation</div>
+      </div>
+      <div class="header-right">
+        <div class="report-label">Monthly Report</div>
+        <div
+          class="report-month"
+          contenteditable="true"
+          data-key="reportMonth"
+          spellcheck="false"
+          title="Click to edit month/year"
+        >June 2026</div>
+      </div>
+    </header>
+
+    <!-- ── Body ───────────────────────────────────────────────── -->
+    <div class="report-body">
+
+      <!-- 1. Executive Summary -->
+      <div class="section">
+        <div class="section-title">Executive Summary</div>
+        <div
+          class="exec-summary"
+          contenteditable="true"
+          data-key="execSummary"
+          role="textbox"
+          aria-multiline="true"
+          title="Click to edit summary"
+        >Your AI assistant had another strong month, handling the majority of incoming conversations autonomously and delivering fast, consistent responses around the clock. Appointment volume remained steady, and lead capture continued to outperform manual benchmarks. Overall the system is performing well and delivering measurable value to your business.</div>
+      </div>
+
+      <!-- 2. Key Metrics -->
+      <div class="section">
+        <div class="section-title">Key Metrics</div>
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <span class="metric-value" contenteditable="true" data-key="metricConvos" spellcheck="false">0</span>
+            <div class="metric-label">Total<br>Conversations</div>
+          </div>
+          <div class="metric-card">
+            <span class="metric-value" contenteditable="true" data-key="metricAppts" spellcheck="false">0</span>
+            <div class="metric-label">Appointments<br>Booked</div>
+          </div>
+          <div class="metric-card">
+            <span class="metric-value" contenteditable="true" data-key="metricLeads" spellcheck="false">0</span>
+            <div class="metric-label">Leads<br>Captured</div>
+          </div>
+          <div class="metric-card">
+            <span class="metric-value" contenteditable="true" data-key="metricResponse" spellcheck="false">&lt;1 min</span>
+            <div class="metric-label">Response<br>Time Avg</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Conversation Breakdown -->
+      <div class="section">
+        <div class="section-title">Conversation Breakdown</div>
+        <div class="bar-chart">
+
+          <div class="bar-row">
+            <div class="bar-label">Booking</div>
+            <div class="bar-track">
+              <div class="bar-fill" id="bar-booking" style="width:40%"></div>
+            </div>
+            <div class="bar-pct-wrap">
+              <span class="bar-pct" contenteditable="true" data-key="barBooking" data-bar="bar-booking" spellcheck="false">40</span>
+              <span class="bar-pct-symbol">%</span>
+            </div>
+          </div>
+
+          <div class="bar-row">
+            <div class="bar-label">Pricing</div>
+            <div class="bar-track">
+              <div class="bar-fill" id="bar-pricing" style="width:25%"></div>
+            </div>
+            <div class="bar-pct-wrap">
+              <span class="bar-pct" contenteditable="true" data-key="barPricing" data-bar="bar-pricing" spellcheck="false">25</span>
+              <span class="bar-pct-symbol">%</span>
+            </div>
+          </div>
+
+          <div class="bar-row">
+            <div class="bar-label">Hours</div>
+            <div class="bar-track">
+              <div class="bar-fill" id="bar-hours" style="width:15%"></div>
+            </div>
+            <div class="bar-pct-wrap">
+              <span class="bar-pct" contenteditable="true" data-key="barHours" data-bar="bar-hours" spellcheck="false">15</span>
+              <span class="bar-pct-symbol">%</span>
+            </div>
+          </div>
+
+          <div class="bar-row">
+            <div class="bar-label">Support</div>
+            <div class="bar-track">
+              <div class="bar-fill" id="bar-support" style="width:12%"></div>
+            </div>
+            <div class="bar-pct-wrap">
+              <span class="bar-pct" contenteditable="true" data-key="barSupport" data-bar="bar-support" spellcheck="false">12</span>
+              <span class="bar-pct-symbol">%</span>
+            </div>
+          </div>
+
+          <div class="bar-row">
+            <div class="bar-label">Other</div>
+            <div class="bar-track">
+              <div class="bar-fill" id="bar-other" style="width:8%"></div>
+            </div>
+            <div class="bar-pct-wrap">
+              <span class="bar-pct" contenteditable="true" data-key="barOther" data-bar="bar-other" spellcheck="false">8</span>
+              <span class="bar-pct-symbol">%</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 4. AI Performance -->
+      <div class="section">
+        <div class="section-title">AI Performance</div>
+        <div class="perf-grid">
+          <div class="perf-card">
+            <span class="perf-val" contenteditable="true" data-key="perfAiPct" spellcheck="false">0%</span>
+            <div class="perf-label">Messages Handled by AI</div>
+          </div>
+          <div class="perf-card">
+            <span class="perf-val" contenteditable="true" data-key="perfAvgTime" spellcheck="false">0s</span>
+            <div class="perf-label">Average Response Time</div>
+          </div>
+          <div class="perf-card">
+            <span class="perf-val" contenteditable="true" data-key="perfEscalations" spellcheck="false">0</span>
+            <div class="perf-label">Human Escalations</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. Wins This Month -->
+      <div class="section">
+        <div class="section-title">Wins This Month</div>
+        <ul class="bullet-list">
+          <li>
+            <div class="bullet-dot"></div>
+            <span class="bullet-text" contenteditable="true" data-key="win1" spellcheck="false">Describe a specific win or highlight from this month.</span>
+          </li>
+          <li>
+            <div class="bullet-dot"></div>
+            <span class="bullet-text" contenteditable="true" data-key="win2" spellcheck="false">Describe a second win or positive outcome.</span>
+          </li>
+          <li>
+            <div class="bullet-dot"></div>
+            <span class="bullet-text" contenteditable="true" data-key="win3" spellcheck="false">Describe a third win or notable improvement.</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- 6. Next Month Goals -->
+      <div class="section">
+        <div class="section-title">Next Month Goals</div>
+        <ul class="bullet-list">
+          <li>
+            <div class="bullet-dot"></div>
+            <span class="bullet-text" contenteditable="true" data-key="goal1" spellcheck="false">Define the first goal or focus area for next month.</span>
+          </li>
+          <li>
+            <div class="bullet-dot"></div>
+            <span class="bullet-text" contenteditable="true" data-key="goal2" spellcheck="false">Define the second improvement or optimization target.</span>
+          </li>
+          <li>
+            <div class="bullet-dot"></div>
+            <span class="bullet-text" contenteditable="true" data-key="goal3" spellcheck="false">Define the third initiative or enhancement planned.</span>
+          </li>
+        </ul>
+      </div>
+
+    </div><!-- /.report-body -->
+
+    <!-- ── Footer ─────────────────────────────────────────────── -->
+    <footer class="report-footer">
+      <strong>Report generated by CWI AI LLC</strong> &nbsp;|&nbsp;
+      brian@cwiai.net &nbsp;|&nbsp; (734) 812-9971
+    </footer>
+
+  </div><!-- /.page -->
+
+  <script>
+    /* ── localStorage key prefix ───────────────────────────── */
+    const STORAGE_KEY = 'cwi_monthly_report_v1';
+    const saveIndicator = document.getElementById('saveIndicator');
+    let saveTimer;
+
+    /* ── Debounced save ────────────────────────────────────── */
+    function scheduleSave() {
+      clearTimeout(saveTimer);
+      saveIndicator.textContent = 'Saving...';
+      saveIndicator.classList.remove('saved');
+      saveTimer = setTimeout(saveAll, 800);
+    }
+
+    function saveAll() {
+      const data = {};
+      document.querySelectorAll('[data-key]').forEach(el => {
+        data[el.dataset.key] = el.innerText.trim();
+      });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      saveIndicator.textContent = 'All changes saved';
+      saveIndicator.classList.add('saved');
+      setTimeout(() => {
+        saveIndicator.textContent = 'All changes auto-saved';
+        saveIndicator.classList.remove('saved');
+      }, 2500);
+    }
+
+    /* ── Load from localStorage ────────────────────────────── */
+    function loadAll() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      let data;
+      try { data = JSON.parse(raw); } catch(e) { return; }
+      document.querySelectorAll('[data-key]').forEach(el => {
+        const val = data[el.dataset.key];
+        if (val !== undefined) el.innerText = val;
+      });
+      /* Sync bar widths after load */
+      document.querySelectorAll('.bar-pct[data-bar]').forEach(el => {
+        syncBar(el);
+      });
+    }
+
+    /* ── Bar width sync ────────────────────────────────────── */
+    function syncBar(el) {
+      const barId = el.dataset.bar;
+      if (!barId) return;
+      const barEl = document.getElementById(barId);
+      if (!barEl) return;
+      const pct = Math.min(100, Math.max(0, parseFloat(el.innerText) || 0));
+      barEl.style.width = pct + '%';
+    }
+
+    /* ── Attach input listeners ────────────────────────────── */
+    function attachListeners() {
+      document.querySelectorAll('[contenteditable="true"]').forEach(el => {
+        el.addEventListener('input', () => {
+          /* If this is a bar percentage input, update bar width live */
+          if (el.classList.contains('bar-pct')) {
+            syncBar(el);
+          }
+          scheduleSave();
+        });
+
+        /* Prevent Enter from creating block elements in single-line fields */
+        const multilineKeys = ['execSummary', 'win1', 'win2', 'win3', 'goal1', 'goal2', 'goal3'];
+        if (!multilineKeys.includes(el.dataset.key)) {
+          el.addEventListener('keydown', e => {
+            if (e.key === 'Enter') { e.preventDefault(); el.blur(); }
+          });
+        }
+      });
+    }
+
+    /* ── Clear / reset ─────────────────────────────────────── */
+    function clearStorage() {
+      if (!confirm('Reset all report data to defaults?')) return;
+      localStorage.removeItem(STORAGE_KEY);
+      location.reload();
+    }
+
+    /* ── Init ──────────────────────────────────────────────── */
+    loadAll();
+    attachListeners();
+  </script>
+</body>
+</html>

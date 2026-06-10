@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CWI AI — Client Results Card Generator</title>
+  <meta name="description" content="CWI internal tool: CWI AI — Client Results Card Generator. Internal use only — CWI Compute With Imagination.">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800;900&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --orange:    #FF5A1F;
+      --orange-dim: #cc4718;
+      --black:     #0A0A0A;
+      --offwhite:  #F8F7F4;
+      --warmgray:  #6B6B6B;
+      --surface:   #FFFFFF;
+      --border:    #E5E4E0;
+      --font-head: 'Sora', system-ui, sans-serif;
+      --font-body: 'Instrument Sans', system-ui, sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--offwhite);
+      color: var(--black);
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--black);
+      border-bottom: 3px solid var(--orange);
+      display: flex;
+      align-items: center;
+      gap: 0;
+      padding: 0 2rem;
+      height: 60px;
+    }
+    .nav-brand {
+      font-family: var(--font-head);
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: #fff;
+      letter-spacing: -0.02em;
+      margin-right: auto;
+    }
+    .nav-brand span { color: var(--orange); }
+    .nav-links { display: flex; gap: 0.25rem; }
+    .nav-links a {
+      color: #ccc;
+      text-decoration: none;
+      font-size: 0.8rem;
+      padding: 0.4rem 0.75rem;
+      border-radius: 6px;
+      transition: color 0.15s, background 0.15s;
+    }
+    .nav-links a:hover { color: #fff; background: rgba(255,255,255,0.08); }
+    .nav-links a.active { color: var(--orange); font-weight: 600; }
+
+    /* ── PAGE LAYOUT ── */
+    .page-wrap {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 4rem;
+    }
+    .page-header {
+      margin-bottom: 2rem;
+    }
+    .page-header h1 {
+      font-family: var(--font-head);
+      font-size: 1.9rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--black);
+    }
+    .page-header h1 span { color: var(--orange); }
+    .page-header p {
+      color: var(--warmgray);
+      margin-top: 0.4rem;
+      font-size: 0.95rem;
+    }
+
+    /* ── TABS ── */
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+      border-bottom: 2px solid var(--border);
+    }
+    .tab-btn {
+      font-family: var(--font-head);
+      font-weight: 600;
+      font-size: 0.875rem;
+      padding: 0.6rem 1.25rem;
+      border: none;
+      background: none;
+      color: var(--warmgray);
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      transition: color 0.15s, border-color 0.15s;
+      border-radius: 4px 4px 0 0;
+    }
+    .tab-btn:hover { color: var(--black); }
+    .tab-btn.active { color: var(--orange); border-bottom-color: var(--orange); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── TWO-COL BUILDER ── */
+    .builder-grid {
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      gap: 2rem;
+      align-items: start;
+    }
+    @media (max-width: 900px) {
+      .builder-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ── FORM CARD ── */
+    .form-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      padding: 1.75rem;
+    }
+    .form-section-title {
+      font-family: var(--font-head);
+      font-weight: 700;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--orange);
+      margin-bottom: 1rem;
+      margin-top: 1.5rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--border);
+    }
+    .form-section-title:first-of-type { margin-top: 0; padding-top: 0; border-top: none; }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+    .form-row.single { grid-template-columns: 1fr; }
+
+    label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--black);
+      margin-bottom: 0.3rem;
+    }
+    label .hint {
+      font-weight: 400;
+      color: var(--warmgray);
+      font-size: 0.75rem;
+    }
+    input[type="text"],
+    input[type="number"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 0.55rem 0.75rem;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-family: var(--font-body);
+      font-size: 0.875rem;
+      color: var(--black);
+      background: #fff;
+      transition: border-color 0.15s;
+      outline: none;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--orange);
+    }
+    textarea { resize: vertical; min-height: 72px; }
+
+    /* star rating input */
+    .star-input { display: flex; gap: 0.4rem; align-items: center; }
+    .star-input button {
+      background: none;
+      border: none;
+      font-size: 1.4rem;
+      cursor: pointer;
+      color: #ddd;
+      transition: color 0.1s, transform 0.1s;
+      padding: 0;
+      line-height: 1;
+    }
+    .star-input button.on { color: #FFB800; }
+    .star-input button:hover { transform: scale(1.2); }
+
+    .format-toggle {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .format-btn {
+      flex: 1;
+      padding: 0.6rem;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      background: #fff;
+      font-family: var(--font-head);
+      font-weight: 700;
+      font-size: 0.8rem;
+      cursor: pointer;
+      text-align: center;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+      color: var(--warmgray);
+    }
+    .format-btn.active {
+      border-color: var(--orange);
+      color: var(--orange);
+      background: #fff5f1;
+    }
+    .format-btn small { display: block; font-weight: 400; color: var(--warmgray); font-size: 0.7rem; }
+
+    .action-bar {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .btn {
+      font-family: var(--font-head);
+      font-weight: 700;
+      font-size: 0.85rem;
+      padding: 0.65rem 1.25rem;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .btn:hover { opacity: 0.88; transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+    .btn-primary { background: var(--orange); color: #fff; }
+    .btn-secondary { background: var(--black); color: #fff; }
+    .btn-ghost { background: #fff; color: var(--black); border: 1.5px solid var(--border); }
+
+    /* ── PREVIEW PANEL ── */
+    .preview-panel {
+      position: sticky;
+      top: 80px;
+    }
+    .preview-label {
+      font-family: var(--font-head);
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--warmgray);
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .preview-label .dims {
+      background: var(--border);
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.7rem;
+    }
+    .preview-scaler {
+      overflow: hidden;
+      border-radius: 14px;
+      border: 1.5px solid var(--border);
+      background: #111;
+      display: inline-block;
+      max-width: 100%;
+    }
+    /* The actual card at native resolution, scaled down to fit */
+    .card-container {
+      transform-origin: top left;
+    }
+
+    /* ── RESULTS CARD STYLES (native resolution) ── */
+    .results-card {
+      background: #0F0F0F;
+      font-family: var(--font-head);
+      position: relative;
+      overflow: hidden;
+      color: #fff;
+    }
+    .results-card.square { width: 1080px; height: 1080px; }
+    .results-card.landscape { width: 1200px; height: 628px; }
+
+    /* background texture */
+    .results-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 10% 15%, rgba(255,90,31,0.18) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 40% at 90% 85%, rgba(255,90,31,0.10) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .results-card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: var(--orange);
+    }
+
+    /* SQUARE layout */
+    .results-card.square .card-inner {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      padding: 72px 80px 60px;
+    }
+    .results-card.square .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 60px;
+    }
+    .results-card.square .card-header-left {}
+    .results-card.square .card-eyebrow {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--orange);
+      margin-bottom: 10px;
+    }
+    .results-card.square .card-title {
+      font-size: 46px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1.05;
+      color: #fff;
+    }
+    .results-card.square .plan-badge {
+      background: rgba(255,90,31,0.15);
+      border: 1.5px solid rgba(255,90,31,0.4);
+      color: var(--orange);
+      font-size: 13px;
+      font-weight: 700;
+      padding: 8px 18px;
+      border-radius: 100px;
+      white-space: nowrap;
+    }
+    .results-card.square .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+      margin-bottom: 40px;
+    }
+    .results-card.square .stat-block {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 32px 28px;
+      position: relative;
+      overflow: hidden;
+    }
+    .results-card.square .stat-block::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--orange);
+      opacity: 0.6;
+    }
+    .results-card.square .stat-number {
+      font-size: 52px;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      color: var(--orange);
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    .results-card.square .stat-label {
+      font-size: 15px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.75);
+      line-height: 1.3;
+    }
+    .results-card.square .stat-sub {
+      font-size: 12px;
+      color: rgba(255,255,255,0.4);
+      margin-top: 4px;
+    }
+    .results-card.square .quote-block {
+      background: rgba(255,90,31,0.08);
+      border-left: 4px solid var(--orange);
+      border-radius: 0 12px 12px 0;
+      padding: 20px 24px;
+      margin-bottom: 28px;
+    }
+    .results-card.square .quote-text {
+      font-size: 16px;
+      font-weight: 400;
+      font-style: italic;
+      color: rgba(255,255,255,0.85);
+      line-height: 1.55;
+    }
+    .results-card.square .stars-row {
+      display: flex;
+      gap: 5px;
+      margin-top: 10px;
+    }
+    .results-card.square .star-icon {
+      font-size: 18px;
+      color: #FFB800;
+    }
+    .results-card.square .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: auto;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+    .results-card.square .footer-info {
+      font-size: 14px;
+      color: rgba(255,255,255,0.5);
+    }
+    .results-card.square .footer-info strong {
+      color: rgba(255,255,255,0.8);
+      font-weight: 600;
+    }
+    .results-card.square .months-badge {
+      font-size: 13px;
+      color: rgba(255,255,255,0.45);
+    }
+    .results-card.square .watermark {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--orange);
+      letter-spacing: 0.05em;
+      opacity: 0.7;
+    }
+
+    /* LANDSCAPE layout */
+    .results-card.landscape .card-inner {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      height: 100%;
+      gap: 0;
+    }
+    .results-card.landscape .card-left {
+      padding: 52px 44px;
+      border-right: 1px solid rgba(255,255,255,0.07);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .results-card.landscape .card-eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--orange);
+      margin-bottom: 10px;
+    }
+    .results-card.landscape .card-title {
+      font-size: 32px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      color: #fff;
+      margin-bottom: 20px;
+    }
+    .results-card.landscape .plan-badge {
+      display: inline-block;
+      background: rgba(255,90,31,0.15);
+      border: 1.5px solid rgba(255,90,31,0.4);
+      color: var(--orange);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: 100px;
+      margin-bottom: 16px;
+    }
+    .results-card.landscape .months-line {
+      font-size: 12px;
+      color: rgba(255,255,255,0.4);
+    }
+    .results-card.landscape .quote-block {
+      background: rgba(255,90,31,0.08);
+      border-left: 3px solid var(--orange);
+      border-radius: 0 8px 8px 0;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+    }
+    .results-card.landscape .quote-text {
+      font-size: 12px;
+      font-weight: 400;
+      font-style: italic;
+      color: rgba(255,255,255,0.8);
+      line-height: 1.5;
+    }
+    .results-card.landscape .stars-row {
+      display: flex;
+      gap: 3px;
+      margin-top: 8px;
+    }
+    .results-card.landscape .star-icon { font-size: 14px; color: #FFB800; }
+    .results-card.landscape .footer-info {
+      font-size: 11px;
+      color: rgba(255,255,255,0.45);
+    }
+    .results-card.landscape .footer-info strong { color: rgba(255,255,255,0.75); font-weight: 600; }
+    .results-card.landscape .watermark {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--orange);
+      letter-spacing: 0.05em;
+      opacity: 0.7;
+    }
+    .results-card.landscape .card-right {
+      padding: 44px 48px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .results-card.landscape .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 18px;
+      flex: 1;
+    }
+    .results-card.landscape .stat-block {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 22px 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .results-card.landscape .stat-block::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--orange);
+      opacity: 0.6;
+    }
+    .results-card.landscape .stat-number {
+      font-size: 38px;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      color: var(--orange);
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+    .results-card.landscape .stat-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.75);
+      line-height: 1.3;
+    }
+    .results-card.landscape .stat-sub {
+      font-size: 10px;
+      color: rgba(255,255,255,0.4);
+      margin-top: 3px;
+    }
+    .results-card.landscape .ls-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 14px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      margin-top: 16px;
+    }
+
+    /* ── GALLERY ── */
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.25rem;
+    }
+    .gallery-item {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+    .gallery-item:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.08); transform: translateY(-2px); }
+    .gallery-thumb {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      display: block;
+      background: #111;
+    }
+    .gallery-thumb.landscape-thumb { aspect-ratio: 1200/628; }
+    .gallery-meta {
+      padding: 0.9rem 1rem;
+      border-top: 1px solid var(--border);
+    }
+    .gallery-meta h3 {
+      font-family: var(--font-head);
+      font-size: 0.875rem;
+      font-weight: 700;
+    }
+    .gallery-meta p {
+      font-size: 0.75rem;
+      color: var(--warmgray);
+      margin-top: 0.2rem;
+    }
+    .gallery-actions {
+      display: flex;
+      gap: 0.5rem;
+      padding: 0 1rem 0.9rem;
+    }
+    .gallery-actions .btn { font-size: 0.75rem; padding: 0.45rem 0.9rem; }
+
+    .empty-gallery {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--warmgray);
+    }
+    .empty-gallery h3 {
+      font-family: var(--font-head);
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: var(--black);
+      color: #fff;
+      font-family: var(--font-head);
+      font-weight: 600;
+      font-size: 0.875rem;
+      padding: 0.75rem 1.25rem;
+      border-radius: 10px;
+      border-left: 3px solid var(--orange);
+      z-index: 9999;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.25s, transform 0.25s;
+      pointer-events: none;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    /* ── UTIL ── */
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">CWI <span>AI</span></div>
+  <div class="nav-links">
+    <a href="index.html">Hub</a>
+    <a href="client-success-tracker.html">Clients</a>
+    <a href="metrics-dashboard.html">Metrics</a>
+    <a href="client-results-card.html" class="active">Results Cards</a>
+  </div>
+</nav>
+
+<div class="page-wrap">
+  <div class="page-header">
+    <h1>Client Results <span>Card Generator</span></h1>
+    <p>Create shareable social proof cards for LinkedIn &amp; Instagram. Highlight real client outcomes with branded visuals.</p>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="builder">Build Card</button>
+    <button class="tab-btn" data-tab="gallery">Saved Cards <span id="gallery-count-badge"></span></button>
+  </div>
+
+  <!-- ── BUILDER TAB ── -->
+  <div id="tab-builder" class="tab-panel active">
+    <div class="builder-grid">
+
+      <!-- FORM -->
+      <div class="form-card">
+
+        <div class="form-section-title">Client Info</div>
+        <div class="form-row">
+          <div>
+            <label for="f-industry">Industry <span class="hint">(shown on card)</span></label>
+            <input type="text" id="f-industry" placeholder="e.g. HVAC, Dental, Law" />
+          </div>
+          <div>
+            <label for="f-location">City / State</label>
+            <input type="text" id="f-location" placeholder="e.g. Austin, TX" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div>
+            <label for="f-plan">Plan Tier</label>
+            <select id="f-plan">
+              <option value="">-- Select --</option>
+              <option>Starter</option>
+              <option>Growth</option>
+              <option>Pro</option>
+              <option>Enterprise</option>
+              <option>Custom</option>
+            </select>
+          </div>
+          <div>
+            <label for="f-months">Months Active</label>
+            <input type="number" id="f-months" placeholder="e.g. 3" min="1" max="60" />
+          </div>
+        </div>
+
+        <div class="form-section-title">Results</div>
+        <div class="form-row">
+          <div>
+            <label for="f-calls">Calls Answered After-Hours <span class="hint">(#/mo)</span></label>
+            <input type="text" id="f-calls" placeholder="e.g. 127" />
+          </div>
+          <div>
+            <label for="f-leads">Leads Recovered <span class="hint">(#/mo)</span></label>
+            <input type="text" id="f-leads" placeholder="e.g. 34" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div>
+            <label for="f-time">Time Saved <span class="hint">(hrs/week)</span></label>
+            <input type="text" id="f-time" placeholder="e.g. 12" />
+          </div>
+          <div>
+            <label for="f-revenue">Revenue Impact <span class="hint">($/mo)</span></label>
+            <input type="text" id="f-revenue" placeholder="e.g. 4,200" />
+          </div>
+        </div>
+
+        <div class="form-section-title">Social Proof</div>
+        <div class="form-row single">
+          <div>
+            <label for="f-quote">Client Quote <span class="hint">(optional)</span></label>
+            <textarea id="f-quote" placeholder="&quot;CWI AI transformed how we handle after-hours calls...&quot;"></textarea>
+          </div>
+        </div>
+        <div style="margin-bottom:0.75rem">
+          <label for="star-input">Star Rating</label>
+          <div class="star-input" id="star-input">
+            <button data-star="1">★</button>
+            <button data-star="2">★</button>
+            <button data-star="3">★</button>
+            <button data-star="4">★</button>
+            <button data-star="5">★</button>
+          </div>
+        </div>
+
+        <div class="form-section-title">Format</div>
+        <div class="format-toggle">
+          <button class="format-btn active" data-format="square" id="btn-square">
+            Square
+            <small>1080×1080 — Instagram</small>
+          </button>
+          <button class="format-btn" data-format="landscape" id="btn-landscape">
+            Landscape
+            <small>1200×628 — LinkedIn</small>
+          </button>
+        </div>
+
+        <div class="action-bar">
+          <button class="btn btn-primary" id="btn-export">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export PNG
+          </button>
+          <button class="btn btn-secondary" id="btn-save">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Save to Gallery
+          </button>
+          <button class="btn btn-ghost" id="btn-clear">Clear</button>
+        </div>
+
+      </div><!-- /form-card -->
+
+      <!-- PREVIEW -->
+      <div class="preview-panel">
+        <div class="preview-label">
+          Preview
+          <span class="dims" id="preview-dims">1080 × 1080</span>
+        </div>
+        <div class="preview-scaler" id="preview-scaler">
+          <div class="card-container" id="card-container">
+            <div class="results-card square" id="results-card">
+              <!-- populated by JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /builder-grid -->
+  </div><!-- /tab-builder -->
+
+  <!-- ── GALLERY TAB ── -->
+  <div id="tab-gallery" class="tab-panel">
+    <div id="gallery-empty" class="empty-gallery hidden">
+      <h3>No saved cards yet</h3>
+      <p>Build a card and hit "Save to Gallery" to see it here.</p>
+    </div>
+    <div class="gallery-grid" id="gallery-grid"></div>
+  </div>
+
+</div><!-- /page-wrap -->
+
+<div class="toast" id="toast"></div>
+
+<!-- Hidden render target for export (full size, off-screen) -->
+<div id="export-mount" style="position:fixed;left:-9999px;top:-9999px;z-index:-1;pointer-events:none;"></div>
+
+<script>
+// ─── State ───────────────────────────────────────────────────────────────────
+let currentFormat = 'square';
+let currentStars = 5;
+const STORAGE_KEY = 'cwi_result_cards_v2';
+
+// ─── DOM refs ─────────────────────────────────────────────────────────────────
+const $card        = document.getElementById('results-card');
+const $container   = document.getElementById('card-container');
+const $scaler      = document.getElementById('preview-scaler');
+const $dims        = document.getElementById('preview-dims');
+const $exportMount = document.getElementById('export-mount');
+
+// ─── Field helpers ────────────────────────────────────────────────────────────
+const fv = id => document.getElementById(id).value.trim();
+
+function getFormData() {
+  return {
+    industry:  fv('f-industry') || 'Industry',
+    location:  fv('f-location') || 'City, ST',
+    plan:      fv('f-plan') || 'Growth',
+    months:    fv('f-months') || '3',
+    calls:     fv('f-calls') || '—',
+    leads:     fv('f-leads') || '—',
+    time:      fv('f-time') || '—',
+    revenue:   fv('f-revenue') || '—',
+    quote:     fv('f-quote'),
+    stars:     currentStars,
+    format:    currentFormat,
+    ts:        Date.now(),
+  };
+}
+
+// ─── Card HTML builder ────────────────────────────────────────────────────────
+function buildStarsHTML(n, size) {
+  let html = '';
+  for (let i = 1; i <= 5; i++) {
+    html += `<span class="star-icon" style="${i > n ? 'opacity:0.15' : ''}">${i <= n ? '★' : '★'}</span>`;
+  }
+  return html;
+}
+
+function buildCardHTML(d) {
+  const starsHTML = `<div class="stars-row">${buildStarsHTML(d.stars)}</div>`;
+  const quoteHTML = d.quote
+    ? `<div class="quote-block"><div class="quote-text">"${escHtml(d.quote)}"</div>${starsHTML}</div>`
+    : (d.stars > 0 ? `<div style="padding:8px 0">${starsHTML}</div>` : '');
+
+  if (d.format === 'square') {
+    return `
+      <div class="card-inner">
+        <div class="card-header">
+          <div class="card-header-left">
+            <div class="card-eyebrow">CWI AI Client Results</div>
+            <div class="card-title">${escHtml(d.industry)}<br>Success Story</div>
+          </div>
+          <div class="plan-badge">${escHtml(d.plan)} Plan</div>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-block">
+            <div class="stat-number">${escHtml(d.calls)}</div>
+            <div class="stat-label">After-Hours Calls<br>Answered</div>
+            <div class="stat-sub">per month</div>
+          </div>
+          <div class="stat-block">
+            <div class="stat-number">${escHtml(d.leads)}</div>
+            <div class="stat-label">Leads<br>Recovered</div>
+            <div class="stat-sub">per month</div>
+          </div>
+          <div class="stat-block">
+            <div class="stat-number">${escHtml(d.time)}</div>
+            <div class="stat-label">Hours Saved<br>Weekly</div>
+            <div class="stat-sub">hours / week</div>
+          </div>
+          <div class="stat-block">
+            <div class="stat-number">$${escHtml(d.revenue)}</div>
+            <div class="stat-label">Estimated<br>Revenue Impact</div>
+            <div class="stat-sub">per month</div>
+          </div>
+        </div>
+        ${quoteHTML}
+        <div class="card-footer">
+          <div class="footer-info">
+            <strong>${escHtml(d.industry)}</strong> · ${escHtml(d.location)}
+            <div class="months-badge">${escHtml(d.months)} months with CWI AI</div>
+          </div>
+          <div class="watermark">cwiai.net</div>
+        </div>
+      </div>
+    `;
+  } else {
+    // landscape
+    return `
+      <div class="card-inner">
+        <div class="card-left">
+          <div>
+            <div class="card-eyebrow">CWI AI Client Results</div>
+            <div class="card-title">${escHtml(d.industry)}<br>Success Story</div>
+            <div class="plan-badge">${escHtml(d.plan)} Plan</div>
+            <div class="months-line">${escHtml(d.months)} months active</div>
+          </div>
+          ${quoteHTML}
+          <div>
+            <div class="footer-info">
+              <strong>${escHtml(d.location)}</strong>
+            </div>
+            <div class="watermark" style="margin-top:6px">cwiai.net</div>
+          </div>
+        </div>
+        <div class="card-right">
+          <div class="stats-grid">
+            <div class="stat-block">
+              <div class="stat-number">${escHtml(d.calls)}</div>
+              <div class="stat-label">After-Hours Calls Answered</div>
+              <div class="stat-sub">per month</div>
+            </div>
+            <div class="stat-block">
+              <div class="stat-number">${escHtml(d.leads)}</div>
+              <div class="stat-label">Leads Recovered</div>
+              <div class="stat-sub">per month</div>
+            </div>
+            <div class="stat-block">
+              <div class="stat-number">${escHtml(d.time)}</div>
+              <div class="stat-label">Hours Saved Weekly</div>
+              <div class="stat-sub">hours / week</div>
+            </div>
+            <div class="stat-block">
+              <div class="stat-number">$${escHtml(d.revenue)}</div>
+              <div class="stat-label">Est. Revenue Impact</div>
+              <div class="stat-sub">per month</div>
+            </div>
+          </div>
+          <div class="ls-footer">
+            <div class="footer-info">${escHtml(d.industry)} · ${escHtml(d.location)}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+}
+
+function escHtml(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─── Render preview ───────────────────────────────────────────────────────────
+function renderPreview() {
+  const d = getFormData();
+  $card.className = `results-card ${d.format}`;
+  $card.innerHTML = buildCardHTML(d);
+  scaleCard();
+}
+
+function scaleCard() {
+  const isSquare = currentFormat === 'square';
+  const nativeW = isSquare ? 1080 : 1200;
+  const nativeH = isSquare ? 1080 : 628;
+  $dims.textContent = `${nativeW} × ${nativeH}`;
+
+  const maxW = $scaler.parentElement.clientWidth || 620;
+  const scale = Math.min(1, (maxW - 2) / nativeW);
+
+  $container.style.width = nativeW + 'px';
+  $container.style.height = nativeH + 'px';
+  $container.style.transform = `scale(${scale})`;
+  $scaler.style.width = Math.round(nativeW * scale) + 'px';
+  $scaler.style.height = Math.round(nativeH * scale) + 'px';
+}
+
+// ─── Live preview on input ────────────────────────────────────────────────────
+document.querySelectorAll('input, select, textarea').forEach(el => {
+  el.addEventListener('input', renderPreview);
+});
+window.addEventListener('resize', scaleCard);
+
+// ─── Format toggle ────────────────────────────────────────────────────────────
+document.querySelectorAll('.format-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.format-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFormat = btn.dataset.format;
+    renderPreview();
+  });
+});
+
+// ─── Star input ───────────────────────────────────────────────────────────────
+const $starBtns = document.querySelectorAll('#star-input button');
+$starBtns.forEach(btn => {
+  btn.addEventListener('mouseenter', () => highlightStars(+btn.dataset.star));
+  btn.addEventListener('mouseleave', () => highlightStars(currentStars));
+  btn.addEventListener('click', () => {
+    currentStars = +btn.dataset.star;
+    highlightStars(currentStars);
+    renderPreview();
+  });
+});
+function highlightStars(n) {
+  $starBtns.forEach(b => b.classList.toggle('on', +b.dataset.star <= n));
+}
+highlightStars(currentStars);
+
+// ─── Tabs ─────────────────────────────────────────────────────────────────────
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    const panel = document.getElementById('tab-' + btn.dataset.tab);
+    panel.classList.add('active');
+    if (btn.dataset.tab === 'gallery') renderGallery();
+  });
+});
+
+// ─── Export PNG ───────────────────────────────────────────────────────────────
+document.getElementById('btn-export').addEventListener('click', async () => {
+  const d = getFormData();
+
+  if (typeof html2canvas === 'undefined') {
+    showToast('html2canvas not loaded. Try: right-click preview → Save Image As, or use Print to PDF.');
+    return;
+  }
+
+  showToast('Generating PNG...');
+
+  // Build a fresh full-size card in the hidden mount
+  const wrapper = document.createElement('div');
+  wrapper.style.cssText = 'position:absolute;left:0;top:0;';
+  const clone = document.createElement('div');
+  clone.className = `results-card ${d.format}`;
+  clone.innerHTML = buildCardHTML(d);
+  wrapper.appendChild(clone);
+  $exportMount.innerHTML = '';
+  $exportMount.appendChild(wrapper);
+
+  try {
+    const canvas = await html2canvas(clone, {
+      backgroundColor: null,
+      scale: 1,
+      useCORS: true,
+      logging: false,
+    });
+    const url = canvas.toDataURL('image/png');
+    const a = document.createElement('a');
+    const industry = d.industry.replace(/[^a-z0-9]/gi,'_').toLowerCase();
+    a.download = `cwi-ai-results-${industry}-${d.format}.png`;
+    a.href = url;
+    a.click();
+    showToast('PNG exported!');
+  } catch(e) {
+    console.error(e);
+    showToast('Export failed. Check console for details.');
+  } finally {
+    $exportMount.innerHTML = '';
+  }
+});
+
+// ─── Save to gallery ──────────────────────────────────────────────────────────
+document.getElementById('btn-save').addEventListener('click', async () => {
+  const d = getFormData();
+  const cards = loadCards();
+
+  // generate thumbnail via html2canvas if available
+  let thumb = null;
+  if (typeof html2canvas !== 'undefined') {
+    const wrapper = document.createElement('div');
+    const clone = document.createElement('div');
+    clone.className = `results-card ${d.format}`;
+    clone.innerHTML = buildCardHTML(d);
+    wrapper.appendChild(clone);
+    $exportMount.innerHTML = '';
+    $exportMount.appendChild(wrapper);
+    try {
+      const canvas = await html2canvas(clone, {
+        backgroundColor: null, scale: 0.25, useCORS: true, logging: false,
+      });
+      thumb = canvas.toDataURL('image/png');
+    } catch(e) {}
+    $exportMount.innerHTML = '';
+  }
+
+  d.thumb = thumb;
+  d.id = 'card_' + d.ts;
+  cards.push(d);
+  saveCards(cards);
+  updateGalleryBadge();
+  showToast('Card saved to gallery!');
+});
+
+// ─── Clear ────────────────────────────────────────────────────────────────────
+document.getElementById('btn-clear').addEventListener('click', () => {
+  ['f-industry','f-location','f-plan','f-months','f-calls','f-leads',
+   'f-time','f-revenue','f-quote'].forEach(id => {
+    const el = document.getElementById(id);
+    el.value = '';
+  });
+  currentStars = 5;
+  highlightStars(5);
+  renderPreview();
+});
+
+// ─── LocalStorage ────────────────────────────────────────────────────────────
+function loadCards() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+  catch(e) { return []; }
+}
+function saveCards(arr) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); }
+  catch(e) { showToast('Storage full — try deleting old cards.'); }
+}
+function updateGalleryBadge() {
+  const n = loadCards().length;
+  document.getElementById('gallery-count-badge').textContent = n > 0 ? ` (${n})` : '';
+}
+
+// ─── Gallery render ───────────────────────────────────────────────────────────
+function renderGallery() {
+  const cards = loadCards();
+  const $grid = document.getElementById('gallery-grid');
+  const $empty = document.getElementById('gallery-empty');
+
+  if (cards.length === 0) {
+    $empty.classList.remove('hidden');
+    $grid.innerHTML = '';
+    return;
+  }
+  $empty.classList.add('hidden');
+
+  $grid.innerHTML = cards.map(d => {
+    const thumbClass = d.format === 'landscape' ? 'landscape-thumb' : '';
+    const thumbEl = d.thumb
+      ? `<img class="gallery-thumb ${thumbClass}" src="${d.thumb}" alt="card preview" />`
+      : `<div class="gallery-thumb ${thumbClass}" style="display:flex;align-items:center;justify-content:center;background:#111;color:#555;font-size:0.8rem;font-family:var(--font-head)">No preview</div>`;
+    const date = new Date(d.ts).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+    return `
+      <div class="gallery-item" data-id="${d.id}">
+        ${thumbEl}
+        <div class="gallery-meta">
+          <h3>${escHtml(d.industry)} — ${escHtml(d.location)}</h3>
+          <p>${escHtml(d.plan)} Plan · ${escHtml(d.months)} mo · ${d.format} · ${date}</p>
+        </div>
+        <div class="gallery-actions">
+          <button class="btn btn-primary" onclick="exportGalleryCard('${d.id}')">Export PNG</button>
+          <button class="btn btn-ghost" onclick="loadGalleryCard('${d.id}')">Edit</button>
+          <button class="btn btn-ghost" style="color:#ef4444;border-color:#ef4444" onclick="deleteGalleryCard('${d.id}')">Delete</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function loadGalleryCard(id) {
+  const card = loadCards().find(c => c.id === id);
+  if (!card) return;
+
+  document.getElementById('f-industry').value = card.industry;
+  document.getElementById('f-location').value = card.location;
+  document.getElementById('f-plan').value = card.plan;
+  document.getElementById('f-months').value = card.months;
+  document.getElementById('f-calls').value = card.calls;
+  document.getElementById('f-leads').value = card.leads;
+  document.getElementById('f-time').value = card.time;
+  document.getElementById('f-revenue').value = card.revenue;
+  document.getElementById('f-quote').value = card.quote || '';
+  currentStars = card.stars || 5;
+  highlightStars(currentStars);
+
+  currentFormat = card.format || 'square';
+  document.querySelectorAll('.format-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.format === currentFormat);
+  });
+
+  // switch to builder tab
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelector('[data-tab="builder"]').classList.add('active');
+  document.getElementById('tab-builder').classList.add('active');
+
+  renderPreview();
+  showToast('Card loaded into editor.');
+}
+
+async function exportGalleryCard(id) {
+  const d = loadCards().find(c => c.id === id);
+  if (!d) return;
+  if (typeof html2canvas === 'undefined') {
+    showToast('html2canvas not available.');
+    return;
+  }
+  showToast('Generating PNG...');
+  const clone = document.createElement('div');
+  clone.className = `results-card ${d.format}`;
+  clone.innerHTML = buildCardHTML(d);
+  $exportMount.innerHTML = '';
+  $exportMount.appendChild(clone);
+  try {
+    const canvas = await html2canvas(clone, { backgroundColor: null, scale: 1, useCORS: true, logging: false });
+    const url = canvas.toDataURL('image/png');
+    const a = document.createElement('a');
+    const industry = d.industry.replace(/[^a-z0-9]/gi,'_').toLowerCase();
+    a.download = `cwi-ai-results-${industry}-${d.format}.png`;
+    a.href = url;
+    a.click();
+    showToast('PNG exported!');
+  } catch(e) { showToast('Export failed.'); }
+  $exportMount.innerHTML = '';
+}
+
+function deleteGalleryCard(id) {
+  if (!confirm('Delete this card?')) return;
+  const cards = loadCards().filter(c => c.id !== id);
+  saveCards(cards);
+  updateGalleryBadge();
+  renderGallery();
+  showToast('Card deleted.');
+}
+
+// ─── Toast ────────────────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg) {
+  const $t = document.getElementById('toast');
+  $t.textContent = msg;
+  $t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => $t.classList.remove('show'), 3000);
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+updateGalleryBadge();
+renderPreview();
+</script>
+</body>
+</html>

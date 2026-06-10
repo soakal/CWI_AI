@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CWI Client Onboarding Form</title>
+  <meta name="description" content="CWI internal tool: CWI Client Onboarding Form. Internal use only — CWI Compute With Imagination.">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #0A0A0C;
+      --surface:    #14141A;
+      --surface2:   #1C1C26;
+      --border:     #2A2A38;
+      --accent:     #FF5A1F;
+      --accent-dim: #CC4718;
+      --text:       #F0F0F4;
+      --muted:      #8A8AA0;
+      --success:    #22C55E;
+      --error:      #EF4444;
+      --radius:     10px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Sora', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 0 0 80px;
+    }
+
+    /* ---- Header ---- */
+    .site-header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 24px 32px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .logo-mark {
+      width: 44px; height: 44px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 18px; color: #fff;
+      flex-shrink: 0;
+    }
+    .site-header h1 {
+      font-size: 1.25rem; font-weight: 600; letter-spacing: -0.02em;
+    }
+    .site-header p {
+      font-size: 0.8rem; color: var(--muted); margin-top: 2px;
+    }
+
+    /* ---- Progress bar ---- */
+    .progress-wrap {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 32px;
+    }
+    .progress-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .progress-meta span:last-child { color: var(--accent); font-weight: 600; }
+    .progress-track {
+      height: 6px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-dim), var(--accent));
+      border-radius: 99px;
+      transition: width 0.4s ease;
+      width: 0%;
+    }
+
+    /* ---- Main layout ---- */
+    .container {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 40px 24px 0;
+    }
+
+    /* ---- Section nav pills ---- */
+    .section-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 36px;
+    }
+    .section-pill {
+      padding: 6px 14px;
+      border-radius: 99px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+    .section-pill:hover, .section-pill.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(255, 90, 31, 0.08);
+    }
+
+    /* ---- Cards / Sections ---- */
+    .form-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 28px;
+      overflow: hidden;
+    }
+    .section-header {
+      padding: 20px 28px;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .section-icon {
+      width: 36px; height: 36px;
+      background: rgba(255, 90, 31, 0.15);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .section-header h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+    .section-header p {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    .section-body {
+      padding: 28px;
+      display: grid;
+      gap: 22px;
+    }
+    .two-col { grid-template-columns: 1fr 1fr; }
+
+    @media (max-width: 600px) {
+      .two-col { grid-template-columns: 1fr; }
+      .progress-wrap, .site-header { padding-left: 16px; padding-right: 16px; }
+      .container { padding: 24px 12px 0; }
+      .section-body { padding: 20px 16px; }
+    }
+
+    /* ---- Field styles ---- */
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field.full { grid-column: 1 / -1; }
+
+    label {
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--text);
+    }
+    label .req { color: var(--accent); margin-left: 2px; }
+    .hint {
+      font-size: 0.74rem;
+      color: var(--muted);
+      margin-top: -2px;
+      line-height: 1.5;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"],
+    input[type="url"],
+    input[type="number"],
+    input[type="date"],
+    select,
+    textarea {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      color: var(--text);
+      font-family: 'Sora', sans-serif;
+      font-size: 0.88rem;
+      padding: 10px 14px;
+      width: 100%;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(255, 90, 31, 0.12);
+    }
+    input.invalid, select.invalid, textarea.invalid {
+      border-color: var(--error);
+    }
+    textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238A8AA0' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 36px;
+    }
+
+    /* ---- Checkbox group ---- */
+    .check-group { display: flex; flex-direction: column; gap: 8px; }
+    .check-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      cursor: pointer;
+      padding: 8px 12px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .check-item:hover { border-color: var(--accent); background: rgba(255,90,31,0.04); }
+    .check-item input[type="checkbox"] {
+      width: 16px; height: 16px;
+      accent-color: var(--accent);
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .check-item span { font-size: 0.84rem; line-height: 1.5; }
+
+    /* ---- Radio group ---- */
+    .radio-group { display: flex; flex-wrap: wrap; gap: 8px; }
+    .radio-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 99px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.82rem;
+    }
+    .radio-item:hover { border-color: var(--accent); background: rgba(255,90,31,0.04); }
+    .radio-item input[type="radio"] {
+      width: 14px; height: 14px;
+      accent-color: var(--accent);
+    }
+
+    /* ---- FAQ rows ---- */
+    .faq-row {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      display: grid;
+      gap: 10px;
+    }
+    .faq-row .faq-q-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 2px;
+    }
+
+    /* ---- Submit area ---- */
+    .submit-area {
+      margin-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .btn-submit {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Sora', sans-serif;
+      font-size: 0.92rem;
+      font-weight: 600;
+      padding: 13px 36px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      letter-spacing: 0.01em;
+    }
+    .btn-submit:hover { background: var(--accent-dim); }
+    .btn-submit:active { transform: scale(0.98); }
+    .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+    .validation-msg {
+      font-size: 0.8rem;
+      color: var(--error);
+      display: none;
+    }
+
+    /* ---- Success overlay ---- */
+    #success-screen {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(10,10,12,0.96);
+      z-index: 999;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    #success-screen.visible { display: flex; }
+    .success-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 48px 40px;
+      max-width: 520px;
+      width: 100%;
+      text-align: center;
+    }
+    .success-icon {
+      width: 72px; height: 72px;
+      background: rgba(34,197,94,0.12);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 34px;
+      margin: 0 auto 24px;
+    }
+    .success-card h2 { font-size: 1.4rem; font-weight: 700; margin-bottom: 12px; }
+    .success-card p { color: var(--muted); font-size: 0.9rem; line-height: 1.7; margin-bottom: 28px; }
+    .btn-download {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Sora', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 600;
+      padding: 12px 28px;
+      cursor: pointer;
+      transition: background 0.2s;
+      margin-bottom: 12px;
+    }
+    .btn-download:hover { background: var(--accent-dim); }
+    .btn-new {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: 'Sora', sans-serif;
+      font-size: 0.82rem;
+      padding: 10px 24px;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-left: 10px;
+    }
+    .btn-new:hover { color: var(--text); border-color: var(--muted); }
+  </style>
+</head>
+<body>
+
+<!-- ===== SUCCESS OVERLAY ===== -->
+<div id="success-screen" role="dialog" aria-modal="true" aria-label="Form submitted successfully">
+  <div class="success-card">
+    <div class="success-icon">&#10003;</div>
+    <h2>You're all set!</h2>
+    <p>
+      Thank you! Brian will review your responses and reach out within&nbsp;24&nbsp;hours
+      to confirm your build start date.<br /><br />
+      Your answers have been saved as a JSON file you can reference at any time.
+    </p>
+    <div>
+      <button class="btn-download" id="btn-download-json">Download My Responses (JSON)</button>
+      <button class="btn-new" id="btn-fill-again">Fill Out Again</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== HEADER ===== -->
+<header class="site-header">
+  <div class="logo-mark">CWI</div>
+  <div>
+    <h1>Client Onboarding Form</h1>
+    <p>CWI AI &mdash; Complete all sections so we can build your AI assistant</p>
+  </div>
+</header>
+
+<!-- ===== PROGRESS ===== -->
+<div class="progress-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress-bar-wrap">
+  <div class="progress-meta">
+    <span id="progress-label">Section 1 of 9 &mdash; Business Basics</span>
+    <span id="progress-pct">0% complete</span>
+  </div>
+  <div class="progress-track">
+    <div class="progress-fill" id="progress-fill"></div>
+  </div>
+</div>
+
+<!-- ===== FORM ===== -->
+<main class="container">
+
+  <!-- Section nav -->
+  <nav class="section-nav" aria-label="Jump to section">
+    <a href="#sec-business"   class="section-pill active">1. Business</a>
+    <a href="#sec-services"   class="section-pill">2. Services</a>
+    <a href="#sec-scheduling" class="section-pill">3. Scheduling</a>
+    <a href="#sec-branding"   class="section-pill">4. Branding</a>
+    <a href="#sec-faq"        class="section-pill">5. FAQ</a>
+    <a href="#sec-staff"      class="section-pill">6. Staff</a>
+    <a href="#sec-technical"  class="section-pill">7. Technical</a>
+    <a href="#sec-billing"    class="section-pill">8. Billing</a>
+    <a href="#sec-optional"   class="section-pill">9. Optional</a>
+  </nav>
+
+  <form id="onboarding-form" novalidate>
+
+    <!-- ===================== 1. BUSINESS BASICS ===================== -->
+    <section class="form-section" id="sec-business">
+      <div class="section-header">
+        <div class="section-icon">&#127968;</div>
+        <div>
+          <h2>1. Business Basics</h2>
+          <p>Core details about your company so the AI can represent you accurately.</p>
+        </div>
+      </div>
+      <div class="section-body two-col">
+
+        <div class="field">
+          <label for="business_name">Business Name <span class="req">*</span></label>
+          <input type="text" id="business_name" name="business_name" required placeholder="e.g. Apex Roofing LLC" />
+        </div>
+
+        <div class="field">
+          <label for="owner_name">Owner / Primary Contact Name <span class="req">*</span></label>
+          <input type="text" id="owner_name" name="owner_name" required placeholder="Full name" />
+        </div>
+
+        <div class="field">
+          <label for="contact_email">Contact Email <span class="req">*</span></label>
+          <input type="email" id="contact_email" name="contact_email" required placeholder="you@company.com" />
+        </div>
+
+        <div class="field">
+          <label for="contact_phone">Contact Phone <span class="req">*</span></label>
+          <input type="tel" id="contact_phone" name="contact_phone" required placeholder="(555) 000-0000" />
+        </div>
+
+        <div class="field">
+          <label for="business_address">Business Address</label>
+          <input type="text" id="business_address" name="business_address" placeholder="Street, City, State, ZIP" />
+          <span class="hint">Include city and state at minimum — AI uses this for local references.</span>
+        </div>
+
+        <div class="field">
+          <label for="website_url">Website URL</label>
+          <input type="url" id="website_url" name="website_url" placeholder="https://yoursite.com" />
+        </div>
+
+        <div class="field full">
+          <label for="business_description">What does your business do? <span class="req">*</span></label>
+          <textarea id="business_description" name="business_description" required placeholder="Briefly describe your services, your typical customers, and what makes you different from competitors."></textarea>
+          <span class="hint">1-3 sentences. This becomes the AI's core understanding of your business.</span>
+        </div>
+
+        <div class="field">
+          <label for="years_in_business">Years in Business</label>
+          <input type="number" id="years_in_business" name="years_in_business" min="0" max="200" placeholder="e.g. 7" />
+        </div>
+
+        <div class="field">
+          <label for="service_area">Primary Service Area / Region</label>
+          <input type="text" id="service_area" name="service_area" placeholder="e.g. Greater Phoenix, AZ" />
+        </div>
+
+        <div class="field full">
+          <label for="business_hours">Business Hours <span class="req">*</span></label>
+          <textarea id="business_hours" name="business_hours" required placeholder="e.g. Mon-Fri 8am-5pm, Sat 9am-2pm, Sun closed" style="min-height:70px;"></textarea>
+          <span class="hint">The AI will quote these to customers when asked about availability.</span>
+        </div>
+
+        <div class="field full">
+          <label for="license_numbers">License / Certification Numbers (if applicable)</label>
+          <input type="text" id="license_numbers" name="license_numbers" placeholder="e.g. ROC 123456, AZ Lic. #AB-12345" />
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ===================== 2. SERVICES & PRICING ===================== -->
+    <section class="form-section" id="sec-services">
+      <div class="section-header">
+        <div class="section-icon">&#128179;</div>
+        <div>
+          <h2>2. Services &amp; Pricing</h2>
+          <p>What you offer and how you charge, so the AI can answer pricing questions correctly.</p>
+        </div>
+      </div>
+      <div class="section-body">
+
+        <div class="field">
+          <label for="services_offered">List All Services Offered <span class="req">*</span></label>
+          <textarea id="services_offered" name="services_offered" required placeholder="e.g. Roof inspection, Full replacement, Repair patches, Gutters, TPO flat roofing..."></textarea>
+          <span class="hint">Separate by line or comma. Be as specific as possible.</span>
+        </div>
+
+        <div class="field">
+          <label for="pricing_model">Pricing Model <span class="req">*</span></label>
+          <select id="pricing_model" name="pricing_model" required>
+            <option value="">-- Select --</option>
+            <option>Flat rate per service</option>
+            <option>Hourly rate</option>
+            <option>Per square foot / unit</option>
+            <option>Custom quote only</option>
+            <option>Subscription / retainer</option>
+            <option>Mixed (varies by service)</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="price_ranges">Typical Price Ranges</label>
+          <textarea id="price_ranges" name="price_ranges" placeholder="e.g. Roof inspection $150, Full replacement $8k-$20k depending on size and material" style="min-height:70px;"></textarea>
+          <span class="hint">Exact figures or ranges. The AI will share these when asked, or say &ldquo;custom quote&rdquo; if you prefer.</span>
+        </div>
+
+        <div class="field">
+          <label for="quote_policy">Do you share pricing over the phone/chat?</label>
+          <div class="radio-group">
+            <label class="radio-item"><input type="radio" name="quote_policy" value="Yes, share ranges" /> Yes, share ranges</label>
+            <label class="radio-item"><input type="radio" name="quote_policy" value="No, always quote in person" /> No, always quote in person</label>
+            <label class="radio-item"><input type="radio" name="quote_policy" value="Depends on service" /> Depends on service</label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="financing_options">Financing or Payment Plans Available?</label>
+          <textarea id="financing_options" name="financing_options" placeholder="e.g. 0% financing through GreenSky, accepts all major cards, checks" style="min-height:60px;"></textarea>
+        </div>
+
+        <div class="field">
+          <label for="warranty_info">Warranty / Guarantee Information</label>
+          <textarea id="warranty_info" name="warranty_info" placeholder="e.g. 10-year labor warranty, manufacturer's material warranty up to 30 years" style="min-height:60px;"></textarea>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ===================== 3. SCHEDULING & CALENDAR ===================== -->
+    <section class="form-section" id="sec-scheduling">
+      <div class="section-header">
+        <div class="section-icon">&#128197;</div>
+        <div>
+          <h2>3. Scheduling &amp; Calendar</h2>
+          <p>How appointments are booked and what the AI should say about availability.</p>
+        </div>
+      </div>
+      <div class="section-body two-col">
+
+        <div class="field">
+          <label for="booking_method">Primary Booking Method <span class="req">*</span></label>
+          <select id="booking_method" name="booking_method" required>
+            <option value="">-- Select --</option>
+            <option>Phone call</option>
+            <option>Online booking link</option>
+            <option>Email</option>
+            <option>Text message</option>
+            <option>In-person only</option>
+            <option>AI handles scheduling directly</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="booking_url">Online Booking URL (if applicable)</label>
+          <input type="url" id="booking_url" name="booking_url" placeholder="https://calendly.com/yourbusiness" />
+        </div>
+
+        <div class="field">
+          <label for="scheduling_software">Scheduling Software Used</label>
+          <input type="text" id="scheduling_software" name="scheduling_software" placeholder="e.g. Calendly, Jobber, ServiceTitan, Google Calendar" />
+        </div>
+
+        <div class="field">
+          <label for="lead_time">Typical Lead Time for New Appointments</label>
+          <input type="text" id="lead_time" name="lead_time" placeholder="e.g. 3-5 business days, Same week" />
+        </div>
+
+        <div class="field full">
+          <label for="available_slots">Available Appointment Windows</label>
+          <textarea id="available_slots" name="available_slots" placeholder="e.g. Morning (8am-12pm) or Afternoon (1pm-5pm) Mon-Fri" style="min-height:60px;"></textarea>
+        </div>
+
+        <div class="field full">
+          <label for="emergency_service">Do you offer emergency / after-hours service?</label>
+          <div class="radio-group">
+            <label class="radio-item"><input type="radio" name="emergency_service" value="Yes" /> Yes</label>
+            <label class="radio-item"><input type="radio" name="emergency_service" value="No" /> No</label>
+            <label class="radio-item"><input type="radio" name="emergency_service" value="Seasonal" /> Seasonal only</label>
+          </div>
+        </div>
+
+        <div class="field full">
+          <label for="emergency_details">Emergency Service Details</label>
+          <textarea id="emergency_details" name="emergency_details" placeholder="e.g. 24/7 storm damage response, additional fee applies" style="min-height:60px;"></textarea>
+        </div>
+
+        <div class="field full">
+          <label for="cancellation_policy">Cancellation / Rescheduling Policy</label>
+          <textarea id="cancellation_policy" name="cancellation_policy" placeholder="e.g. 24-hour notice required, no-shows charged $50 fee" style="min-height:60px;"></textarea>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ===================== 4. BRANDING & DESIGN ===================== -->
+    <section class="form-section" id="sec-branding">
+      <div class="section-header">
+        <div class="section-icon">&#127912;</div>
+        <div>
+          <h2>4. Branding &amp; Design</h2>
+          <p>Visual identity and voice guidelines for the AI chat widget.</p>
+        </div>
+      </div>
+      <div class="section-body two-col">
+
+        <div class="field">
+          <label for="brand_colors">Primary Brand Colors</label>
+          <input type="text" id="brand_colors" name="brand_colors" placeholder="e.g. #1A3C6E (navy), #F5A623 (gold), #FFFFFF" />
+          <span class="hint">Hex codes preferred. These style the chat widget.</span>
+        </div>
+
+        <div class="field">
+          <label for="logo_url">Logo URL or File Location</label>
+          <input type="url" id="logo_url" name="logo_url" placeholder="https://yoursite.com/logo.png" />
+        </div>
+
+        <div class="field">
+          <label for="ai_name">What should the AI assistant be named?</label>
+          <input type="text" id="ai_name" name="ai_name" placeholder="e.g. Apex, Max, Sarah, Aria" />
+          <span class="hint">Leave blank and we&rsquo;ll suggest one based on your brand.</span>
+        </div>
+
+        <div class="field">
+          <label for="ai_persona">AI Persona / Personality</label>
+          <select id="ai_persona" name="ai_persona">
+            <option value="">-- Select --</option>
+            <option>Professional &amp; formal</option>
+            <option>Friendly &amp; conversational</option>
+            <option>Expert &amp; authoritative</option>
+            <option>Warm &amp; empathetic</option>
+            <option>Energetic &amp; upbeat</option>
+          </select>
+        </div>
+
+        <div class="field full">
+          <label for="tone_examples">Tone Examples / Brand Voice Notes</label>
+          <textarea id="tone_examples" name="tone_examples" placeholder="e.g. We never use slang, always say &ldquo;our team&rdquo; not &ldquo;I&rdquo;, avoid competitor mentions"></textarea>
+        </div>
+
+        <div class="field full">
+          <label for="words_to_avoid">Words or Phrases to Avoid</label>
+          <textarea id="words_to_avoid" name="words_to_avoid" placeholder="e.g. &ldquo;cheap&rdquo;, &ldquo;discount&rdquo;, competitor names" style="min-height:60px;"></textarea>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ===================== 5. FAQ CONTENT ===================== -->
+    <section class="form-section" id="sec-faq">
+      <div class="section-header">
+        <div class="section-icon">&#10067;</div>
+        <div>
+          <h2>5. FAQ Content</h2>
+          <p>Answer 15 common questions your customers ask. These train the AI directly.</p>
+        </div>
+      </div>
+      <div class="section-body" id="faq-container">
+        <!-- Rendered by JS -->
+      </div>
+    </section>
+
+    <!-- ===================== 6. STAFF & ESCALATION ===================== -->
+    <section class="form-section" id="sec-staff">
+      <div class="section-header">
+        <div class="section-icon">&#128101;</div>
+        <div>
+          <h2>6. Staff &amp; Escalation</h2>
+          <p>Who the AI transfers or escalates to, and how.</p>
+        </div>
+      </div>
+      <div class="section-body two-col">
+
+        <div class="field">
+          <label for="escalation_name">Primary Escalation Contact Name <span class="req">*</span></label>
+          <input type="text" id="escalation_name" name="escalation_name" required placeholder="e.g. Brian Johnson" />
+        </div>
+
+        <div class="field">
+          <label for="escalation_role">Their Role / Title</label>
+          <input type="text" id="escalation_role" name="escalation_role" placeholder="e.g. Owner, Office Manager, Sales Lead" />
+        </div>
+
+        <div class="field">
+          <label for="escalation_phone">Escalation Phone</label>
+          <input type="tel" id="escalation_phone" name="escalation_phone" placeholder="(555) 000-0000" />
+        </div>
+
+        <div class="field">
+          <label for="escalation_email">Escalation Email</label>
+          <input type="email" id="escalation_email" name="escalation_email" placeholder="manager@company.com" />
+        </div>
+
+        <div class="field full">
+          <label for="escalation_triggers">When should the AI escalate to a human?</label>
+          <div class="check-group">
+            <label class="check-item"><input type="checkbox" name="escalation_triggers" value="Angry or upset customer" /><span>Angry or upset customer</span></label>
+            <label class="check-item"><input type="checkbox" name="escalation_triggers" value="Complex pricing question" /><span>Complex pricing question</span></label>
+            <label class="check-item"><input type="checkbox" name="escalation_triggers" value="Legal or liability concern" /><span>Legal or liability concern</span></label>
+            <label class="check-item"><input type="checkbox" name="escalation_triggers" value="Customer requests human" /><span>Customer explicitly requests a human</span></label>
+            <label class="check-item"><input type="checkbox" name="escalation_triggers" value="Emergency situation" /><span>Emergency situation</span></label>
+            <label class="check-item"><input type="checkbox" name="escalation_triggers" value="Large job over $X" /><span>Large job over a threshold amount</span></label>
+          </div>
+        </div>
+
+        <div class="field full">
+          <label for="escalation_script">What should the AI say when escalating?</label>
+          <textarea id="escalation_script" name="escalation_script" placeholder="e.g. &ldquo;Let me connect you with our team directly. Someone will call you within 2 hours.&rdquo;"></textarea>
+        </div>
+
+        <div class="field full">
+          <label for="after_hours_handling">After-hours message handling</label>
+          <div class="radio-group">
+            <label class="radio-item"><input type="radio" name="after_hours_handling" value="Collect contact info and follow up next day" /> Collect info &amp; follow up next day</label>
+            <label class="radio-item"><input type="radio" name="after_hours_handling" value="Offer to schedule callback" /> Offer to schedule callback</label>
+            <label class="radio-item"><input type="radio" name="after_hours_handling" value="AI responds 24/7 autonomously" /> AI responds 24/7 autonomously</label>
+          </div>
+        </div>
+
+        <div class="field full">
+          <label for="staff_names">Other Key Staff Names to Reference (optional)</label>
+          <textarea id="staff_names" name="staff_names" placeholder="e.g. Tom (Lead Inspector), Maria (Office), Dave (Project Manager)" style="min-height:60px;"></textarea>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ===================== 7. TECHNICAL ACCESS ===================== -->
+    <section class="form-section" id="sec-technical">
+      <div class="section-header">
+        <div class="section-icon">&#128290;</div>
+        <div>
+          <h2>7. Technical Access</h2>
+          <p>Credentials and integrations needed to deploy the AI assistant.</p>
+        </div>
+      </div>
+      <div class="section-body two-col">
+
+        <div class="field">
+          <label for="website_platform">Website Platform <span class="req">*</span></label>
+          <select id="website_platform" name="website_platform" required>
+            <option value="">-- Select --</option>
+            <option>WordPress</option>
+            <option>Wix</option>
+            <option>Squarespace</option>
+            <option>Shopify</option>
+            <option>Webflow</option>
+            <option>GoDaddy</option>
+            <option>Custom / HTML</option>
+            <option>Other</option>
+            <option>I don't know</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="website_admin_access">Do you have website admin access?</label>
+          <div class="radio-group">
+            <label class="radio-item"><input type="radio" name="website_admin_access" value="Yes" /> Yes</label>
+            <label class="radio-item"><input type="radio" name="website_admin_access" value="No" /> No</label>
+            <label class="radio-item"><input type="radio" name="website_admin_access" value="My developer does" /> My developer does</label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="crm_software">CRM or Job Management Software</label>
+          <input type="text" id="crm_software" name="crm_software" placeholder="e.g. Jobber, HubSpot, Salesforce, none" />
+        </div>
+
+        <div class="field">
+          <label for="phone_system">Phone System / VoIP Provider</label>
+          <input type="text" id="phone_system" name="phone_system" placeholder="e.g. RingCentral, Google Voice, Vonage, standard landline" />
+        </div>
+
+        <div class="field full">
+          <label>Which platforms should the AI integrate with?</label>
+          <div class="check-group">
+            <label class="check-item"><input type="checkbox" name="integrations" value="Google Calendar" /><span>Google Calendar</span></label>
+            <label class="check-item"><input type="checkbox" name="integrations" value="Calendly" /><span>Calendly</span></label>
+            <label class="check-item"><input type="checkbox" name="integrations" value="Facebook Messenger" /><span>Facebook Messenger</span></label>
+            <label class="check-item"><input type="checkbox" name="integrations" value="Instagram DMs" /><span>Instagram DMs</span></label>
+            <label class="check-item"><input type="checkbox" name="integrations" value="SMS / Text" /><span>SMS / Text messaging</span></label>
+            <label class="check-item"><input type="checkbox" name="integrations" value="Email inbox" /><span>Email inbox monitoring</span></label>
+            <label class="check-item"><input type="checkbox" name="integrations" value="Jobber" /><span>Jobber</span></label>
+            <label class="check-item"><input type="checkbox" name="integrations" value="Zapier" /><span>Zapier</span></label>
+          </div>
+        </div>
+
+        <div class="field full">
+          <label for="dev_contact">Web Developer Contact (if we need to coordinate)</label>
+          <input type="text" id="dev_contact" name="dev_contact" placeholder="Name, email or phone" />
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ===================== 8. BILLING ===================== -->
+    <section class="form-section" id="sec-billing">
+      <div class="section-header">
+        <div class="section-icon">&#128176;</div>
+        <div>
+          <h2>8. Billing</h2>
+          <p>Payment and invoicing preferences for your CWI service.</p>
+        </div>
+      </div>
+      <div class="section-body two-col">
+
+        <div class="field">
+          <label for="billing_email">Billing Email <span class="req">*</span></label>
+          <input type="email" id="billing_email" name="billing_email" required placeholder="billing@company.com" />
+        </div>
+
+        <div class="field">
+          <label for="billing_contact">Billing Contact Name</label>
+          <input type="text" id="billing_contact" name="billing_contact" placeholder="If different from owner" />
+        </div>
+
+        <div class="field">
+          <label for="billing_cycle">Preferred Billing Cycle <span class="req">*</span></label>
+          <div class="radio-group">
+            <label class="radio-item"><input type="radio" name="billing_cycle" value="Monthly" required /> Monthly</label>
+            <label class="radio-item"><input type="radio" name="billing_cycle" value="Quarterly" /> Quarterly</label>
+            <label class="radio-item"><input type="radio" name="billing_cycle" value="Annually" /> Annually</label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="payment_method">Preferred Payment Method</label>
+          <select id="payment_method" name="payment_method">
+            <option value="">-- Select --</option>
+            <option>Credit / Debit card (auto-pay)</option>
+            <option>ACH bank transfer</option>
+            <option>Check</option>
+            <option>PayPal</option>
+            <option>Zelle</option>
+          </select>
+        </div>
+
+        <div class="field full">
+          <label for="billing_notes">Additional Billing Notes</label>
+          <textarea id="billing_notes" name="billing_notes" placeholder="e.g. PO number required, Net-30 terms, specific invoice format" style="min-height:60px;"></textarea>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ===================== 9. OPTIONAL ===================== -->
+    <section class="form-section" id="sec-optional">
+      <div class="section-header">
+        <div class="section-icon">&#128203;</div>
+        <div>
+          <h2>9. Optional &amp; Additional Info</h2>
+          <p>Extra context that helps us build a better AI assistant for you.</p>
+        </div>
+      </div>
+      <div class="section-body">
+
+        <div class="field">
+          <label for="competitors">Main Competitors (optional)</label>
+          <textarea id="competitors" name="competitors" placeholder="e.g. ABC Roofing, XYZ Home Services" style="min-height:60px;"></textarea>
+          <span class="hint">The AI will avoid directing customers to these companies.</span>
+        </div>
+
+        <div class="field">
+          <label for="differentiators">What sets you apart from competitors?</label>
+          <textarea id="differentiators" name="differentiators" placeholder="e.g. Family-owned since 1998, certified installers, 5-star Google rating, lifetime warranty"></textarea>
+        </div>
+
+        <div class="field">
+          <label for="review_links">Review / Social Links</label>
+          <textarea id="review_links" name="review_links" placeholder="Google review URL, Yelp, Facebook page, etc." style="min-height:60px;"></textarea>
+          <span class="hint">AI can direct happy customers here.</span>
+        </div>
+
+        <div class="field">
+          <label for="seasonal_notes">Seasonal or Promotional Notes</label>
+          <textarea id="seasonal_notes" name="seasonal_notes" placeholder="e.g. Summer discount on inspections, winter emergency surcharge" style="min-height:60px;"></textarea>
+        </div>
+
+        <div class="field">
+          <label for="anything_else">Anything else we should know?</label>
+          <textarea id="anything_else" name="anything_else" placeholder="Special instructions, concerns, or questions for the CWI team."></textarea>
+        </div>
+
+        <div class="field">
+          <label for="go_live_target">Target Go-Live Date</label>
+          <input type="date" id="go_live_target" name="go_live_target" />
+        </div>
+
+        <!-- Submit -->
+        <div class="submit-area">
+          <button type="submit" class="btn-submit" id="submit-btn">Submit Onboarding Form</button>
+          <span class="validation-msg" id="validation-msg">Please fill in all required fields marked with * before submitting.</span>
+        </div>
+
+      </div>
+    </section>
+
+  </form>
+</main>
+
+<script>
+/* ================================================================
+   FAQ QUESTIONS
+   ================================================================ */
+const FAQ_QUESTIONS = [
+  { q: "How do I get a quote?",                      hint: "Describe your quoting process step by step." },
+  { q: "How long does a typical job take?",          hint: "Give time ranges for your most common services." },
+  { q: "Are you licensed and insured?",              hint: "State yes/no and list license numbers if comfortable." },
+  { q: "What areas do you service?",                 hint: "List your full service area — cities, counties, radius." },
+  { q: "Do you offer free estimates?",               hint: "Yes/no, any conditions (e.g. on-site only, virtual ok)." },
+  { q: "What payment methods do you accept?",        hint: "Cash, card, check, financing — list all." },
+  { q: "Do you offer a warranty?",                   hint: "Labor warranty, product warranty, duration details." },
+  { q: "How far in advance do I need to book?",      hint: "Typical lead time and peak-season caveats." },
+  { q: "What happens if it rains / weather issues?", hint: "Your weather rescheduling policy." },
+  { q: "Can I get an itemized breakdown of costs?",  hint: "Describe what your estimate or invoice includes." },
+  { q: "Do you do residential and commercial work?", hint: "Which types you serve or which you specialize in." },
+  { q: "What brands or materials do you use?",       hint: "Name preferred manufacturers, product lines, grades." },
+  { q: "What should I do in an emergency?",          hint: "Who to call, what number, after-hours procedure." },
+  { q: "Can I see examples of past work?",           hint: "Portfolio links, Google photos, case study pages." },
+  { q: "How do I leave a review?",                   hint: "Preferred platform URL and any instructions." },
+];
+
+/* Build FAQ fields */
+const faqContainer = document.getElementById('faq-container');
+FAQ_QUESTIONS.forEach((item, i) => {
+  const row = document.createElement('div');
+  row.className = 'faq-row';
+  row.innerHTML = `
+    <div class="faq-q-label">Q${i + 1}: ${item.q}</div>
+    <div class="hint">${item.hint}</div>
+    <textarea
+      id="faq_${i}"
+      name="faq_${i}"
+      placeholder="Your answer..."
+      style="min-height:80px;"
+    ></textarea>
+  `;
+  faqContainer.appendChild(row);
+});
+
+/* ================================================================
+   PROGRESS BAR
+   ================================================================ */
+const SECTIONS = [
+  { id: 'sec-business',   label: 'Business Basics',    pill: 0 },
+  { id: 'sec-services',   label: 'Services & Pricing',  pill: 1 },
+  { id: 'sec-scheduling', label: 'Scheduling & Calendar', pill: 2 },
+  { id: 'sec-branding',   label: 'Branding & Design',   pill: 3 },
+  { id: 'sec-faq',        label: 'FAQ Content',          pill: 4 },
+  { id: 'sec-staff',      label: 'Staff & Escalation',   pill: 5 },
+  { id: 'sec-technical',  label: 'Technical Access',     pill: 6 },
+  { id: 'sec-billing',    label: 'Billing',              pill: 7 },
+  { id: 'sec-optional',   label: 'Optional & Additional', pill: 8 },
+];
+
+const progressFill  = document.getElementById('progress-fill');
+const progressLabel = document.getElementById('progress-label');
+const progressPct   = document.getElementById('progress-pct');
+const progressWrap  = document.getElementById('progress-bar-wrap');
+const pills         = document.querySelectorAll('.section-pill');
+
+function countSectionFilled(sectionEl) {
+  const inputs = sectionEl.querySelectorAll('input[type="text"], input[type="email"], input[type="tel"], input[type="url"], input[type="number"], input[type="date"], select, textarea');
+  let filled = 0;
+  inputs.forEach(el => {
+    const v = el.value.trim();
+    if (v && v !== '') filled++;
+  });
+  return inputs.length > 0 ? filled / inputs.length : 0;
+}
+
+function updateProgress() {
+  let totalRatio = 0;
+  SECTIONS.forEach(s => {
+    const el = document.getElementById(s.id);
+    if (el) totalRatio += countSectionFilled(el);
+  });
+  const pct = Math.round((totalRatio / SECTIONS.length) * 100);
+  progressFill.style.width = pct + '%';
+  progressWrap.setAttribute('aria-valuenow', pct);
+  progressPct.textContent = pct + '% complete';
+}
+
+// IntersectionObserver for active section highlight
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const idx = SECTIONS.findIndex(s => s.id === entry.target.id);
+      if (idx !== -1) {
+        progressLabel.textContent = `Section ${idx + 1} of ${SECTIONS.length} — ${SECTIONS[idx].label}`;
+        pills.forEach((p, i) => p.classList.toggle('active', i === idx));
+      }
+    }
+  });
+}, { rootMargin: '-30% 0px -60% 0px' });
+
+SECTIONS.forEach(s => {
+  const el = document.getElementById(s.id);
+  if (el) observer.observe(el);
+});
+
+document.getElementById('onboarding-form').addEventListener('input', updateProgress);
+updateProgress();
+
+/* ================================================================
+   FORM VALIDATION + SUBMIT
+   ================================================================ */
+function validateForm() {
+  const required = document.querySelectorAll('[required]');
+  let valid = true;
+  required.forEach(el => {
+    const empty = !el.value.trim();
+    el.classList.toggle('invalid', empty);
+    if (empty) valid = false;
+  });
+  return valid;
+}
+
+function collectFormData() {
+  const data = {};
+  const form = document.getElementById('onboarding-form');
+
+  // Text / select / textarea
+  form.querySelectorAll('input[type="text"], input[type="email"], input[type="tel"], input[type="url"], input[type="number"], input[type="date"], select, textarea').forEach(el => {
+    if (el.name) data[el.name] = el.value;
+  });
+
+  // Radio buttons
+  form.querySelectorAll('input[type="radio"]:checked').forEach(el => {
+    data[el.name] = el.value;
+  });
+
+  // Checkboxes (multi-value)
+  const checkFields = {};
+  form.querySelectorAll('input[type="checkbox"]').forEach(el => {
+    if (!checkFields[el.name]) checkFields[el.name] = [];
+    if (el.checked) checkFields[el.name].push(el.value);
+  });
+  Object.assign(data, checkFields);
+
+  // FAQ
+  const faqs = [];
+  FAQ_QUESTIONS.forEach((item, i) => {
+    faqs.push({ question: item.q, answer: data[`faq_${i}`] || '' });
+    delete data[`faq_${i}`];
+  });
+  data.faq_answers = faqs;
+
+  data._submitted_at = new Date().toISOString();
+  return data;
+}
+
+let lastFormData = null;
+
+document.getElementById('onboarding-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const validMsg = document.getElementById('validation-msg');
+
+  if (!validateForm()) {
+    validMsg.style.display = 'block';
+    const firstInvalid = document.querySelector('.invalid');
+    if (firstInvalid) firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+
+  validMsg.style.display = 'none';
+  lastFormData = collectFormData();
+
+  // Show success screen
+  document.getElementById('success-screen').classList.add('visible');
+  document.body.style.overflow = 'hidden';
+});
+
+/* ================================================================
+   DOWNLOAD JSON
+   ================================================================ */
+document.getElementById('btn-download-json').addEventListener('click', function() {
+  if (!lastFormData) return;
+  const blob = new Blob([JSON.stringify(lastFormData, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const bizName = (lastFormData.business_name || 'client').replace(/[^a-z0-9]/gi, '-').toLowerCase();
+  a.href = url;
+  a.download = `cwi-onboarding-${bizName}-${Date.now()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+/* ================================================================
+   FILL AGAIN
+   ================================================================ */
+document.getElementById('btn-fill-again').addEventListener('click', function() {
+  document.getElementById('success-screen').classList.remove('visible');
+  document.body.style.overflow = '';
+  document.getElementById('onboarding-form').reset();
+  document.querySelectorAll('.invalid').forEach(el => el.classList.remove('invalid'));
+  updateProgress();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+/* Remove invalid class on input */
+document.getElementById('onboarding-form').addEventListener('input', function(e) {
+  if (e.target.classList.contains('invalid')) {
+    e.target.classList.remove('invalid');
+  }
+});
+
+</script>
+</body>
+</html>

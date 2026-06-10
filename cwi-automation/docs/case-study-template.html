@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CWI AI — Client Success Story</title>
+  <meta name="description" content="CWI internal tool: CWI AI — Client Success Story. Internal use only — CWI Compute With Imagination.">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent: #FF5A1F;
+      --accent-light: #FFF0EB;
+      --accent-dark: #CC4718;
+      --text: #1A1A2E;
+      --text-muted: #5A5A72;
+      --border: #E8E8F0;
+      --white: #FFFFFF;
+      --shadow: 0 2px 16px rgba(0,0,0,0.08);
+      --shadow-hover: 0 6px 28px rgba(255,90,31,0.18);
+    }
+
+    body {
+      font-family: 'Sora', system-ui, sans-serif;
+      background: #F7F7FB;
+      color: var(--text);
+      min-height: 100vh;
+      padding: 32px 16px 64px;
+    }
+
+    /* ── Edit hint banner ── */
+    .edit-hint {
+      background: var(--accent-light);
+      border: 1.5px dashed var(--accent);
+      border-radius: 10px;
+      color: var(--accent-dark);
+      font-size: 13px;
+      font-weight: 500;
+      padding: 10px 18px;
+      text-align: center;
+      margin: 0 auto 24px;
+      max-width: 860px;
+      letter-spacing: 0.01em;
+    }
+
+    /* ── Document card ── */
+    .card {
+      background: var(--white);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      max-width: 860px;
+      margin: 0 auto;
+      overflow: hidden;
+    }
+
+    /* ── Header bar ── */
+    .header {
+      background: var(--accent);
+      padding: 28px 40px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo-icon {
+      width: 46px;
+      height: 46px;
+      background: rgba(255,255,255,0.22);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-icon svg {
+      width: 28px;
+      height: 28px;
+      fill: white;
+    }
+
+    .logo-text {
+      font-size: 26px;
+      font-weight: 800;
+      color: white;
+      letter-spacing: -0.5px;
+    }
+
+    .logo-tagline {
+      font-size: 11px;
+      font-weight: 400;
+      color: rgba(255,255,255,0.78);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    .industry-badge {
+      background: rgba(255,255,255,0.20);
+      border: 1.5px solid rgba(255,255,255,0.45);
+      border-radius: 999px;
+      color: white;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 6px 18px;
+      letter-spacing: 0.02em;
+      cursor: text;
+      min-width: 80px;
+      text-align: center;
+    }
+
+    .industry-badge:focus {
+      outline: 2px solid rgba(255,255,255,0.7);
+      outline-offset: 2px;
+      background: rgba(255,255,255,0.28);
+    }
+
+    /* ── Headline section ── */
+    .headline-section {
+      padding: 36px 40px 0;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 28px;
+    }
+
+    .label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+
+    .client-name {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.2;
+      margin-bottom: 8px;
+      min-width: 200px;
+    }
+
+    .doc-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-muted);
+      letter-spacing: 0.01em;
+    }
+
+    /* ── Content body ── */
+    .content {
+      padding: 36px 40px;
+      display: grid;
+      gap: 32px;
+    }
+
+    /* ── Two-col section ── */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    /* ── Section box ── */
+    .section-box {
+      background: #FAFAFA;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 22px 24px;
+    }
+
+    .section-box .label { margin-bottom: 10px; }
+
+    .section-box p,
+    .editable-body {
+      font-size: 14.5px;
+      line-height: 1.75;
+      color: var(--text);
+      min-height: 60px;
+    }
+
+    /* ── Stats row ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .stat-box {
+      background: var(--accent-light);
+      border: 1.5px solid #FFCEBA;
+      border-radius: 14px;
+      padding: 22px 16px 18px;
+      text-align: center;
+    }
+
+    .stat-number {
+      font-size: 38px;
+      font-weight: 800;
+      color: var(--accent);
+      line-height: 1;
+      margin-bottom: 8px;
+      display: block;
+      min-width: 60px;
+    }
+
+    .stat-number:focus {
+      outline: 2px dashed var(--accent);
+      outline-offset: 3px;
+      border-radius: 4px;
+    }
+
+    .stat-label {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: 0.02em;
+      line-height: 1.4;
+    }
+
+    .stat-label-edit {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 0.02em;
+      line-height: 1.4;
+      display: block;
+    }
+
+    /* ── Quote ── */
+    .quote-section {
+      background: var(--accent-light);
+      border-left: 5px solid var(--accent);
+      border-radius: 0 14px 14px 0;
+      padding: 24px 28px;
+    }
+
+    .quote-mark {
+      font-size: 52px;
+      font-weight: 800;
+      color: var(--accent);
+      line-height: 0.8;
+      margin-bottom: 8px;
+      display: block;
+      font-family: Georgia, serif;
+    }
+
+    .quote-text {
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--text);
+      line-height: 1.7;
+      font-style: italic;
+      min-height: 48px;
+    }
+
+    .quote-text:focus {
+      outline: 2px dashed var(--accent);
+      outline-offset: 3px;
+      border-radius: 4px;
+      font-style: italic;
+    }
+
+    .quote-attr {
+      margin-top: 12px;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--accent-dark);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    /* ── Timeline strip ── */
+    .timeline-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: var(--text);
+      border-radius: 12px;
+      padding: 16px 22px;
+    }
+
+    .timeline-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--accent);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .timeline-icon svg {
+      width: 20px;
+      height: 20px;
+      fill: white;
+    }
+
+    .timeline-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.55);
+    }
+
+    .timeline-value {
+      font-size: 15px;
+      font-weight: 600;
+      color: white;
+      min-width: 120px;
+    }
+
+    .timeline-value:focus {
+      outline: 2px dashed rgba(255,90,31,0.7);
+      outline-offset: 3px;
+      border-radius: 4px;
+    }
+
+    /* ── Footer ── */
+    .doc-footer {
+      background: #F2F2F8;
+      border-top: 1px solid var(--border);
+      padding: 18px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .footer-brand {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 0.04em;
+    }
+
+    .footer-url {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    /* ── Print button ── */
+    .print-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-family: 'Sora', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 11px 22px;
+      cursor: pointer;
+      letter-spacing: 0.01em;
+      box-shadow: 0 4px 14px rgba(255,90,31,0.35);
+      transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+      margin: 0 auto 8px;
+      display: block;
+      width: fit-content;
+    }
+
+    .print-btn:hover {
+      background: var(--accent-dark);
+      box-shadow: var(--shadow-hover);
+      transform: translateY(-1px);
+    }
+
+    .print-btn:active { transform: translateY(0); }
+
+    .print-btn svg {
+      width: 16px;
+      height: 16px;
+      fill: white;
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 4px;
+    }
+
+    /* ── Editable focus ring ── */
+    [contenteditable="true"]:focus {
+      outline: 2px dashed var(--accent);
+      outline-offset: 3px;
+      border-radius: 4px;
+    }
+
+    [contenteditable="true"] { cursor: text; }
+
+    /* ── Print styles ── */
+    @media print {
+      body { background: white; padding: 0; }
+      .card { box-shadow: none; border-radius: 0; max-width: 100%; }
+      .edit-hint, .print-btn-wrap { display: none !important; }
+      .header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .stat-box { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .quote-section { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .timeline-row { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .doc-footer { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 600px) {
+      .header, .headline-section, .content, .doc-footer { padding-left: 20px; padding-right: 20px; }
+      .two-col { grid-template-columns: 1fr; }
+      .stats-row { grid-template-columns: 1fr; }
+      .client-name { font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Edit instructions (hidden on print) -->
+  <div class="edit-hint no-print">
+    Click any orange-outlined or italic field to edit it directly. Use the Print button to export as PDF.
+  </div>
+
+  <div class="card">
+
+    <!-- Header -->
+    <div class="header">
+      <div class="logo-area">
+        <div class="logo-icon">
+          <!-- Spark / bolt icon -->
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M13 2L4.09 12.96A1 1 0 0 0 5 14.5h5.5L11 22l8.91-10.96A1 1 0 0 0 19 9.5H13.5L13 2Z"/>
+          </svg>
+        </div>
+        <div>
+          <div class="logo-text">CWI AI</div>
+          <div class="logo-tagline">Automation &amp; AI Solutions</div>
+        </div>
+      </div>
+      <!-- Industry badge — editable -->
+      <span class="industry-badge" contenteditable="true" title="Edit industry type">Home Services</span>
+    </div>
+
+    <!-- Headline -->
+    <div class="headline-section">
+      <div class="label">Client Success Story</div>
+      <div class="client-name" contenteditable="true" title="Edit client description">Landscaping Company — Austin, TX</div>
+      <div class="doc-title">How CWI AI transformed their operations with intelligent automation</div>
+    </div>
+
+    <!-- Content body -->
+    <div class="content">
+
+      <!-- Challenge + Solution -->
+      <div class="two-col">
+        <div class="section-box">
+          <div class="label">The Challenge</div>
+          <p class="editable-body" contenteditable="true" title="Describe the client's problem">
+            This local landscaping company was drowning in missed calls and manual scheduling. Leads were slipping through the cracks after hours, staff spent hours each week chasing follow-ups, and their booking process required back-and-forth phone calls just to get a simple estimate on the calendar.
+          </p>
+        </div>
+        <div class="section-box">
+          <div class="label">The Solution</div>
+          <p class="editable-body" contenteditable="true" title="Describe what CWI AI automated">
+            CWI AI deployed a 24/7 AI receptionist that qualifies leads, answers FAQs, and books estimates directly into their calendar — all via SMS and web chat. Automated follow-up sequences were added to re-engage cold leads, and weekly performance summaries replaced manual reporting.
+          </p>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div>
+        <div class="label" style="margin-bottom:14px;">Results at a Glance</div>
+        <div class="stats-row">
+
+          <div class="stat-box">
+            <span class="stat-number" contenteditable="true" title="Edit number">14</span>
+            <span class="stat-label">hours saved<br>per week</span>
+            <div class="stat-label-edit no-print" style="margin-top:6px; font-size:11px; color:#aaa;">(edit number above)</div>
+          </div>
+
+          <div class="stat-box">
+            <span class="stat-number" contenteditable="true" title="Edit number">85%</span>
+            <span class="stat-label">faster lead<br>response time</span>
+            <div class="stat-label-edit no-print" style="margin-top:6px; font-size:11px; color:#aaa;">(edit number above)</div>
+          </div>
+
+          <div class="stat-box">
+            <span class="stat-number" contenteditable="true" title="Edit number">23</span>
+            <span class="stat-label">new bookings<br>per month</span>
+            <div class="stat-label-edit no-print" style="margin-top:6px; font-size:11px; color:#aaa;">(edit number above)</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Quote -->
+      <div class="quote-section">
+        <span class="quote-mark">&ldquo;</span>
+        <p class="quote-text" contenteditable="true" title="Edit client testimonial">
+          Before CWI AI, we were losing jobs just because nobody could answer the phone on weekends. Now I wake up on Monday to a full schedule and I didn't have to do a thing. It's like having an extra employee who never takes a day off.
+        </p>
+        <div class="quote-attr" contenteditable="true" title="Edit attribution (keep anonymous if preferred)">
+          Owner, Landscaping Company — Austin, TX
+        </div>
+      </div>
+
+      <!-- Timeline -->
+      <div>
+        <div class="label" style="margin-bottom:12px;">Implementation Timeline</div>
+        <div class="timeline-row">
+          <div class="timeline-icon">
+            <!-- Calendar icon -->
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 2v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3V2h-2v2H9V2H8ZM5 9h14v11H5V9Z"/>
+            </svg>
+          </div>
+          <div>
+            <div class="timeline-label">Time to Launch</div>
+            <div class="timeline-value" contenteditable="true" title="Edit setup timeline">
+              Fully live in 5 business days
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+
+    <!-- Footer -->
+    <div class="doc-footer">
+      <div>
+        <div class="footer-brand">CWI AI</div>
+        <div class="footer-url">cwiai.com &nbsp;|&nbsp; Automation built for small business</div>
+      </div>
+      <div style="font-size:11px; color:#aaa;">Results may vary. Client identity kept anonymous by default.</div>
+    </div>
+
+  </div><!-- /card -->
+
+  <!-- Print button (outside card, hidden on print) -->
+  <div class="print-btn-wrap no-print" style="max-width:860px; margin: 24px auto 0; text-align:right;">
+    <button class="print-btn" onclick="window.print()">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;vertical-align:middle;margin-right:6px;"><path d="M18 3H6v4H5a3 3 0 0 0-3 3v5a3 3 0 0 0 3 3h1v3h12v-3h1a3 3 0 0 0 3-3V10a3 3 0 0 0-3-3h-1V3ZM8 5h8v2H8V5ZM7 17v-4h10v4H7Zm11-5H6v-1h12v1Z"/></svg>
+      Print / Save as PDF
+    </button>
+  </div>
+
+  <style>
+    @media print {
+      .no-print { display: none !important; }
+    }
+  </style>
+
+</body>
+</html>

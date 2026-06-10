@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CWI AI — Client Health Score</title>
+  <meta name="description" content="CWI internal tool: CWI AI — Client Health Score. Internal use only — CWI Compute With Imagination.">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #0A0A0C;
+      --surface:     #13131A;
+      --surface2:    #1C1C26;
+      --border:      #2A2A3A;
+      --accent:      #FF5A1F;
+      --accent-dim:  #FF5A1F22;
+      --text:        #E8E8F0;
+      --muted:       #7A7A9A;
+      --green:       #22C55E;
+      --green-dim:   #22C55E22;
+      --yellow:      #FACC15;
+      --yellow-dim:  #FACC1522;
+      --red:         #EF4444;
+      --red-dim:     #EF444422;
+      --radius:      12px;
+      --radius-sm:   8px;
+    }
+
+    body {
+      font-family: 'Sora', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 0;
+    }
+
+    /* ── TOP BAR ── */
+    .topbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .topbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .topbar-logo {
+      width: 32px;
+      height: 32px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+      color: #fff;
+      flex-shrink: 0;
+    }
+    .topbar-title { font-size: 15px; font-weight: 600; }
+    .topbar-sub   { font-size: 11px; color: var(--muted); margin-top: 1px; }
+    .topbar-actions { display: flex; gap: 10px; align-items: center; }
+
+    /* ── BUTTONS ── */
+    .btn {
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      font-family: 'Sora', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      transition: opacity .15s, background .15s;
+    }
+    .btn:hover { opacity: .85; }
+    .btn-primary   { background: var(--accent); color: #fff; }
+    .btn-outline   { background: transparent; color: var(--text); border: 1px solid var(--border); }
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-danger    { background: var(--red); color: #fff; }
+    .btn-sm { padding: 5px 11px; font-size: 12px; }
+
+    /* ── MAIN LAYOUT ── */
+    .main { max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
+
+    /* ── SELECTOR ROW ── */
+    .selector-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+    }
+    .selector-label { font-size: 13px; color: var(--muted); }
+    select.client-select {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 8px 36px 8px 12px;
+      font-family: 'Sora', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%237A7A9A' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      cursor: pointer;
+      min-width: 220px;
+    }
+    select.client-select:focus { outline: none; border-color: var(--accent); }
+
+    .last-updated { font-size: 11px; color: var(--muted); margin-left: auto; }
+
+    /* ── HEALTH OVERVIEW ── */
+    .health-overview {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 24px;
+      margin-bottom: 28px;
+    }
+    @media (max-width: 720px) {
+      .health-overview { grid-template-columns: 1fr; }
+    }
+
+    /* ── DONUT CARD ── */
+    .donut-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      position: relative;
+    }
+    .donut-wrapper {
+      position: relative;
+      width: 160px;
+      height: 160px;
+    }
+    .donut-center-text {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      pointer-events: none;
+    }
+    .donut-score {
+      font-size: 36px;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .donut-label {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+    .health-badge {
+      padding: 5px 14px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .04em;
+    }
+    .badge-green  { background: var(--green-dim);  color: var(--green); }
+    .badge-yellow { background: var(--yellow-dim); color: var(--yellow); }
+    .badge-red    { background: var(--red-dim);    color: var(--red); }
+
+    /* ── ACTION CARD ── */
+    .action-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .action-card-title {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted);
+    }
+    .action-text {
+      font-size: 15px;
+      line-height: 1.6;
+      color: var(--text);
+    }
+    .action-icon {
+      font-size: 28px;
+    }
+    .action-dim-name {
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    /* ── DIMENSIONS GRID ── */
+    .dims-title {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+    .dims-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .dim-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+    .dim-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .dim-info { display: flex; align-items: center; gap: 10px; }
+    .dim-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      background: var(--surface2);
+      flex-shrink: 0;
+    }
+    .dim-name { font-size: 14px; font-weight: 600; }
+    .dim-desc { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .dim-score-badge {
+      font-size: 20px;
+      font-weight: 700;
+      min-width: 32px;
+      text-align: right;
+    }
+
+    /* slider */
+    .slider-track {
+      position: relative;
+      height: 6px;
+      background: var(--surface2);
+      border-radius: 99px;
+      margin-bottom: 8px;
+    }
+    .slider-fill {
+      position: absolute;
+      left: 0; top: 0;
+      height: 100%;
+      border-radius: 99px;
+      transition: width .3s ease, background .3s ease;
+    }
+    input[type=range].dim-slider {
+      width: 100%;
+      appearance: none;
+      background: transparent;
+      cursor: pointer;
+      height: 6px;
+      position: relative;
+      z-index: 2;
+      margin: 0;
+    }
+    input[type=range].dim-slider::-webkit-slider-thumb {
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--text);
+      border: 3px solid var(--bg);
+      box-shadow: 0 0 0 1px var(--border);
+      cursor: grab;
+      transition: transform .1s;
+    }
+    input[type=range].dim-slider:active::-webkit-slider-thumb { transform: scale(1.2); cursor: grabbing; }
+    input[type=range].dim-slider::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--text);
+      border: 3px solid var(--bg);
+      cursor: grab;
+    }
+    .slider-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* weight badge */
+    .dim-weight {
+      font-size: 10px;
+      color: var(--muted);
+      background: var(--surface2);
+      padding: 2px 7px;
+      border-radius: 99px;
+      margin-top: 4px;
+    }
+
+    /* ── NOTES ROW ── */
+    .notes-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 28px;
+    }
+    .notes-label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+    textarea.notes-input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: 'Sora', sans-serif;
+      font-size: 13px;
+      padding: 12px;
+      resize: vertical;
+      min-height: 80px;
+      transition: border-color .15s;
+    }
+    textarea.notes-input:focus { outline: none; border-color: var(--accent); }
+
+    /* ── DANGER ZONE ── */
+    .danger-zone {
+      background: var(--surface);
+      border: 1px solid #3a1a1a;
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .danger-zone-text { font-size: 13px; color: var(--muted); }
+    .danger-zone-text strong { color: var(--red); }
+
+    /* ── MODAL ── */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.7);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-backdrop.hidden { display: none; }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      width: 100%;
+      max-width: 420px;
+    }
+    .modal-title { font-size: 17px; font-weight: 600; margin-bottom: 18px; }
+    .field { margin-bottom: 16px; }
+    .field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; font-weight: 500; }
+    .field input, .field select.field-select {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: 'Sora', sans-serif;
+      font-size: 14px;
+      padding: 10px 12px;
+      transition: border-color .15s;
+    }
+    .field input:focus, .field select.field-select:focus { outline: none; border-color: var(--accent); }
+    .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+    /* ── EMPTY STATE ── */
+    .empty-state {
+      text-align: center;
+      padding: 80px 20px;
+      color: var(--muted);
+    }
+    .empty-icon { font-size: 48px; margin-bottom: 16px; }
+    .empty-title { font-size: 18px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+    .empty-sub { font-size: 14px; margin-bottom: 24px; }
+
+    /* ── ALL CLIENTS SUMMARY ── */
+    .all-clients-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .client-summary-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      cursor: pointer;
+      transition: border-color .15s, transform .1s;
+    }
+    .client-summary-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+    .cscard-name { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .cscard-plan { font-size: 11px; color: var(--muted); margin-bottom: 12px; }
+    .cscard-score-row { display: flex; align-items: center; justify-content: space-between; }
+    .cscard-score { font-size: 26px; font-weight: 700; }
+    .cscard-bars { display: flex; gap: 3px; align-items: flex-end; margin-top: 8px; }
+    .csbar {
+      width: 8px;
+      border-radius: 2px;
+      background: var(--surface2);
+      position: relative;
+      overflow: hidden;
+    }
+    .csbar-fill {
+      position: absolute;
+      bottom: 0; left: 0;
+      width: 100%;
+      border-radius: 2px;
+      transition: height .3s;
+    }
+
+    /* scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+  </style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<header class="topbar">
+  <div class="topbar-brand">
+    <div class="topbar-logo">CWI</div>
+    <div>
+      <div class="topbar-title">Client Health Score</div>
+      <div class="topbar-sub">CWI AI — Account Management</div>
+    </div>
+  </div>
+  <div class="topbar-actions">
+    <button class="btn btn-outline btn-sm" onclick="exportJSON()">Export JSON</button>
+    <button class="btn btn-primary btn-sm" onclick="openAddModal()">+ Add Client</button>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- SELECTOR ROW -->
+  <div class="selector-row">
+    <span class="selector-label">Client:</span>
+    <select class="client-select" id="clientSelect" onchange="selectClient(this.value)">
+      <option value="__all__">— All Clients Overview —</option>
+    </select>
+    <span class="last-updated" id="lastUpdatedLabel"></span>
+  </div>
+
+  <!-- CONTENT AREA -->
+  <div id="contentArea"></div>
+
+</main>
+
+<!-- ADD CLIENT MODAL -->
+<div class="modal-backdrop hidden" id="addModal">
+  <div class="modal">
+    <div class="modal-title">Add New Client</div>
+    <div class="field">
+      <label for="newClientName">Client Name *</label>
+      <input type="text" id="newClientName" placeholder="e.g. Greenfield Dental" />
+    </div>
+    <div class="field">
+      <label for="newClientPlan">Service Plan</label>
+      <input type="text" id="newClientPlan" placeholder="e.g. Growth Package" />
+    </div>
+    <div class="field">
+      <label for="newClientIndustry">Industry</label>
+      <input type="text" id="newClientIndustry" placeholder="e.g. Dental, HVAC, Fitness" />
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeAddModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="addClient()">Add Client</button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE CONFIRM MODAL -->
+<div class="modal-backdrop hidden" id="deleteModal">
+  <div class="modal">
+    <div class="modal-title">Delete Client?</div>
+    <p style="font-size:14px;color:var(--muted);line-height:1.6;">This will permanently remove <strong id="deleteClientNameLabel" style="color:var(--text)"></strong> and all their health data. This cannot be undone.</p>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeDeleteModal()">Cancel</button>
+      <button class="btn btn-danger" onclick="confirmDelete()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ====================================================
+   DATA MODEL
+   ==================================================== */
+const STORAGE_KEY = 'cwi_client_health_v1';
+
+const DIMENSIONS = [
+  {
+    key: 'engagement',
+    name: 'Engagement',
+    icon: '💬',
+    desc: 'Responding to reports, attending check-ins',
+    weight: 0.20,
+    labels: ['Unresponsive','Slow','Occasional','Active','Highly Engaged']
+  },
+  {
+    key: 'results',
+    name: 'Results',
+    icon: '📈',
+    desc: 'Leads captured, bookings made this month',
+    weight: 0.25,
+    labels: ['None','Below Goal','On Track','Above Goal','Exceptional']
+  },
+  {
+    key: 'payment',
+    name: 'Payment',
+    icon: '💳',
+    desc: 'On-time payments, no disputes',
+    weight: 0.15,
+    labels: ['Overdue/Dispute','Late','Delayed','On Time','Early/Auto']
+  },
+  {
+    key: 'satisfaction',
+    name: 'Satisfaction',
+    icon: '⭐',
+    desc: 'Last NPS / satisfaction score',
+    weight: 0.20,
+    labels: ['Detractor','Unhappy','Neutral','Happy','Promoter']
+  },
+  {
+    key: 'growth',
+    name: 'Growth Potential',
+    icon: '🚀',
+    desc: 'Upsell likelihood, expansion appetite',
+    weight: 0.10,
+    labels: ['None','Unlikely','Possible','Likely','High Priority']
+  },
+  {
+    key: 'churn',
+    name: 'Churn Risk',
+    icon: '🛡️',
+    desc: 'Inverted — 5 = very low churn risk',
+    weight: 0.10,
+    labels: ['Churning','Very High','Moderate','Low','Very Low Risk']
+  }
+];
+
+function defaultScores() {
+  const s = {};
+  DIMENSIONS.forEach(d => s[d.key] = 3);
+  return s;
+}
+
+function loadData() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || { clients: [] };
+  } catch { return { clients: [] }; }
+}
+
+function saveData(data) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+function calcHealth(scores) {
+  let sum = 0;
+  DIMENSIONS.forEach(d => { sum += (scores[d.key] || 3) * d.weight; });
+  return Math.round(sum * 10) / 10;
+}
+
+function healthColor(score) {
+  if (score >= 4.0) return 'var(--green)';
+  if (score >= 3.0) return 'var(--yellow)';
+  return 'var(--red)';
+}
+
+function healthLabel(score) {
+  if (score >= 4.0) return 'Healthy';
+  if (score >= 3.0) return 'Watch';
+  return 'At Risk';
+}
+
+function healthBadgeClass(score) {
+  if (score >= 4.0) return 'badge-green';
+  if (score >= 3.0) return 'badge-yellow';
+  return 'badge-red';
+}
+
+function dimColor(val) {
+  if (val >= 4) return 'var(--green)';
+  if (val >= 3) return 'var(--yellow)';
+  return 'var(--red)';
+}
+
+function lowestDim(scores) {
+  let lowest = null, lowestVal = 99;
+  DIMENSIONS.forEach(d => {
+    if ((scores[d.key] || 3) < lowestVal) {
+      lowestVal = scores[d.key] || 3;
+      lowest = d;
+    }
+  });
+  return { dim: lowest, val: lowestVal };
+}
+
+function actionText(dim, val, clientName) {
+  const map = {
+    engagement: [
+      'Immediately call or text the client — they are non-responsive and at risk.',
+      `Schedule an urgent check-in with ${clientName} — response rate is critically low.`,
+      `Re-engage ${clientName} with a monthly summary email and ask if check-ins are still valuable.`,
+      `${clientName} is fairly active — send a quick win highlight to reinforce engagement.`,
+      `${clientName} is highly engaged. Consider co-creating a case study or referral ask.`
+    ],
+    results: [
+      `Audit campaigns immediately — ${clientName} has seen zero results this month.`,
+      `Review funnel and targeting for ${clientName} — results are below goal.`,
+      `Results are on track for ${clientName}. Identify one optimization to push over goal.`,
+      `Strong results for ${clientName}! Document wins and share in report.`,
+      `Exceptional results — present ${clientName} with a growth/upsell opportunity.`
+    ],
+    payment: [
+      `Contact ${clientName} immediately about overdue payment or dispute resolution.`,
+      `Send a friendly payment reminder to ${clientName} and check for billing friction.`,
+      `Payment is slightly delayed for ${clientName} — confirm ACH or card is current.`,
+      `${clientName} pays on time. Good standing — no action needed.`,
+      `${clientName} is on auto-pay and never misses. Ideal billing status.`
+    ],
+    satisfaction: [
+      `${clientName} is a detractor — schedule an emergency satisfaction call now.`,
+      `${clientName} is unhappy. Deliver a quick win this week and request direct feedback.`,
+      `${clientName} is neutral. Send an NPS survey and identify one improvement to make.`,
+      `${clientName} is happy. Ask for a Google review or testimonial.`,
+      `${clientName} is a promoter! Request a referral or case study participation.`
+    ],
+    growth: [
+      `No upsell opportunity with ${clientName} right now — focus on retention.`,
+      `Upsell is unlikely for ${clientName}. Ensure core value is being delivered first.`,
+      `There's a possible upsell for ${clientName} — plant the seed on the next call.`,
+      `${clientName} is likely to expand. Prepare a tailored upgrade proposal.`,
+      `${clientName} is ready to grow — present the upsell package this week.`
+    ],
+    churn: [
+      `${clientName} is actively churning — escalate to leadership immediately.`,
+      `Very high churn risk for ${clientName}. Assign a dedicated success call today.`,
+      `Moderate churn risk for ${clientName}. Proactively address any friction points.`,
+      `Low churn risk for ${clientName}. Maintain regular touchpoints.`,
+      `${clientName} is very stable — great retention candidate for case study.`
+    ]
+  };
+  const arr = map[dim.key] || [];
+  return arr[Math.max(0, Math.min(4, val - 1))] || 'Review this dimension and take appropriate action.';
+}
+
+/* ====================================================
+   STATE
+   ==================================================== */
+let state = loadData();
+let currentClientId = '__all__';
+let pendingDeleteId = null;
+
+/* ====================================================
+   RENDER
+   ==================================================== */
+function populateSelect() {
+  const sel = document.getElementById('clientSelect');
+  const prev = sel.value;
+  sel.innerHTML = '<option value="__all__">— All Clients Overview —</option>';
+  state.clients.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.id;
+    opt.textContent = c.name + (c.plan ? ` (${c.plan})` : '');
+    sel.appendChild(opt);
+  });
+  // restore or default
+  const ids = state.clients.map(c => c.id);
+  if (ids.includes(prev)) sel.value = prev;
+  else if (ids.includes(currentClientId)) sel.value = currentClientId;
+  else sel.value = '__all__';
+}
+
+function selectClient(id) {
+  currentClientId = id;
+  render();
+}
+
+function render() {
+  populateSelect();
+  document.getElementById('clientSelect').value = currentClientId;
+  const area = document.getElementById('contentArea');
+  if (currentClientId === '__all__') {
+    renderAllClients(area);
+  } else {
+    const client = state.clients.find(c => c.id === currentClientId);
+    if (!client) {
+      currentClientId = '__all__';
+      renderAllClients(area);
+      return;
+    }
+    renderClient(area, client);
+  }
+}
+
+/* ── ALL CLIENTS OVERVIEW ── */
+function renderAllClients(area) {
+  document.getElementById('lastUpdatedLabel').textContent = '';
+
+  if (state.clients.length === 0) {
+    area.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">🏥</div>
+        <div class="empty-title">No clients yet</div>
+        <div class="empty-sub">Add your first client to start tracking health scores.</div>
+        <button class="btn btn-primary" onclick="openAddModal()">+ Add First Client</button>
+      </div>`;
+    return;
+  }
+
+  const sorted = [...state.clients].sort((a, b) => calcHealth(b.scores) - calcHealth(a.scores));
+
+  // Summary counts
+  let healthy = 0, watch = 0, atRisk = 0;
+  sorted.forEach(c => {
+    const h = calcHealth(c.scores);
+    if (h >= 4) healthy++;
+    else if (h >= 3) watch++;
+    else atRisk++;
+  });
+
+  const avgScore = sorted.length
+    ? Math.round(sorted.reduce((s, c) => s + calcHealth(c.scores), 0) / sorted.length * 10) / 10
+    : 0;
+
+  area.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;margin-bottom:28px;">
+      ${summaryTile('Portfolio Avg', avgScore.toFixed(1), healthColor(avgScore), 'Average health across all clients')}
+      ${summaryTile('Healthy', healthy, 'var(--green)', 'Score 4.0 – 5.0')}
+      ${summaryTile('Watch', watch, 'var(--yellow)', 'Score 3.0 – 3.9')}
+      ${summaryTile('At Risk', atRisk, 'var(--red)', 'Score below 3.0')}
+    </div>
+    <p class="dims-title">All Clients</p>
+    <div class="all-clients-grid" id="allClientsGrid"></div>`;
+
+  const grid = document.getElementById('allClientsGrid');
+  sorted.forEach(c => {
+    const h = calcHealth(c.scores);
+    const card = document.createElement('div');
+    card.className = 'client-summary-card';
+    card.onclick = () => { currentClientId = c.id; render(); };
+
+    const bars = DIMENSIONS.map(d => {
+      const val = c.scores[d.key] || 3;
+      const pct = (val / 5) * 100;
+      const col = dimColor(val);
+      return `<div class="csbar" style="height:36px;"><div class="csbar-fill" style="height:${pct}%;background:${col};"></div></div>`;
+    }).join('');
+
+    card.innerHTML = `
+      <div class="cscard-name">${esc(c.name)}</div>
+      <div class="cscard-plan">${esc(c.plan || 'No plan set')}${c.industry ? ' · ' + esc(c.industry) : ''}</div>
+      <div class="cscard-score-row">
+        <div>
+          <div class="cscard-score" style="color:${healthColor(h)}">${h.toFixed(1)}</div>
+          <span class="health-badge ${healthBadgeClass(h)}" style="font-size:10px;padding:3px 10px;">${healthLabel(h)}</span>
+        </div>
+        <div class="cscard-bars">${bars}</div>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+function summaryTile(label, value, color, sub) {
+  return `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.07em;">${label}</div>
+      <div style="font-size:28px;font-weight:700;color:${color};line-height:1;">${value}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:6px;">${sub}</div>
+    </div>`;
+}
+
+/* ── SINGLE CLIENT ── */
+function renderClient(area, client) {
+  const scores = client.scores;
+  const health = calcHealth(scores);
+  const { dim: ld, val: lv } = lowestDim(scores);
+  const action = actionText(ld, lv, client.name);
+  const ts = client.updatedAt ? new Date(client.updatedAt).toLocaleString() : 'Never';
+  document.getElementById('lastUpdatedLabel').textContent = 'Last updated: ' + ts;
+
+  // Build SVG donut
+  const svgDonut = buildDonut(health);
+
+  // Build dim cards HTML
+  const dimCards = DIMENSIONS.map(d => {
+    const val = scores[d.key] || 3;
+    const pct = ((val - 1) / 4) * 100;
+    const col = dimColor(val);
+    return `
+      <div class="dim-card" id="dimcard-${d.key}">
+        <div class="dim-header">
+          <div class="dim-info">
+            <div class="dim-icon">${d.icon}</div>
+            <div>
+              <div class="dim-name">${d.name}</div>
+              <div class="dim-desc">${d.desc}</div>
+            </div>
+          </div>
+          <div>
+            <div class="dim-score-badge" id="score-${d.key}" style="color:${col}">${val.toFixed(1)}</div>
+            <div class="dim-weight">${Math.round(d.weight * 100)}% weight</div>
+          </div>
+        </div>
+        <div style="position:relative;">
+          <div class="slider-track">
+            <div class="slider-fill" id="fill-${d.key}" style="width:${pct}%;background:${col};"></div>
+          </div>
+          <input
+            type="range"
+            class="dim-slider"
+            id="slider-${d.key}"
+            min="1" max="5" step="0.5"
+            value="${val}"
+            style="position:absolute;top:-3px;left:0;width:100%;"
+            oninput="onSlider('${client.id}','${d.key}',this.value)"
+          />
+        </div>
+        <div class="slider-labels">
+          <span>1 — ${d.labels[0]}</span>
+          <span>${d.labels[2]}</span>
+          <span>${d.labels[4]} — 5</span>
+        </div>
+      </div>`;
+  }).join('');
+
+  area.innerHTML = `
+    <!-- OVERVIEW -->
+    <div class="health-overview">
+      <div class="donut-card">
+        <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);">Overall Health</div>
+        <div class="donut-wrapper">
+          ${svgDonut}
+          <div class="donut-center-text">
+            <div class="donut-score" id="donut-score" style="color:${healthColor(health)}">${health.toFixed(1)}</div>
+            <div class="donut-label">/ 5.0</div>
+          </div>
+        </div>
+        <span class="health-badge ${healthBadgeClass(health)}" id="health-badge">${healthLabel(health)}</span>
+        <div style="font-size:12px;color:var(--muted);text-align:center;">
+          ${esc(client.plan || '')}${client.industry ? '<br>' + esc(client.industry) : ''}
+        </div>
+      </div>
+
+      <div class="action-card">
+        <div class="action-card-title">Recommended Action</div>
+        <div class="action-icon">${ld ? ld.icon : '💡'}</div>
+        <div style="font-size:11px;color:var(--muted);">Lowest dimension: <span class="action-dim-name">${ld ? ld.name : '—'}</span> (${lv.toFixed(1)})</div>
+        <div class="action-text" id="action-text">${action}</div>
+        <div style="margin-top:auto;padding-top:12px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap;">
+          ${DIMENSIONS.map(d => {
+            const v = scores[d.key] || 3;
+            return `<span style="font-size:11px;background:var(--surface2);border-radius:99px;padding:3px 9px;color:${dimColor(v)};">${d.icon} ${v.toFixed(1)}</span>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>
+
+    <!-- DIMENSIONS -->
+    <p class="dims-title">Health Dimensions</p>
+    <div class="dims-grid">${dimCards}</div>
+
+    <!-- NOTES -->
+    <div class="notes-section">
+      <div class="notes-label">Internal Notes</div>
+      <textarea class="notes-input" id="notesInput" placeholder="Add context, action items, or observations about this client..."
+        oninput="onNotes('${client.id}', this.value)">${esc(client.notes || '')}</textarea>
+    </div>
+
+    <!-- DANGER ZONE -->
+    <div class="danger-zone">
+      <div class="danger-zone-text">
+        <strong>Danger Zone</strong> — Deleting <strong>${esc(client.name)}</strong> will remove all health data permanently.
+      </div>
+      <button class="btn btn-danger btn-sm" onclick="openDeleteModal('${client.id}','${esc(client.name)}')">Delete Client</button>
+    </div>`;
+}
+
+/* ── DONUT SVG ── */
+function buildDonut(score) {
+  const r = 64;
+  const cx = 80, cy = 80;
+  const circumference = 2 * Math.PI * r;
+  const pct = (score / 5);
+  const dash = pct * circumference;
+  const gap  = circumference - dash;
+  const col  = healthColor(score);
+
+  return `
+    <svg width="160" height="160" viewBox="0 0 160 160" id="donut-svg">
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--surface2)" stroke-width="14"/>
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none"
+        stroke="${col}"
+        stroke-width="14"
+        stroke-linecap="round"
+        stroke-dasharray="${dash} ${gap}"
+        stroke-dashoffset="${circumference * 0.25}"
+        id="donut-arc"
+        style="transition: stroke-dasharray .4s ease, stroke .4s ease;"
+      />
+    </svg>`;
+}
+
+function updateDonut(score) {
+  const arc = document.getElementById('donut-arc');
+  const scoreEl = document.getElementById('donut-score');
+  const badge = document.getElementById('health-badge');
+  if (!arc || !scoreEl) return;
+  const r = 64;
+  const circumference = 2 * Math.PI * r;
+  const pct = score / 5;
+  const dash = pct * circumference;
+  const gap  = circumference - dash;
+  const col  = healthColor(score);
+  arc.setAttribute('stroke-dasharray', `${dash} ${gap}`);
+  arc.setAttribute('stroke', col);
+  scoreEl.textContent = score.toFixed(1);
+  scoreEl.style.color = col;
+  badge.textContent = healthLabel(score);
+  badge.className = 'health-badge ' + healthBadgeClass(score);
+}
+
+/* ====================================================
+   EVENT HANDLERS
+   ==================================================== */
+function onSlider(clientId, dimKey, rawVal) {
+  const val = parseFloat(rawVal);
+  const client = state.clients.find(c => c.id === clientId);
+  if (!client) return;
+  client.scores[dimKey] = val;
+  client.updatedAt = new Date().toISOString();
+
+  // Update fill + score badge
+  const pct = ((val - 1) / 4) * 100;
+  const col = dimColor(val);
+  const fillEl = document.getElementById('fill-' + dimKey);
+  const scoreEl = document.getElementById('score-' + dimKey);
+  if (fillEl) { fillEl.style.width = pct + '%'; fillEl.style.background = col; }
+  if (scoreEl) { scoreEl.textContent = val.toFixed(1); scoreEl.style.color = col; }
+
+  // Recalc overall
+  const health = calcHealth(client.scores);
+  updateDonut(health);
+
+  // Update action
+  const { dim: ld, val: lv } = lowestDim(client.scores);
+  const actionEl = document.getElementById('action-text');
+  if (actionEl) actionEl.textContent = actionText(ld, lv, client.name);
+
+  // Update timestamp label
+  document.getElementById('lastUpdatedLabel').textContent = 'Last updated: ' + new Date().toLocaleString();
+
+  saveData(state);
+}
+
+function onNotes(clientId, val) {
+  const client = state.clients.find(c => c.id === clientId);
+  if (!client) return;
+  client.notes = val;
+  client.updatedAt = new Date().toISOString();
+  saveData(state);
+}
+
+/* ====================================================
+   ADD CLIENT
+   ==================================================== */
+function openAddModal() {
+  document.getElementById('newClientName').value = '';
+  document.getElementById('newClientPlan').value = '';
+  document.getElementById('newClientIndustry').value = '';
+  document.getElementById('addModal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('newClientName').focus(), 50);
+}
+function closeAddModal() { document.getElementById('addModal').classList.add('hidden'); }
+
+function addClient() {
+  const name = document.getElementById('newClientName').value.trim();
+  if (!name) { document.getElementById('newClientName').focus(); return; }
+  const plan     = document.getElementById('newClientPlan').value.trim();
+  const industry = document.getElementById('newClientIndustry').value.trim();
+  const id = 'c_' + Date.now();
+  const client = {
+    id, name, plan, industry,
+    scores: defaultScores(),
+    notes: '',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+  state.clients.push(client);
+  saveData(state);
+  closeAddModal();
+  currentClientId = id;
+  render();
+}
+
+/* ====================================================
+   DELETE CLIENT
+   ==================================================== */
+function openDeleteModal(id, name) {
+  pendingDeleteId = id;
+  document.getElementById('deleteClientNameLabel').textContent = name;
+  document.getElementById('deleteModal').classList.remove('hidden');
+}
+function closeDeleteModal() {
+  document.getElementById('deleteModal').classList.add('hidden');
+  pendingDeleteId = null;
+}
+function confirmDelete() {
+  if (!pendingDeleteId) return;
+  state.clients = state.clients.filter(c => c.id !== pendingDeleteId);
+  saveData(state);
+  closeDeleteModal();
+  currentClientId = '__all__';
+  render();
+}
+
+/* ====================================================
+   EXPORT
+   ==================================================== */
+function exportJSON() {
+  const data = state.clients.map(c => ({
+    id: c.id,
+    name: c.name,
+    plan: c.plan,
+    industry: c.industry,
+    scores: c.scores,
+    overallHealth: calcHealth(c.scores),
+    healthStatus: healthLabel(calcHealth(c.scores)),
+    notes: c.notes,
+    createdAt: c.createdAt,
+    updatedAt: c.updatedAt
+  }));
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = 'cwi-client-health-' + new Date().toISOString().slice(0, 10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* ====================================================
+   KEYBOARD: close modals on Escape
+   ==================================================== */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeAddModal();
+    closeDeleteModal();
+  }
+});
+
+/* ====================================================
+   UTIL
+   ==================================================== */
+function esc(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/* ====================================================
+   INIT
+   ==================================================== */
+render();
+</script>
+</body>
+</html>

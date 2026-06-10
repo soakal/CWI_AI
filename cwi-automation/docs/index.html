@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CWI AI — Tools Index</title>
+<meta name="description" content="CWI internal tool: CWI AI — Tools Index. Internal use only — CWI Compute With Imagination.">
+<style>
+  :root { --orange: #FF5A1F; --black: #0A0A0A; --gray: #6B6B6B; --light: #F8F7F4; --border: #E5E5E5; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Instrument Sans', system-ui, sans-serif; background: var(--light); color: var(--black); }
+  header { background: var(--black); color: white; padding: 20px 32px; display: flex; align-items: center; gap: 16px; }
+  header h1 { font-size: 22px; font-weight: 800; } header h1 span { color: var(--orange); }
+  header p { color: #aaa; font-size: 13px; margin-left: auto; }
+  .search-bar { padding: 16px 32px; background: white; border-bottom: 1px solid var(--border); display: flex; gap: 12px; align-items: center; position: sticky; top: 0; z-index: 10; }
+  .search-bar input { flex: 1; padding: 10px 16px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; outline: none; }
+  .search-bar input:focus { border-color: var(--orange); }
+  .filter-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+  .filter-btn { padding: 6px 14px; border: 1px solid var(--border); border-radius: 20px; background: white; font-size: 12px; cursor: pointer; transition: all .15s; }
+  .filter-btn.active, .filter-btn:hover { background: var(--orange); color: white; border-color: var(--orange); }
+  main { padding: 24px 32px; max-width: 1400px; margin: 0 auto; }
+  .section { margin-bottom: 32px; }
+  .section h2 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--gray); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .section h2 span { background: var(--border); color: var(--gray); border-radius: 10px; padding: 1px 8px; font-size: 11px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+  .card { background: white; border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; cursor: pointer; transition: all .15s; text-decoration: none; color: inherit; display: block; }
+  .card:hover { border-color: var(--orange); box-shadow: 0 2px 8px rgba(255,90,31,.12); transform: translateY(-1px); }
+  .card-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .card-desc { font-size: 12px; color: var(--gray); line-height: 1.4; }
+  .cat-badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 3px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em; }
+  .badge-sales { background: #FEF3C7; color: #92400E; }
+  .badge-client { background: #D1FAE5; color: #065F46; }
+  .badge-ops { background: #DBEAFE; color: #1E40AF; }
+  .badge-finance { background: #F3F4F6; color: #374151; }
+  .badge-marketing { background: #FCE7F3; color: #9D174D; }
+  .badge-reporting { background: #EDE9FE; color: #5B21B6; }
+  .badge-growth { background: #FEF9C3; color: #713F12; }
+  .badge-internal { background: #F1F5F9; color: #475569; }
+  .stat-bar { display: flex; gap: 24px; padding: 16px 32px; background: white; border-bottom: 1px solid var(--border); }
+  .stat { text-align: center; }
+  .stat .n { font-size: 28px; font-weight: 800; color: var(--orange); }
+  .stat .l { font-size: 11px; color: var(--gray); text-transform: uppercase; letter-spacing: .04em; }
+  .hidden { display: none !important; }
+  #no-results { display: none; padding: 40px; text-align: center; color: var(--gray); font-size: 14px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>CWI<span>AI</span> Tools</h1>
+  <p>cwi-automation/docs/ — Open any file in your browser</p>
+</header>
+<div class="stat-bar">
+  <div class="stat"><div class="n">83</div><div class="l">Total Tools</div></div>
+  <div class="stat"><div class="n">38</div><div class="l">Scenarios</div></div>
+  <div class="stat"><div class="n">12</div><div class="l">Site Pages</div></div>
+  <div class="stat"><div class="n">40</div><div class="l">Tests Passing</div></div>
+</div>
+<div class="search-bar">
+  <input type="text" id="search" placeholder="Search tools..." oninput="filterTools()">
+  <div class="filter-btns">
+    <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+    <button class="filter-btn" onclick="setFilter('sales',this)">Sales</button>
+    <button class="filter-btn" onclick="setFilter('client',this)">Client</button>
+    <button class="filter-btn" onclick="setFilter('ops',this)">Ops</button>
+    <button class="filter-btn" onclick="setFilter('finance',this)">Finance</button>
+    <button class="filter-btn" onclick="setFilter('marketing',this)">Marketing</button>
+    <button class="filter-btn" onclick="setFilter('reporting',this)">Reporting</button>
+    <button class="filter-btn" onclick="setFilter('growth',this)">Growth</button>
+    <button class="filter-btn" onclick="setFilter('internal',this)">Internal</button>
+  </div>
+</div>
+<main>
+<div id="no-results">No tools match your search.</div>
+
+<div class="section" data-cat="sales">
+  <h2>Sales & Outreach <span id="cnt-sales"></span></h2>
+  <div class="grid">
+    <a class="card" href="discovery-call-script.html" data-cat="sales"><span class="cat-badge badge-sales">Sales</span><div class="card-title">Discovery Call Script</div><div class="card-desc">Timed sections, prospect notes, auto tier recommendation</div></a>
+    <a class="card" href="sales-one-pager.html" data-cat="sales"><span class="cat-badge badge-sales">Sales</span><div class="card-title">Sales One-Pager</div><div class="card-desc">Print-ready two-column leave-behind with pricing and stats</div></a>
+    <a class="card" href="sales-call-script.html" data-cat="sales"><span class="cat-badge badge-sales">Sales</span><div class="card-title">Sales Call Script</div><div class="card-desc">Full sales call flow with objection handling</div></a>
+    <a class="card" href="outreach-templates.html" data-cat="sales"><span class="cat-badge badge-sales">Sales</span><div class="card-title">Outreach Templates</div><div class="card-desc">LinkedIn DMs, cold email sequences, objection responses</div></a>
+    <a class="card" href="apollo-sequences.html" data-cat="sales"><span class="cat-badge badge-sales">Sales</span><div class="card-title">Apollo Sequences</div><div class="card-desc">3-industry cold email sequences (Plumbing/HVAC/Accounting)</div></a>
+    <a class="card" href="cold-email-scorer.html" data-cat="sales"><span class="cat-badge badge-sales">Sales</span><div class="card-title">Cold Email Scorer</div><div class="card-desc">8-criterion email analyzer with letter grade and fixes</div></a>
+    <a class="card" href="proposal-generator.html" data-cat="sales"><span class="cat-badge badge-sales">Sales</span><div class="card-title">Proposal Generator</div><div class="card-desc">Auto-fills client proposal with ROI calc, print to PDF</div></a>
+    <a class="card" href="proposal-tracker.html" data-cat="sales"><span class="cat-badge badge-sales">Sales</span><div class="card-title">Proposal Tracker</div><div class="card-desc">Sent proposals with auto follow-up dates and win rate</div></a>
+    <a class="card" href="competitor-analysis.html" data-cat="sales"><span class="cat-badge badge-sales">Sales</span><div class="card-desc">5 competitors pre-loaded, feature comparison table</div><div class="card-title">Competitor Analysis</div></a>
+    <a class="card" href="industry-roi-guide.html" data-cat="sales"><span class="cat-badge badge-sales">Sales</span><div class="card-title">Industry ROI Guide</div><div class="card-desc">Per-industry ROI calc with live pitch script (Plumbing/HVAC/Accounting)</div></a>
+    <a class="card" href="deal-value-calculator.html" data-cat="sales"><span class="cat-badge badge-sales">Sales</span><div class="card-title">Deal Value Calculator</div><div class="card-desc">LTV + 5-factor deal score + 3-tier comparison</div></a>
+    <a class="card" href="pipeline-tracker.html" data-cat="sales"><span class="cat-badge badge-sales">Sales</span><div class="card-title">Pipeline Tracker</div><div class="card-desc">Visual Kanban — 6 stages, day-counter badges, confetti on win</div></a>
+    <a class="card" href="objection-handler.html" data-cat="sales"><span class="cat-badge badge-sales">Sales</span><div class="card-title">Objection Handler</div><div class="card-desc">15 objections with scripted responses, flashcard practice, mastery tracker</div></a>
+    <a class="card" href="cold-call-script.html" data-cat="sales"><span class="cat-badge badge-sales">Sales</span><div class="card-title">Cold Call Script</div><div class="card-desc">Industry-adaptive phone script, live timer, daily call log</div></a>
+    <a class="card" href="pricing-roleplay.html" data-cat="sales"><span class="cat-badge badge-sales">Sales</span><div class="card-title">Pricing Roleplay</div><div class="card-desc">15 interactive pricing conversation rounds with scoring</div></a>
+  </div>
+</div>
+
+<div class="section" data-cat="client">
+  <h2>Client Management <span id="cnt-client"></span></h2>
+  <div class="grid">
+    <a class="card" href="client-directory.html" data-cat="client"><span class="cat-badge badge-client">Client</span><div class="card-title">Client Directory</div><div class="card-desc">Master contact list with all credentials and quick-copy buttons</div></a>
+    <a class="card" href="client-portal.html" data-cat="client"><span class="cat-badge badge-client">Client</span><div class="card-title">Client Portal</div><div class="card-desc">Internal client setup tracker with localStorage</div></a>
+    <a class="card" href="client-success-tracker.html" data-cat="client"><span class="cat-badge badge-client">Client</span><div class="card-title">Client Success Tracker</div><div class="card-desc">12-milestone tracker per client</div></a>
+    <a class="card" href="client-quick-start.html" data-cat="client"><span class="cat-badge badge-client">Client</span><div class="card-title">Client Quick-Start Guide</div><div class="card-desc">Printable one-page onboarding guide for new clients</div></a>
+    <a class="card" href="client-training-guide.html" data-cat="client"><span class="cat-badge badge-client">Client</span><div class="card-title">Client Training Guide</div><div class="card-desc">Printable guide — what AI does, what they do, escalation contacts</div></a>
+    <a class="card" href="client-health-score.html" data-cat="client"><span class="cat-badge badge-client">Client</span><div class="card-title">Client Health Score</div><div class="card-desc">6-dimension scoring with SVG donut chart, risk levels</div></a>
+    <a class="card" href="client-offboarding-checklist.html" data-cat="client"><span class="cat-badge badge-client">Client</span><div class="card-title">Client Offboarding</div><div class="card-desc">3-phase checklist with cancellation reason analytics</div></a>
+    <a class="card" href="onboarding-milestone-tracker.html" data-cat="client"><span class="cat-badge badge-client">Client</span><div class="card-title">Onboarding Milestones</div><div class="card-desc">12-milestone 30-day timeline with color-coded status</div></a>
+    <a class="card" href="monthly-client-report.html" data-cat="client"><span class="cat-badge badge-client">Client</span><div class="card-title">Monthly Client Report</div><div class="card-desc">White-label monthly report, localStorage, print-ready</div></a>
+    <a class="card" href="onboarding-email-sequence.html" data-cat="client"><span class="cat-badge badge-client">Client</span><div class="card-title">Onboarding Email Sequence</div><div class="card-desc">7-email Day 0–30 drip sequence reference</div></a>
+    <a class="card" href="onboarding-form.html" data-cat="client"><span class="cat-badge badge-client">Client</span><div class="card-title">Onboarding Form</div><div class="card-desc">New client intake form</div></a>
+  </div>
+</div>
+
+<div class="section" data-cat="ops">
+  <h2>Operations <span id="cnt-ops"></span></h2>
+  <div class="grid">
+    <a class="card" href="sop-library.html" data-cat="ops"><span class="cat-badge badge-ops">Ops</span><div class="card-title">SOP Library</div><div class="card-desc">8 pre-built SOPs: onboarding, escalation, offboarding, health check</div></a>
+    <a class="card" href="webhook-tester.html" data-cat="ops"><span class="cat-badge badge-ops">Ops</span><div class="card-title">Webhook Tester</div><div class="card-desc">Test Make.com payloads for all 33 scenarios</div></a>
+    <a class="card" href="make-quickstart.html" data-cat="ops"><span class="cat-badge badge-ops">Ops</span><div class="card-title">Make.com Quickstart</div><div class="card-desc">Import order, connections, webhook registration guide</div></a>
+    <a class="card" href="api-key-manager.html" data-cat="ops"><span class="cat-badge badge-ops">Ops</span><div class="card-title">API Key Manager</div><div class="card-desc">Key inventory, rotation schedule, overdue alerts</div></a>
+    <a class="card" href="workspace-setup-guide.html" data-cat="ops"><span class="cat-badge badge-ops">Ops</span><div class="card-title">Workspace Setup Guide</div><div class="card-desc">Complete zero-to-live setup checklist with time estimates</div></a>
+    <a class="card" href="launch-checklist.html" data-cat="ops"><span class="cat-badge badge-ops">Ops</span><div class="card-title">Launch Checklist</div><div class="card-desc">36-item go-live checklist across 5 phases</div></a>
+    <a class="card" href="compliance-checklist.html" data-cat="ops"><span class="cat-badge badge-ops">Ops</span><div class="card-title">Compliance Checklist</div><div class="card-desc">Regulatory and compliance items for the platform</div></a>
+    <a class="card" href="risk-register.html" data-cat="ops"><span class="cat-badge badge-ops">Ops</span><div class="card-title">Risk Register</div><div class="card-desc">Business risk tracking and mitigation plans</div></a>
+    <a class="card" href="crm-setup-guide.html" data-cat="ops"><span class="cat-badge badge-ops">Ops</span><div class="card-title">CRM Setup Guide</div><div class="card-desc">HubSpot configuration walkthrough</div></a>
+    <a class="card" href="stripe-billing-guide.html" data-cat="ops"><span class="cat-badge badge-ops">Ops</span><div class="card-title">Stripe Billing Guide</div><div class="card-desc">Stripe subscription setup guide</div></a>
+    <a class="card" href="email-warmup-guide.html" data-cat="ops"><span class="cat-badge badge-ops">Ops</span><div class="card-title">Email Warmup Tracker</div><div class="card-desc">Resend domain warmup — 30-day schedule, daily tracker, DNS checklist</div></a>
+    <a class="card" href="knowledge-base-builder.html" data-cat="ops"><span class="cat-badge badge-ops">Ops</span><div class="card-title">Knowledge Base Builder</div><div class="card-desc">Pre-built FAQ cards for Freshchat, Freshchat JSON export</div></a>
+    <a class="card" href="google-biz-profile-guide.html" data-cat="ops"><span class="cat-badge badge-ops">Ops</span><div class="card-title">Google Biz Profile Guide</div><div class="card-desc">GBP optimization checklist with localStorage per client</div></a>
+    <a class="card" href="email-warmup-guide.html" data-cat="ops"><span class="cat-badge badge-ops">Ops</span><div class="card-title">Email Warmup Guide</div><div class="card-desc">30-day Resend domain warmup tracker, bounce monitor, DNS checklist</div></a>
+    <a class="card" href="faq-builder.html" data-cat="ops"><span class="cat-badge badge-ops">Ops</span><div class="card-title">FAQ Builder</div><div class="card-desc">Client FAQ builder — exports HTML snippet, Freshchat JSON, plain text</div></a>
+  </div>
+</div>
+
+<div class="section" data-cat="finance">
+  <h2>Finance & Admin <span id="cnt-finance"></span></h2>
+  <div class="grid">
+    <a class="card" href="invoice-generator.html" data-cat="finance"><span class="cat-badge badge-finance">Finance</span><div class="card-title">Invoice Generator</div><div class="card-desc">Line items, discount, tax, print to PDF, history log</div></a>
+    <a class="card" href="budget-tracker.html" data-cat="finance"><span class="cat-badge badge-finance">Finance</span><div class="card-title">Budget Tracker</div><div class="card-desc">Monthly P&L — revenue rows, fixed costs, profit margin</div></a>
+    <a class="card" href="revenue-forecast.html" data-cat="finance"><span class="cat-badge badge-finance">Finance</span><div class="card-title">Revenue Forecast</div><div class="card-desc">12-month MRR projection with SVG chart, break-even detection</div></a>
+    <a class="card" href="tax-expense-tracker.html" data-cat="finance"><span class="cat-badge badge-finance">Finance</span><div class="card-title">Tax & Expense Tracker</div><div class="card-desc">Quarterly tax estimator with SE tax, QBI note, CSV</div></a>
+    <a class="card" href="financial-forecast.html" data-cat="finance"><span class="cat-badge badge-finance">Finance</span><div class="card-title">Financial Forecast</div><div class="card-desc">Long-range financial planning tool</div></a>
+    <a class="card" href="pricing-calculator.html" data-cat="finance"><span class="cat-badge badge-finance">Finance</span><div class="card-title">Pricing Calculator</div><div class="card-desc">Custom pricing scenarios for edge cases</div></a>
+    <a class="card" href="vendor-contracts.html" data-cat="finance"><span class="cat-badge badge-finance">Finance</span><div class="card-title">Vendor Contracts</div><div class="card-desc">8-vendor tracker with renewal alerts, cost totals</div></a>
+    <a class="card" href="service-agreement-generator.html" data-cat="finance"><span class="cat-badge badge-finance">Finance</span><div class="card-title">Service Agreement</div><div class="card-desc">Client contract generator with 9 sections, print to PDF</div></a>
+    <a class="card" href="contract-generator.html" data-cat="finance"><span class="cat-badge badge-finance">Finance</span><div class="card-title">Contract Generator</div><div class="card-desc">Additional contract templates</div></a>
+  </div>
+</div>
+
+<div class="section" data-cat="marketing">
+  <h2>Marketing & Content <span id="cnt-marketing"></span></h2>
+  <div class="grid">
+    <a class="card" href="email-templates.html" data-cat="marketing"><span class="cat-badge badge-marketing">Marketing</span><div class="card-title">Email Templates</div><div class="card-desc">6 email template previews with copy buttons</div></a>
+    <a class="card" href="email-signature.html" data-cat="marketing"><span class="cat-badge badge-marketing">Marketing</span><div class="card-title">Email Signature Generator</div><div class="card-desc">Live signature generator, 3 variants</div></a>
+    <a class="card" href="content-library.html" data-cat="marketing"><span class="cat-badge badge-marketing">Marketing</span><div class="card-title">Content Library</div><div class="card-desc">50+ subject lines, social posts, CTAs, objection responses</div></a>
+    <a class="card" href="social-content-calendar.html" data-cat="marketing"><span class="cat-badge badge-marketing">Marketing</span><div class="card-title">Social Content Calendar</div><div class="card-desc">Mon–Fri calendar, 20 pre-loaded posts, copy/status/export</div></a>
+    <a class="card" href="ab-test-tracker.html" data-cat="marketing"><span class="cat-badge badge-marketing">Marketing</span><div class="card-title">A/B Test Tracker</div><div class="card-desc">Test log with 3 pre-loaded examples, winner tracking</div></a>
+    <a class="card" href="testimonial-wall.html" data-cat="marketing"><span class="cat-badge badge-marketing">Marketing</span><div class="card-title">Testimonial Wall</div><div class="card-desc">8 curated testimonials, format for email/social/web</div></a>
+    <a class="card" href="case-study-template.html" data-cat="marketing"><span class="cat-badge badge-marketing">Marketing</span><div class="card-title">Case Study Template</div><div class="card-desc">Printable editable case study</div></a>
+    <a class="card" href="brand-kit.html" data-cat="marketing"><span class="cat-badge badge-marketing">Marketing</span><div class="card-title">Brand Kit</div><div class="card-desc">Colors, typography, voice, email signatures, social bios</div></a>
+    <a class="card" href="press-media-kit.html" data-cat="marketing"><span class="cat-badge badge-marketing">Marketing</span><div class="card-title">Press & Media Kit</div><div class="card-desc">Boilerplate copy, founder bio, stats, media contact</div></a>
+    <a class="card" href="ad-campaign-tracker.html" data-cat="marketing"><span class="cat-badge badge-marketing">Marketing</span><div class="card-title">Ad Campaign Tracker</div><div class="card-desc">Facebook/Google/LinkedIn with CPL, ROAS, 2 examples</div></a>
+    <a class="card" href="video-script-templates.html" data-cat="marketing"><span class="cat-badge badge-marketing">Marketing</span><div class="card-title">Video Script Templates</div><div class="card-desc">60s demo, 2min explainer, 30s ad, testimonial interview guide</div></a>
+    <a class="card" href="linkedin-templates.html" data-cat="marketing"><span class="cat-badge badge-marketing">Marketing</span><div class="card-title">LinkedIn Templates</div><div class="card-desc">Profile optimization, 10 post templates, connection requests</div></a>
+    <a class="card" href="client-results-card.html" data-cat="marketing"><span class="cat-badge badge-marketing">Marketing</span><div class="card-title">Client Results Card</div><div class="card-desc">Social proof card generator — 4 stats, quote, LinkedIn/Instagram formats</div></a>
+  </div>
+</div>
+
+<div class="section" data-cat="reporting">
+  <h2>Reporting & Analytics <span id="cnt-reporting"></span></h2>
+  <div class="grid">
+    <a class="card" href="reporting-dashboard.html" data-cat="reporting"><span class="cat-badge badge-reporting">Reporting</span><div class="card-title">Reporting Dashboard</div><div class="card-desc">Master KPI dashboard — Revenue, Pipeline, Automation, Client Health</div></a>
+    <a class="card" href="metrics-dashboard.html" data-cat="reporting"><span class="cat-badge badge-reporting">Reporting</span><div class="card-title">Metrics Dashboard</div><div class="card-desc">Key business metrics at a glance</div></a>
+    <a class="card" href="nps-tracker.html" data-cat="reporting"><span class="cat-badge badge-reporting">Reporting</span><div class="card-title">NPS Tracker</div><div class="card-desc">NPS score tracker with gauge and CSV export</div></a>
+    <a class="card" href="help-desk-tracker.html" data-cat="reporting"><span class="cat-badge badge-reporting">Reporting</span><div class="card-title">Help Desk Tracker</div><div class="card-desc">Support tickets with SLA alerts, per-client history</div></a>
+    <a class="card" href="email-sequence-tracker.html" data-cat="reporting"><span class="cat-badge badge-reporting">Reporting</span><div class="card-title">Email Sequence Tracker</div><div class="card-desc">Apollo sequence performance with CSS bar charts</div></a>
+    <a class="card" href="weekly-goal-tracker.html" data-cat="reporting"><span class="cat-badge badge-reporting">Reporting</span><div class="card-title">Weekly Goal Tracker</div><div class="card-desc">Revenue + activity + client success goals, 12-week history</div></a>
+  </div>
+</div>
+
+<div class="section" data-cat="growth">
+  <h2>Growth & Strategy <span id="cnt-growth"></span></h2>
+  <div class="grid">
+    <a class="card" href="growth-playbook.html" data-cat="growth"><span class="cat-badge badge-growth">Growth</span><div class="card-title">90-Day Growth Playbook</div><div class="card-desc">Week-by-week plan with MRR projection, checkboxes</div></a>
+    <a class="card" href="90-day-timeline.html" data-cat="growth"><span class="cat-badge badge-growth">Growth</span><div class="card-title">90-Day Timeline</div><div class="card-desc">Visual 90-day execution timeline</div></a>
+    <a class="card" href="affiliate-tracker.html" data-cat="growth"><span class="cat-badge badge-growth">Growth</span><div class="card-title">Affiliate Tracker</div><div class="card-desc">Referral partner leaderboard, credits outstanding, CSV</div></a>
+    <a class="card" href="referral-program.html" data-cat="growth"><span class="cat-badge badge-growth">Growth</span><div class="card-title">Referral Program</div><div class="card-desc">Referral program guide and tracker table</div></a>
+    <a class="card" href="partnership-outreach-tracker.html" data-cat="growth"><span class="cat-badge badge-growth">Growth</span><div class="card-title">Partnership Tracker</div><div class="card-desc">B2B referral partner pipeline with follow-up alerts</div></a>
+    <a class="card" href="milestone-board.html" data-cat="growth"><span class="cat-badge badge-growth">Growth</span><div class="card-title">Milestone Board</div><div class="card-desc">25 business milestones with confetti animation</div></a>
+    <a class="card" href="quick-win-ideas.html" data-cat="growth"><span class="cat-badge badge-growth">Growth</span><div class="card-title">Quick Win Ideas</div><div class="card-desc">30 ideas sorted by effort/impact, checkboxes, progress stats</div></a>
+    <a class="card" href="product-roadmap.html" data-cat="growth"><span class="cat-badge badge-growth">Growth</span><div class="card-title">Product Roadmap</div><div class="card-desc">Now/Next/Later kanban, 12 pre-loaded items, voting, public toggle</div></a>
+    <a class="card" href="hiring-guide.html" data-cat="growth"><span class="cat-badge badge-growth">Growth</span><div class="card-title">Hiring Guide</div><div class="card-desc">VA/SDR/contractor role templates, compensation ROI calculator</div></a>
+  </div>
+</div>
+
+<div class="section" data-cat="internal">
+  <h2>Internal & Admin <span id="cnt-internal"></span></h2>
+  <div class="grid">
+    <a class="card" href="meeting-notes-template.html" data-cat="internal"><span class="cat-badge badge-internal">Internal</span><div class="card-title">Meeting Notes</div><div class="card-desc">Action items, follow-up email draft, auto-save</div></a>
+    <a class="card" href="support-playbook.html" data-cat="internal"><span class="cat-badge badge-internal">Internal</span><div class="card-title">Support Playbook</div><div class="card-desc">Client support procedures and escalation guide</div></a>
+    <a class="card" href="budget-tracker.html" data-cat="internal"><span class="cat-badge badge-internal">Internal</span><div class="card-title">Budget Tracker</div><div class="card-desc">Monthly business expense and revenue tracker</div></a>
+    <a class="card" href="tax-expense-tracker.html" data-cat="internal"><span class="cat-badge badge-internal">Internal</span><div class="card-title">Tax Tracker</div><div class="card-desc">Quarterly tax prep and expense log</div></a>
+    <a class="card" href="monthly-planning.html" data-cat="internal"><span class="cat-badge badge-internal">Internal</span><div class="card-title">Monthly Planning</div><div class="card-desc">OKR format — key results, focus areas, weekly breakdown, end-of-month review</div></a>
+    <a class="card" href="communication-log.html" data-cat="internal"><span class="cat-badge badge-internal">Internal</span><div class="card-title">Communication Log</div><div class="card-desc">Phone call/meeting log with follow-up alerts and sentiment tracking</div></a>
+    <a class="card" href="year-in-review.html" data-cat="internal"><span class="cat-badge badge-internal">Internal</span><div class="card-title">Year in Review</div><div class="card-desc">Annual business review — stats, wins, lessons, 2027 goals</div></a>
+    <a class="card" href="investor-pitch.html" data-cat="internal"><span class="cat-badge badge-internal">Internal</span><div class="card-title">Investor Pitch</div><div class="card-desc">One-page partner/investor pitch with editable traction fields</div></a>
+  </div>
+</div>
+
+</main>
+<script>
+let activeFilter = 'all';
+function setFilter(cat, btn) {
+  activeFilter = cat;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  filterTools();
+}
+function filterTools() {
+  const q = document.getElementById('search').value.toLowerCase();
+  let anyVisible = false;
+  document.querySelectorAll('.section').forEach(sec => {
+    const secCat = sec.dataset.cat;
+    let secVisible = false;
+    sec.querySelectorAll('.card').forEach(card => {
+      const text = card.textContent.toLowerCase();
+      const cardCat = card.dataset.cat;
+      const matchFilter = activeFilter === 'all' || cardCat === activeFilter;
+      const matchSearch = !q || text.includes(q);
+      if (matchFilter && matchSearch) { card.classList.remove('hidden'); secVisible = true; anyVisible = true; }
+      else card.classList.add('hidden');
+    });
+    sec.style.display = secVisible ? '' : 'none';
+  });
+  document.getElementById('no-results').style.display = anyVisible ? 'none' : 'block';
+}
+// Count badges
+['sales','client','ops','finance','marketing','reporting','growth','internal'].forEach(cat => {
+  const el = document.getElementById('cnt-' + cat);
+  if (el) el.textContent = document.querySelectorAll('.card[data-cat="' + cat + '"]').length;
+});
+</script>
+</body>
+</html>

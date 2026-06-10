@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CWI AI — Apollo Sequence Templates</title>
+  <meta name="description" content="CWI internal tool: CWI AI — Apollo Sequence Templates. Internal use only — CWI Compute With Imagination.">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg:        #0A0A0C;
+      --surface:   #13131A;
+      --surface2:  #1C1C26;
+      --border:    #2A2A38;
+      --accent:    #FF5A1F;
+      --accent-dim: rgba(255, 90, 31, 0.15);
+      --text:      #E8E8F0;
+      --text-muted:#8888A8;
+      --radius:    12px;
+      --radius-sm: 8px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Sora', sans-serif;
+      font-size: 15px;
+      line-height: 1.65;
+      min-height: 100vh;
+      padding: 48px 24px 80px;
+    }
+
+    /* ── Header ── */
+    header {
+      text-align: center;
+      margin-bottom: 52px;
+    }
+
+    header .badge {
+      display: inline-block;
+      background: var(--accent-dim);
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 4px 14px;
+      border-radius: 100px;
+      border: 1px solid rgba(255, 90, 31, 0.35);
+      margin-bottom: 18px;
+    }
+
+    header h1 {
+      font-size: clamp(24px, 5vw, 38px);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #fff;
+    }
+
+    header h1 span {
+      color: var(--accent);
+    }
+
+    header p {
+      margin-top: 12px;
+      color: var(--text-muted);
+      font-size: 14px;
+      max-width: 480px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* ── Tabs ── */
+    .tab-bar {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 40px;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-family: 'Sora', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 10px 26px;
+      border-radius: 100px;
+      cursor: pointer;
+      transition: background 0.18s, color 0.18s, border-color 0.18s, box-shadow 0.18s;
+    }
+
+    .tab-btn:hover {
+      background: var(--surface2);
+      color: var(--text);
+      border-color: #3A3A50;
+    }
+
+    .tab-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      box-shadow: 0 0 22px rgba(255, 90, 31, 0.38);
+    }
+
+    /* ── Panel ── */
+    .tab-panel {
+      display: none;
+      max-width: 820px;
+      margin: 0 auto;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    /* ── Sequence timeline ── */
+    .sequence {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .email-step {
+      display: flex;
+      gap: 0;
+      position: relative;
+    }
+
+    /* connector line */
+    .email-step:not(:last-child) .step-line {
+      position: absolute;
+      left: 23px;
+      top: 52px;
+      bottom: -24px;
+      width: 2px;
+      background: linear-gradient(to bottom, var(--border), transparent);
+    }
+
+    .step-marker {
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 14px;
+      margin-right: 20px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .step-dot {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background: var(--surface2);
+      border: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .email-step:hover .step-dot {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .step-day {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 6px;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    /* card */
+    .email-card {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px 24px;
+      margin-bottom: 24px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .email-card:hover {
+      border-color: rgba(255, 90, 31, 0.4);
+      box-shadow: 0 4px 28px rgba(255, 90, 31, 0.08);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .card-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .card-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .card-subject {
+      font-size: 15px;
+      font-weight: 600;
+      color: #fff;
+      line-height: 1.4;
+    }
+
+    /* copy button */
+    .copy-btn {
+      flex-shrink: 0;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-family: 'Sora', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 7px 14px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.18s, color 0.18s, border-color 0.18s;
+      white-space: nowrap;
+    }
+
+    .copy-btn:hover {
+      background: var(--accent-dim);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .copy-btn.copied {
+      background: rgba(34, 197, 94, 0.12);
+      border-color: rgba(34, 197, 94, 0.5);
+      color: #22c55e;
+    }
+
+    .copy-btn svg {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+    }
+
+    /* divider */
+    .card-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 14px 0;
+    }
+
+    /* body text */
+    .card-subject-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .card-body {
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.7;
+    }
+
+    .field-group {
+      margin-bottom: 14px;
+    }
+
+    .field-group:last-child {
+      margin-bottom: 0;
+    }
+
+    /* footer */
+    footer {
+      text-align: center;
+      margin-top: 64px;
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    footer span {
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="badge">Apollo.io Outreach</div>
+    <h1>CWI AI — <span>Apollo Sequence Templates</span></h1>
+    <p>3-email cold outreach sequences organized by industry. Copy and paste directly into Apollo.</p>
+  </header>
+
+  <!-- Tab Bar -->
+  <div class="tab-bar" role="tablist">
+    <button class="tab-btn active" role="tab" aria-selected="true"  data-tab="plumbing">Plumbing</button>
+    <button class="tab-btn"        role="tab" aria-selected="false" data-tab="hvac">HVAC</button>
+    <button class="tab-btn"        role="tab" aria-selected="false" data-tab="accounting">Accounting</button>
+  </div>
+
+  <!-- ── PLUMBING ── -->
+  <div class="tab-panel active" id="panel-plumbing" role="tabpanel">
+    <div class="sequence">
+
+      <!-- Email 1 -->
+      <div class="email-step">
+        <div class="step-line"></div>
+        <div class="step-marker">
+          <div class="step-dot">E1</div>
+          <div class="step-day">Day 1</div>
+        </div>
+        <div class="email-card">
+          <div class="card-header">
+            <div class="card-meta">
+              <div class="card-label">Email 1 &mdash; Initial Outreach</div>
+              <div class="card-subject">The missed call costing plumbers $500+</div>
+            </div>
+            <button class="copy-btn" onclick="copyEmail(this,
+              'Subject: The missed call costing plumbers $500+\n\nMost leads call 3 shops and book the first to answer. After hours? That lead is gone. We built an AI that answers, books, and follows up automatically. Worth 15 min?')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy
+            </button>
+          </div>
+          <div class="card-divider"></div>
+          <div class="field-group">
+            <div class="card-subject-label">Body</div>
+            <div class="card-body">Most leads call 3 shops and book the first to answer. After hours? That lead is gone. We built an AI that answers, books, and follows up automatically. Worth 15 min?</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Email 2 -->
+      <div class="email-step">
+        <div class="step-line"></div>
+        <div class="step-marker">
+          <div class="step-dot">E2</div>
+          <div class="step-day">Day 4</div>
+        </div>
+        <div class="email-card">
+          <div class="card-header">
+            <div class="card-meta">
+              <div class="card-label">Email 2 &mdash; Follow-Up</div>
+              <div class="card-subject">Quick question about [Company]</div>
+            </div>
+            <button class="copy-btn" onclick="copyEmail(this,
+              'Subject: Quick question about [Company]\n\nDo you have any automation for after-hours leads? Most plumbers lose 20-30% of bookings to faster competitors. Happy to show you exactly how this works.')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy
+            </button>
+          </div>
+          <div class="card-divider"></div>
+          <div class="field-group">
+            <div class="card-subject-label">Body</div>
+            <div class="card-body">Do you have any automation for after-hours leads? Most plumbers lose 20-30% of bookings to faster competitors. Happy to show you exactly how this works.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Email 3 -->
+      <div class="email-step">
+        <div class="step-marker">
+          <div class="step-dot">E3</div>
+          <div class="step-day">Day 8</div>
+        </div>
+        <div class="email-card">
+          <div class="card-header">
+            <div class="card-meta">
+              <div class="card-label">Email 3 &mdash; Breakup</div>
+              <div class="card-subject">Last one from me</div>
+            </div>
+            <button class="copy-btn" onclick="copyEmail(this,
+              'Subject: Last one from me\n\nI will keep this short. If you ever want to see AI booking automation for your shop, I am one email away. No pressure.')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy
+            </button>
+          </div>
+          <div class="card-divider"></div>
+          <div class="field-group">
+            <div class="card-subject-label">Body</div>
+            <div class="card-body">I will keep this short. If you ever want to see AI booking automation for your shop, I am one email away. No pressure.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── HVAC ── -->
+  <div class="tab-panel" id="panel-hvac" role="tabpanel">
+    <div class="sequence">
+
+      <!-- Email 1 -->
+      <div class="email-step">
+        <div class="step-line"></div>
+        <div class="step-marker">
+          <div class="step-dot">E1</div>
+          <div class="step-day">Day 1</div>
+        </div>
+        <div class="email-card">
+          <div class="card-header">
+            <div class="card-meta">
+              <div class="card-label">Email 1 &mdash; Initial Outreach</div>
+              <div class="card-subject">HVAC owners: stop losing summer leads after hours</div>
+            </div>
+            <button class="copy-btn" onclick="copyEmail(this,
+              'Subject: HVAC owners: stop losing summer leads after hours\n\nPeak season calls at 9PM get ignored. We built AI that answers every lead, books the appointment, and sends a confirmation — all while you sleep. 15 min to see it live?')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy
+            </button>
+          </div>
+          <div class="card-divider"></div>
+          <div class="field-group">
+            <div class="card-subject-label">Body</div>
+            <div class="card-body">Peak season calls at 9PM get ignored. We built AI that answers every lead, books the appointment, and sends a confirmation — all while you sleep. 15 min to see it live?</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Email 2 -->
+      <div class="email-step">
+        <div class="step-line"></div>
+        <div class="step-marker">
+          <div class="step-dot">E2</div>
+          <div class="step-day">Day 4</div>
+        </div>
+        <div class="email-card">
+          <div class="card-header">
+            <div class="card-meta">
+              <div class="card-label">Email 2 &mdash; Follow-Up</div>
+              <div class="card-subject">How [Company] handles after-hours?</div>
+            </div>
+            <button class="copy-btn" onclick="copyEmail(this,
+              'Subject: How [Company] handles after-hours?\n\nCurious if you have a system for leads that come in outside business hours. Most HVAC companies we talk to say this is their biggest leak. Happy to share what we do.')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy
+            </button>
+          </div>
+          <div class="card-divider"></div>
+          <div class="field-group">
+            <div class="card-subject-label">Body</div>
+            <div class="card-body">Curious if you have a system for leads that come in outside business hours. Most HVAC companies we talk to say this is their biggest leak. Happy to share what we do.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Email 3 -->
+      <div class="email-step">
+        <div class="step-marker">
+          <div class="step-dot">E3</div>
+          <div class="step-day">Day 8</div>
+        </div>
+        <div class="email-card">
+          <div class="card-header">
+            <div class="card-meta">
+              <div class="card-label">Email 3 &mdash; Breakup</div>
+              <div class="card-subject">Signing off — but leaving the door open</div>
+            </div>
+            <button class="copy-btn" onclick="copyEmail(this,
+              'Subject: Signing off — but leaving the door open\n\nNot going to keep pinging you. If AI-powered booking ever makes sense for your business, reach out anytime. Good luck this season.')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy
+            </button>
+          </div>
+          <div class="card-divider"></div>
+          <div class="field-group">
+            <div class="card-subject-label">Body</div>
+            <div class="card-body">Not going to keep pinging you. If AI-powered booking ever makes sense for your business, reach out anytime. Good luck this season.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── ACCOUNTING ── -->
+  <div class="tab-panel" id="panel-accounting" role="tabpanel">
+    <div class="sequence">
+
+      <!-- Email 1 -->
+      <div class="email-step">
+        <div class="step-line"></div>
+        <div class="step-marker">
+          <div class="step-dot">E1</div>
+          <div class="step-day">Day 1</div>
+        </div>
+        <div class="email-card">
+          <div class="card-header">
+            <div class="card-meta">
+              <div class="card-label">Email 1 &mdash; Initial Outreach</div>
+              <div class="card-subject">Accounting firms: your intake process is leaking leads</div>
+            </div>
+            <button class="copy-btn" onclick="copyEmail(this,
+              'Subject: Accounting firms: your intake process is leaking leads\n\nMost prospects research 3-4 firms and go with whoever responds first. If your website has a contact form and a 24hr response time, you are losing to competitors with instant AI chat. 15 min demo?')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy
+            </button>
+          </div>
+          <div class="card-divider"></div>
+          <div class="field-group">
+            <div class="card-subject-label">Body</div>
+            <div class="card-body">Most prospects research 3-4 firms and go with whoever responds first. If your website has a contact form and a 24hr response time, you are losing to competitors with instant AI chat. 15 min demo?</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Email 2 -->
+      <div class="email-step">
+        <div class="step-line"></div>
+        <div class="step-marker">
+          <div class="step-dot">E2</div>
+          <div class="step-day">Day 4</div>
+        </div>
+        <div class="email-card">
+          <div class="card-header">
+            <div class="card-meta">
+              <div class="card-label">Email 2 &mdash; Follow-Up</div>
+              <div class="card-subject">Question about [Company] intake process</div>
+            </div>
+            <button class="copy-btn" onclick="copyEmail(this,
+              'Subject: Question about [Company] intake process\n\nDo you have automated follow-up for web leads? Most accounting firms tell us they lose 1-2 prospective clients per month to slow response. Happy to show you a fix.')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy
+            </button>
+          </div>
+          <div class="card-divider"></div>
+          <div class="field-group">
+            <div class="card-subject-label">Body</div>
+            <div class="card-body">Do you have automated follow-up for web leads? Most accounting firms tell us they lose 1-2 prospective clients per month to slow response. Happy to show you a fix.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Email 3 -->
+      <div class="email-step">
+        <div class="step-marker">
+          <div class="step-dot">E3</div>
+          <div class="step-day">Day 8</div>
+        </div>
+        <div class="email-card">
+          <div class="card-header">
+            <div class="card-meta">
+              <div class="card-label">Email 3 &mdash; Breakup</div>
+              <div class="card-subject">Last email — promise</div>
+            </div>
+            <button class="copy-btn" onclick="copyEmail(this,
+              'Subject: Last email — promise\n\nI will be brief. If you ever want to see how AI chat converts more website visitors into consultations, I am here. Best of luck.')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy
+            </button>
+          </div>
+          <div class="card-divider"></div>
+          <div class="field-group">
+            <div class="card-subject-label">Body</div>
+            <div class="card-body">I will be brief. If you ever want to see how AI chat converts more website visitors into consultations, I am here. Best of luck.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <footer>
+    <p>CWI AI &mdash; Built for <span>Apollo.io</span> cold outreach. Templates ready to copy.</p>
+  </footer>
+
+  <script>
+    // ── Tab switching ──
+    document.querySelectorAll('.tab-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var tab = btn.dataset.tab;
+
+        document.querySelectorAll('.tab-btn').forEach(function(b) {
+          b.classList.remove('active');
+          b.setAttribute('aria-selected', 'false');
+        });
+        btn.classList.add('active');
+        btn.setAttribute('aria-selected', 'true');
+
+        document.querySelectorAll('.tab-panel').forEach(function(p) {
+          p.classList.remove('active');
+        });
+        document.getElementById('panel-' + tab).classList.add('active');
+      });
+    });
+
+    // ── Copy to clipboard ──
+    function copyEmail(btn, text) {
+      navigator.clipboard.writeText(text).then(function() {
+        var original = btn.innerHTML;
+        btn.classList.add('copied');
+        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Copied!';
+        setTimeout(function() {
+          btn.classList.remove('copied');
+          btn.innerHTML = original;
+        }, 2000);
+      }).catch(function() {
+        // Fallback for older browsers
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+
+        var original = btn.innerHTML;
+        btn.classList.add('copied');
+        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Copied!';
+        setTimeout(function() {
+          btn.classList.remove('copied');
+          btn.innerHTML = original;
+        }, 2000);
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CWI AI — Affiliate & Referral Partner Tracker</title>
+<meta name="description" content="CWI internal tool: CWI AI — Affiliate & Referral Partner Tracker. Internal use only — CWI Compute With Imagination.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:          #0A0A0C;
+  --surface:     #111114;
+  --surface2:    #18181D;
+  --surface3:    #20202A;
+  --border:      #2A2A34;
+  --accent:      #FF5A1F;
+  --accent-h:    #FF7A45;
+  --accent-dim:  rgba(255,90,31,0.12);
+  --text:        #F0F0F5;
+  --muted:       #888899;
+  --green:       #22C55E;
+  --green-bg:    rgba(34,197,94,0.12);
+  --yellow:      #EAB308;
+  --yellow-bg:   rgba(234,179,8,0.12);
+  --blue:        #3B82F6;
+  --blue-bg:     rgba(59,130,246,0.12);
+  --red:         #EF4444;
+  --red-bg:      rgba(239,68,68,0.12);
+  --gold:        #F59E0B;
+  --silver:      #9CA3AF;
+  --bronze:      #CD7C3A;
+}
+
+body {
+  font-family: 'Sora', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.5;
+}
+
+/* ── Layout ── */
+.app-header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 18px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.logo { display: flex; align-items: center; gap: 10px; }
+.logo-icon {
+  width: 32px; height: 32px;
+  background: var(--accent);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 700; color: #fff;
+}
+.logo-text { font-size: 15px; font-weight: 600; }
+.logo-text span { color: var(--accent); }
+.header-actions { display: flex; gap: 10px; }
+
+.main { max-width: 1400px; margin: 0 auto; padding: 32px 24px 80px; }
+
+/* ── Tabs ── */
+.tabs {
+  display: flex; gap: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 4px;
+  margin-bottom: 28px;
+  width: fit-content;
+}
+.tab-btn {
+  padding: 8px 20px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--muted);
+  font-family: 'Sora', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .18s;
+  white-space: nowrap;
+}
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ── Stat Cards ── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--accent);
+}
+.stat-label { font-size: 12px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px; }
+.stat-value { font-size: 28px; font-weight: 700; color: var(--text); }
+.stat-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+/* ── Leaderboard ── */
+.leaderboard-row {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 16px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 8px;
+}
+.trophy { font-size: 22px; width: 32px; text-align: center; }
+.lb-rank { font-size: 22px; font-weight: 700; width: 28px; color: var(--muted); }
+.lb-info { flex: 1; }
+.lb-name { font-size: 14px; font-weight: 600; }
+.lb-role { font-size: 12px; color: var(--muted); }
+.lb-count { text-align: right; }
+.lb-count-num { font-size: 20px; font-weight: 700; color: var(--accent); }
+.lb-count-label { font-size: 11px; color: var(--muted); }
+
+/* ── Section headings ── */
+.section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px;
+}
+.section-title {
+  font-size: 16px; font-weight: 600;
+}
+.section-title small { color: var(--muted); font-weight: 400; font-size: 12px; margin-left: 8px; }
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 9px 16px;
+  border-radius: 8px;
+  border: none;
+  font-family: 'Sora', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .18s;
+}
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent-h); }
+.btn-ghost {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover { color: var(--text); border-color: var(--muted); }
+.btn-sm { padding: 5px 11px; font-size: 12px; border-radius: 6px; }
+.btn-danger { background: var(--red-bg); color: var(--red); border: 1px solid var(--red); }
+.btn-danger:hover { background: var(--red); color: #fff; }
+.btn-success { background: var(--green-bg); color: var(--green); border: 1px solid var(--green); }
+.btn-success:hover { background: var(--green); color: #fff; }
+
+/* ── Tables ── */
+.table-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.table-wrap table {
+  width: 100%; border-collapse: collapse;
+}
+.table-wrap th {
+  background: var(--surface2);
+  padding: 11px 14px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.table-wrap td {
+  padding: 11px 14px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.table-wrap tr:last-child td { border-bottom: none; }
+.table-wrap tr:hover td { background: var(--surface2); }
+
+.empty-row td {
+  text-align: center;
+  color: var(--muted);
+  padding: 40px 14px;
+  font-size: 13px;
+}
+
+/* ── Badges ── */
+.badge {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.badge-green  { background: var(--green-bg);  color: var(--green); }
+.badge-red    { background: var(--red-bg);    color: var(--red); }
+.badge-yellow { background: var(--yellow-bg); color: var(--yellow); }
+.badge-blue   { background: var(--blue-bg);   color: var(--blue); }
+.badge-gray   { background: rgba(136,136,153,.15); color: var(--muted); }
+
+/* ── Modal ── */
+.modal-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.65);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(3px);
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 28px;
+  width: 100%;
+  max-width: 540px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+}
+.modal-title {
+  font-size: 17px; font-weight: 700;
+  margin-bottom: 20px;
+  padding-right: 32px;
+}
+.modal-close {
+  position: absolute; top: 20px; right: 20px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 16px;
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s;
+}
+.modal-close:hover { color: var(--text); border-color: var(--muted); }
+
+/* ── Forms ── */
+.form-grid { display: grid; gap: 14px; }
+.form-grid-2 { grid-template-columns: 1fr 1fr; }
+.form-field { display: flex; flex-direction: column; gap: 5px; }
+.form-label { font-size: 12px; font-weight: 500; color: var(--muted); }
+.form-input, .form-select {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: 'Sora', sans-serif;
+  font-size: 13px;
+  padding: 9px 12px;
+  transition: border-color .18s;
+  width: 100%;
+}
+.form-input:focus, .form-select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.form-select option { background: var(--surface2); }
+.form-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px; }
+
+/* ── Referral log filter bar ── */
+.filter-bar {
+  display: flex; gap: 10px; align-items: center;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.filter-bar .form-input, .filter-bar .form-select {
+  width: auto; min-width: 160px;
+}
+
+/* ── Partner detail header ── */
+.partner-detail-header {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 20px;
+  display: flex; align-items: center; gap: 20px;
+}
+.partner-avatar {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: var(--accent-dim);
+  border: 2px solid var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 700; color: var(--accent);
+  flex-shrink: 0;
+}
+.partner-detail-info { flex: 1; }
+.partner-detail-name { font-size: 18px; font-weight: 700; }
+.partner-detail-meta { font-size: 13px; color: var(--muted); margin-top: 2px; }
+.partner-detail-stats { display: flex; gap: 24px; }
+.pds { text-align: right; }
+.pds-val { font-size: 18px; font-weight: 700; color: var(--accent); }
+.pds-lbl { font-size: 11px; color: var(--muted); }
+
+/* ── Back button ── */
+.back-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: none; border: none;
+  color: var(--muted);
+  font-family: 'Sora', sans-serif;
+  font-size: 13px;
+  cursor: pointer;
+  margin-bottom: 16px;
+  padding: 0;
+  transition: color .15s;
+}
+.back-btn:hover { color: var(--accent); }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--surface); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+/* ── Toast ── */
+.toast-container {
+  position: fixed;
+  bottom: 24px; right: 24px;
+  z-index: 999;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.toast {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--green);
+  border-radius: 8px;
+  padding: 12px 18px;
+  font-size: 13px;
+  color: var(--text);
+  animation: slideIn .25s ease;
+  max-width: 300px;
+}
+.toast.error { border-left-color: var(--red); }
+@keyframes slideIn {
+  from { transform: translateX(40px); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+
+/* ── Partner view: inline panels ── */
+#partnerDetailView { display: none; }
+
+@media (max-width: 700px) {
+  .form-grid-2 { grid-template-columns: 1fr; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .partner-detail-stats { display: none; }
+  .app-header { padding: 14px 16px; }
+  .main { padding: 20px 12px 60px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<header class="app-header">
+  <div class="logo">
+    <div class="logo-icon">C</div>
+    <div class="logo-text"><span>CWI AI</span> — Affiliate &amp; Referral Tracker</div>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-ghost btn-sm" onclick="exportCSV()">⬇ Export CSV</button>
+  </div>
+</header>
+
+<!-- ── Main ── -->
+<main class="main">
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('dashboard')">Dashboard</button>
+    <button class="tab-btn" onclick="switchTab('partners')">Partners</button>
+    <button class="tab-btn" onclick="switchTab('referrals')">Referral Log</button>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       DASHBOARD TAB
+  ══════════════════════════════════════════ -->
+  <div id="tab-dashboard" class="tab-panel active">
+
+    <div class="stats-grid" id="summaryStats"></div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:8px;" class="db-grid">
+
+      <!-- Leaderboard -->
+      <div>
+        <div class="section-header">
+          <div class="section-title">Leaderboard <small>Top 3 by referrals</small></div>
+        </div>
+        <div id="leaderboard"></div>
+      </div>
+
+      <!-- Recent referrals -->
+      <div>
+        <div class="section-header">
+          <div class="section-title">Recent Referrals <small>Last 5</small></div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Client</th>
+                <th>Partner</th>
+                <th>MRR</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="recentReferrals"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       PARTNERS TAB
+  ══════════════════════════════════════════ -->
+  <div id="tab-partners" class="tab-panel">
+
+    <!-- List view -->
+    <div id="partnerListView">
+      <div class="section-header">
+        <div class="section-title">Referral Partners <small id="partnerCount"></small></div>
+        <button class="btn btn-primary btn-sm" onclick="openPartnerModal()">+ Add Partner</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Business / Role</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Added</th>
+              <th>Referrals</th>
+              <th>Rev. Referred</th>
+              <th>Credits Owed</th>
+              <th>Credits Paid</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="partnersTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Partner detail view -->
+    <div id="partnerDetailView">
+      <button class="back-btn" onclick="closePartnerDetail()">← Back to Partners</button>
+      <div id="partnerDetailHeader"></div>
+
+      <div class="section-header">
+        <div class="section-title">Referral Log <small id="detailPartnerName"></small></div>
+        <button class="btn btn-primary btn-sm" onclick="openRefModal(currentPartnerId)">+ Add Referral</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Client Name</th>
+              <th>Tier</th>
+              <th>MRR ($)</th>
+              <th>Setup Fee ($)</th>
+              <th>Credit ($)</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="partnerReferralsTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       REFERRAL LOG TAB
+  ══════════════════════════════════════════ -->
+  <div id="tab-referrals" class="tab-panel">
+
+    <div class="section-header">
+      <div class="section-title">All Referrals <small id="refCount"></small></div>
+      <button class="btn btn-primary btn-sm" onclick="openRefModal(null)">+ Add Referral</button>
+    </div>
+
+    <div class="filter-bar">
+      <input class="form-input" id="refSearch" placeholder="Search client or partner…" oninput="renderReferrals()">
+      <select class="form-select" id="refStatusFilter" onchange="renderReferrals()">
+        <option value="">All Statuses</option>
+        <option>Pending</option>
+        <option>Applied</option>
+        <option>Paid</option>
+      </select>
+      <select class="form-select" id="refPartnerFilter" onchange="renderReferrals()">
+        <option value="">All Partners</option>
+      </select>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Client Name</th>
+            <th>Partner</th>
+            <th>Tier</th>
+            <th>MRR ($)</th>
+            <th>Setup Fee ($)</th>
+            <th>Credit ($)</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="allReferralsTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<!-- ══════════════════════════════════════════
+     PARTNER MODAL
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="partnerModal">
+  <div class="modal">
+    <div class="modal-title" id="partnerModalTitle">Add Partner</div>
+    <button class="modal-close" onclick="closePartnerModal()">✕</button>
+    <div class="form-grid">
+      <div class="form-grid form-grid-2">
+        <div class="form-field">
+          <label class="form-label" for="pName">Name *</label>
+          <input class="form-input" id="pName" placeholder="Jane Smith">
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="pRole">Business / Role *</label>
+          <input class="form-input" id="pRole" placeholder="Accountant / Agency">
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="pEmail">Email</label>
+          <input class="form-input" id="pEmail" type="email" placeholder="jane@example.com">
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="pPhone">Phone</label>
+          <input class="form-input" id="pPhone" placeholder="(555) 000-0000">
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="pDateAdded">Date Added</label>
+          <input class="form-input" id="pDateAdded" type="date">
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="pStatus">Status</label>
+          <select class="form-select" id="pStatus">
+            <option>Active</option>
+            <option>Inactive</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-grid form-grid-2">
+        <div class="form-field">
+          <label class="form-label" for="pCreditsPaid">Credits Paid ($)</label>
+          <input class="form-input" id="pCreditsPaid" type="number" min="0" step="0.01" placeholder="0.00">
+        </div>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closePartnerModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="savePartner()">Save Partner</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     REFERRAL MODAL
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="refModal">
+  <div class="modal">
+    <div class="modal-title" id="refModalTitle">Add Referral</div>
+    <button class="modal-close" onclick="closeRefModal()">✕</button>
+    <div class="form-grid">
+      <div class="form-grid form-grid-2">
+        <div class="form-field">
+          <label class="form-label" for="rPartner">Partner *</label>
+          <select class="form-select" id="rPartner"></select>
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="rDate">Date *</label>
+          <input class="form-input" id="rDate" type="date">
+        </div>
+        <div class="form-field" style="grid-column:1/-1">
+          <label class="form-label" for="rClient">Client Name *</label>
+          <input class="form-input" id="rClient" placeholder="Acme Corp">
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="rTier">Tier</label>
+          <input class="form-input" id="rTier" placeholder="e.g. Starter, Growth, Pro">
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="rMRR">MRR ($)</label>
+          <input class="form-input" id="rMRR" type="number" min="0" step="0.01" placeholder="0.00">
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="rSetup">Setup Fee ($)</label>
+          <input class="form-input" id="rSetup" type="number" min="0" step="0.01" placeholder="0.00">
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="rCredit">Credit Amount ($)</label>
+          <input class="form-input" id="rCredit" type="number" min="0" step="0.01" value="50">
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="rStatus">Status</label>
+          <select class="form-select" id="rStatus">
+            <option>Pending</option>
+            <option>Applied</option>
+            <option>Paid</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeRefModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveReferral()">Save Referral</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Toast container ── -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ── Storage helpers ──────────────────────────────────────────────
+const LS_PARTNERS = 'cwi_aff_partners';
+const LS_REFS     = 'cwi_aff_referrals';
+
+function loadPartners() {
+  try { return JSON.parse(localStorage.getItem(LS_PARTNERS)) || []; }
+  catch { return []; }
+}
+function savePartners(d) { localStorage.setItem(LS_PARTNERS, JSON.stringify(d)); }
+function loadRefs() {
+  try { return JSON.parse(localStorage.getItem(LS_REFS)) || []; }
+  catch { return []; }
+}
+function saveRefs(d) { localStorage.setItem(LS_REFS, JSON.stringify(d)); }
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+// ── Tab routing ──────────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach((b, i) => {
+    const names = ['dashboard','partners','referrals'];
+    b.classList.toggle('active', names[i] === tab);
+  });
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  if (tab === 'dashboard') renderDashboard();
+  if (tab === 'partners')  renderPartners();
+  if (tab === 'referrals') { renderReferrals(); populateRefPartnerFilter(); }
+}
+
+// ── Toast ────────────────────────────────────────────────────────
+function toast(msg, type = 'ok') {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = 'toast' + (type === 'error' ? ' error' : '');
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+// ── Computed partner stats ───────────────────────────────────────
+function partnerStats(partnerId) {
+  const refs = loadRefs().filter(r => r.partnerId === partnerId);
+  const totalRefs  = refs.length;
+  const totalMRR   = refs.reduce((s, r) => s + (parseFloat(r.mrr) || 0), 0);
+  const totalRev   = refs.reduce((s, r) => s + (parseFloat(r.mrr) || 0) + (parseFloat(r.setup) || 0), 0);
+  const creditsOwed = refs.reduce((s, r) => s + (parseFloat(r.credit) || 0), 0);
+  return { totalRefs, totalMRR, totalRev, creditsOwed };
+}
+
+function fmt$(n) { return '$' + (parseFloat(n) || 0).toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0}); }
+function fmtDate(d) {
+  if (!d) return '—';
+  const dt = new Date(d + 'T12:00:00');
+  return dt.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+}
+function today() { return new Date().toISOString().slice(0,10); }
+
+// ── Dashboard ────────────────────────────────────────────────────
+function renderDashboard() {
+  const partners = loadPartners();
+  const refs     = loadRefs();
+
+  const active   = partners.filter(p => p.status === 'Active').length;
+  const totalRefs = refs.length;
+  const totalMRR = refs.reduce((s, r) => s + (parseFloat(r.mrr) || 0), 0);
+  const allCredits = refs.reduce((s, r) => s + (parseFloat(r.credit) || 0), 0);
+  const creditsPaid = partners.reduce((s, p) => s + (parseFloat(p.creditsPaid) || 0), 0);
+  const outstanding = allCredits - creditsPaid;
+
+  const statsEl = document.getElementById('summaryStats');
+  statsEl.innerHTML = `
+    <div class="stat-card">
+      <div class="stat-label">Active Partners</div>
+      <div class="stat-value">${active}</div>
+      <div class="stat-sub">${partners.length} total</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total Referrals</div>
+      <div class="stat-value">${totalRefs}</div>
+      <div class="stat-sub">all time</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">MRR from Referrals</div>
+      <div class="stat-value">${fmt$(totalMRR)}</div>
+      <div class="stat-sub">monthly recurring</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Credits Outstanding</div>
+      <div class="stat-value" style="color:var(--accent)">${fmt$(Math.max(0, outstanding))}</div>
+      <div class="stat-sub">${fmt$(creditsPaid)} paid so far</div>
+    </div>
+  `;
+
+  // Leaderboard
+  const countMap = {};
+  refs.forEach(r => { countMap[r.partnerId] = (countMap[r.partnerId] || 0) + 1; });
+  const ranked = partners
+    .map(p => ({ ...p, count: countMap[p.id] || 0 }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 3);
+
+  const trophies = ['🥇','🥈','🥉'];
+  const lbEl = document.getElementById('leaderboard');
+  if (ranked.length === 0 || ranked[0].count === 0) {
+    lbEl.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:20px 0">No referrals yet.</div>';
+  } else {
+    lbEl.innerHTML = ranked.map((p, i) => `
+      <div class="leaderboard-row">
+        <div class="trophy">${trophies[i] || ''}</div>
+        <div class="lb-info">
+          <div class="lb-name">${esc(p.name)}</div>
+          <div class="lb-role">${esc(p.role)}</div>
+        </div>
+        <div class="lb-count">
+          <div class="lb-count-num">${p.count}</div>
+          <div class="lb-count-label">referral${p.count !== 1 ? 's' : ''}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // Recent referrals
+  const recent = [...refs].sort((a,b) => b.date.localeCompare(a.date)).slice(0,5);
+  const pMap = {};
+  partners.forEach(p => pMap[p.id] = p.name);
+  const rrEl = document.getElementById('recentReferrals');
+  if (recent.length === 0) {
+    rrEl.innerHTML = '<tr class="empty-row"><td colspan="5">No referrals yet.</td></tr>';
+  } else {
+    rrEl.innerHTML = recent.map(r => `
+      <tr>
+        <td>${fmtDate(r.date)}</td>
+        <td>${esc(r.client)}</td>
+        <td>${esc(pMap[r.partnerId] || '—')}</td>
+        <td>${fmt$(r.mrr)}</td>
+        <td>${statusBadge(r.status)}</td>
+      </tr>
+    `).join('');
+  }
+}
+
+// ── Partners ─────────────────────────────────────────────────────
+let editingPartnerId = null;
+
+function renderPartners() {
+  const partners = loadPartners();
+  document.getElementById('partnerCount').textContent = partners.length + ' partner' + (partners.length !== 1 ? 's' : '');
+  const tbody = document.getElementById('partnersTable');
+  if (partners.length === 0) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="11">No partners yet. Add your first referral partner.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = partners.map(p => {
+    const s = partnerStats(p.id);
+    const owed = Math.max(0, s.creditsOwed - (parseFloat(p.creditsPaid) || 0));
+    return `
+    <tr>
+      <td><button class="btn btn-ghost btn-sm" onclick="openPartnerDetail('${p.id}')" style="color:var(--accent);border:none;background:none;cursor:pointer;padding:0;font-weight:600">${esc(p.name)}</button></td>
+      <td>${esc(p.role)}</td>
+      <td><a href="mailto:${esc(p.email)}" style="color:var(--blue);text-decoration:none">${esc(p.email) || '—'}</a></td>
+      <td>${esc(p.phone) || '—'}</td>
+      <td>${fmtDate(p.dateAdded)}</td>
+      <td style="text-align:center;font-weight:600">${s.totalRefs}</td>
+      <td>${fmt$(s.totalRev)}</td>
+      <td style="color:${owed > 0 ? 'var(--yellow)' : 'var(--muted)'}">${fmt$(owed)}</td>
+      <td>${fmt$(p.creditsPaid || 0)}</td>
+      <td>${statusBadgePartner(p.status)}</td>
+      <td>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-ghost btn-sm" onclick="openPartnerModal('${p.id}')">Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="deletePartner('${p.id}')">Del</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function openPartnerModal(id) {
+  editingPartnerId = id || null;
+  const modal = document.getElementById('partnerModal');
+  document.getElementById('partnerModalTitle').textContent = id ? 'Edit Partner' : 'Add Partner';
+  if (id) {
+    const p = loadPartners().find(x => x.id === id);
+    if (p) {
+      document.getElementById('pName').value        = p.name || '';
+      document.getElementById('pRole').value        = p.role || '';
+      document.getElementById('pEmail').value       = p.email || '';
+      document.getElementById('pPhone').value       = p.phone || '';
+      document.getElementById('pDateAdded').value   = p.dateAdded || today();
+      document.getElementById('pStatus').value      = p.status || 'Active';
+      document.getElementById('pCreditsPaid').value = p.creditsPaid || '';
+    }
+  } else {
+    document.getElementById('pName').value        = '';
+    document.getElementById('pRole').value        = '';
+    document.getElementById('pEmail').value       = '';
+    document.getElementById('pPhone').value       = '';
+    document.getElementById('pDateAdded').value   = today();
+    document.getElementById('pStatus').value      = 'Active';
+    document.getElementById('pCreditsPaid').value = '';
+  }
+  modal.classList.add('open');
+}
+
+function closePartnerModal() {
+  document.getElementById('partnerModal').classList.remove('open');
+  editingPartnerId = null;
+}
+
+function savePartner() {
+  const name = document.getElementById('pName').value.trim();
+  const role = document.getElementById('pRole').value.trim();
+  if (!name || !role) { toast('Name and Business/Role are required.', 'error'); return; }
+
+  const partners = loadPartners();
+  const obj = {
+    id:          editingPartnerId || uid(),
+    name,
+    role,
+    email:       document.getElementById('pEmail').value.trim(),
+    phone:       document.getElementById('pPhone').value.trim(),
+    dateAdded:   document.getElementById('pDateAdded').value || today(),
+    status:      document.getElementById('pStatus').value,
+    creditsPaid: parseFloat(document.getElementById('pCreditsPaid').value) || 0,
+  };
+
+  if (editingPartnerId) {
+    const idx = partners.findIndex(p => p.id === editingPartnerId);
+    if (idx >= 0) partners[idx] = obj;
+  } else {
+    partners.push(obj);
+  }
+  savePartners(partners);
+  closePartnerModal();
+  renderPartners();
+  renderDashboard();
+  toast(editingPartnerId ? 'Partner updated.' : 'Partner added.');
+}
+
+function deletePartner(id) {
+  if (!confirm('Delete this partner? Their referral records will also be removed.')) return;
+  savePartners(loadPartners().filter(p => p.id !== id));
+  saveRefs(loadRefs().filter(r => r.partnerId !== id));
+  renderPartners();
+  renderDashboard();
+  toast('Partner deleted.');
+}
+
+// ── Partner detail ────────────────────────────────────────────────
+let currentPartnerId = null;
+
+function openPartnerDetail(id) {
+  currentPartnerId = id;
+  const p = loadPartners().find(x => x.id === id);
+  if (!p) return;
+
+  document.getElementById('partnerListView').style.display  = 'none';
+  document.getElementById('partnerDetailView').style.display = 'block';
+
+  const s = partnerStats(id);
+  const owed = Math.max(0, s.creditsOwed - (parseFloat(p.creditsPaid) || 0));
+
+  document.getElementById('detailPartnerName').textContent = p.name;
+  document.getElementById('partnerDetailHeader').innerHTML = `
+    <div class="partner-detail-header">
+      <div class="partner-avatar">${p.name.charAt(0).toUpperCase()}</div>
+      <div class="partner-detail-info">
+        <div class="partner-detail-name">${esc(p.name)}</div>
+        <div class="partner-detail-meta">${esc(p.role)} · ${esc(p.email) || 'No email'} · ${esc(p.phone) || 'No phone'} · Added ${fmtDate(p.dateAdded)} · ${statusBadgePartner(p.status)}</div>
+      </div>
+      <div class="partner-detail-stats">
+        <div class="pds"><div class="pds-val">${s.totalRefs}</div><div class="pds-lbl">Referrals</div></div>
+        <div class="pds"><div class="pds-val">${fmt$(s.totalRev)}</div><div class="pds-lbl">Rev Referred</div></div>
+        <div class="pds"><div class="pds-val" style="color:var(--yellow)">${fmt$(owed)}</div><div class="pds-lbl">Credits Owed</div></div>
+        <div class="pds"><div class="pds-val" style="color:var(--green)">${fmt$(p.creditsPaid||0)}</div><div class="pds-lbl">Credits Paid</div></div>
+      </div>
+    </div>
+  `;
+
+  renderPartnerReferrals(id);
+}
+
+function closePartnerDetail() {
+  currentPartnerId = null;
+  document.getElementById('partnerListView').style.display  = 'block';
+  document.getElementById('partnerDetailView').style.display = 'none';
+}
+
+function renderPartnerReferrals(partnerId) {
+  const refs = loadRefs().filter(r => r.partnerId === partnerId).sort((a,b) => b.date.localeCompare(a.date));
+  const tbody = document.getElementById('partnerReferralsTable');
+  if (refs.length === 0) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="8">No referrals recorded for this partner.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = refs.map(r => `
+    <tr>
+      <td>${fmtDate(r.date)}</td>
+      <td>${esc(r.client)}</td>
+      <td>${esc(r.tier) || '—'}</td>
+      <td>${fmt$(r.mrr)}</td>
+      <td>${fmt$(r.setup)}</td>
+      <td>${fmt$(r.credit)}</td>
+      <td>${statusBadge(r.status)}</td>
+      <td>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-ghost btn-sm" onclick="openRefModal('${r.partnerId}','${r.id}')">Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteRef('${r.id}')">Del</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+// ── Referrals ────────────────────────────────────────────────────
+let editingRefId = null;
+
+function populateRefPartnerSelect(preselect) {
+  const partners = loadPartners();
+  const sel = document.getElementById('rPartner');
+  sel.innerHTML = '<option value="">— Select Partner —</option>' +
+    partners.map(p => `<option value="${p.id}" ${p.id === preselect ? 'selected' : ''}>${esc(p.name)}</option>`).join('');
+}
+
+function populateRefPartnerFilter() {
+  const partners = loadPartners();
+  const sel = document.getElementById('refPartnerFilter');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">All Partners</option>' +
+    partners.map(p => `<option value="${p.id}" ${p.id === cur ? 'selected' : ''}>${esc(p.name)}</option>`).join('');
+}
+
+function openRefModal(partnerId, refId) {
+  editingRefId = refId || null;
+  populateRefPartnerSelect(partnerId || null);
+  const modal = document.getElementById('refModal');
+  document.getElementById('refModalTitle').textContent = refId ? 'Edit Referral' : 'Add Referral';
+
+  if (refId) {
+    const r = loadRefs().find(x => x.id === refId);
+    if (r) {
+      document.getElementById('rPartner').value = r.partnerId || '';
+      document.getElementById('rDate').value    = r.date || today();
+      document.getElementById('rClient').value  = r.client || '';
+      document.getElementById('rTier').value    = r.tier || '';
+      document.getElementById('rMRR').value     = r.mrr || '';
+      document.getElementById('rSetup').value   = r.setup || '';
+      document.getElementById('rCredit').value  = r.credit !== undefined ? r.credit : 50;
+      document.getElementById('rStatus').value  = r.status || 'Pending';
+    }
+  } else {
+    document.getElementById('rPartner').value = partnerId || '';
+    document.getElementById('rDate').value    = today();
+    document.getElementById('rClient').value  = '';
+    document.getElementById('rTier').value    = '';
+    document.getElementById('rMRR').value     = '';
+    document.getElementById('rSetup').value   = '';
+    document.getElementById('rCredit').value  = 50;
+    document.getElementById('rStatus').value  = 'Pending';
+  }
+  modal.classList.add('open');
+}
+
+function closeRefModal() {
+  document.getElementById('refModal').classList.remove('open');
+  editingRefId = null;
+}
+
+function saveReferral() {
+  const partnerId = document.getElementById('rPartner').value;
+  const client    = document.getElementById('rClient').value.trim();
+  const date      = document.getElementById('rDate').value;
+  if (!partnerId) { toast('Please select a partner.', 'error'); return; }
+  if (!client)    { toast('Client name is required.', 'error'); return; }
+  if (!date)      { toast('Date is required.', 'error'); return; }
+
+  const refs = loadRefs();
+  const obj = {
+    id:        editingRefId || uid(),
+    partnerId,
+    date,
+    client,
+    tier:   document.getElementById('rTier').value.trim(),
+    mrr:    parseFloat(document.getElementById('rMRR').value)    || 0,
+    setup:  parseFloat(document.getElementById('rSetup').value)  || 0,
+    credit: parseFloat(document.getElementById('rCredit').value) ?? 50,
+    status: document.getElementById('rStatus').value,
+  };
+
+  if (editingRefId) {
+    const idx = refs.findIndex(r => r.id === editingRefId);
+    if (idx >= 0) refs[idx] = obj;
+  } else {
+    refs.push(obj);
+  }
+  saveRefs(refs);
+  closeRefModal();
+
+  // Refresh wherever we are
+  renderReferrals();
+  renderDashboard();
+  if (currentPartnerId) {
+    renderPartnerReferrals(currentPartnerId);
+    openPartnerDetail(currentPartnerId); // refresh header stats
+  } else {
+    renderPartners();
+  }
+  toast(editingRefId ? 'Referral updated.' : 'Referral added.');
+}
+
+function deleteRef(id) {
+  if (!confirm('Delete this referral record?')) return;
+  saveRefs(loadRefs().filter(r => r.id !== id));
+  renderReferrals();
+  renderDashboard();
+  renderPartners();
+  if (currentPartnerId) renderPartnerReferrals(currentPartnerId);
+  toast('Referral deleted.');
+}
+
+function renderReferrals() {
+  const search    = (document.getElementById('refSearch')?.value || '').toLowerCase();
+  const statusF   = document.getElementById('refStatusFilter')?.value || '';
+  const partnerF  = document.getElementById('refPartnerFilter')?.value || '';
+
+  const partners  = loadPartners();
+  const pMap = {};
+  partners.forEach(p => pMap[p.id] = p.name);
+
+  let refs = loadRefs().sort((a,b) => b.date.localeCompare(a.date));
+  if (search)   refs = refs.filter(r => r.client.toLowerCase().includes(search) || (pMap[r.partnerId]||'').toLowerCase().includes(search));
+  if (statusF)  refs = refs.filter(r => r.status === statusF);
+  if (partnerF) refs = refs.filter(r => r.partnerId === partnerF);
+
+  document.getElementById('refCount').textContent = refs.length + ' record' + (refs.length !== 1 ? 's' : '');
+
+  const tbody = document.getElementById('allReferralsTable');
+  if (refs.length === 0) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="9">No referrals match your filters.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = refs.map(r => `
+    <tr>
+      <td>${fmtDate(r.date)}</td>
+      <td>${esc(r.client)}</td>
+      <td>${esc(pMap[r.partnerId] || '—')}</td>
+      <td>${esc(r.tier) || '—'}</td>
+      <td>${fmt$(r.mrr)}</td>
+      <td>${fmt$(r.setup)}</td>
+      <td>${fmt$(r.credit)}</td>
+      <td>${statusBadge(r.status)}</td>
+      <td>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-ghost btn-sm" onclick="openRefModal('${r.partnerId}','${r.id}')">Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteRef('${r.id}')">Del</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+// ── CSV Export ────────────────────────────────────────────────────
+function exportCSV() {
+  const partners = loadPartners();
+  const refs     = loadRefs();
+  const pMap = {};
+  partners.forEach(p => pMap[p.id] = p.name);
+
+  const rows = [['Date','Client Name','Partner','Partner Role','Tier','MRR','Setup Fee','Credit Amount','Status']];
+  refs.sort((a,b) => b.date.localeCompare(a.date)).forEach(r => {
+    const p = partners.find(x => x.id === r.partnerId) || {};
+    rows.push([r.date, r.client, p.name||'', p.role||'', r.tier||'', r.mrr||0, r.setup||0, r.credit||0, r.status]);
+  });
+
+  const csv = rows.map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'cwi-affiliates-' + today() + '.csv';
+  a.click();
+  toast('CSV exported.');
+}
+
+// ── Badges ───────────────────────────────────────────────────────
+function statusBadge(s) {
+  const map = { Pending: 'badge-yellow', Applied: 'badge-blue', Paid: 'badge-green' };
+  return `<span class="badge ${map[s] || 'badge-gray'}">${s || '—'}</span>`;
+}
+function statusBadgePartner(s) {
+  return `<span class="badge ${s === 'Active' ? 'badge-green' : 'badge-red'}">${s || '—'}</span>`;
+}
+
+// ── Escape ───────────────────────────────────────────────────────
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Init ─────────────────────────────────────────────────────────
+renderDashboard();
+</script>
+</body>
+</html>

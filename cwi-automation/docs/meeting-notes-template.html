@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CWI Meeting Notes</title>
+<meta name="description" content="CWI internal tool: CWI Meeting Notes. Internal use only — CWI Compute With Imagination.">
+<style>
+  :root {
+    --accent: #FF5A1F;
+    --accent-light: #fff3ee;
+    --accent-dark: #cc4518;
+    --amber: #f59e0b;
+    --green: #10b981;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-400: #9ca3af;
+    --gray-500: #6b7280;
+    --gray-700: #374151;
+    --gray-900: #111827;
+    --radius: 8px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.06);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.05);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--gray-100);
+    color: var(--gray-900);
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  #app-header {
+    background: var(--accent);
+    color: #fff;
+    padding: 0 24px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(255,90,31,0.30);
+  }
+  #app-header h1 { font-size: 1.15rem; font-weight: 700; letter-spacing: 0.01em; }
+  #header-actions { display: flex; align-items: center; gap: 12px; }
+
+  .save-indicator {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--amber);
+    transition: background 0.4s;
+    flex-shrink: 0;
+  }
+  .save-indicator.saved { background: var(--green); }
+
+  #recent-select {
+    font-size: 0.82rem;
+    padding: 4px 8px;
+    border-radius: var(--radius);
+    border: none;
+    background: rgba(255,255,255,0.2);
+    color: #fff;
+    cursor: pointer;
+    max-width: 200px;
+  }
+  #recent-select option { color: var(--gray-900); background: #fff; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 14px;
+    border-radius: var(--radius);
+    border: none;
+    font-size: 0.84rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, opacity 0.15s;
+  }
+  .btn-white { background: #fff; color: var(--accent); }
+  .btn-white:hover { background: var(--accent-light); }
+  .btn-ghost { background: rgba(255,255,255,0.15); color: #fff; }
+  .btn-ghost:hover { background: rgba(255,255,255,0.25); }
+  .btn-accent { background: var(--accent); color: #fff; }
+  .btn-accent:hover { background: var(--accent-dark); }
+  .btn-danger { background: #fee2e2; color: #b91c1c; }
+  .btn-danger:hover { background: #fecaca; }
+  .btn-sm { padding: 4px 10px; font-size: 0.78rem; }
+
+  /* ── Layout ── */
+  #main {
+    max-width: 900px;
+    margin: 32px auto;
+    padding: 0 16px 64px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* ── Cards ── */
+  .card {
+    background: #fff;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .card-header {
+    background: var(--accent-light);
+    border-left: 4px solid var(--accent);
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-num {
+    background: var(--accent);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .card-header h2 { font-size: 0.97rem; font-weight: 700; color: var(--gray-700); }
+  .card-body { padding: 20px; }
+
+  /* ── Meta fields ── */
+  .meta-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+  }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label { font-size: 0.78rem; font-weight: 600; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.05em; }
+
+  input, select, textarea {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius);
+    font-size: 0.9rem;
+    font-family: inherit;
+    color: var(--gray-900);
+    background: #fff;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    outline: none;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(255,90,31,0.12);
+  }
+  textarea { resize: vertical; min-height: 120px; line-height: 1.6; }
+
+  /* ── Action Items table ── */
+  .ai-table { width: 100%; border-collapse: collapse; }
+  .ai-table th {
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 8px 10px;
+    border-bottom: 2px solid var(--gray-200);
+    background: var(--gray-50);
+  }
+  .ai-table td { padding: 7px 8px; vertical-align: middle; }
+  .ai-table tbody tr:nth-child(even) { background: var(--gray-50); }
+  .ai-table input, .ai-table select { padding: 5px 8px; font-size: 0.85rem; }
+
+  .status-open  { background: #fffbeb; border-color: var(--amber); color: #92400e; }
+  .status-done  { background: #ecfdf5; border-color: var(--green); color: #065f46; }
+  .status-inprogress { background: #eff6ff; border-color: #3b82f6; color: #1e40af; }
+
+  .ai-actions { margin-top: 12px; display: flex; gap: 8px; }
+
+  /* ── Email draft ── */
+  #email-output {
+    min-height: 180px;
+    background: var(--gray-50);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius);
+    padding: 14px;
+    font-size: 0.88rem;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    color: var(--gray-700);
+  }
+  .email-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+
+  /* ── Next meeting ── */
+  .next-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+  }
+
+  /* ── Print ── */
+  @media print {
+    #app-header, .btn, .ai-actions, .email-actions, #recent-select,
+    .save-indicator, #delete-btn, #print-btn { display: none !important; }
+    body { background: #fff; }
+    #main { margin: 0; padding: 0; max-width: 100%; }
+    .card { box-shadow: none; border: 1px solid var(--gray-200); break-inside: avoid; }
+    #email-output { border: 1px solid var(--gray-300); }
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 600px) {
+    #app-header { padding: 0 12px; }
+    #app-header h1 { font-size: 1rem; }
+    #main { margin: 16px auto; }
+    .meta-grid { grid-template-columns: 1fr; }
+    .ai-table { font-size: 0.8rem; }
+    .ai-table th:nth-child(3), .ai-table td:nth-child(3) { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════ HEADER ════════════════════════════ -->
+<header id="app-header">
+  <h1>CWI Meeting Notes</h1>
+  <div id="header-actions">
+    <span class="save-indicator" id="save-dot" title="Unsaved changes"></span>
+    <select id="recent-select" title="Load a recent meeting">
+      <option value="">— Recent Meetings —</option>
+    </select>
+    <button class="btn btn-ghost btn-sm" id="delete-btn" title="Delete loaded meeting" style="display:none">Delete</button>
+    <button class="btn btn-white btn-sm" id="print-btn" onclick="window.print()">Print</button>
+  </div>
+</header>
+
+<!-- ════════════════════════════ MAIN ════════════════════════════ -->
+<main id="main">
+
+  <!-- Meta -->
+  <div class="card">
+    <div class="card-header">
+      <h2>Meeting Details</h2>
+    </div>
+    <div class="card-body">
+      <div class="meta-grid">
+        <div class="field">
+          <label for="meeting-type">Meeting Type</label>
+          <select id="meeting-type">
+            <option value="">— Select type —</option>
+            <option value="discovery">Discovery Call</option>
+            <option value="onboarding">Onboarding</option>
+            <option value="monthly">Monthly Review</option>
+            <option value="checkin">Check-in</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="client-name">Client Name</label>
+          <input id="client-name" type="text" placeholder="Company / Contact">
+        </div>
+        <div class="field">
+          <label for="meeting-datetime">Date &amp; Time</label>
+          <input id="meeting-datetime" type="datetime-local">
+        </div>
+        <div class="field" style="grid-column: span 1;">
+          <label for="attendees">Attendees</label>
+          <input id="attendees" type="text" placeholder="Brian, Jane Smith, …">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 1: Agenda -->
+  <div class="card">
+    <div class="card-header">
+      <span class="section-num">1</span>
+      <h2>Agenda</h2>
+    </div>
+    <div class="card-body">
+      <textarea id="agenda" placeholder="Select a meeting type above to pre-fill the agenda, or type here…"></textarea>
+    </div>
+  </div>
+
+  <!-- Section 2: Key Discussion Points -->
+  <div class="card">
+    <div class="card-header">
+      <span class="section-num">2</span>
+      <h2>Key Discussion Points</h2>
+    </div>
+    <div class="card-body">
+      <textarea id="discussion" placeholder="• Topic or point discussed&#10;• Another key point&#10;• Client concern or question raised"></textarea>
+    </div>
+  </div>
+
+  <!-- Section 3: Decisions Made -->
+  <div class="card">
+    <div class="card-header">
+      <span class="section-num">3</span>
+      <h2>Decisions Made</h2>
+    </div>
+    <div class="card-body">
+      <textarea id="decisions" placeholder="• Agreement or commitment reached&#10;• Scope confirmed&#10;• Pricing / timeline agreed"></textarea>
+    </div>
+  </div>
+
+  <!-- Section 4: Action Items -->
+  <div class="card">
+    <div class="card-header">
+      <span class="section-num">4</span>
+      <h2>Action Items</h2>
+    </div>
+    <div class="card-body">
+      <table class="ai-table" id="ai-table">
+        <thead>
+          <tr>
+            <th style="width:44%">Action Item</th>
+            <th style="width:17%">Owner</th>
+            <th style="width:18%">Due Date</th>
+            <th style="width:15%">Status</th>
+            <th style="width:6%"></th>
+          </tr>
+        </thead>
+        <tbody id="ai-body">
+          <!-- rows inserted by JS -->
+        </tbody>
+      </table>
+      <div class="ai-actions">
+        <button class="btn btn-accent btn-sm" id="add-row-btn">+ Add Row</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 5: Follow-up Email -->
+  <div class="card">
+    <div class="card-header">
+      <span class="section-num">5</span>
+      <h2>Follow-up Email Draft</h2>
+    </div>
+    <div class="card-body">
+      <div id="email-output">Click "Generate Email" to assemble a follow-up draft from the fields above.</div>
+      <div class="email-actions">
+        <button class="btn btn-accent" id="gen-email-btn">Generate Email</button>
+        <button class="btn btn-ghost btn-sm" id="copy-email-btn" style="background:var(--gray-200);color:var(--gray-700)" disabled>Copy Email</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 6: Next Meeting -->
+  <div class="card">
+    <div class="card-header">
+      <span class="section-num">6</span>
+      <h2>Next Meeting</h2>
+    </div>
+    <div class="card-body">
+      <div class="next-grid">
+        <div class="field">
+          <label for="next-datetime">Date &amp; Time</label>
+          <input id="next-datetime" type="datetime-local">
+        </div>
+        <div class="field">
+          <label for="next-type">Meeting Type</label>
+          <select id="next-type">
+            <option value="">— Select —</option>
+            <option value="discovery">Discovery Call</option>
+            <option value="onboarding">Onboarding</option>
+            <option value="monthly">Monthly Review</option>
+            <option value="checkin">Check-in</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="field" style="grid-column: 1 / -1;">
+          <label for="prep-notes">Prep Notes</label>
+          <textarea id="prep-notes" style="min-height:80px" placeholder="Items to prepare before the next meeting…"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+// ════════════════════════════════════════════════
+// AGENDA TEMPLATES
+// ════════════════════════════════════════════════
+const AGENDAS = {
+  discovery: `1. Introductions and background
+2. Current challenges and pain points
+3. Existing tools, workflows, and tech stack
+4. Goals and desired outcomes
+5. Timeline and urgency
+6. Budget and pricing discussion
+7. Next steps and expectations`,
+
+  onboarding: `1. Welcome and introductions
+2. Project overview and goals recap
+3. Access provisioning and tool setup
+4. Timeline, milestones, and deliverables
+5. Communication cadence and points of contact
+6. Roles and responsibilities
+7. Open questions and next steps`,
+
+  monthly: `1. Review of prior month's metrics and KPIs
+2. Progress on open action items
+3. Wins and highlights
+4. Challenges and blockers
+5. Roadmap updates and upcoming priorities
+6. Budget / resource check-in
+7. Action items and next meeting`,
+
+  checkin: `1. Status update on active projects
+2. Blockers or issues to address
+3. Quick wins since last meeting
+4. Upcoming deadlines
+5. Any questions or support needed`,
+
+  other: `1. Welcome / introductions
+2. Agenda review
+3. Main discussion topics
+4. Decisions and action items
+5. Next steps`
+};
+
+// ════════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════════
+function now8601() {
+  const d = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function fmtDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return d.toLocaleString('en-US', { weekday:'short', month:'short', day:'numeric', year:'numeric', hour:'numeric', minute:'2-digit' });
+}
+
+function fmtDateOnly(iso) {
+  if (!iso) return '';
+  const d = new Date(iso + 'T00:00:00');
+  return d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+}
+
+// ════════════════════════════════════════════════
+// ACTION ITEMS
+// ════════════════════════════════════════════════
+let rowCount = 0;
+
+function createRow(data = {}) {
+  rowCount++;
+  const id = rowCount;
+  const tr = document.createElement('tr');
+  tr.dataset.rowId = id;
+
+  const statusClass = {
+    'Open': 'status-open',
+    'In Progress': 'status-inprogress',
+    'Done': 'status-done'
+  };
+
+  const statusVal = data.status || 'Open';
+  const statusCls = statusClass[statusVal] || 'status-open';
+
+  tr.innerHTML = `
+    <td><input type="text" class="ai-item" placeholder="Describe the action…" value="${escHtml(data.item||'')}"></td>
+    <td>
+      <select class="ai-owner">
+        <option value="Brian" ${data.owner==='Brian'?'selected':''}>Brian</option>
+        <option value="Client" ${data.owner==='Client'?'selected':''}>Client</option>
+        <option value="Both" ${data.owner==='Both'?'selected':''}>Both</option>
+      </select>
+    </td>
+    <td><input type="date" class="ai-due" value="${data.due||''}"></td>
+    <td>
+      <select class="ai-status ${statusCls}">
+        <option value="Open" ${statusVal==='Open'?'selected':''}>Open</option>
+        <option value="In Progress" ${statusVal==='In Progress'?'selected':''}>In Progress</option>
+        <option value="Done" ${statusVal==='Done'?'selected':''}>Done</option>
+      </select>
+    </td>
+    <td><button class="btn btn-danger btn-sm remove-row-btn" title="Remove row">✕</button></td>
+  `;
+
+  const statusSel = tr.querySelector('.ai-status');
+  statusSel.addEventListener('change', function() {
+    this.className = 'ai-status ' + (statusClass[this.value] || '');
+    scheduleSave();
+  });
+
+  tr.querySelector('.ai-item').addEventListener('input', scheduleSave);
+  tr.querySelector('.ai-owner').addEventListener('change', scheduleSave);
+  tr.querySelector('.ai-due').addEventListener('change', scheduleSave);
+  tr.querySelector('.remove-row-btn').addEventListener('click', function() {
+    tr.remove();
+    scheduleSave();
+  });
+
+  return tr;
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function getActionItems() {
+  const rows = [];
+  document.querySelectorAll('#ai-body tr').forEach(tr => {
+    rows.push({
+      item: tr.querySelector('.ai-item').value,
+      owner: tr.querySelector('.ai-owner').value,
+      due: tr.querySelector('.ai-due').value,
+      status: tr.querySelector('.ai-status').value
+    });
+  });
+  return rows;
+}
+
+function renderActionItems(items) {
+  const tbody = document.getElementById('ai-body');
+  tbody.innerHTML = '';
+  if (!items || items.length === 0) {
+    tbody.appendChild(createRow());
+  } else {
+    items.forEach(item => tbody.appendChild(createRow(item)));
+  }
+}
+
+// ════════════════════════════════════════════════
+// EMAIL GENERATION
+// ════════════════════════════════════════════════
+function generateEmail() {
+  const client   = document.getElementById('client-name').value.trim() || 'there';
+  const attendees = document.getElementById('attendees').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const greeting  = attendees.find(a => a.toLowerCase() !== 'brian') || client;
+  const dateStr   = fmtDate(document.getElementById('meeting-datetime').value);
+  const discussion = document.getElementById('discussion').value.trim();
+  const decisions  = document.getElementById('decisions').value.trim();
+  const nextDt     = document.getElementById('next-datetime').value;
+  const actionItems = getActionItems().filter(r => r.item.trim());
+
+  let email = `Hi ${greeting},\n\nThank you for taking the time to connect${dateStr ? ' on ' + dateStr : ''}.`;
+
+  if (discussion) {
+    const topics = discussion.split('\n').map(l=>l.replace(/^[•\-*]\s*/,'')).filter(Boolean);
+    if (topics.length === 1) {
+      email += ` We discussed ${topics[0].toLowerCase()}.`;
+    } else if (topics.length > 1) {
+      const last = topics[topics.length - 1];
+      const rest = topics.slice(0, -1).map(t => t.toLowerCase());
+      email += ` During our conversation we covered: ${rest.join(', ')}, and ${last.toLowerCase()}.`;
+    }
+  }
+
+  if (decisions) {
+    const dec = decisions.split('\n').map(l=>l.replace(/^[•\-*]\s*/,'')).filter(Boolean);
+    if (dec.length) {
+      email += `\n\nKey decisions and agreements from the call:\n`;
+      dec.forEach(d => { email += `  • ${d}\n`; });
+    }
+  }
+
+  const openItems = actionItems.filter(r => r.status !== 'Done');
+  if (openItems.length) {
+    email += `\nAs a reminder, here are the open action items:\n`;
+    openItems.forEach(r => {
+      const due = r.due ? ` (due ${fmtDateOnly(r.due)})` : '';
+      email += `  • ${r.item} — ${r.owner}${due}\n`;
+    });
+  }
+
+  if (nextDt) {
+    email += `\nOur next meeting is scheduled for ${fmtDate(nextDt)}. I look forward to connecting then.`;
+  }
+
+  email += `\n\nPlease don't hesitate to reach out if you have any questions in the meantime.\n\nBest regards,\nBrian\nCWI`;
+
+  const out = document.getElementById('email-output');
+  out.textContent = email;
+  document.getElementById('copy-email-btn').disabled = false;
+  document.getElementById('gen-email-btn').textContent = 'Regenerate';
+}
+
+// ════════════════════════════════════════════════
+// SAVE / LOAD  (localStorage)
+// ════════════════════════════════════════════════
+const LS_PREFIX = 'cwi_meeting_';
+let saveTimer = null;
+let currentKey = null;
+
+function getFormData() {
+  return {
+    meetingType: document.getElementById('meeting-type').value,
+    clientName:  document.getElementById('client-name').value,
+    datetime:    document.getElementById('meeting-datetime').value,
+    attendees:   document.getElementById('attendees').value,
+    agenda:      document.getElementById('agenda').value,
+    discussion:  document.getElementById('discussion').value,
+    decisions:   document.getElementById('decisions').value,
+    actionItems: getActionItems(),
+    nextDatetime: document.getElementById('next-datetime').value,
+    nextType:    document.getElementById('next-type').value,
+    prepNotes:   document.getElementById('prep-notes').value,
+    savedAt:     new Date().toISOString()
+  };
+}
+
+function makeKey(data) {
+  const client = (data.clientName || 'unknown').replace(/[^a-z0-9]/gi,'_').slice(0,30);
+  const dt     = (data.datetime || new Date().toISOString()).slice(0,16).replace(/[T:]/g,'-');
+  return LS_PREFIX + client + '__' + dt;
+}
+
+function saveMeeting() {
+  const data = getFormData();
+  if (!currentKey) currentKey = makeKey(data);
+  try {
+    localStorage.setItem(currentKey, JSON.stringify(data));
+    // Keep index
+    let idx = getIndex();
+    if (!idx.includes(currentKey)) {
+      idx.unshift(currentKey);
+      if (idx.length > 50) idx = idx.slice(0, 50);
+      localStorage.setItem(LS_PREFIX + 'index', JSON.stringify(idx));
+    }
+    setSaved(true);
+    populateRecentSelect();
+  } catch(e) { console.warn('Save failed', e); }
+}
+
+function setSaved(saved) {
+  document.getElementById('save-dot').classList.toggle('saved', saved);
+}
+
+function scheduleSave() {
+  setSaved(false);
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveMeeting, 3000);
+}
+
+function getIndex() {
+  try { return JSON.parse(localStorage.getItem(LS_PREFIX + 'index') || '[]'); }
+  catch(e) { return []; }
+}
+
+function populateRecentSelect() {
+  const sel = document.getElementById('recent-select');
+  const idx = getIndex();
+  sel.innerHTML = '<option value="">— Recent Meetings —</option>';
+  idx.forEach(key => {
+    try {
+      const d = JSON.parse(localStorage.getItem(key) || '{}');
+      const label = `${d.clientName || '?'} · ${(d.datetime||'').slice(0,10)||'no date'}`;
+      const opt = document.createElement('option');
+      opt.value = key;
+      opt.textContent = label;
+      if (key === currentKey) opt.selected = true;
+      sel.appendChild(opt);
+    } catch(e) {}
+  });
+}
+
+function loadMeeting(key) {
+  if (!key) return;
+  try {
+    const data = JSON.parse(localStorage.getItem(key) || '{}');
+    document.getElementById('meeting-type').value    = data.meetingType || '';
+    document.getElementById('client-name').value     = data.clientName  || '';
+    document.getElementById('meeting-datetime').value = data.datetime   || '';
+    document.getElementById('attendees').value        = data.attendees  || '';
+    document.getElementById('agenda').value           = data.agenda     || '';
+    document.getElementById('discussion').value       = data.discussion || '';
+    document.getElementById('decisions').value        = data.decisions  || '';
+    renderActionItems(data.actionItems);
+    document.getElementById('next-datetime').value   = data.nextDatetime || '';
+    document.getElementById('next-type').value        = data.nextType   || '';
+    document.getElementById('prep-notes').value       = data.prepNotes  || '';
+    currentKey = key;
+    setSaved(true);
+    document.getElementById('delete-btn').style.display = '';
+    document.getElementById('email-output').textContent = 'Click "Generate Email" to assemble a follow-up draft from the fields above.';
+    document.getElementById('copy-email-btn').disabled = true;
+    document.getElementById('gen-email-btn').textContent = 'Generate Email';
+  } catch(e) { console.warn('Load failed', e); }
+}
+
+function deleteMeeting(key) {
+  if (!key) return;
+  if (!confirm('Delete this saved meeting? This cannot be undone.')) return;
+  localStorage.removeItem(key);
+  let idx = getIndex().filter(k => k !== key);
+  localStorage.setItem(LS_PREFIX + 'index', JSON.stringify(idx));
+  currentKey = null;
+  document.getElementById('delete-btn').style.display = 'none';
+  populateRecentSelect();
+  setSaved(false);
+}
+
+// ════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', function () {
+
+  // Default datetime to now
+  document.getElementById('meeting-datetime').value = now8601();
+
+  // Initial empty action item row
+  renderActionItems([]);
+
+  // Meeting type → pre-fill agenda
+  document.getElementById('meeting-type').addEventListener('change', function() {
+    const template = AGENDAS[this.value];
+    if (template) {
+      const current = document.getElementById('agenda').value.trim();
+      if (!current || Object.values(AGENDAS).includes(current)) {
+        document.getElementById('agenda').value = template;
+      }
+    }
+    scheduleSave();
+  });
+
+  // Add row
+  document.getElementById('add-row-btn').addEventListener('click', function() {
+    document.getElementById('ai-body').appendChild(createRow());
+    scheduleSave();
+  });
+
+  // Generate email
+  document.getElementById('gen-email-btn').addEventListener('click', generateEmail);
+
+  // Copy email
+  document.getElementById('copy-email-btn').addEventListener('click', function() {
+    const text = document.getElementById('email-output').textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      this.textContent = 'Copied!';
+      setTimeout(() => { this.textContent = 'Copy Email'; }, 2000);
+    }).catch(() => {
+      // fallback
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      this.textContent = 'Copied!';
+      setTimeout(() => { this.textContent = 'Copy Email'; }, 2000);
+    });
+  });
+
+  // Recent select
+  document.getElementById('recent-select').addEventListener('change', function() {
+    if (this.value) loadMeeting(this.value);
+  });
+
+  // Delete button
+  document.getElementById('delete-btn').addEventListener('click', function() {
+    deleteMeeting(currentKey);
+  });
+
+  // Auto-save on all text inputs/textareas/selects (except recent-select)
+  const watchIds = ['client-name','meeting-datetime','attendees','agenda','discussion','decisions','next-datetime','next-type','prep-notes'];
+  watchIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', scheduleSave);
+    if (el) el.addEventListener('change', scheduleSave);
+  });
+
+  // Populate recent meetings
+  populateRecentSelect();
+});
+</script>
+</body>
+</html>

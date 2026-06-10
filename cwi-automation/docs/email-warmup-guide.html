@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CWI AI — Email Domain Warmup Tracker</title>
+  <meta name="description" content="CWI internal tool: CWI AI — Email Domain Warmup Tracker. Internal use only — CWI Compute With Imagination.">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #0A0A0C;
+      --bg-card:    #111114;
+      --bg-hover:   #18181C;
+      --accent:     #FF5A1F;
+      --accent-dim: #cc4718;
+      --text:       #E8E8EC;
+      --text-muted: #888896;
+      --border:     #252530;
+      --success:    #22C55E;
+      --warn:       #F59E0B;
+      --danger:     #EF4444;
+      --info:       #3B82F6;
+      --radius:     10px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Sora', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      font-size: 15px;
+    }
+
+    /* ── TOP BAR ── */
+    .topbar {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .topbar-brand { display: flex; align-items: center; gap: 12px; }
+    .topbar-logo {
+      width: 32px; height: 32px;
+      background: var(--accent);
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 14px; color: #fff; letter-spacing: -0.5px;
+    }
+    .topbar-title { font-weight: 600; font-size: 15px; color: var(--text); }
+    .topbar-sub   { font-size: 12px; color: var(--text-muted); }
+    .topbar-actions { display: flex; gap: 10px; align-items: center; }
+    .btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 18px;
+      font-family: 'Sora', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn:hover { background: var(--accent-dim); }
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); background: transparent; }
+
+    /* ── LAYOUT ── */
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+
+    /* ── DOMAIN HEADER ── */
+    .domain-bar {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      margin-bottom: 32px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .domain-bar label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+    .domain-input {
+      flex: 1;
+      min-width: 200px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-family: 'Sora', sans-serif;
+      font-size: 14px;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .domain-input:focus { border-color: var(--accent); }
+    .domain-input::placeholder { color: var(--text-muted); }
+    .warmup-start-wrap { display: flex; align-items: center; gap: 10px; }
+    .warmup-start-wrap label { font-size: 13px; font-weight: 600; color: var(--text-muted); white-space: nowrap; }
+    .date-input {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-family: 'Sora', sans-serif;
+      font-size: 14px;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .date-input:focus { border-color: var(--accent); }
+
+    /* ── PROGRESS BAR ── */
+    .progress-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      margin-bottom: 32px;
+    }
+    .progress-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .progress-header h3 { font-size: 14px; font-weight: 600; color: var(--text); }
+    .progress-pct { font-size: 22px; font-weight: 700; color: var(--accent); }
+    .progress-bar-outer {
+      height: 12px;
+      background: var(--bg);
+      border-radius: 99px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+    .progress-bar-inner {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent) 0%, #ff8c5a 100%);
+      border-radius: 99px;
+      transition: width 0.4s ease;
+    }
+    .progress-meta {
+      display: flex;
+      gap: 24px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .progress-meta span strong { color: var(--text); }
+
+    /* ── SECTION TITLES ── */
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── EXPLAINER ── */
+    .explainer {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 32px;
+    }
+    .explainer h2 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 12px;
+    }
+    .explainer p {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.8;
+      margin-bottom: 10px;
+    }
+    .explainer p:last-child { margin-bottom: 0; }
+    .explainer strong { color: var(--text); }
+    .tip-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .tip-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+    }
+    .tip-card .tip-icon { font-size: 20px; margin-bottom: 6px; }
+    .tip-card .tip-label { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+    .tip-card .tip-desc  { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+
+    /* ── WARMUP SCHEDULE TABLE ── */
+    .schedule-wrap {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 32px;
+    }
+    .schedule-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .schedule-table thead tr {
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+    }
+    .schedule-table th {
+      padding: 12px 16px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      text-align: left;
+    }
+    .schedule-table td {
+      padding: 11px 16px;
+      font-size: 13px;
+      color: var(--text);
+      border-bottom: 1px solid var(--border);
+    }
+    .schedule-table tr:last-child td { border-bottom: none; }
+    .schedule-table tbody tr:hover { background: var(--bg-hover); }
+    .phase-badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .phase-1 { background: rgba(59,130,246,0.15); color: #60A5FA; }
+    .phase-2 { background: rgba(34,197,94,0.15); color: #4ADE80; }
+    .phase-3 { background: rgba(245,158,11,0.15); color: #FCD34D; }
+    .phase-4 { background: rgba(239,68,68,0.15); color: #FCA5A5; }
+    .phase-5 { background: rgba(168,85,247,0.15); color: #C084FC; }
+    .phase-6 { background: rgba(255,90,31,0.15); color: #FF8C5A; }
+    .vol-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .vol-track {
+      flex: 1;
+      height: 6px;
+      background: var(--bg);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .vol-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 99px;
+    }
+    .vol-num { font-size: 13px; font-weight: 600; color: var(--text); min-width: 36px; text-align: right; }
+
+    /* ── DAILY TRACKER ── */
+    .tracker-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+    .day-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      transition: border-color 0.2s;
+      position: relative;
+    }
+    .day-card.status-green  { border-color: var(--success); }
+    .day-card.status-yellow { border-color: var(--warn); }
+    .day-card.status-red    { border-color: var(--danger); }
+    .day-card.today {
+      box-shadow: 0 0 0 2px var(--accent);
+      border-color: var(--accent);
+    }
+    .day-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .day-num {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .today-badge {
+      display: none;
+      background: var(--accent);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 99px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .day-card.today .today-badge { display: inline-block; }
+    .day-target {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .day-target strong { color: var(--accent); }
+    .day-status-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--border);
+      transition: background 0.2s;
+    }
+    .day-card.status-green  .day-status-dot { background: var(--success); }
+    .day-card.status-yellow .day-status-dot { background: var(--warn); }
+    .day-card.status-red    .day-status-dot { background: var(--danger); }
+    .day-inputs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .day-field label {
+      display: block;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+    .day-field input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 7px 10px;
+      font-family: 'Sora', sans-serif;
+      font-size: 13px;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .day-field input:focus { border-color: var(--accent); }
+    .day-field input::placeholder { color: #444450; }
+    .day-date-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
+    .status-label {
+      font-size: 10px;
+      font-weight: 600;
+      margin-top: 8px;
+      display: none;
+    }
+    .day-card.status-green  .status-label { display: block; color: var(--success); }
+    .day-card.status-yellow .status-label { display: block; color: var(--warn); }
+    .day-card.status-red    .status-label { display: block; color: var(--danger); }
+
+    /* ── DNS CHECKLIST ── */
+    .dns-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+    .dns-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      transition: border-color 0.2s;
+    }
+    .dns-card.checked { border-color: var(--success); }
+    .dns-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .dns-checkbox {
+      width: 20px; height: 20px;
+      border: 2px solid var(--border);
+      border-radius: 5px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    .dns-card.checked .dns-checkbox {
+      background: var(--success);
+      border-color: var(--success);
+    }
+    .dns-checkbox svg { display: none; }
+    .dns-card.checked .dns-checkbox svg { display: block; }
+    .dns-record-type {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .dns-record-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .dns-code {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      color: #93C5FD;
+      line-height: 1.6;
+      word-break: break-all;
+    }
+    .dns-code .dns-key { color: #FCA5A5; }
+    .dns-code .dns-val { color: #86EFAC; }
+
+    /* ── RESEND HEALTH CHECK ── */
+    .health-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+    .health-step {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      transition: border-color 0.2s;
+      cursor: pointer;
+    }
+    .health-step.done { border-color: var(--success); }
+    .step-num {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: var(--bg);
+      border: 2px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+    .health-step.done .step-num {
+      background: var(--success);
+      border-color: var(--success);
+      color: #fff;
+    }
+    .step-body { flex: 1; }
+    .step-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .step-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    .step-desc code {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      color: #93C5FD;
+    }
+    .step-link {
+      display: inline-block;
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .step-link:hover { text-decoration: underline; }
+
+    /* ── ALERT THRESHOLDS ── */
+    .thresholds-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+    .threshold-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+    }
+    .threshold-card .t-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    .threshold-card .t-green { font-size: 13px; margin-bottom: 3px; color: var(--success); }
+    .threshold-card .t-yellow { font-size: 13px; margin-bottom: 3px; color: var(--warn); }
+    .threshold-card .t-red { font-size: 13px; color: var(--danger); }
+
+    /* ── FOOTER ── */
+    .footer {
+      text-align: center;
+      padding: 32px 0 0;
+      font-size: 12px;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
+    }
+    .footer strong { color: var(--accent); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 600px) {
+      .topbar { padding: 12px 16px; flex-wrap: wrap; gap: 8px; }
+      .container { padding: 24px 16px 60px; }
+      .domain-bar { flex-direction: column; align-items: flex-start; }
+      .thresholds-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-brand">
+    <div class="topbar-logo">CW</div>
+    <div>
+      <div class="topbar-title">CWI AI — Email Warmup Tracker</div>
+      <div class="topbar-sub">Resend Domain Warmup · 30-Day Plan</div>
+    </div>
+  </div>
+  <div class="topbar-actions">
+    <button class="btn btn-ghost" onclick="clearDomainData()">Reset Data</button>
+    <button class="btn" onclick="window.print()">Print / Export</button>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- DOMAIN INPUT -->
+  <div class="domain-bar">
+    <label for="domainInput">Domain</label>
+    <input class="domain-input" id="domainInput" type="text" placeholder="e.g. mail.cwiai.com" oninput="saveDomain()" />
+    <div class="warmup-start-wrap">
+      <label for="startDate">Warmup Start Date</label>
+      <input class="date-input" id="startDate" type="date" oninput="saveStartDate(); renderAll()" />
+    </div>
+    <button class="btn" onclick="renderAll()">Apply</button>
+  </div>
+
+  <!-- PROGRESS BAR -->
+  <div class="progress-section">
+    <div class="progress-header">
+      <h3>Overall Warmup Progress</h3>
+      <div class="progress-pct" id="progressPct">0%</div>
+    </div>
+    <div class="progress-bar-outer">
+      <div class="progress-bar-inner" id="progressBar" style="width:0%"></div>
+    </div>
+    <div class="progress-meta">
+      <span><strong id="daysLogged">0</strong> days logged</span>
+      <span><strong id="daysRemaining">30</strong> days remaining</span>
+      <span><strong id="totalSent">0</strong> total emails sent</span>
+      <span id="currentDayLabel" style="margin-left:auto; color: var(--accent); font-weight:600;"></span>
+    </div>
+  </div>
+
+  <!-- WHY WARMUP MATTERS -->
+  <div class="section-title">Why Email Warmup Matters</div>
+  <div class="explainer">
+    <h2>Build Sender Reputation Before You Send at Scale</h2>
+    <p>
+      When you add a new domain to <strong>Resend</strong> (or any ESP), inbox providers like Gmail, Outlook, and Yahoo have
+      zero history on your sending behavior. They cannot tell whether you are a legitimate sender or a spammer. Without
+      a warmup period, blasting thousands of emails from day one almost always triggers spam-filter action — bulk
+      sends get deferred, your domain lands on blocklists, and reversing that damage can take months.
+    </p>
+    <p>
+      Email warmup is the practice of <strong>gradually increasing daily send volume</strong> over 30 days while
+      maintaining healthy engagement metrics (high opens, low bounces, near-zero spam complaints). This trains
+      receiving mail servers to recognize your domain as a trustworthy source and allocates you a larger
+      sending "budget" over time.
+    </p>
+    <p>
+      During warmup, focus on your <strong>most engaged contacts first</strong> — people who opted in recently
+      and are likely to open. Every open is a positive reputation signal. Every bounce or spam complaint
+      is a negative one. The thresholds below reflect Resend's recommended limits and Google/Yahoo's
+      2024 bulk sender requirements.
+    </p>
+    <div class="tip-grid">
+      <div class="tip-card">
+        <div class="tip-icon">&#x1F4E7;</div>
+        <div class="tip-label">Send to engaged lists only</div>
+        <div class="tip-desc">Use contacts who have recently opened or clicked. Avoid cold lists during warmup.</div>
+      </div>
+      <div class="tip-card">
+        <div class="tip-icon">&#x1F4CA;</div>
+        <div class="tip-label">Monitor daily</div>
+        <div class="tip-desc">Check bounce and spam rates every day. One bad batch can stall the entire warmup.</div>
+      </div>
+      <div class="tip-card">
+        <div class="tip-icon">&#x26A0;&#xFE0F;</div>
+        <div class="tip-label">Pause if rates spike</div>
+        <div class="tip-desc">If bounces exceed 2% or spam exceeds 0.1%, stop sending and investigate immediately.</div>
+      </div>
+      <div class="tip-card">
+        <div class="tip-icon">&#x1F9F9;</div>
+        <div class="tip-label">Clean your list first</div>
+        <div class="tip-desc">Run all contacts through an email validation service before warmup begins.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ALERT THRESHOLDS -->
+  <div class="section-title">Health Thresholds</div>
+  <div class="thresholds-row">
+    <div class="threshold-card">
+      <div class="t-label">Bounce Rate</div>
+      <div class="t-green">&#x2705; Green: &lt; 2%</div>
+      <div class="t-yellow">&#x26A0;&#xFE0F; Yellow: 2% – 4%</div>
+      <div class="t-red">&#x1F534; Red: &gt; 4%</div>
+    </div>
+    <div class="threshold-card">
+      <div class="t-label">Spam Complaint Rate</div>
+      <div class="t-green">&#x2705; Green: &lt; 0.1%</div>
+      <div class="t-yellow">&#x26A0;&#xFE0F; Yellow: 0.1% – 0.3%</div>
+      <div class="t-red">&#x1F534; Red: &gt; 0.3%</div>
+    </div>
+    <div class="threshold-card">
+      <div class="t-label">Open Rate (target)</div>
+      <div class="t-green">&#x2705; Healthy: &gt; 30%</div>
+      <div class="t-yellow">&#x26A0;&#xFE0F; Watch: 15% – 30%</div>
+      <div class="t-red">&#x1F534; Low: &lt; 15%</div>
+    </div>
+  </div>
+
+  <!-- WARMUP SCHEDULE TABLE -->
+  <div class="section-title">30-Day Warmup Schedule</div>
+  <div class="schedule-wrap">
+    <table class="schedule-table">
+      <thead>
+        <tr>
+          <th>Days</th>
+          <th>Phase</th>
+          <th>Daily Volume</th>
+          <th>Cumulative (max)</th>
+          <th>Focus</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1 – 3</td>
+          <td><span class="phase-badge phase-1">Phase 1</span></td>
+          <td>
+            <div class="vol-bar">
+              <div class="vol-track"><div class="vol-fill" style="width:4%"></div></div>
+              <div class="vol-num">20</div>
+            </div>
+          </td>
+          <td>60</td>
+          <td>Internal team + close contacts</td>
+        </tr>
+        <tr>
+          <td>4 – 7</td>
+          <td><span class="phase-badge phase-2">Phase 2</span></td>
+          <td>
+            <div class="vol-bar">
+              <div class="vol-track"><div class="vol-fill" style="width:8%"></div></div>
+              <div class="vol-num">40</div>
+            </div>
+          </td>
+          <td>220</td>
+          <td>Highly engaged subscribers</td>
+        </tr>
+        <tr>
+          <td>8 – 10</td>
+          <td><span class="phase-badge phase-3">Phase 3</span></td>
+          <td>
+            <div class="vol-bar">
+              <div class="vol-track"><div class="vol-fill" style="width:15%"></div></div>
+              <div class="vol-num">75</div>
+            </div>
+          </td>
+          <td>445</td>
+          <td>Recent opt-ins (&lt; 90 days)</td>
+        </tr>
+        <tr>
+          <td>11 – 14</td>
+          <td><span class="phase-badge phase-3">Phase 3</span></td>
+          <td>
+            <div class="vol-bar">
+              <div class="vol-track"><div class="vol-fill" style="width:20%"></div></div>
+              <div class="vol-num">100</div>
+            </div>
+          </td>
+          <td>845</td>
+          <td>Active list segments</td>
+        </tr>
+        <tr>
+          <td>15 – 18</td>
+          <td><span class="phase-badge phase-4">Phase 4</span></td>
+          <td>
+            <div class="vol-bar">
+              <div class="vol-track"><div class="vol-fill" style="width:30%"></div></div>
+              <div class="vol-num">150</div>
+            </div>
+          </td>
+          <td>1,445</td>
+          <td>Broader engaged segments</td>
+        </tr>
+        <tr>
+          <td>19 – 22</td>
+          <td><span class="phase-badge phase-4">Phase 4</span></td>
+          <td>
+            <div class="vol-bar">
+              <div class="vol-track"><div class="vol-fill" style="width:40%"></div></div>
+              <div class="vol-num">200</div>
+            </div>
+          </td>
+          <td>2,245</td>
+          <td>Full active list</td>
+        </tr>
+        <tr>
+          <td>23 – 26</td>
+          <td><span class="phase-badge phase-5">Phase 5</span></td>
+          <td>
+            <div class="vol-bar">
+              <div class="vol-track"><div class="vol-fill" style="width:60%"></div></div>
+              <div class="vol-num">300</div>
+            </div>
+          </td>
+          <td>3,445</td>
+          <td>Expand to newsletter subscribers</td>
+        </tr>
+        <tr>
+          <td>27 – 30</td>
+          <td><span class="phase-badge phase-6">Phase 6</span></td>
+          <td>
+            <div class="vol-bar">
+              <div class="vol-track"><div class="vol-fill" style="width:100%"></div></div>
+              <div class="vol-num">500</div>
+            </div>
+          </td>
+          <td>5,445</td>
+          <td>Full production volume</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- DAILY TRACKER -->
+  <div class="section-title">Daily Send Tracker</div>
+  <div class="tracker-grid" id="trackerGrid">
+    <!-- Populated by JS -->
+  </div>
+
+  <!-- DNS CHECKLIST -->
+  <div class="section-title">DNS Records Checklist</div>
+  <div class="dns-grid" id="dnsGrid">
+
+    <div class="dns-card" id="dns-spf">
+      <div class="dns-header">
+        <div class="dns-checkbox" onclick="toggleDns('dns-spf')">
+          <svg width="12" height="10" viewBox="0 0 12 10" fill="none">
+            <path d="M1 5L4.5 8.5L11 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <div class="dns-record-type">SPF Record</div>
+          <div class="dns-record-desc">Authorizes Resend to send on your behalf</div>
+        </div>
+      </div>
+      <div class="dns-code">
+        <span class="dns-key">Type:</span> <span class="dns-val">TXT</span><br>
+        <span class="dns-key">Name:</span> <span class="dns-val">@</span> (or your domain root)<br>
+        <span class="dns-key">Value:</span> <span class="dns-val">v=spf1 include:amazonses.com ~all</span>
+      </div>
+    </div>
+
+    <div class="dns-card" id="dns-dkim">
+      <div class="dns-header">
+        <div class="dns-checkbox" onclick="toggleDns('dns-dkim')">
+          <svg width="12" height="10" viewBox="0 0 12 10" fill="none">
+            <path d="M1 5L4.5 8.5L11 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <div class="dns-record-type">DKIM Record</div>
+          <div class="dns-record-desc">Signs outbound mail to prevent spoofing</div>
+        </div>
+      </div>
+      <div class="dns-code">
+        <span class="dns-key">Type:</span> <span class="dns-val">CNAME</span><br>
+        <span class="dns-key">Name:</span> <span class="dns-val">resend._domainkey</span><br>
+        <span class="dns-key">Value:</span> <span class="dns-val">resend._domainkey.resend.com</span>
+      </div>
+    </div>
+
+    <div class="dns-card" id="dns-dmarc">
+      <div class="dns-header">
+        <div class="dns-checkbox" onclick="toggleDns('dns-dmarc')">
+          <svg width="12" height="10" viewBox="0 0 12 10" fill="none">
+            <path d="M1 5L4.5 8.5L11 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <div class="dns-record-type">DMARC Record</div>
+          <div class="dns-record-desc">Policy for handling authentication failures</div>
+        </div>
+      </div>
+      <div class="dns-code">
+        <span class="dns-key">Type:</span> <span class="dns-val">TXT</span><br>
+        <span class="dns-key">Name:</span> <span class="dns-val">_dmarc</span><br>
+        <span class="dns-key">Value:</span> <span class="dns-val">v=DMARC1; p=quarantine; rua=mailto:dmarc@<span id="dmarcDomain">yourdomain.com</span></span>
+      </div>
+    </div>
+
+    <div class="dns-card" id="dns-mx">
+      <div class="dns-header">
+        <div class="dns-checkbox" onclick="toggleDns('dns-mx')">
+          <svg width="12" height="10" viewBox="0 0 12 10" fill="none">
+            <path d="M1 5L4.5 8.5L11 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <div class="dns-record-type">MX Record</div>
+          <div class="dns-record-desc">Routes inbound mail (for bounce handling)</div>
+        </div>
+      </div>
+      <div class="dns-code">
+        <span class="dns-key">Type:</span> <span class="dns-val">MX</span><br>
+        <span class="dns-key">Name:</span> <span class="dns-val">@</span> (or your sending subdomain)<br>
+        <span class="dns-key">Priority:</span> <span class="dns-val">10</span><br>
+        <span class="dns-key">Value:</span> <span class="dns-val">feedback-smtp.us-east-1.amazonses.com</span>
+      </div>
+    </div>
+
+    <div class="dns-card" id="dns-cname">
+      <div class="dns-header">
+        <div class="dns-checkbox" onclick="toggleDns('dns-cname')">
+          <svg width="12" height="10" viewBox="0 0 12 10" fill="none">
+            <path d="M1 5L4.5 8.5L11 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <div class="dns-record-type">Sending Subdomain CNAME</div>
+          <div class="dns-record-desc">Custom tracking &amp; sending endpoint</div>
+        </div>
+      </div>
+      <div class="dns-code">
+        <span class="dns-key">Type:</span> <span class="dns-val">CNAME</span><br>
+        <span class="dns-key">Name:</span> <span class="dns-val">send.<span class="dns-subdomain-placeholder" id="cnameSubdomain">yourdomain.com</span></span><br>
+        <span class="dns-key">Value:</span> <span class="dns-val">eu-mail.resend.com</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RESEND HEALTH CHECK STEPS -->
+  <div class="section-title">Resend Health Check Steps</div>
+  <div class="health-steps">
+
+    <div class="health-step" id="step-1" onclick="toggleStep('step-1')">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <div class="step-title">Verify Domain in Resend Dashboard</div>
+        <div class="step-desc">
+          Log in to <a class="step-link" href="https://resend.com/domains" target="_blank" rel="noopener">resend.com/domains</a> and confirm your domain shows
+          <code>Verified</code> status. All DNS records (SPF, DKIM, DMARC) must show green checkmarks.
+          If any record is pending, re-check propagation — DNS changes can take up to 48 hours.
+        </div>
+        <a class="step-link" href="https://resend.com/docs/dashboard/domains/introduction" target="_blank" rel="noopener">Resend Domains Docs &rarr;</a>
+      </div>
+    </div>
+
+    <div class="health-step" id="step-2" onclick="toggleStep('step-2')">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <div class="step-title">Send a Test Email</div>
+        <div class="step-desc">
+          From the Resend dashboard or via API, send a test email to your own inbox (Gmail, Outlook, and Apple Mail)
+          using your verified sending domain. Confirm the email lands in inbox — not spam. Check that the
+          <code>From</code> address, subject line, and HTML render correctly. Verify the unsubscribe header is present.
+        </div>
+        <a class="step-link" href="https://resend.com/docs/send-with-resend/introduction" target="_blank" rel="noopener">Resend Send Docs &rarr;</a>
+      </div>
+    </div>
+
+    <div class="health-step" id="step-3" onclick="toggleStep('step-3')">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <div class="step-title">Check Spam Score with Mail Tester</div>
+        <div class="step-desc">
+          Go to <a class="step-link" href="https://www.mail-tester.com" target="_blank" rel="noopener">mail-tester.com</a> and get a unique test address.
+          Send an actual campaign-style email (with HTML body, unsubscribe link) to that address, then view your score.
+          Target <code>9/10 or higher</code>. Common deductions: missing List-Unsubscribe header, broken HTML,
+          or a DMARC policy of <code>p=none</code>.
+        </div>
+        <a class="step-link" href="https://www.mail-tester.com" target="_blank" rel="noopener">mail-tester.com &rarr;</a>
+      </div>
+    </div>
+
+    <div class="health-step" id="step-4" onclick="toggleStep('step-4')">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <div class="step-title">Review Resend Logs &amp; Webhook Events</div>
+        <div class="step-desc">
+          In the Resend dashboard navigate to <code>Logs</code> and review delivery events for any
+          <code>bounced</code>, <code>complained</code>, or <code>failed</code> entries. Set up a webhook
+          endpoint in your app to receive <code>email.bounced</code> and <code>email.complained</code> events
+          so you can automatically suppress those addresses.
+        </div>
+        <a class="step-link" href="https://resend.com/docs/dashboard/logs/introduction" target="_blank" rel="noopener">Resend Logs Docs &rarr;</a>
+      </div>
+    </div>
+
+    <div class="health-step" id="step-5" onclick="toggleStep('step-5')">
+      <div class="step-num">5</div>
+      <div class="step-body">
+        <div class="step-title">Check Google Postmaster Tools</div>
+        <div class="step-desc">
+          Register your domain at <a class="step-link" href="https://postmaster.google.com" target="_blank" rel="noopener">postmaster.google.com</a>.
+          After a few days of sending, you will see <strong>Domain Reputation</strong> and
+          <strong>IP Reputation</strong> scores. Aim for <code>HIGH</code> or <code>MEDIUM</code>.
+          A <code>LOW</code> or <code>BAD</code> score means Gmail is already filtering your mail — pause
+          sending and investigate bounce/complaint sources.
+        </div>
+        <a class="step-link" href="https://postmaster.google.com" target="_blank" rel="noopener">Google Postmaster Tools &rarr;</a>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <p>CWI AI &mdash; <strong>Email Warmup Tracker</strong> &mdash; All data saved locally in your browser</p>
+    <p style="margin-top:6px;">Data is stored per domain key in localStorage. Clear browser data to reset.</p>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+  // ── DATA MODEL ──────────────────────────────────────────────────────────────
+
+  const SCHEDULE = [
+    { days: [1,2,3],          target: 20  },
+    { days: [4,5,6,7],        target: 40  },
+    { days: [8,9,10],         target: 75  },
+    { days: [11,12,13,14],    target: 100 },
+    { days: [15,16,17,18],    target: 150 },
+    { days: [19,20,21,22],    target: 200 },
+    { days: [23,24,25,26],    target: 300 },
+    { days: [27,28,29,30],    target: 500 },
+  ];
+
+  function getTarget(day) {
+    for (const phase of SCHEDULE) {
+      if (phase.days.includes(day)) return phase.target;
+    }
+    return 0;
+  }
+
+  function storageKey() {
+    const domain = (document.getElementById('domainInput').value || 'default').trim().toLowerCase();
+    return 'cwi_warmup_' + domain;
+  }
+
+  function loadData() {
+    try {
+      const raw = localStorage.getItem(storageKey());
+      return raw ? JSON.parse(raw) : {};
+    } catch(e) { return {}; }
+  }
+
+  function saveData(data) {
+    localStorage.setItem(storageKey(), JSON.stringify(data));
+  }
+
+  function saveDomain() {
+    const domain = document.getElementById('domainInput').value.trim();
+    localStorage.setItem('cwi_warmup_last_domain', domain);
+    updateDmarcDomain(domain);
+    updateCnameSubdomain(domain);
+    loadDnsState();
+    loadStepsState();
+    renderAll();
+  }
+
+  function saveStartDate() {
+    const domain = (document.getElementById('domainInput').value || 'default').trim().toLowerCase();
+    const d = document.getElementById('startDate').value;
+    localStorage.setItem('cwi_warmup_start_' + domain, d);
+  }
+
+  function loadStartDate() {
+    const domain = (document.getElementById('domainInput').value || 'default').trim().toLowerCase();
+    const d = localStorage.getItem('cwi_warmup_start_' + domain);
+    if (d) document.getElementById('startDate').value = d;
+  }
+
+  function getCurrentWarmupDay() {
+    const startVal = document.getElementById('startDate').value;
+    if (!startVal) return null;
+    const start = new Date(startVal + 'T00:00:00');
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const diff = Math.floor((today - start) / 86400000) + 1;
+    if (diff < 1 || diff > 30) return null;
+    return diff;
+  }
+
+  // ── DOMAIN HELPERS ──────────────────────────────────────────────────────────
+
+  function updateDmarcDomain(domain) {
+    const el = document.getElementById('dmarcDomain');
+    if (el) el.textContent = domain || 'yourdomain.com';
+  }
+
+  function updateCnameSubdomain(domain) {
+    const el = document.getElementById('cnameSubdomain');
+    if (el) el.textContent = domain || 'yourdomain.com';
+  }
+
+  // ── DNS CHECKLIST ────────────────────────────────────────────────────────────
+
+  function dnsStorageKey() {
+    const domain = (document.getElementById('domainInput').value || 'default').trim().toLowerCase();
+    return 'cwi_dns_' + domain;
+  }
+
+  function loadDnsState() {
+    try {
+      const raw = localStorage.getItem(dnsStorageKey());
+      return raw ? JSON.parse(raw) : {};
+    } catch(e) { return {}; }
+  }
+
+  function saveDnsState(state) {
+    localStorage.setItem(dnsStorageKey(), JSON.stringify(state));
+  }
+
+  function toggleDns(id) {
+    const card = document.getElementById(id);
+    const state = loadDnsState();
+    const isChecked = card.classList.contains('checked');
+    if (isChecked) {
+      card.classList.remove('checked');
+      delete state[id];
+    } else {
+      card.classList.add('checked');
+      state[id] = true;
+    }
+    saveDnsState(state);
+  }
+
+  function applyDnsState() {
+    const state = loadDnsState();
+    ['dns-spf','dns-dkim','dns-dmarc','dns-mx','dns-cname'].forEach(id => {
+      const card = document.getElementById(id);
+      if (card) {
+        if (state[id]) card.classList.add('checked');
+        else card.classList.remove('checked');
+      }
+    });
+  }
+
+  // ── HEALTH STEPS ─────────────────────────────────────────────────────────────
+
+  function stepsStorageKey() {
+    const domain = (document.getElementById('domainInput').value || 'default').trim().toLowerCase();
+    return 'cwi_steps_' + domain;
+  }
+
+  function loadStepsStateData() {
+    try {
+      const raw = localStorage.getItem(stepsStorageKey());
+      return raw ? JSON.parse(raw) : {};
+    } catch(e) { return {}; }
+  }
+
+  function saveStepsState(state) {
+    localStorage.setItem(stepsStorageKey(), JSON.stringify(state));
+  }
+
+  function toggleStep(id) {
+    const el = document.getElementById(id);
+    const state = loadStepsStateData();
+    const isDone = el.classList.contains('done');
+    if (isDone) {
+      el.classList.remove('done');
+      delete state[id];
+    } else {
+      el.classList.add('done');
+      state[id] = true;
+    }
+    saveStepsState(state);
+  }
+
+  function loadStepsState() {
+    const state = loadStepsStateData();
+    for (let i = 1; i <= 5; i++) {
+      const el = document.getElementById('step-' + i);
+      if (el) {
+        if (state['step-' + i]) el.classList.add('done');
+        else el.classList.remove('done');
+      }
+    }
+  }
+
+  // ── DAY STATUS LOGIC ─────────────────────────────────────────────────────────
+
+  function getDayStatus(sent, bounceRate, spamRate, openRate) {
+    const s = parseFloat(sent) || 0;
+    const b = parseFloat(bounceRate);
+    const sp = parseFloat(spamRate);
+    if (s === 0) return 'none';
+    const hasB = !isNaN(b);
+    const hasSp = !isNaN(sp);
+    if ((hasB && b > 4) || (hasSp && sp > 0.3)) return 'red';
+    if ((hasB && b >= 2) || (hasSp && sp >= 0.1)) return 'yellow';
+    return 'green';
+  }
+
+  function getStatusLabel(status) {
+    if (status === 'green')  return 'On Track';
+    if (status === 'yellow') return 'Warning — review metrics';
+    if (status === 'red')    return 'Pause sending — investigate';
+    return '';
+  }
+
+  // ── RENDER TRACKER ───────────────────────────────────────────────────────────
+
+  function renderAll() {
+    const data = loadData();
+    const currentDay = getCurrentWarmupDay();
+    const grid = document.getElementById('trackerGrid');
+    grid.innerHTML = '';
+
+    let daysLogged = 0;
+    let totalSent  = 0;
+
+    for (let day = 1; day <= 30; day++) {
+      const target = getTarget(day);
+      const key    = 'day' + day;
+      const d      = data[key] || {};
+      const isToday = currentDay === day;
+
+      const status = getDayStatus(d.sent, d.bounce, d.spam, d.open);
+      if (d.sent && parseFloat(d.sent) > 0) {
+        daysLogged++;
+        totalSent += parseFloat(d.sent) || 0;
+      }
+
+      const statusLabel = getStatusLabel(status);
+      const startVal = document.getElementById('startDate').value;
+      let dateLabel = '';
+      if (startVal) {
+        const start = new Date(startVal + 'T00:00:00');
+        const dayDate = new Date(start.getTime() + (day - 1) * 86400000);
+        dateLabel = dayDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      }
+
+      const card = document.createElement('div');
+      card.className = 'day-card' +
+        (status !== 'none' ? ' status-' + status : '') +
+        (isToday ? ' today' : '');
+
+      card.innerHTML = `
+        <div class="day-header">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="day-status-dot"></div>
+            <div class="day-num">Day ${day}</div>
+            <span class="today-badge">Today</span>
+          </div>
+          <div class="day-target">Target: <strong>${target}</strong></div>
+        </div>
+        ${dateLabel ? `<div class="day-date-label">${dateLabel}</div>` : ''}
+        <div class="day-inputs">
+          <div class="day-field">
+            <label>Emails Sent</label>
+            <input type="number" min="0" placeholder="${target}" value="${d.sent || ''}"
+              oninput="saveField(${day},'sent',this.value)" />
+          </div>
+          <div class="day-field">
+            <label>Bounce %</label>
+            <input type="number" min="0" max="100" step="0.01" placeholder="0.0" value="${d.bounce || ''}"
+              oninput="saveField(${day},'bounce',this.value)" />
+          </div>
+          <div class="day-field">
+            <label>Spam %</label>
+            <input type="number" min="0" max="100" step="0.001" placeholder="0.0" value="${d.spam || ''}"
+              oninput="saveField(${day},'spam',this.value)" />
+          </div>
+          <div class="day-field">
+            <label>Open %</label>
+            <input type="number" min="0" max="100" step="0.1" placeholder="0.0" value="${d.open || ''}"
+              oninput="saveField(${day},'open',this.value)" />
+          </div>
+        </div>
+        <div class="status-label">${statusLabel}</div>
+      `;
+
+      grid.appendChild(card);
+    }
+
+    // Update progress
+    const pct = Math.round((daysLogged / 30) * 100);
+    document.getElementById('progressPct').textContent = pct + '%';
+    document.getElementById('progressBar').style.width = pct + '%';
+    document.getElementById('daysLogged').textContent = daysLogged;
+    document.getElementById('daysRemaining').textContent = Math.max(0, 30 - daysLogged);
+    document.getElementById('totalSent').textContent = totalSent.toLocaleString();
+
+    if (currentDay) {
+      document.getElementById('currentDayLabel').textContent = 'Currently: Day ' + currentDay + ' of 30';
+    } else {
+      document.getElementById('currentDayLabel').textContent = '';
+    }
+  }
+
+  function saveField(day, field, value) {
+    const data = loadData();
+    const key = 'day' + day;
+    if (!data[key]) data[key] = {};
+    data[key][field] = value;
+    saveData(data);
+    // Re-evaluate status for this card without full re-render
+    const d = data[key];
+    const status = getDayStatus(d.sent, d.bounce, d.spam, d.open);
+    const cards = document.querySelectorAll('.day-card');
+    const card = cards[day - 1];
+    if (card) {
+      card.classList.remove('status-green','status-yellow','status-red');
+      if (status !== 'none') card.classList.add('status-' + status);
+      const sl = card.querySelector('.status-label');
+      if (sl) {
+        sl.textContent = getStatusLabel(status);
+      }
+    }
+    // Update progress counters
+    updateProgress();
+  }
+
+  function updateProgress() {
+    const data = loadData();
+    let daysLogged = 0, totalSent = 0;
+    for (let day = 1; day <= 30; day++) {
+      const d = data['day' + day] || {};
+      if (d.sent && parseFloat(d.sent) > 0) {
+        daysLogged++;
+        totalSent += parseFloat(d.sent) || 0;
+      }
+    }
+    const pct = Math.round((daysLogged / 30) * 100);
+    document.getElementById('progressPct').textContent = pct + '%';
+    document.getElementById('progressBar').style.width = pct + '%';
+    document.getElementById('daysLogged').textContent = daysLogged;
+    document.getElementById('daysRemaining').textContent = Math.max(0, 30 - daysLogged);
+    document.getElementById('totalSent').textContent = totalSent.toLocaleString();
+  }
+
+  // ── RESET ────────────────────────────────────────────────────────────────────
+
+  function clearDomainData() {
+    if (!confirm('Clear all tracker data for this domain? This cannot be undone.')) return;
+    localStorage.removeItem(storageKey());
+    localStorage.removeItem(dnsStorageKey());
+    localStorage.removeItem(stepsStorageKey());
+    const domain = (document.getElementById('domainInput').value || 'default').trim().toLowerCase();
+    localStorage.removeItem('cwi_warmup_start_' + domain);
+    document.getElementById('startDate').value = '';
+    renderAll();
+    applyDnsState();
+    loadStepsState();
+  }
+
+  // ── INIT ─────────────────────────────────────────────────────────────────────
+
+  window.addEventListener('DOMContentLoaded', () => {
+    // Restore last domain
+    const lastDomain = localStorage.getItem('cwi_warmup_last_domain');
+    if (lastDomain) {
+      document.getElementById('domainInput').value = lastDomain;
+      updateDmarcDomain(lastDomain);
+      updateCnameSubdomain(lastDomain);
+    }
+    loadStartDate();
+    renderAll();
+    applyDnsState();
+    loadStepsState();
+  });
+</script>
+</body>
+</html>

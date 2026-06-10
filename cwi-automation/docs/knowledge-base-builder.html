@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Knowledge Base Builder — CWI</title>
+<meta name="description" content="Build your AI bot knowledge base with pre-written industry FAQs. Edit, select, and export for Freshchat import.">
+<link rel="icon" type="image/png" href="../assets/cwi-favicon-64.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ── Brand tokens ── */
+:root {
+  --ink: #0A0A0C;
+  --ink-2: #0E0E11;
+  --surface: #141418;
+  --surface-2: #191920;
+  --line: rgba(255,255,255,.09);
+  --line-2: rgba(255,255,255,.14);
+  --accent: #FF5A1F;
+  --ember: #FF8A3D;
+  --steel: #85858E;
+  --text: #F4F4F6;
+  --text-dim: #C2C2C8;
+  --font-disp: 'Sora', sans-serif;
+  --font-body: 'Instrument Sans', sans-serif;
+  --r-sm: 12px;
+  --r-md: 18px;
+  --r-lg: 26px;
+  --r-pill: 999px;
+  --ease: cubic-bezier(.22,.61,.36,1);
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font-body);
+  background: var(--ink);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.6;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+h1, h2, h3, h4 { font-family: var(--font-disp); letter-spacing: -.035em; line-height: 1.1; font-weight: 800; }
+a { color: inherit; text-decoration: none; }
+
+/* ── Ambient background ── */
+.bg-field { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
+.bg-field::before {
+  content: "";
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(720px 460px at 82% -6%, rgba(255,90,31,.13), transparent 60%),
+    radial-gradient(620px 520px at 6% 8%,  rgba(255,90,31,.05), transparent 60%);
+}
+.bg-field::after {
+  content: "";
+  position: absolute; inset: 0; opacity: .5;
+  background-image:
+    linear-gradient(rgba(255,255,255,.022) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.022) 1px, transparent 1px);
+  background-size: 58px 58px;
+  mask-image: radial-gradient(900px 700px at 72% 2%, #000, transparent 78%);
+}
+
+/* ── Layout ── */
+.wrap { max-width: 1160px; margin: 0 auto; padding: 0 28px; }
+
+/* ── Top bar ── */
+.topbar {
+  border-bottom: 1px solid var(--line);
+  background: rgba(10,10,12,.82);
+  backdrop-filter: blur(14px);
+  position: sticky; top: 0; z-index: 100;
+  padding: 14px 0;
+}
+.topbar-inner {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+}
+.logo {
+  font-family: var(--font-disp);
+  font-weight: 800;
+  font-size: 18px;
+  letter-spacing: -.04em;
+  color: var(--text);
+  display: flex; align-items: center; gap: 9px;
+}
+.logo .dot { color: var(--accent); }
+.back-link {
+  font-size: 13px; color: var(--steel); display: flex; align-items: center; gap: 6px;
+  transition: color .2s;
+}
+.back-link:hover { color: var(--text); }
+.back-link svg { width: 14px; height: 14px; }
+
+/* ── Hero ── */
+.hero {
+  padding: 64px 0 44px;
+  text-align: center;
+}
+.kicker {
+  display: inline-flex; align-items: center; gap: 9px;
+  font-size: 11.5px; font-weight: 600; letter-spacing: .22em; text-transform: uppercase;
+  color: var(--steel); margin-bottom: 18px;
+}
+.pip {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+}
+.hero h1 {
+  font-size: clamp(32px, 5vw, 56px);
+  max-width: 18ch;
+  margin: 0 auto 16px;
+}
+.hero h1 .acc { color: var(--accent); }
+.hero p {
+  font-size: clamp(15px, 1.8vw, 18px);
+  color: var(--text-dim);
+  max-width: 52ch;
+  margin: 0 auto;
+}
+
+/* ── Industry selector ── */
+.selector-section { padding: 0 0 48px; }
+.selector-label {
+  font-size: 12px; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--steel); font-weight: 600; margin-bottom: 14px;
+  text-align: center;
+}
+.industry-tabs {
+  display: flex; flex-wrap: wrap; gap: 10px;
+  justify-content: center;
+}
+.tab-btn {
+  font-family: var(--font-body);
+  font-size: 15px; font-weight: 600;
+  padding: 12px 28px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line-2);
+  background: var(--surface);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all .22s var(--ease);
+  display: flex; align-items: center; gap: 9px;
+}
+.tab-btn .icon { font-size: 18px; }
+.tab-btn:hover {
+  border-color: rgba(255,90,31,.4);
+  color: var(--text);
+  background: var(--surface-2);
+}
+.tab-btn.active {
+  border-color: var(--accent);
+  background: rgba(255,90,31,.1);
+  color: #fff;
+  box-shadow: 0 0 18px rgba(255,90,31,.18);
+}
+
+/* ── FAQ section ── */
+.faq-section { padding-bottom: 80px; }
+.faq-header {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 14px;
+  margin-bottom: 28px;
+}
+.faq-header h2 {
+  font-size: clamp(20px, 2.6vw, 28px);
+}
+.faq-header h2 span { color: var(--accent); }
+.toolbar {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.count-badge {
+  font-size: 13px; color: var(--steel);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  padding: 5px 14px;
+}
+.count-badge strong { color: var(--accent); }
+
+/* ── Export button ── */
+.btn-export {
+  font-family: var(--font-body);
+  font-size: 14px; font-weight: 600;
+  padding: 10px 22px;
+  border-radius: var(--r-pill);
+  border: 1.5px solid var(--accent);
+  background: rgba(255,90,31,.1);
+  color: #fff;
+  cursor: pointer;
+  transition: all .22s var(--ease);
+  display: flex; align-items: center; gap: 8px;
+}
+.btn-export:hover {
+  background: var(--accent);
+  box-shadow: 0 0 22px rgba(255,90,31,.35);
+}
+.btn-export svg { width: 15px; height: 15px; }
+
+.btn-select-all {
+  font-family: var(--font-body);
+  font-size: 13px; font-weight: 500;
+  padding: 8px 16px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line-2);
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all .2s;
+}
+.btn-select-all:hover { border-color: var(--line-2); color: var(--text); background: var(--surface-2); }
+
+/* ── Cards grid ── */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 18px;
+}
+
+.faq-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: 22px;
+  display: flex; flex-direction: column; gap: 14px;
+  transition: border-color .2s, box-shadow .2s;
+  position: relative;
+}
+.faq-card:hover { border-color: var(--line-2); }
+.faq-card.checked {
+  border-color: rgba(255,90,31,.4);
+  box-shadow: 0 0 0 1px rgba(255,90,31,.15);
+  background: rgba(255,90,31,.04);
+}
+
+/* card top row */
+.card-top {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
+}
+.card-num {
+  font-family: var(--font-disp);
+  font-size: 11px; font-weight: 700; letter-spacing: .14em;
+  color: var(--accent); text-transform: uppercase;
+  background: rgba(255,90,31,.1);
+  border: 1px solid rgba(255,90,31,.2);
+  border-radius: 6px; padding: 3px 8px; flex: none;
+}
+.card-checkbox-wrap {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 12px; color: var(--steel); flex: none; cursor: pointer;
+  user-select: none;
+}
+.card-checkbox-wrap input[type="checkbox"] {
+  appearance: none; -webkit-appearance: none;
+  width: 18px; height: 18px; border-radius: 5px;
+  border: 1.5px solid var(--line-2);
+  background: transparent; cursor: pointer;
+  transition: all .18s; flex: none;
+  position: relative;
+}
+.card-checkbox-wrap input[type="checkbox"]:checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.card-checkbox-wrap input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute; left: 4px; top: 1px;
+  width: 6px; height: 10px;
+  border: 2px solid #fff;
+  border-top: none; border-left: none;
+  transform: rotate(42deg);
+}
+.used-label { font-size: 11.5px; }
+
+/* editable fields */
+.card-question {
+  font-family: var(--font-disp);
+  font-size: 15.5px; font-weight: 700;
+  color: var(--text);
+  border: none; outline: none;
+  background: transparent;
+  border-radius: 7px;
+  padding: 6px 8px; margin: -6px -8px;
+  line-height: 1.35;
+  transition: background .18s;
+  cursor: text;
+}
+.card-question:hover, .card-question:focus {
+  background: rgba(255,255,255,.04);
+}
+.card-question:focus { box-shadow: 0 0 0 1.5px rgba(255,90,31,.3); }
+
+.card-answer {
+  font-size: 14px;
+  color: var(--text-dim);
+  border: none; outline: none;
+  background: transparent;
+  border-radius: 7px;
+  padding: 8px 10px; margin: -8px -10px;
+  line-height: 1.6;
+  min-height: 64px;
+  transition: background .18s;
+  cursor: text;
+  resize: none;
+  font-family: var(--font-body);
+  width: calc(100% + 20px);
+}
+.card-answer:hover, .card-answer:focus {
+  background: rgba(255,255,255,.04);
+  color: var(--text);
+}
+.card-answer:focus { box-shadow: 0 0 0 1.5px rgba(255,90,31,.3); }
+
+.edit-hint {
+  font-size: 11px; color: var(--steel); letter-spacing: .06em;
+  display: flex; align-items: center; gap: 5px;
+  opacity: 0; transition: opacity .2s;
+}
+.faq-card:hover .edit-hint { opacity: 1; }
+
+/* card bottom row */
+.card-bottom {
+  display: flex; align-items: center; justify-content: flex-end; gap: 8px;
+  margin-top: 2px;
+}
+.btn-copy {
+  font-family: var(--font-body);
+  font-size: 12.5px; font-weight: 500;
+  padding: 7px 15px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line-2);
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all .2s;
+  display: flex; align-items: center; gap: 6px;
+}
+.btn-copy:hover { border-color: var(--accent); color: var(--accent); }
+.btn-copy.copied { color: #4ade80; border-color: rgba(74,222,128,.4); }
+.btn-copy svg { width: 13px; height: 13px; }
+
+/* ── Empty state ── */
+.empty-state {
+  display: none;
+  text-align: center;
+  padding: 80px 0;
+}
+.empty-state.visible { display: block; }
+.empty-icon {
+  width: 72px; height: 72px; border-radius: 20px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 20px;
+  font-size: 32px;
+}
+.empty-state h3 { font-size: 22px; margin-bottom: 10px; }
+.empty-state p { color: var(--text-dim); font-size: 15px; }
+
+/* ── Toast ── */
+.toast {
+  position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px);
+  background: var(--surface-2);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-pill);
+  padding: 12px 22px;
+  font-size: 14px; color: var(--text);
+  display: flex; align-items: center; gap: 10px;
+  transition: transform .3s var(--ease), opacity .3s;
+  opacity: 0; z-index: 999; white-space: nowrap;
+  pointer-events: none;
+}
+.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+.toast .t-icon { font-size: 16px; }
+
+/* ── Footer ── */
+.footer {
+  border-top: 1px solid var(--line);
+  padding: 24px 0;
+  text-align: center;
+  font-size: 13px; color: var(--steel);
+}
+.footer a { color: var(--accent); }
+
+/* ── Animations ── */
+.faq-section { animation: fadeUp .4s var(--ease) both; }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.faq-card { animation: cardIn .35s var(--ease) both; }
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(12px) scale(.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .faq-header { flex-direction: column; align-items: flex-start; }
+  .toolbar { width: 100%; }
+  .btn-export { width: 100%; justify-content: center; }
+  .cards-grid { grid-template-columns: 1fr; }
+  .hero { padding: 44px 0 32px; }
+}
+</style>
+</head>
+<body>
+<div class="bg-field"></div>
+
+<!-- Top bar -->
+<header class="topbar">
+  <div class="wrap">
+    <div class="topbar-inner">
+      <div class="logo">
+        <svg width="22" height="22" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <rect x="4" y="10" width="4" height="12" rx="2" fill="#FF5A1F"/>
+          <rect x="10" y="6" width="4" height="20" rx="2" fill="#FF5A1F" opacity=".85"/>
+          <rect x="16" y="2" width="4" height="28" rx="2" fill="#FF5A1F" opacity=".7"/>
+          <rect x="22" y="6" width="4" height="20" rx="2" fill="#FF5A1F" opacity=".55"/>
+        </svg>
+        CWI <span class="dot">·</span> Knowledge Base Builder
+      </div>
+      <a class="back-link" href="../index.html">
+        <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M8 2L3 7l5 5"/>
+          <line x1="3" y1="7" x2="12" y2="7"/>
+        </svg>
+        Back to site
+      </a>
+    </div>
+  </div>
+</header>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="wrap">
+    <div class="kicker"><span class="pip"></span> Client Tool</div>
+    <h1>Knowledge Base <span class="acc">Builder</span></h1>
+    <p>Select your industry to load 10 pre-written FAQs. Edit any card to match your business, check the ones you want, then export for Freshchat import.</p>
+  </div>
+</section>
+
+<!-- Industry selector -->
+<section class="selector-section">
+  <div class="wrap">
+    <div class="selector-label">Choose your industry</div>
+    <div class="industry-tabs" role="tablist" aria-label="Industry selector">
+      <button class="tab-btn" data-industry="plumbing" role="tab" aria-selected="false">
+        <span class="icon">🔧</span> Plumbing
+      </button>
+      <button class="tab-btn" data-industry="hvac" role="tab" aria-selected="false">
+        <span class="icon">❄️</span> HVAC
+      </button>
+      <button class="tab-btn" data-industry="accounting" role="tab" aria-selected="false">
+        <span class="icon">📊</span> Accounting
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ section (populated by JS) -->
+<main class="faq-section" id="faq-section" style="display:none;">
+  <div class="wrap">
+    <div class="faq-header">
+      <h2>FAQs — <span id="industry-label"></span></h2>
+      <div class="toolbar">
+        <div class="count-badge"><strong id="checked-count">0</strong> selected</div>
+        <button class="btn-select-all" id="btn-select-all">Select all</button>
+        <button class="btn-export" id="btn-export">
+          <svg viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M7.5 1v9M4 7l3.5 3.5L11 7"/>
+            <path d="M2 11v1.5A1.5 1.5 0 003.5 14h8A1.5 1.5 0 0013 12.5V11"/>
+          </svg>
+          Export JSON
+        </button>
+      </div>
+    </div>
+
+    <div class="empty-state" id="empty-state">
+      <div class="empty-icon">📭</div>
+      <h3>No FAQs selected</h3>
+      <p>Check at least one FAQ card above, then click Export JSON.</p>
+    </div>
+
+    <div class="cards-grid" id="cards-grid"></div>
+  </div>
+</main>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="wrap">
+    Built by <a href="../index.html">CWI · Compute With Imagination</a> &nbsp;·&nbsp; Internal client tool
+  </div>
+</footer>
+
+<!-- Toast notification -->
+<div class="toast" id="toast">
+  <span class="t-icon" id="toast-icon">✓</span>
+  <span id="toast-msg">Copied to clipboard</span>
+</div>
+
+<script>
+/* ── FAQ data ── */
+const FAQ_DATA = {
+  plumbing: {
+    label: "Plumbing",
+    faqs: [
+      {
+        question: "What areas do you serve?",
+        answer: "We serve [City] and the surrounding [County] area, including [Neighborhood A], [Neighborhood B], and [Neighborhood C]. Call us to confirm coverage at your address."
+      },
+      {
+        question: "Do you offer emergency service?",
+        answer: "Yes! We offer 24/7 emergency plumbing service. Whether it's a burst pipe, sewage backup, or major leak, our on-call technicians are available nights, weekends, and holidays."
+      },
+      {
+        question: "How much does a service call cost?",
+        answer: "Our standard service call fee is $[XX]. This covers the diagnostic visit and is applied toward the cost of the repair if you proceed. We always provide a written estimate before any work begins."
+      },
+      {
+        question: "Do you fix leaks?",
+        answer: "Absolutely. We repair all types of leaks — pipe leaks, slab leaks, fixture leaks, and more. We use video inspection to locate the source precisely before cutting into walls or floors."
+      },
+      {
+        question: "Can you replace water heaters?",
+        answer: "Yes. We install and replace traditional tank water heaters and tankless models. Our team can recommend the right size and efficiency rating for your household and budget."
+      },
+      {
+        question: "Are you licensed?",
+        answer: "Yes, we are fully licensed, bonded, and insured. Our license number is [#XXXXXXX]. All technicians hold current state plumbing certifications."
+      },
+      {
+        question: "How long does a typical repair take?",
+        answer: "Most standard repairs are completed the same day, often within 1–3 hours. Larger projects like repiping or slab leak repair may require 1–2 days. We'll give you a timeline estimate upfront."
+      },
+      {
+        question: "Do you offer free estimates?",
+        answer: "We offer free estimates for larger projects such as repiping, water heater replacement, and new installations. Diagnostic service calls for active issues carry a standard service fee."
+      },
+      {
+        question: "What brands do you work with?",
+        answer: "We work with all major plumbing brands including Kohler, Moen, Delta, American Standard, Bradford White, Rheem, and more. We carry common parts on our trucks for faster repairs."
+      },
+      {
+        question: "Do you do drain cleaning?",
+        answer: "Yes. We clear clogged drains using professional-grade augers and hydro-jetting equipment. We also perform video camera inspections to identify blockages, root intrusion, and pipe damage."
+      }
+    ]
+  },
+  hvac: {
+    label: "HVAC",
+    faqs: [
+      {
+        question: "Do you service all brands?",
+        answer: "Yes, our certified technicians service all major HVAC brands including Carrier, Trane, Lennox, Rheem, Goodman, American Standard, Bryant, and more. We carry a wide range of OEM parts."
+      },
+      {
+        question: "How often should I change my filter?",
+        answer: "Most standard 1-inch filters should be replaced every 30–90 days. Thicker media filters (4–5 inches) can last 6–12 months. If you have pets or allergies, check monthly and replace as needed."
+      },
+      {
+        question: "What does an AC tune-up include?",
+        answer: "Our tune-up includes checking refrigerant levels, cleaning coils, inspecting electrical connections, lubricating moving parts, testing thermostat calibration, and a full safety inspection — so your system runs at peak efficiency."
+      },
+      {
+        question: "Do you offer 24/7 emergency service?",
+        answer: "Yes. We offer around-the-clock emergency HVAC service. When your heating or cooling goes down in extreme weather, our on-call technicians respond fast — nights, weekends, and holidays included."
+      },
+      {
+        question: "How long does installation take?",
+        answer: "A standard residential AC or furnace installation typically takes 4–8 hours in a single day. More complex systems or full system replacements may take 1–2 days. We'll give you a firm timeline before scheduling."
+      },
+      {
+        question: "What size unit do I need?",
+        answer: "The right size depends on your home's square footage, insulation, ceiling height, windows, and climate. We perform a proper load calculation (Manual J) before recommending any equipment — never just guessing by square footage alone."
+      },
+      {
+        question: "Do you offer financing?",
+        answer: "Yes. We offer flexible financing options through [Financing Partner] with approved credit. Ask about 0% interest plans and low monthly payment options when you schedule your free estimate."
+      },
+      {
+        question: "Are your technicians certified?",
+        answer: "All of our technicians are EPA 608 certified and [NATE/other] certified. We require ongoing training to keep up with the latest equipment, refrigerants, and energy efficiency standards."
+      },
+      {
+        question: "What is SEER rating?",
+        answer: "SEER (Seasonal Energy Efficiency Ratio) measures how efficiently an air conditioner uses electricity. Higher SEER = lower energy bills. Current federal minimums are 14–15 SEER depending on region. We recommend 16+ SEER for best long-term savings."
+      },
+      {
+        question: "Do you service both heating and cooling?",
+        answer: "Yes. We service, repair, and install all types of heating and cooling systems — central AC, heat pumps, furnaces, boilers, mini-splits, and more. One call handles your whole home comfort system."
+      }
+    ]
+  },
+  accounting: {
+    label: "Accounting",
+    faqs: [
+      {
+        question: "What services do you offer?",
+        answer: "We offer a full range of accounting and financial services including tax preparation, bookkeeping, payroll processing, financial statement preparation, business consulting, and IRS representation."
+      },
+      {
+        question: "Do you work with small businesses?",
+        answer: "Absolutely. Small businesses are the heart of our practice. We work with sole proprietors, LLCs, S-corps, and partnerships across a variety of industries. We tailor our services to fit your size and budget."
+      },
+      {
+        question: "How much do you charge?",
+        answer: "Our fees depend on the complexity and frequency of services needed. Bookkeeping starts at $[XX]/month, individual tax returns from $[XXX], and business returns from $[XXX]. We provide a clear, upfront quote before work begins."
+      },
+      {
+        question: "Do you do tax preparation?",
+        answer: "Yes. We prepare individual (1040), business (1120, 1120-S, 1065), and estate/trust tax returns. We also handle prior-year returns, amended returns, and IRS notices."
+      },
+      {
+        question: "What accounting software do you use?",
+        answer: "We work with QuickBooks (Online and Desktop), Xero, Wave, and FreshBooks. If your business already uses a platform, we'll work within it. If you're starting fresh, we'll help you choose the right fit."
+      },
+      {
+        question: "How do I get started?",
+        answer: "Getting started is easy. Schedule a free 30-minute consultation — by phone or video — and we'll review your current situation and recommend the right services. No commitment required."
+      },
+      {
+        question: "Do you offer bookkeeping?",
+        answer: "Yes. We offer monthly, quarterly, and annual bookkeeping packages. Services include transaction categorization, bank reconciliation, financial reporting, and year-end cleanup for tax time."
+      },
+      {
+        question: "Can you help with payroll?",
+        answer: "Yes. We handle full-service payroll including direct deposit, payroll tax filings (941, 940), W-2 and 1099 preparation, and new hire reporting. We keep you compliant so you can focus on running your business."
+      },
+      {
+        question: "Are you a CPA?",
+        answer: "Yes, our firm is led by [Name], CPA, licensed in [State]. Our staff includes both CPAs and enrolled agents (EAs) who are authorized to represent clients before the IRS."
+      },
+      {
+        question: "What industries do you specialize in?",
+        answer: "We have deep experience in [Industry A], [Industry B], [Industry C], and [Industry D]. Industry-specific knowledge means we understand your deductions, compliance requirements, and seasonal cash flow patterns."
+      }
+    ]
+  }
+};
+
+/* ── State ── */
+let activeIndustry = null;
+let allSelected = false;
+
+/* ── DOM refs ── */
+const faqSection    = document.getElementById('faq-section');
+const cardsGrid     = document.getElementById('cards-grid');
+const industryLabel = document.getElementById('industry-label');
+const checkedCount  = document.getElementById('checked-count');
+const emptyState    = document.getElementById('empty-state');
+const btnExport     = document.getElementById('btn-export');
+const btnSelectAll  = document.getElementById('btn-select-all');
+const toast         = document.getElementById('toast');
+const toastMsg      = document.getElementById('toast-msg');
+const toastIcon     = document.getElementById('toast-icon');
+
+/* ── Tabs ── */
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const industry = btn.dataset.industry;
+    document.querySelectorAll('.tab-btn').forEach(b => {
+      b.classList.toggle('active', b === btn);
+      b.setAttribute('aria-selected', b === btn ? 'true' : 'false');
+    });
+    loadIndustry(industry);
+  });
+});
+
+/* ── Load industry ── */
+function loadIndustry(industry) {
+  activeIndustry = industry;
+  allSelected    = false;
+  const data     = FAQ_DATA[industry];
+  industryLabel.textContent = data.label;
+  cardsGrid.innerHTML       = '';
+  emptyState.classList.remove('visible');
+
+  data.faqs.forEach((faq, i) => {
+    const card = buildCard(faq, i + 1);
+    cardsGrid.appendChild(card);
+    // stagger animation
+    card.style.animationDelay = `${i * 40}ms`;
+  });
+
+  faqSection.style.display = 'block';
+  updateCount();
+  faqSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* ── Build card ── */
+function buildCard(faq, num) {
+  const card = document.createElement('div');
+  card.className = 'faq-card';
+  card.dataset.num = num;
+
+  card.innerHTML = `
+    <div class="card-top">
+      <span class="card-num">FAQ ${String(num).padStart(2,'0')}</span>
+      <label class="card-checkbox-wrap" title="Mark as used in bot">
+        <input type="checkbox" class="faq-check" aria-label="Use in bot">
+        <span class="used-label">Use in bot</span>
+      </label>
+    </div>
+    <div class="card-question" contenteditable="true" spellcheck="true" aria-label="Question — editable">${escHtml(faq.question)}</div>
+    <textarea class="card-answer" spellcheck="true" aria-label="Answer — editable" rows="3">${escHtml(faq.answer)}</textarea>
+    <div class="card-bottom">
+      <span class="edit-hint">✏ Click any field to edit</span>
+      <button class="btn-copy" title="Copy Q&amp;A to clipboard">
+        <svg viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.7">
+          <rect x="4" y="4" width="8" height="8" rx="1.5"/>
+          <path d="M9 4V2.5A1.5 1.5 0 007.5 1H2.5A1.5 1.5 0 001 2.5v5A1.5 1.5 0 002.5 9H4"/>
+        </svg>
+        Copy
+      </button>
+    </div>`;
+
+  /* checkbox → card state + count */
+  const cb = card.querySelector('.faq-check');
+  cb.addEventListener('change', () => {
+    card.classList.toggle('checked', cb.checked);
+    updateCount();
+  });
+
+  /* auto-resize textarea */
+  const ta = card.querySelector('.card-answer');
+  ta.addEventListener('input', () => autoResize(ta));
+  autoResize(ta);
+
+  /* copy button */
+  const btnCopy = card.querySelector('.btn-copy');
+  btnCopy.addEventListener('click', () => {
+    const q = card.querySelector('.card-question').innerText.trim();
+    const a = card.querySelector('.card-answer').value.trim();
+    const text = `Q: ${q}\nA: ${a}`;
+    navigator.clipboard.writeText(text).then(() => {
+      btnCopy.classList.add('copied');
+      btnCopy.innerHTML = `<svg viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M1.5 7L5 10.5L11.5 2.5"/></svg> Copied`;
+      showToast('Copied to clipboard', '✓');
+      setTimeout(() => {
+        btnCopy.classList.remove('copied');
+        btnCopy.innerHTML = `<svg viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="4" width="8" height="8" rx="1.5"/><path d="M9 4V2.5A1.5 1.5 0 007.5 1H2.5A1.5 1.5 0 001 2.5v5A1.5 1.5 0 002.5 9H4"/></svg> Copy`;
+      }, 2200);
+    }).catch(() => {
+      showToast('Copy failed — try selecting text manually', '⚠');
+    });
+  });
+
+  return card;
+}
+
+/* ── Select all / deselect all ── */
+btnSelectAll.addEventListener('click', () => {
+  allSelected = !allSelected;
+  document.querySelectorAll('.faq-check').forEach(cb => {
+    cb.checked = allSelected;
+    cb.closest('.faq-card').classList.toggle('checked', allSelected);
+  });
+  btnSelectAll.textContent = allSelected ? 'Deselect all' : 'Select all';
+  updateCount();
+});
+
+/* ── Update checked count ── */
+function updateCount() {
+  const n = document.querySelectorAll('.faq-check:checked').length;
+  checkedCount.textContent = n;
+}
+
+/* ── Export JSON ── */
+btnExport.addEventListener('click', () => {
+  const cards   = document.querySelectorAll('.faq-card');
+  const checked = [];
+
+  cards.forEach(card => {
+    const cb = card.querySelector('.faq-check');
+    if (!cb.checked) return;
+    const q = card.querySelector('.card-question').innerText.trim();
+    const a = card.querySelector('.card-answer').value.trim();
+    checked.push({
+      id: `faq-${activeIndustry}-${card.dataset.num}`,
+      industry: FAQ_DATA[activeIndustry].label,
+      question: q,
+      answer: a,
+      source: "Knowledge Base Builder — CWI",
+      exported_at: new Date().toISOString()
+    });
+  });
+
+  if (checked.length === 0) {
+    emptyState.classList.add('visible');
+    showToast('Select at least one FAQ first', '⚠');
+    return;
+  }
+
+  emptyState.classList.remove('visible');
+  const json    = JSON.stringify(checked, null, 2);
+  const blob    = new Blob([json], { type: 'application/json' });
+  const url     = URL.createObjectURL(blob);
+  const a       = document.createElement('a');
+  a.href        = url;
+  a.download    = `cwi-faqs-${activeIndustry}-${Date.now()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast(`Exported ${checked.length} FAQ${checked.length !== 1 ? 's' : ''} as JSON`, '📥');
+});
+
+/* ── Auto-resize textarea ── */
+function autoResize(ta) {
+  ta.style.height = 'auto';
+  ta.style.height = ta.scrollHeight + 'px';
+}
+
+/* ── Toast ── */
+let toastTimer;
+function showToast(msg, icon = '✓') {
+  clearTimeout(toastTimer);
+  toastMsg.textContent  = msg;
+  toastIcon.textContent = icon;
+  toast.classList.add('show');
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 2800);
+}
+
+/* ── Escape HTML helper ── */
+function escHtml(str) {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+</script>
+</body>
+</html>

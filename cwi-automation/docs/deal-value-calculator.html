@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deal Value Calculator — CWI AI</title>
+<meta name="description" content="CWI internal tool: Deal Value Calculator — CWI AI. Internal use only — CWI Compute With Imagination.">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --accent: #FF5A1F;
+    --accent-dark: #d44a18;
+    --accent-light: #fff2ed;
+    --bg: #f8f9fb;
+    --card: #ffffff;
+    --border: #e2e6ea;
+    --text: #1a1f2e;
+    --muted: #6b7280;
+    --success: #059669;
+    --warning: #d97706;
+    --danger: #dc2626;
+    --info: #2563eb;
+    --radius: 12px;
+    --shadow: 0 2px 12px rgba(0,0,0,0.07);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.10);
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  header {
+    background: linear-gradient(135deg, #1a1f2e 0%, #2d3548 100%);
+    color: white;
+    padding: 28px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.18);
+  }
+  .header-brand { display: flex; align-items: center; gap: 14px; }
+  .header-logo {
+    width: 44px; height: 44px; background: var(--accent);
+    border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 18px; letter-spacing: -1px; flex-shrink: 0;
+  }
+  header h1 { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.3px; }
+  header p { font-size: 0.82rem; color: #9ca3b8; margin-top: 2px; }
+
+  .btn-print {
+    background: var(--accent); color: white; border: none; border-radius: 8px;
+    padding: 10px 22px; font-size: 0.88rem; font-weight: 600; cursor: pointer;
+    display: flex; align-items: center; gap: 8px; transition: background 0.15s;
+    white-space: nowrap;
+  }
+  .btn-print:hover { background: var(--accent-dark); }
+  .btn-print svg { width: 16px; height: 16px; }
+
+  /* ── Layout ── */
+  main {
+    max-width: 1140px; margin: 0 auto; padding: 32px 20px 60px;
+    display: flex; flex-direction: column; gap: 32px;
+  }
+
+  /* ── Section wrapper ── */
+  .section {
+    background: var(--card); border-radius: var(--radius);
+    border: 1px solid var(--border); box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .section-header {
+    background: linear-gradient(90deg, var(--accent) 0%, #ff7a47 100%);
+    color: white; padding: 16px 24px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .section-num {
+    width: 30px; height: 30px; background: rgba(255,255,255,0.25);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 0.9rem; flex-shrink: 0;
+  }
+  .section-header h2 { font-size: 1.05rem; font-weight: 700; }
+  .section-header p { font-size: 0.78rem; opacity: 0.85; margin-top: 1px; }
+  .section-body { padding: 24px; }
+
+  /* ── Two-column grid ── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } }
+
+  /* ── Field group ── */
+  .field-group { display: flex; flex-direction: column; gap: 16px; }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  label { font-size: 0.82rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; }
+
+  /* Tier selector */
+  .tier-selector { display: flex; gap: 10px; flex-wrap: wrap; }
+  .tier-btn {
+    flex: 1; min-width: 90px; padding: 12px 8px; border-radius: 8px;
+    border: 2px solid var(--border); background: white; cursor: pointer;
+    text-align: center; transition: all 0.15s; font-family: inherit;
+  }
+  .tier-btn .tier-price { font-size: 1.1rem; font-weight: 800; color: var(--text); }
+  .tier-btn .tier-name { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+  .tier-btn.active {
+    border-color: var(--accent); background: var(--accent-light);
+  }
+  .tier-btn.active .tier-price { color: var(--accent); }
+
+  /* Readonly input */
+  .input-readonly {
+    padding: 10px 14px; background: #f3f4f6; border: 1px solid var(--border);
+    border-radius: 8px; font-size: 0.95rem; font-weight: 600; color: var(--text);
+    width: 100%;
+  }
+
+  /* Slider */
+  .slider-wrap { display: flex; flex-direction: column; gap: 4px; }
+  .slider-row { display: flex; align-items: center; gap: 12px; }
+  input[type=range] {
+    flex: 1; -webkit-appearance: none; height: 6px;
+    background: linear-gradient(90deg, var(--accent) var(--pct, 0%), #e2e6ea var(--pct, 0%));
+    border-radius: 3px; outline: none; cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%;
+    background: var(--accent); border: 3px solid white;
+    box-shadow: 0 1px 6px rgba(255,90,31,0.35); cursor: pointer; transition: transform 0.1s;
+  }
+  input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+  input[type=range]::-moz-range-thumb {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--accent); border: 3px solid white;
+    box-shadow: 0 1px 6px rgba(255,90,31,0.35); cursor: pointer;
+  }
+  .slider-val {
+    min-width: 50px; text-align: right; font-size: 0.95rem;
+    font-weight: 700; color: var(--accent);
+  }
+  .slider-bounds { display: flex; justify-content: space-between; font-size: 0.72rem; color: #9ca3b8; }
+
+  /* ── Outputs panel ── */
+  .outputs-panel { background: #f8f9fb; border-radius: 10px; padding: 20px; border: 1px solid var(--border); }
+  .outputs-panel h3 { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); margin-bottom: 14px; }
+  .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 520px) { .metric-grid { grid-template-columns: 1fr; } }
+
+  .metric-card {
+    background: white; border-radius: 8px; padding: 14px 16px;
+    border: 1px solid var(--border);
+  }
+  .metric-card .m-label { font-size: 0.73rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+  .metric-card .m-value { font-size: 1.4rem; font-weight: 800; color: var(--text); margin-top: 2px; line-height: 1.2; }
+  .metric-card .m-sub { font-size: 0.72rem; color: var(--muted); margin-top: 3px; }
+  .metric-card.highlight { border-color: var(--accent); background: var(--accent-light); }
+  .metric-card.highlight .m-value { color: var(--accent); }
+
+  /* ── Deal Score ── */
+  .factors-grid { display: flex; flex-direction: column; gap: 14px; }
+  .factor-row {
+    display: grid; grid-template-columns: 180px 1fr 60px; gap: 12px; align-items: center;
+  }
+  @media (max-width: 560px) {
+    .factor-row { grid-template-columns: 1fr; gap: 6px; }
+    .factor-row .factor-label { font-size: 0.85rem; }
+  }
+  .factor-label { font-size: 0.86rem; font-weight: 600; color: var(--text); }
+  .factor-label span { display: block; font-size: 0.72rem; color: var(--muted); font-weight: 400; }
+
+  .star-group { display: flex; gap: 6px; }
+  .star {
+    width: 30px; height: 30px; border-radius: 6px; border: 2px solid var(--border);
+    background: white; font-size: 0.75rem; font-weight: 800; color: var(--muted);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.12s; user-select: none;
+  }
+  .star.active { background: var(--accent); border-color: var(--accent); color: white; }
+  .star:hover { border-color: var(--accent); color: var(--accent); transform: scale(1.08); }
+  .star.active:hover { color: white; }
+  .factor-score-disp { font-size: 1.1rem; font-weight: 800; color: var(--accent); text-align: center; }
+
+  /* Score result */
+  .score-result {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 24px;
+    padding-top: 20px; border-top: 1px solid var(--border);
+  }
+  @media (max-width: 560px) { .score-result { grid-template-columns: 1fr; } }
+
+  .grade-display {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: #f8f9fb; border-radius: 10px; padding: 20px; border: 1px solid var(--border);
+  }
+  .grade-letter {
+    font-size: 4rem; font-weight: 900; line-height: 1;
+    color: var(--grade-color, var(--text));
+  }
+  .grade-label { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); margin-top: 6px; }
+  .score-fraction { font-size: 1.1rem; font-weight: 700; color: var(--text); margin-top: 8px; }
+
+  .action-panel {
+    background: #f8f9fb; border-radius: 10px; padding: 20px; border: 1px solid var(--border);
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .action-panel h4 { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); }
+  .action-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 14px; border-radius: 20px; font-size: 0.82rem; font-weight: 700;
+    background: var(--grade-bg, #e5e7eb); color: var(--grade-color, var(--text));
+  }
+  .action-text { font-size: 0.88rem; color: var(--text); line-height: 1.55; }
+
+  /* Score bar */
+  .score-bar-wrap { margin-top: 12px; }
+  .score-bar-track { height: 10px; background: #e2e6ea; border-radius: 5px; overflow: hidden; }
+  .score-bar-fill {
+    height: 100%; border-radius: 5px;
+    background: linear-gradient(90deg, var(--accent) 0%, #ff7a47 100%);
+    transition: width 0.35s cubic-bezier(.4,0,.2,1);
+  }
+
+  /* ── Comparison cards ── */
+  .compare-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  @media (max-width: 620px) { .compare-grid { grid-template-columns: 1fr; } }
+
+  .compare-card {
+    border-radius: 10px; border: 2px solid var(--border);
+    overflow: hidden; transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .compare-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+  .compare-card.best { border-color: var(--accent); }
+
+  .compare-header {
+    padding: 16px; background: #f8f9fb; border-bottom: 1px solid var(--border);
+    text-align: center;
+  }
+  .compare-card.best .compare-header { background: var(--accent-light); }
+  .compare-tier { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); }
+  .compare-price { font-size: 1.6rem; font-weight: 900; color: var(--text); margin-top: 4px; }
+  .compare-card.best .compare-price { color: var(--accent); }
+  .compare-setup { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+
+  .compare-body { padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+  .compare-row { display: flex; justify-content: space-between; align-items: center; }
+  .compare-row .c-label { font-size: 0.78rem; color: var(--muted); }
+  .compare-row .c-val { font-size: 0.9rem; font-weight: 700; color: var(--text); }
+
+  .compare-total {
+    margin-top: 8px; padding-top: 12px; border-top: 1px solid var(--border);
+    text-align: center;
+  }
+  .compare-total .ct-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.4px; color: var(--muted); font-weight: 600; }
+  .compare-total .ct-val { font-size: 1.5rem; font-weight: 900; color: var(--accent); margin-top: 2px; }
+
+  .best-badge {
+    display: inline-block; background: var(--accent); color: white;
+    font-size: 0.68rem; font-weight: 800; padding: 3px 10px; border-radius: 20px;
+    text-transform: uppercase; letter-spacing: 0.5px; margin-top: 6px;
+  }
+
+  /* ── Print ── */
+  @media print {
+    body { background: white; }
+    header { background: #1a1f2e !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .btn-print { display: none; }
+    .section { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
+    main { padding: 16px 0; gap: 20px; }
+    .section-header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .star.active { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .compare-card.best { border-color: var(--accent) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    input[type=range] { display: none; }
+    .slider-row::after { content: attr(data-print-val); font-weight: 700; color: var(--accent); }
+  }
+
+  /* Divider */
+  .divider { height: 1px; background: var(--border); margin: 4px 0; }
+
+  /* Tooltip hint */
+  .hint { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-brand">
+    <div class="header-logo">CWI</div>
+    <div>
+      <h1>Deal Value Calculator</h1>
+      <p>Client Lifetime Value &amp; Deal Scoring — CWI AI</p>
+    </div>
+  </div>
+  <button class="btn-print" onclick="window.print()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+      <rect x="6" y="14" width="12" height="8"/>
+    </svg>
+    Print / PDF
+  </button>
+</header>
+
+<main>
+
+  <!-- ══════════════════════════════════════════
+       SECTION 1 — LTV CALCULATOR
+  ══════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">1</div>
+      <div>
+        <h2>Lifetime Value Calculator</h2>
+        <p>Project total client value across the engagement lifecycle</p>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="two-col">
+
+        <!-- Inputs -->
+        <div class="field-group">
+
+          <div class="field">
+            <label for="tierSelector">Monthly Tier</label>
+            <div class="tier-selector" id="tierSelector">
+              <button class="tier-btn" data-tier="197" onclick="selectTier(this)">
+                <div class="tier-price">$197</div>
+                <div class="tier-name">Starter</div>
+              </button>
+              <button class="tier-btn active" data-tier="397" onclick="selectTier(this)">
+                <div class="tier-price">$397</div>
+                <div class="tier-name">Growth</div>
+              </button>
+              <button class="tier-btn" data-tier="597" onclick="selectTier(this)">
+                <div class="tier-price">$597</div>
+                <div class="tier-name">Scale</div>
+              </button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="setupFeeDisplay">Setup Fee (auto-filled)</label>
+            <div class="input-readonly" id="setupFeeDisplay">$497</div>
+            <p class="hint">Starter: $297 &nbsp;·&nbsp; Growth: $497 &nbsp;·&nbsp; Scale: $797</p>
+          </div>
+
+          <div class="field">
+            <label for="retentionSlider">Expected Retention (months)</label>
+            <div class="slider-wrap">
+              <div class="slider-row" data-print-val="">
+                <input type="range" id="retentionSlider" min="1" max="36" value="12" oninput="updateAll()" />
+                <span class="slider-val" id="retentionVal">12 mo</span>
+              </div>
+              <div class="slider-bounds"><span>1 mo</span><span>36 mo</span></div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="upsellSlider">Upsell Probability</label>
+            <div class="slider-wrap">
+              <div class="slider-row" data-print-val="">
+                <input type="range" id="upsellSlider" min="0" max="100" value="30" oninput="updateAll()" />
+                <span class="slider-val" id="upsellVal">30%</span>
+              </div>
+              <div class="slider-bounds"><span>0%</span><span>100%</span></div>
+            </div>
+            <p class="hint">Probability of upgrading to a higher tier during retention</p>
+          </div>
+
+          <div class="field">
+            <label for="referralSlider">Referrals Expected</label>
+            <div class="slider-wrap">
+              <div class="slider-row" data-print-val="">
+                <input type="range" id="referralSlider" min="0" max="5" value="1" step="1" oninput="updateAll()" />
+                <span class="slider-val" id="referralVal">1</span>
+              </div>
+              <div class="slider-bounds"><span>0</span><span>5</span></div>
+            </div>
+            <p class="hint">Estimated referral clients generated over retention period</p>
+          </div>
+
+        </div>
+
+        <!-- Outputs -->
+        <div class="outputs-panel">
+          <h3>Projected Value</h3>
+          <div class="metric-grid">
+            <div class="metric-card">
+              <div class="m-label">Monthly Recurring Revenue</div>
+              <div class="m-value" id="outMRR">$397</div>
+              <div class="m-sub">Per month</div>
+            </div>
+            <div class="metric-card">
+              <div class="m-label">Total Contract Value</div>
+              <div class="m-value" id="outTCV">$5,261</div>
+              <div class="m-sub">MRR × retention + setup</div>
+            </div>
+            <div class="metric-card highlight">
+              <div class="m-label">LTV with Upsell</div>
+              <div class="m-value" id="outLTVUpsell">$6,015</div>
+              <div class="m-sub">Expected upsell added</div>
+            </div>
+            <div class="metric-card highlight">
+              <div class="m-label">LTV with Referrals</div>
+              <div class="m-value" id="outLTVReferral">$10,783</div>
+              <div class="m-sub">Including referred clients</div>
+            </div>
+            <div class="metric-card" style="grid-column: 1 / -1;">
+              <div class="m-label">CAC Payback Period</div>
+              <div class="m-value" id="outCAC">0.5 mo</div>
+              <div class="m-sub">Assumes $200 customer acquisition cost</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SECTION 2 — DEAL SCORE
+  ══════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">2</div>
+      <div>
+        <h2>Deal Score</h2>
+        <p>Rate the prospect on 5 key factors to get a composite grade</p>
+      </div>
+    </div>
+    <div class="section-body">
+
+      <div class="factors-grid" id="factorsGrid">
+        <!-- Rows injected by JS -->
+      </div>
+
+      <!-- Score bar -->
+      <div class="score-bar-wrap" style="margin-top:20px;">
+        <div style="display:flex;justify-content:space-between;font-size:0.78rem;color:var(--muted);font-weight:600;margin-bottom:6px;">
+          <span>Deal Score</span>
+          <span id="scoreBarLabel">10 / 25</span>
+        </div>
+        <div class="score-bar-track">
+          <div class="score-bar-fill" id="scoreBarFill" style="width:40%"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:0.7rem;color:#c0c4cc;margin-top:4px;">
+          <span>D (&lt;11)</span><span>C (11–15)</span><span>B (16–20)</span><span>A (21–25)</span>
+        </div>
+      </div>
+
+      <!-- Result -->
+      <div class="score-result">
+        <div class="grade-display">
+          <div class="grade-letter" id="gradeLetter">B</div>
+          <div class="grade-label">Deal Grade</div>
+          <div class="score-fraction" id="scoreFraction">10 / 25</div>
+        </div>
+        <div class="action-panel" id="actionPanel">
+          <h4>Recommended Action</h4>
+          <div class="action-badge" id="actionBadge" style="--grade-color:#2563eb;--grade-bg:#dbeafe;">B — Strong Prospect</div>
+          <p class="action-text" id="actionText">Good fit overall. Prioritize follow-up within 48 hours. Address any open objections, present a tailored proposal, and include ROI data relevant to their industry. Aim to move to contract within 2 weeks.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SECTION 3 — QUICK COMPARISON
+  ══════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">3</div>
+      <div>
+        <h2>Quick Tier Comparison</h2>
+        <p>12-month value across all tiers at your current retention rate</p>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="compare-grid" id="compareGrid">
+        <!-- Cards injected by JS -->
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+// ── Config ─────────────────────────────────────
+const TIERS = {
+  197: { name: 'Starter', setup: 297, upsellTo: 397 },
+  397: { name: 'Growth',  setup: 497, upsellTo: 597 },
+  597: { name: 'Scale',   setup: 797, upsellTo: 597 },
+};
+const CAC = 200;
+const UPSELL_BUMP = 0.5; // upsell adds 50% of tier price for remainder of period
+
+// ── State ──────────────────────────────────────
+let selectedTier = 397;
+
+const factorDefs = [
+  { id: 'budget',    label: 'Budget Fit',         hint: 'Can they afford the tier?' },
+  { id: 'pain',      label: 'Pain Intensity',      hint: 'How acute is their problem?' },
+  { id: 'authority', label: 'Decision Authority',  hint: 'Are they the decision-maker?' },
+  { id: 'timeline',  label: 'Timeline Urgency',    hint: 'Do they need to act soon?' },
+  { id: 'industry',  label: 'Industry Fit',        hint: 'Do we serve this niche well?' },
+];
+const factorScores = { budget: 2, pain: 2, authority: 2, timeline: 2, industry: 2 };
+
+// ── Init ───────────────────────────────────────
+buildFactors();
+updateAll();
+
+// ── Tier selection ─────────────────────────────
+function selectTier(btn) {
+  document.querySelectorAll('.tier-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedTier = parseInt(btn.dataset.tier);
+  updateAll();
+}
+
+// ── Build factor rows ──────────────────────────
+function buildFactors() {
+  const grid = document.getElementById('factorsGrid');
+  grid.innerHTML = '';
+  factorDefs.forEach(f => {
+    const row = document.createElement('div');
+    row.className = 'factor-row';
+    row.innerHTML = `
+      <div class="factor-label">${f.label}<span>${f.hint}</span></div>
+      <div class="star-group" id="stars_${f.id}">
+        ${[1,2,3,4,5].map(n =>
+          `<div class="star ${factorScores[f.id] >= n ? 'active' : ''}"
+               data-factor="${f.id}" data-val="${n}"
+               onclick="setFactor('${f.id}', ${n})">${n}</div>`
+        ).join('')}
+      </div>
+      <div class="factor-score-disp" id="fdisp_${f.id}">${factorScores[f.id]}/5</div>
+    `;
+    grid.appendChild(row);
+
+    // Hover effects
+    row.querySelectorAll('.star').forEach(star => {
+      star.addEventListener('mouseenter', () => {
+        const val = parseInt(star.dataset.val);
+        row.querySelectorAll('.star').forEach(s => {
+          s.style.borderColor = parseInt(s.dataset.val) <= val ? 'var(--accent)' : '';
+          s.style.color = parseInt(s.dataset.val) <= val ? 'var(--accent)' : '';
+        });
+      });
+      star.addEventListener('mouseleave', () => {
+        row.querySelectorAll('.star').forEach(s => {
+          s.style.borderColor = '';
+          s.style.color = '';
+        });
+      });
+    });
+  });
+}
+
+function setFactor(id, val) {
+  factorScores[id] = val;
+  // Update stars
+  const group = document.getElementById(`stars_${id}`);
+  group.querySelectorAll('.star').forEach(s => {
+    s.classList.toggle('active', parseInt(s.dataset.val) <= val);
+  });
+  document.getElementById(`fdisp_${id}`).textContent = `${val}/5`;
+  updateAll();
+}
+
+// ── Main update ────────────────────────────────
+function updateAll() {
+  updateSliderTracks();
+  updateLTV();
+  updateDealScore();
+  updateComparison();
+}
+
+function updateSliderTracks() {
+  ['retentionSlider','upsellSlider','referralSlider'].forEach(id => {
+    const el = document.getElementById(id);
+    const pct = ((el.value - el.min) / (el.max - el.min)) * 100;
+    el.style.setProperty('--pct', pct + '%');
+  });
+}
+
+// ── LTV Calculations ───────────────────────────
+function updateLTV() {
+  const tier = TIERS[selectedTier];
+  const months  = parseInt(document.getElementById('retentionSlider').value);
+  const upsellP = parseInt(document.getElementById('upsellSlider').value) / 100;
+  const refs    = parseInt(document.getElementById('referralSlider').value);
+
+  // Update display values
+  document.getElementById('retentionVal').textContent = months + ' mo';
+  document.getElementById('upsellVal').textContent    = document.getElementById('upsellSlider').value + '%';
+  document.getElementById('referralVal').textContent  = refs;
+
+  // Update setup fee display
+  document.getElementById('setupFeeDisplay').textContent = fmt(tier.setup);
+
+  const mrr  = selectedTier;
+  const tcv  = mrr * months + tier.setup;
+
+  // Upsell: expected value = P(upsell) × (upsellTo - current) × half remaining months
+  const upsellMonths = Math.floor(months / 2);
+  const upsellDelta  = tier.upsellTo - selectedTier;
+  const upsellExpVal = upsellP * Math.max(0, upsellDelta) * upsellMonths;
+  const ltvUpsell    = tcv + upsellExpVal;
+
+  // Referrals: each referral treated as same-tier client at same retention / 2
+  const refMonths = Math.max(1, Math.floor(months * 0.6));
+  const refLTV    = refs * (mrr * refMonths + tier.setup);
+  const ltvRef    = tcv + refLTV;
+
+  // CAC payback
+  const cacPayback = CAC / mrr;
+
+  document.getElementById('outMRR').textContent       = fmt(mrr);
+  document.getElementById('outTCV').textContent       = fmt(tcv);
+  document.getElementById('outLTVUpsell').textContent = fmt(ltvUpsell);
+  document.getElementById('outLTVReferral').textContent = fmt(ltvRef);
+  document.getElementById('outCAC').textContent       = cacPayback.toFixed(1) + ' mo';
+
+  // Print data attrs
+  document.getElementById('retentionSlider').closest('.slider-row').dataset.printVal = months + ' months';
+  document.getElementById('upsellSlider').closest('.slider-row').dataset.printVal    = document.getElementById('upsellSlider').value + '%';
+  document.getElementById('referralSlider').closest('.slider-row').dataset.printVal  = refs;
+}
+
+// ── Deal Score ─────────────────────────────────
+const gradeConfig = {
+  A: { color: '#059669', bg: '#d1fae5', action: 'A — Hot Deal', text: 'Exceptional prospect. Move fast — propose today if possible. Offer an onboarding call within 24 hours, consider a launch incentive to close this week, and flag for founder-level priority. High probability of a long-term, high-value relationship.' },
+  B: { color: '#2563eb', bg: '#dbeafe', action: 'B — Strong Prospect', text: 'Good fit overall. Prioritize follow-up within 48 hours. Address any open objections, present a tailored proposal, and include ROI data relevant to their industry. Aim to move to contract within 2 weeks.' },
+  C: { color: '#d97706', bg: '#fef3c7', action: 'C — Nurture & Qualify', text: 'Some fit, but gaps remain. Add to a nurture sequence and invest in education content. Re-qualify in 30–60 days or when a trigger event occurs (funding, new hire, competitor change). Don\'t over-invest sales time yet.' },
+  D: { color: '#dc2626', bg: '#fee2e2', action: 'D — Low Priority', text: 'Poor fit at this time. Log in CRM, send a low-touch follow-up in 90 days. Redirect sales energy to higher-scored prospects. Consider a referral ask — they may know a better-fit contact.' },
+};
+
+function updateDealScore() {
+  const total = Object.values(factorScores).reduce((a,b) => a+b, 0);
+  const pct   = (total / 25) * 100;
+
+  let grade;
+  if (total >= 21) grade = 'A';
+  else if (total >= 16) grade = 'B';
+  else if (total >= 11) grade = 'C';
+  else grade = 'D';
+
+  const cfg = gradeConfig[grade];
+
+  document.getElementById('gradeLetter').textContent    = grade;
+  document.getElementById('gradeLetter').style.color    = cfg.color;
+  document.getElementById('scoreFraction').textContent  = `${total} / 25`;
+  document.getElementById('scoreBarLabel').textContent  = `${total} / 25`;
+  document.getElementById('scoreBarFill').style.width   = pct + '%';
+
+  const badge = document.getElementById('actionBadge');
+  badge.textContent = cfg.action;
+  badge.style.setProperty('--grade-color', cfg.color);
+  badge.style.setProperty('--grade-bg', cfg.bg);
+
+  document.getElementById('actionText').textContent = cfg.text;
+}
+
+// ── Tier Comparison ────────────────────────────
+function updateComparison() {
+  const months  = parseInt(document.getElementById('retentionSlider').value);
+  const refMonths12 = Math.min(12, months);
+
+  const grid = document.getElementById('compareGrid');
+  grid.innerHTML = '';
+
+  const tierKeys = [197, 397, 597];
+  const values = tierKeys.map(t => {
+    const tier = TIERS[t];
+    const mo12 = Math.min(12, months);
+    return tier.setup + t * mo12;
+  });
+  const maxVal = Math.max(...values);
+
+  tierKeys.forEach((t, i) => {
+    const tier = TIERS[t];
+    const mo12 = Math.min(12, months);
+    const mrr  = t;
+    const total12 = tier.setup + mrr * mo12;
+    const isBest  = total12 === maxVal;
+
+    const card = document.createElement('div');
+    card.className = 'compare-card' + (isBest ? ' best' : '');
+    card.innerHTML = `
+      <div class="compare-header">
+        <div class="compare-tier">${tier.name} Tier</div>
+        <div class="compare-price">${fmt(mrr)}<span style="font-size:0.6em;font-weight:600;color:var(--muted)">/mo</span></div>
+        <div class="compare-setup">Setup: ${fmt(tier.setup)}</div>
+        ${isBest ? '<div class="best-badge">Highest Value</div>' : ''}
+      </div>
+      <div class="compare-body">
+        <div class="compare-row">
+          <span class="c-label">Active months (of 12)</span>
+          <span class="c-val">${mo12}</span>
+        </div>
+        <div class="compare-row">
+          <span class="c-label">Recurring revenue</span>
+          <span class="c-val">${fmt(mrr * mo12)}</span>
+        </div>
+        <div class="compare-row">
+          <span class="c-label">Setup fee</span>
+          <span class="c-val">${fmt(tier.setup)}</span>
+        </div>
+        <div class="compare-row">
+          <span class="c-label">CAC payback</span>
+          <span class="c-val">${(CAC / mrr).toFixed(1)} mo</span>
+        </div>
+        <div class="compare-total">
+          <div class="ct-label">12-Month Total Value</div>
+          <div class="ct-val">${fmt(total12)}</div>
+        </div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+// ── Helpers ────────────────────────────────────
+function fmt(n) {
+  return '$' + Math.round(n).toLocaleString('en-US');
+}
+
+// ── Kick off ───────────────────────────────────
+updateAll();
+</script>
+</body>
+</html>

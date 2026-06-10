@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CWI AI — Make.com Quickstart Guide</title>
+  <meta name="description" content="CWI internal tool: CWI AI — Make.com Quickstart Guide. Internal use only — CWI Compute With Imagination.">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0A0A0C;
+      --surface: #111114;
+      --surface2: #18181C;
+      --border: #2A2A30;
+      --accent: #FF5A1F;
+      --accent-dim: rgba(255, 90, 31, 0.15);
+      --accent-glow: rgba(255, 90, 31, 0.08);
+      --text: #E8E8F0;
+      --text-muted: #8888A0;
+      --text-faint: #55556A;
+      --green: #22C55E;
+      --green-dim: rgba(34, 197, 94, 0.12);
+      --yellow: #EAB308;
+      --yellow-dim: rgba(234, 179, 8, 0.12);
+      --blue: #3B82F6;
+      --blue-dim: rgba(59, 130, 246, 0.12);
+      --radius: 10px;
+      --radius-lg: 16px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Sora', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: linear-gradient(135deg, #0F0F13 0%, #16161C 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 40px 24px 36px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: '';
+      position: absolute;
+      top: -60px; left: 50%; transform: translateX(-50%);
+      width: 600px; height: 200px;
+      background: radial-gradient(ellipse, rgba(255,90,31,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .header-badge {
+      display: inline-block;
+      background: var(--accent-dim);
+      border: 1px solid rgba(255,90,31,0.3);
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-bottom: 16px;
+    }
+    header h1 {
+      font-size: clamp(22px, 4vw, 34px);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+    header h1 span { color: var(--accent); }
+    header p {
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 300;
+    }
+
+    /* ── Layout ── */
+    main {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* ── Progress tracker ── */
+    .progress-bar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 13px;
+    }
+    .progress-bar label { color: var(--text-muted); white-space: nowrap; }
+    .bar-track {
+      flex: 1;
+      height: 6px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), #FF8A50);
+      border-radius: 99px;
+      transition: width 0.4s ease;
+      width: 0%;
+    }
+    .bar-pct {
+      color: var(--accent);
+      font-weight: 600;
+      min-width: 36px;
+      text-align: right;
+    }
+
+    /* ── Section card ── */
+    .section-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .section-card:hover { border-color: #3A3A45; }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 18px 22px;
+      cursor: pointer;
+      user-select: none;
+      background: var(--surface);
+      transition: background 0.15s;
+    }
+    .section-header:hover { background: var(--surface2); }
+
+    .section-num {
+      width: 30px; height: 30px;
+      border-radius: 8px;
+      background: var(--accent-dim);
+      border: 1px solid rgba(255,90,31,0.25);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .section-title {
+      flex: 1;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+    .section-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 400;
+      margin-top: 2px;
+    }
+    .chevron {
+      color: var(--text-faint);
+      font-size: 18px;
+      transition: transform 0.25s ease;
+      flex-shrink: 0;
+    }
+    .section-card.open .chevron { transform: rotate(180deg); }
+    .section-card.open .section-header { border-bottom: 1px solid var(--border); }
+
+    .section-body {
+      display: none;
+      padding: 24px 22px;
+    }
+    .section-card.open .section-body { display: block; }
+
+    /* ── Checklist ── */
+    .checklist { display: flex; flex-direction: column; gap: 10px; }
+    .check-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .check-item:hover { border-color: #3A3A45; }
+    .check-item.checked {
+      border-color: rgba(34,197,94,0.3);
+      background: var(--green-dim);
+    }
+    .check-box {
+      width: 18px; height: 18px;
+      border-radius: 5px;
+      border: 2px solid var(--text-faint);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .check-item.checked .check-box {
+      border-color: var(--green);
+      background: var(--green);
+    }
+    .check-box svg { display: none; }
+    .check-item.checked .check-box svg { display: block; }
+    .check-label { font-size: 13.5px; line-height: 1.5; }
+    .check-label code {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      color: #B8B8D0;
+    }
+
+    /* ── Ordered scenario list ── */
+    .scenario-list { display: flex; flex-direction: column; gap: 8px; }
+    .scenario-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 12px 14px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--surface2);
+    }
+    .scenario-num {
+      width: 24px; height: 24px;
+      border-radius: 6px;
+      background: var(--accent-dim);
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .scenario-content { flex: 1; }
+    .scenario-name {
+      font-size: 13.5px;
+      font-weight: 600;
+    }
+    .scenario-name code {
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      color: var(--accent);
+      font-weight: 400;
+    }
+    .scenario-deps {
+      margin-top: 4px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .dep-tag {
+      display: inline-block;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 6px;
+      margin-right: 4px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* ── Step list ── */
+    .steps { display: flex; flex-direction: column; gap: 0; }
+    .step {
+      display: flex;
+      gap: 16px;
+      position: relative;
+    }
+    .step:not(:last-child)::before {
+      content: '';
+      position: absolute;
+      left: 16px; top: 36px;
+      width: 2px;
+      bottom: 0;
+      background: var(--border);
+    }
+    .step-dot {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: var(--surface2);
+      border: 2px solid var(--border);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
+    }
+    .step-content {
+      flex: 1;
+      padding-bottom: 24px;
+    }
+    .step-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      padding-top: 5px;
+    }
+    .step-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    .step-desc strong { color: var(--text); font-weight: 600; }
+    .step-tip {
+      margin-top: 8px;
+      padding: 8px 12px;
+      background: var(--accent-glow);
+      border: 1px solid rgba(255,90,31,0.2);
+      border-radius: 7px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .step-tip strong { color: var(--accent); }
+
+    /* ── Tables ── */
+    .table-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    thead tr { background: var(--surface2); }
+    thead th {
+      padding: 11px 14px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 11px;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+    }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background 0.12s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--surface2); }
+    td { padding: 11px 14px; vertical-align: top; }
+    td code {
+      font-family: 'Courier New', monospace;
+      font-size: 11.5px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 5px;
+      color: #B8B8D0;
+    }
+    td .tag-webhook {
+      display: inline-block;
+      background: var(--yellow-dim);
+      border: 1px solid rgba(234,179,8,0.25);
+      color: var(--yellow);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 1px 6px;
+      border-radius: 4px;
+    }
+    td .tag-schedule {
+      display: inline-block;
+      background: var(--blue-dim);
+      border: 1px solid rgba(59,130,246,0.25);
+      color: var(--blue);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 1px 6px;
+      border-radius: 4px;
+    }
+    td .tag-both {
+      display: inline-block;
+      background: var(--accent-dim);
+      border: 1px solid rgba(255,90,31,0.25);
+      color: var(--accent);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 1px 6px;
+      border-radius: 4px;
+    }
+    td .note { font-size: 11.5px; color: var(--text-muted); margin-top: 3px; }
+
+    /* ── Testing checklist ── */
+    .test-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+    }
+    .test-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+    }
+    .test-card-icon { font-size: 22px; margin-bottom: 8px; }
+    .test-card-title {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .test-card-desc { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+
+    /* ── Info / callout boxes ── */
+    .callout {
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+    .callout-warn {
+      background: var(--yellow-dim);
+      border: 1px solid rgba(234,179,8,0.25);
+      color: #D4A017;
+    }
+    .callout-info {
+      background: var(--blue-dim);
+      border: 1px solid rgba(59,130,246,0.2);
+      color: #8BB8FF;
+    }
+    .callout strong { font-weight: 600; color: inherit; }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 32px 24px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text-faint);
+    }
+    footer span { color: var(--accent); }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #3A3A45; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-badge">Internal Operations Guide</div>
+  <h1><span>CWI AI</span> — Make.com Quickstart Guide</h1>
+  <p>Import, connect, and activate all 15 automation scenarios &nbsp;·&nbsp; For Brian or VA use</p>
+</header>
+
+<main>
+
+  <!-- Progress bar -->
+  <div class="progress-bar">
+    <label for="barFill">Setup Progress</label>
+    <div class="bar-track"><div class="bar-fill" id="barFill"></div></div>
+    <span class="bar-pct" id="barPct">0%</span>
+  </div>
+
+  <!-- ── SECTION 1: Before You Start ── -->
+  <div class="section-card open" id="sec1">
+    <div class="section-header" onclick="toggleSection('sec1')">
+      <div class="section-num">1</div>
+      <div>
+        <div class="section-title">Before You Start</div>
+        <div class="section-subtitle">Complete all prerequisites before importing any scenario</div>
+      </div>
+      <div class="chevron">&#8964;</div>
+    </div>
+    <div class="section-body">
+      <div class="callout callout-warn">
+        <strong>Important:</strong> Do not skip any item. Missing connections or API keys will cause scenarios to fail silently on import.
+      </div>
+      <div class="checklist" id="checklist-pre">
+        <div class="check-item" data-id="pre-1" onclick="toggleCheck(this)">
+          <div class="check-box"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="check-label">Make.com <strong>Core plan</strong> (or higher) is active and billing is confirmed</div>
+        </div>
+        <div class="check-item" data-id="pre-2" onclick="toggleCheck(this)">
+          <div class="check-box"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="check-label"><code>.env</code> file is fully populated — run <code>setup-env.ps1</code> and confirm no blank values remain</div>
+        </div>
+        <div class="check-item" data-id="pre-3" onclick="toggleCheck(this)">
+          <div class="check-box"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="check-label">All <strong>15 scenario JSON files</strong> are present in the <code>make-scenarios/</code> folder (<code>scenario-a.json</code> through <code>scenario-o.json</code>)</div>
+        </div>
+        <div class="check-item" data-id="pre-4" onclick="toggleCheck(this)">
+          <div class="check-box"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="check-label">Resend domain verification for <strong>cwiai.net</strong> shows a green checkmark in the Resend dashboard</div>
+        </div>
+        <div class="check-item" data-id="pre-5" onclick="toggleCheck(this)">
+          <div class="check-box"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="check-label">HubSpot <strong>pipeline created</strong> and all stage IDs copied into <code>.env</code> (<code>HUBSPOT_PIPELINE_ID</code>, <code>HUBSPOT_STAGE_*</code>)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SECTION 2: Import Order ── -->
+  <div class="section-card open" id="sec2">
+    <div class="section-header" onclick="toggleSection('sec2')">
+      <div class="section-num">2</div>
+      <div>
+        <div class="section-title">Import Order</div>
+        <div class="section-subtitle">Follow this sequence — some scenarios depend on webhooks created by earlier ones</div>
+      </div>
+      <div class="chevron">&#8964;</div>
+    </div>
+    <div class="section-body">
+      <div class="callout callout-info">
+        <strong>Why order matters:</strong> Scenario-G creates the Calendly webhook that several later scenarios listen to. Scenario-A and B both need an active Freshchat connection that must be authorised first.
+      </div>
+      <div class="scenario-list">
+
+        <div class="scenario-item">
+          <div class="scenario-num">1</div>
+          <div class="scenario-content">
+            <div class="scenario-name"><code>scenario-g.json</code> &mdash; Calendly → HubSpot Sync</div>
+            <div class="scenario-deps">
+              <span class="dep-tag">Calendly</span>
+              <span class="dep-tag">HubSpot</span>
+              <span style="font-size:11px;color:var(--text-faint);">Sets up the base Calendly webhook used by downstream scenarios</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="scenario-item">
+          <div class="scenario-num">2</div>
+          <div class="scenario-content">
+            <div class="scenario-name"><code>scenario-a.json</code> &mdash; Booking Flow</div>
+            <div class="scenario-deps">
+              <span class="dep-tag">Freshchat</span>
+              <span class="dep-tag">Calendly</span>
+              <span class="dep-tag">HubSpot</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="scenario-item">
+          <div class="scenario-num">3</div>
+          <div class="scenario-content">
+            <div class="scenario-name"><code>scenario-b.json</code> &mdash; Missed Follow-up</div>
+            <div class="scenario-deps">
+              <span class="dep-tag">Freshchat</span>
+              <span class="dep-tag">HubSpot</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="scenario-item">
+          <div class="scenario-num">4</div>
+          <div class="scenario-content">
+            <div class="scenario-name"><code>scenario-d.json</code> &mdash; Apollo → HubSpot Enrichment</div>
+            <div class="scenario-deps">
+              <span class="dep-tag">Apollo</span>
+              <span class="dep-tag">HubSpot</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="scenario-item">
+          <div class="scenario-num">5</div>
+          <div class="scenario-content">
+            <div class="scenario-name"><code>scenario-e.json</code> &mdash; Lead Routing</div>
+            <div class="scenario-deps">
+              <span class="dep-tag">Apollo</span>
+              <span class="dep-tag">HubSpot</span>
+              <span class="dep-tag">Resend</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="scenario-item">
+          <div class="scenario-num">6</div>
+          <div class="scenario-content">
+            <div class="scenario-name"><code>scenario-f.json</code> &mdash; Payment Logging</div>
+            <div class="scenario-deps">
+              <span class="dep-tag">Stripe</span>
+              <span class="dep-tag">HubSpot</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="scenario-item">
+          <div class="scenario-num">7</div>
+          <div class="scenario-content">
+            <div class="scenario-name"><code>scenario-h.json</code> &mdash; Client Onboarding</div>
+            <div class="scenario-deps">
+              <span class="dep-tag">HubSpot</span>
+              <span class="dep-tag">Google Sheets</span>
+              <span class="dep-tag">Resend</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="scenario-item">
+          <div class="scenario-num">8</div>
+          <div class="scenario-content">
+            <div class="scenario-name"><code>scenario-i.json</code> &mdash; Payment Failure Recovery</div>
+            <div class="scenario-deps">
+              <span class="dep-tag">Stripe</span>
+              <span class="dep-tag">HubSpot</span>
+              <span class="dep-tag">Resend</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="scenario-item">
+          <div class="scenario-num">9</div>
+          <div class="scenario-content">
+            <div class="scenario-name"><code>scenario-j.json</code> &mdash; Review Request</div>
+            <div class="scenario-deps">
+              <span class="dep-tag">Calendly</span>
+              <span class="dep-tag">OpenRouter</span>
+              <span class="dep-tag">Resend</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="scenario-item">
+          <div class="scenario-num">10</div>
+          <div class="scenario-content">
+            <div class="scenario-name"><code>scenario-k.json</code> &mdash; Weekly Digest</div>
+            <div class="scenario-deps">
+              <span class="dep-tag">HubSpot</span>
+              <span class="dep-tag">Calendly</span>
+              <span class="dep-tag">Resend</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="scenario-item">
+          <div class="scenario-num">11</div>
+          <div class="scenario-content">
+            <div class="scenario-name"><code>scenario-l.json</code> &mdash; No-Show Recovery</div>
+            <div class="scenario-deps">
+              <span class="dep-tag">Calendly</span>
+              <span class="dep-tag">Resend</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="scenario-item">
+          <div class="scenario-num">12</div>
+          <div class="scenario-content">
+            <div class="scenario-name"><code>scenario-m.json</code> &mdash; Appointment Reminder</div>
+            <div class="scenario-deps">
+              <span class="dep-tag">Calendly</span>
+              <span class="dep-tag">Resend</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="scenario-item">
+          <div class="scenario-num">13</div>
+          <div class="scenario-content">
+            <div class="scenario-name"><code>scenario-n.json</code> &mdash; Lead Scoring</div>
+            <div class="scenario-deps">
+              <span class="dep-tag">HubSpot</span>
+              <span class="dep-tag">Resend</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="scenario-item">
+          <div class="scenario-num">14</div>
+          <div class="scenario-content">
+            <div class="scenario-name"><code>scenario-o.json</code> &mdash; Client Health Check</div>
+            <div class="scenario-deps">
+              <span class="dep-tag">Google Sheets</span>
+              <span class="dep-tag">HubSpot</span>
+              <span class="dep-tag">Resend</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="scenario-item">
+          <div class="scenario-num">15</div>
+          <div class="scenario-content">
+            <div class="scenario-name"><code>scenario-c.json</code> &mdash; Monthly Report &nbsp;<span style="font-size:11px;color:var(--accent);font-weight:600;">IMPORT LAST</span></div>
+            <div class="scenario-deps">
+              <span class="dep-tag">HubSpot</span>
+              <span class="dep-tag">Google Sheets</span>
+              <span class="dep-tag">Calendly</span>
+              <span class="dep-tag">Resend</span>
+              <span style="font-size:11px;color:var(--text-faint);">Most complex — requires all other connections to already exist</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SECTION 3: How to Import ── -->
+  <div class="section-card open" id="sec3">
+    <div class="section-header" onclick="toggleSection('sec3')">
+      <div class="section-num">3</div>
+      <div>
+        <div class="section-title">How to Import a Scenario</div>
+        <div class="section-subtitle">Repeat these steps for each of the 15 scenarios in order</div>
+      </div>
+      <div class="chevron">&#8964;</div>
+    </div>
+    <div class="section-body">
+      <div class="steps">
+
+        <div class="step">
+          <div class="step-dot">1</div>
+          <div class="step-content">
+            <div class="step-title">Open the Scenarios screen</div>
+            <div class="step-desc">
+              Log in to <strong>make.com</strong>. In the left sidebar click <strong>Scenarios</strong>. Then click the blue <strong>Create a new scenario</strong> button (top right).
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-dot">2</div>
+          <div class="step-content">
+            <div class="step-title">Open the Import Blueprint menu</div>
+            <div class="step-desc">
+              On the blank scenario canvas, click the <strong>three-dot menu (&#8943;)</strong> in the top toolbar (next to the scenario name). Select <strong>Import Blueprint</strong> from the dropdown.
+            </div>
+            <div class="step-tip"><strong>Screenshot note:</strong> The three-dot menu is in the top-centre toolbar area, not the left sidebar. It looks like three horizontal dots.</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-dot">3</div>
+          <div class="step-content">
+            <div class="step-title">Select the JSON file</div>
+            <div class="step-desc">
+              A file picker appears. Navigate to your <code>make-scenarios/</code> folder and select the correct <code>.json</code> file for the current scenario (follow import order from Section 2). Click <strong>Open</strong>.
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-dot">4</div>
+          <div class="step-content">
+            <div class="step-title">Save the blueprint</div>
+            <div class="step-desc">
+              Make.com will load the scenario visually. Click <strong>Save</strong> (floppy disk icon, top right). The scenario is saved but not yet active — modules with missing connections will show <strong>orange warning triangles</strong>.
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-dot">5</div>
+          <div class="step-content">
+            <div class="step-title">Assign connections to every module</div>
+            <div class="step-desc">
+              Click each module that has an <strong>orange warning triangle</strong>. In the module settings panel, click the <strong>Connection</strong> dropdown and select the matching connection you created (see Section 4). If the connection doesn't exist yet, click <strong>Add</strong> to create it now.
+            </div>
+            <div class="step-tip"><strong>Tip:</strong> Create all connections first (Section 4) before importing scenarios — it speeds up this step considerably.</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-dot">6</div>
+          <div class="step-content">
+            <div class="step-title">Run a test</div>
+            <div class="step-desc">
+              Click <strong>Run once</strong> (the play button). If the scenario is webhook-triggered, send a test payload using <code>webhook-tester.html</code>. Check the execution log at the bottom of the screen — each module should show a green bubble with the number of processed items. Red = error, click it to see the detail.
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-dot">7</div>
+          <div class="step-content">
+            <div class="step-title">Toggle ON</div>
+            <div class="step-desc">
+              When the test passes cleanly, flip the <strong>blue toggle switch</strong> in the top-right corner of the scenario editor to <strong>ON</strong>. The scenario is now live.
+            </div>
+            <div class="step-tip"><strong>Reminder:</strong> Save again after toggling on to lock in the active state before moving to the next scenario.</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SECTION 4: Connections ── -->
+  <div class="section-card open" id="sec4">
+    <div class="section-header" onclick="toggleSection('sec4')">
+      <div class="section-num">4</div>
+      <div>
+        <div class="section-title">Connections to Create</div>
+        <div class="section-subtitle">Create each connection once — reuse it across all scenarios</div>
+      </div>
+      <div class="chevron">&#8964;</div>
+    </div>
+    <div class="section-body">
+      <div class="callout callout-info">
+        <strong>Best practice:</strong> Create all connections before importing scenarios. Go to <strong>Connections</strong> in the left sidebar and click <strong>Add connection</strong> for each row below.
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Connection Name</th>
+              <th>Service / Module Type</th>
+              <th>What to Paste / Do</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>CWI Resend</strong></td>
+              <td>Resend (native module)</td>
+              <td>Paste <code>RESEND_API_KEY</code> from <code>.env</code> — starts with <code>re_</code></td>
+            </tr>
+            <tr>
+              <td><strong>CWI HubSpot</strong></td>
+              <td>HubSpot — Private App</td>
+              <td>Paste <code>HUBSPOT_API_KEY</code> — starts with <code>pat-na1-</code></td>
+            </tr>
+            <tr>
+              <td><strong>CWI Google Calendar</strong></td>
+              <td>Google Calendar — OAuth2</td>
+              <td>Click <strong>Sign in with Google</strong> and authenticate as <code>brian@cwiai.net</code></td>
+            </tr>
+            <tr>
+              <td><strong>CWI Google Sheets</strong></td>
+              <td>Google Sheets — OAuth2</td>
+              <td>Same Google account as Calendar — reuse the existing OAuth grant if prompted</td>
+            </tr>
+            <tr>
+              <td><strong>CWI Stripe</strong></td>
+              <td>Stripe (native module)</td>
+              <td>Paste <code>STRIPE_API_KEY</code> from <code>.env</code> — starts with <code>sk_live_</code> (or <code>sk_test_</code> for testing)</td>
+            </tr>
+            <tr>
+              <td><strong>CWI Calendly</strong></td>
+              <td>Calendly — Personal Access Token</td>
+              <td>Paste <code>CALENDLY_API_KEY</code> from <code>.env</code></td>
+            </tr>
+            <tr>
+              <td><strong>CWI Apollo</strong></td>
+              <td>Apollo.io — API Key</td>
+              <td>Paste <code>APOLLO_API_KEY</code> from <code>.env</code></td>
+            </tr>
+            <tr>
+              <td><strong>CWI Freshchat</strong></td>
+              <td>Freshchat (HTTP module)</td>
+              <td>Paste <code>FRESHCHAT_API_KEY</code> and set Base URL to your Freshchat domain</td>
+            </tr>
+            <tr>
+              <td><strong>CWI OpenRouter</strong></td>
+              <td>HTTP — API Key header</td>
+              <td>Header: <code>Authorization: Bearer OPENROUTER_API_KEY</code> — paste key from <code>.env</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SECTION 5: Webhook Registration ── -->
+  <div class="section-card" id="sec5">
+    <div class="section-header" onclick="toggleSection('sec5')">
+      <div class="section-num">5</div>
+      <div>
+        <div class="section-title">Webhook Registration Quick Reference</div>
+        <div class="section-subtitle">Which scenarios need webhooks registered externally vs. run on a schedule</div>
+      </div>
+      <div class="chevron">&#8964;</div>
+    </div>
+    <div class="section-body">
+      <div class="callout callout-warn">
+        <strong>After activating a webhook-triggered scenario:</strong> Copy the Make.com webhook URL (shown in the first module after you click it) and register it in the source service. The scenario will not fire until this step is done.
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Scenario</th>
+              <th>Trigger Type</th>
+              <th>Where to Register</th>
+              <th>Event / Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>G</strong> — Calendly→HubSpot</td>
+              <td><span class="tag-webhook">Webhook</span></td>
+              <td>Calendly → Integrations → Webhooks</td>
+              <td><div>All events: <code>invitee.created</code>, <code>invitee.canceled</code></div></td>
+            </tr>
+            <tr>
+              <td><strong>A</strong> — Booking Flow</td>
+              <td><span class="tag-webhook">Webhook</span></td>
+              <td>Calendly → Integrations → Webhooks</td>
+              <td><div><code>invitee.created</code> only</div><div class="note">Separate webhook from scenario-G</div></td>
+            </tr>
+            <tr>
+              <td><strong>B</strong> — Missed Follow-up</td>
+              <td><span class="tag-both">Webhook + Schedule</span></td>
+              <td>Freshchat dashboard → Webhooks</td>
+              <td><div>Conversation status change events</div></td>
+            </tr>
+            <tr>
+              <td><strong>C</strong> — Monthly Report</td>
+              <td><span class="tag-schedule">Schedule</span></td>
+              <td>—</td>
+              <td><div>Set to 1st of month, 8:00 AM</div></td>
+            </tr>
+            <tr>
+              <td><strong>D</strong> — Apollo→HubSpot</td>
+              <td><span class="tag-webhook">Webhook</span></td>
+              <td>Apollo.io → Settings → Webhooks</td>
+              <td><div>New contact / enrichment completed</div></td>
+            </tr>
+            <tr>
+              <td><strong>E</strong> — Lead Routing</td>
+              <td><span class="tag-webhook">Webhook</span></td>
+              <td>HubSpot → Settings → Webhooks</td>
+              <td><div>Contact property change: <code>lifecyclestage</code></div></td>
+            </tr>
+            <tr>
+              <td><strong>F</strong> — Payment Logging</td>
+              <td><span class="tag-webhook">Webhook</span></td>
+              <td>Stripe → Developers → Webhooks</td>
+              <td><div><code>payment_intent.succeeded</code></div></td>
+            </tr>
+            <tr>
+              <td><strong>H</strong> — Client Onboarding</td>
+              <td><span class="tag-webhook">Webhook</span></td>
+              <td>HubSpot → Settings → Webhooks</td>
+              <td><div>Deal stage change → <code>closedwon</code></div></td>
+            </tr>
+            <tr>
+              <td><strong>I</strong> — Payment Failure</td>
+              <td><span class="tag-webhook">Webhook</span></td>
+              <td>Stripe → Developers → Webhooks</td>
+              <td><div><code>payment_intent.payment_failed</code>, <code>invoice.payment_failed</code></div></td>
+            </tr>
+            <tr>
+              <td><strong>J</strong> — Review Request</td>
+              <td><span class="tag-webhook">Webhook</span></td>
+              <td>Calendly → Integrations → Webhooks</td>
+              <td><div><code>invitee.created</code> — fires 24h after event end via delay module</div></td>
+            </tr>
+            <tr>
+              <td><strong>K</strong> — Weekly Digest</td>
+              <td><span class="tag-schedule">Schedule</span></td>
+              <td>—</td>
+              <td><div>Every Monday at 7:00 AM</div></td>
+            </tr>
+            <tr>
+              <td><strong>L</strong> — No-Show Recovery</td>
+              <td><span class="tag-webhook">Webhook</span></td>
+              <td>Calendly → Integrations → Webhooks</td>
+              <td><div><code>invitee.canceled</code> — filter: no-show reason</div></td>
+            </tr>
+            <tr>
+              <td><strong>M</strong> — Appointment Reminder</td>
+              <td><span class="tag-webhook">Webhook</span></td>
+              <td>Calendly → Integrations → Webhooks</td>
+              <td><div><code>invitee.created</code> — sends reminder 1h before event</div></td>
+            </tr>
+            <tr>
+              <td><strong>N</strong> — Lead Scoring</td>
+              <td><span class="tag-schedule">Schedule</span></td>
+              <td>—</td>
+              <td><div>Every day at 6:00 AM — pulls from HubSpot</div></td>
+            </tr>
+            <tr>
+              <td><strong>O</strong> — Client Health</td>
+              <td><span class="tag-schedule">Schedule</span></td>
+              <td>—</td>
+              <td><div>Every Friday at 5:00 PM — updates Sheets + alerts</div></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SECTION 6: Testing Checklist ── -->
+  <div class="section-card" id="sec6">
+    <div class="section-header" onclick="toggleSection('sec6')">
+      <div class="section-num">6</div>
+      <div>
+        <div class="section-title">Testing Checklist</div>
+        <div class="section-subtitle">Verify each scenario is firing and producing the correct output</div>
+      </div>
+      <div class="chevron">&#8964;</div>
+    </div>
+    <div class="section-body">
+
+      <div class="test-grid" style="margin-bottom:24px;">
+        <div class="test-card">
+          <div class="test-card-icon">&#128296;</div>
+          <div class="test-card-title">Webhook Tester</div>
+          <div class="test-card-desc">Open <code>webhook-tester.html</code> to send sample payloads to each scenario's webhook URL. Select the scenario type from the dropdown to auto-fill the correct JSON body.</div>
+        </div>
+        <div class="test-card">
+          <div class="test-card-icon">&#128203;</div>
+          <div class="test-card-title">Make.com History</div>
+          <div class="test-card-desc">In each scenario, click the <strong>History</strong> tab. Green bubbles = success. Red = error. Click any execution to see which module failed and the exact error message.</div>
+        </div>
+        <div class="test-card">
+          <div class="test-card-icon">&#128231;</div>
+          <div class="test-card-title">Resend Dashboard</div>
+          <div class="test-card-desc">Check <strong>resend.com → Logs</strong> after running any scenario that sends email. Confirm the email was delivered to the correct address with the correct subject line.</div>
+        </div>
+        <div class="test-card">
+          <div class="test-card-icon">&#128081;</div>
+          <div class="test-card-title">HubSpot CRM</div>
+          <div class="test-card-desc">After testing scenarios D, E, F, G, H, N: check HubSpot contacts and deals for the expected updates — stage changes, property writes, new notes.</div>
+        </div>
+      </div>
+
+      <div class="checklist" id="checklist-test">
+        <div class="check-item" data-id="test-1" onclick="toggleCheck(this)">
+          <div class="check-box"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="check-label">All 15 scenarios show <strong>green toggle (ON)</strong> in the Scenarios list</div>
+        </div>
+        <div class="check-item" data-id="test-2" onclick="toggleCheck(this)">
+          <div class="check-box"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="check-label">Sent a test Calendly payload via webhook-tester.html — scenario-G history shows success</div>
+        </div>
+        <div class="check-item" data-id="test-3" onclick="toggleCheck(this)">
+          <div class="check-box"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="check-label">Sent a test Stripe payment event — scenario-F wrote the deal to HubSpot correctly</div>
+        </div>
+        <div class="check-item" data-id="test-4" onclick="toggleCheck(this)">
+          <div class="check-box"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="check-label">Resend Logs confirm at least one test email delivered to <code>brian@cwiai.net</code></div>
+        </div>
+        <div class="check-item" data-id="test-5" onclick="toggleCheck(this)">
+          <div class="check-box"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="check-label">No scenarios show red error status in Make.com Operations usage screen</div>
+        </div>
+        <div class="check-item" data-id="test-6" onclick="toggleCheck(this)">
+          <div class="check-box"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="check-label">Scheduled scenarios (C, K, N, O) show correct <strong>next run time</strong> in scenario settings</div>
+        </div>
+        <div class="check-item" data-id="test-7" onclick="toggleCheck(this)">
+          <div class="check-box"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="check-label">All Calendly webhooks registered and showing as <strong>active</strong> in Calendly → Integrations</div>
+        </div>
+        <div class="check-item" data-id="test-8" onclick="toggleCheck(this)">
+          <div class="check-box"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="check-label">Stripe webhook endpoints show <strong>Enabled</strong> status and <code>200 OK</code> on last test delivery</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  CWI AI Internal Docs &nbsp;&middot;&nbsp; Make.com Quickstart &nbsp;&middot;&nbsp; Built for <span>Brian / VA</span>
+</footer>
+
+<script>
+  // ── Section toggle ──
+  function toggleSection(id) {
+    const card = document.getElementById(id);
+    card.classList.toggle('open');
+  }
+
+  // ── Checkbox logic with localStorage ──
+  const STORAGE_KEY = 'cwi_make_quickstart_checks';
+
+  function loadChecks() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch { return {}; }
+  }
+
+  function saveChecks(state) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  function toggleCheck(el) {
+    el.classList.toggle('checked');
+    const state = loadChecks();
+    state[el.dataset.id] = el.classList.contains('checked');
+    saveChecks(state);
+    updateProgress();
+  }
+
+  function updateProgress() {
+    const all = document.querySelectorAll('.check-item');
+    const checked = document.querySelectorAll('.check-item.checked');
+    const pct = all.length ? Math.round((checked.length / all.length) * 100) : 0;
+    document.getElementById('barFill').style.width = pct + '%';
+    document.getElementById('barPct').textContent = pct + '%';
+  }
+
+  function restoreChecks() {
+    const state = loadChecks();
+    document.querySelectorAll('.check-item').forEach(el => {
+      if (state[el.dataset.id]) el.classList.add('checked');
+    });
+    updateProgress();
+  }
+
+  // ── Init ──
+  document.addEventListener('DOMContentLoaded', restoreChecks);
+</script>
+
+</body>
+</html>

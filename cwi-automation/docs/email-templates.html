@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CWI AI — Email Template Library</title>
+  <meta name="description" content="CWI internal tool: CWI AI — Email Template Library. Internal use only — CWI Compute With Imagination.">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0A0A0C;
+      --surface:  #111115;
+      --surface2: #18181e;
+      --border:   #2a2a35;
+      --accent:   #FF5A1F;
+      --accent-h: #ff7040;
+      --text:     #e8e8f0;
+      --muted:    #7a7a90;
+      --white:    #ffffff;
+    }
+
+    body {
+      font-family: 'Sora', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 0 0 80px;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 28px 48px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .logo-mark {
+      width: 40px;
+      height: 40px;
+      background: var(--accent);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 18px;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    header h1 {
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: -0.3px;
+    }
+
+    header p {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    /* ── Page body ── */
+    .page-body {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 52px 48px 0;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1.6px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+
+    .section-title {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 6px;
+    }
+
+    .section-desc {
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 48px;
+    }
+
+    /* ── Grid ── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
+      gap: 28px;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: border-color 0.2s;
+    }
+
+    .card:hover {
+      border-color: #3a3a50;
+    }
+
+    .card-header {
+      padding: 22px 24px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .card-meta {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .scenario-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      background: rgba(255,90,31,0.15);
+      color: var(--accent);
+      border: 1px solid rgba(255,90,31,0.3);
+      border-radius: 6px;
+      padding: 3px 8px;
+      margin-bottom: 7px;
+    }
+
+    .card-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--white);
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .card-trigger {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .copy-btn {
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'Sora', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 7px 13px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      white-space: nowrap;
+    }
+
+    .copy-btn:hover {
+      background: #22222d;
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .copy-btn.copied {
+      background: rgba(255,90,31,0.12);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .copy-btn svg {
+      width: 13px;
+      height: 13px;
+      flex-shrink: 0;
+    }
+
+    /* ── Preview window ── */
+    .preview-wrap {
+      padding: 20px 24px 24px;
+      flex: 1;
+    }
+
+    .preview-chrome {
+      border: 1px solid #d0d0d8;
+      border-radius: 10px;
+      overflow: hidden;
+      background: #f2f2f4;
+    }
+
+    .preview-chrome-bar {
+      background: #e4e4ea;
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border-bottom: 1px solid #d0d0d8;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .dot-r { background: #ff5f57; }
+    .dot-y { background: #febc2e; }
+    .dot-g { background: #28c840; }
+
+    .preview-subject {
+      margin-left: 8px;
+      font-size: 11px;
+      color: #555;
+      font-family: 'Sora', sans-serif;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .preview-body {
+      overflow: hidden;
+      max-height: 420px;
+      position: relative;
+    }
+
+    .preview-body::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: linear-gradient(transparent, #f2f2f4);
+      pointer-events: none;
+    }
+
+    .preview-body iframe {
+      width: 100%;
+      height: 420px;
+      border: none;
+      display: block;
+      background: white;
+    }
+
+    /* ── Hidden template sources ── */
+    .template-source { display: none; }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #1e1e28;
+      border: 1px solid var(--accent);
+      color: var(--text);
+      font-family: 'Sora', sans-serif;
+      font-size: 13px;
+      padding: 10px 20px;
+      border-radius: 10px;
+      opacity: 0;
+      transition: opacity 0.2s, transform 0.2s;
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @media (max-width: 700px) {
+      header { padding: 20px 20px; }
+      .page-body { padding: 36px 20px 0; }
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════ HEADER ══════════════ -->
+<header>
+  <div class="logo-mark">C</div>
+  <div>
+    <h1>CWI AI — Email Template Library</h1>
+    <p>All outbound email templates sent on behalf of clients via Resend</p>
+  </div>
+</header>
+
+<!-- ══════════════ PAGE BODY ══════════════ -->
+<div class="page-body">
+  <div class="section-label">Reference</div>
+  <h2 class="section-title">6 Active Templates</h2>
+  <p class="section-desc">Click "Copy HTML" on any card to copy the raw template source to your clipboard for use in Resend.</p>
+
+  <div class="grid" id="cardGrid"></div>
+</div>
+
+<!-- ══════════════ TOAST ══════════════ -->
+<div id="toast">HTML copied to clipboard</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     TEMPLATE SOURCES  (hidden, read by JS to build cards)
+═══════════════════════════════════════════════════════════ -->
+
+<!-- T1: WELCOME EMAIL -->
+<template id="tpl-1">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Welcome! Here is what happens next</title>
+<style>
+  body{margin:0;padding:0;background:#f6f6f8;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;}
+  .wrapper{background:#f6f6f8;padding:40px 16px;}
+  .card{background:#ffffff;max-width:600px;margin:0 auto;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.07);}
+  .banner{background:#FF5A1F;padding:36px 40px;}
+  .banner h1{color:#ffffff;font-size:26px;font-weight:700;margin:0;letter-spacing:-0.3px;}
+  .banner p{color:rgba(255,255,255,0.85);font-size:14px;margin:8px 0 0;}
+  .body{padding:36px 40px;}
+  .greeting{font-size:17px;color:#1a1a1a;margin:0 0 18px;}
+  .intro{font-size:15px;color:#444;line-height:1.65;margin:0 0 28px;}
+  .steps{margin:0 0 32px;padding:0;list-style:none;}
+  .steps li{display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-bottom:1px solid #f0f0f0;}
+  .steps li:last-child{border-bottom:none;}
+  .step-num{width:28px;height:28px;border-radius:50%;background:#FF5A1F;color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+  .step-text{font-size:14px;color:#333;line-height:1.55;}
+  .step-text strong{color:#1a1a1a;font-weight:600;}
+  .cta-wrap{text-align:center;margin:0 0 32px;}
+  .cta-btn{display:inline-block;background:#FF5A1F;color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;padding:14px 36px;border-radius:8px;letter-spacing:0.2px;}
+  .divider{border:none;border-top:1px solid #ebebeb;margin:0 0 24px;}
+  .sig{font-size:14px;color:#555;line-height:1.6;}
+  .sig strong{color:#1a1a1a;}
+  .footer{background:#f6f6f8;padding:20px 40px;text-align:center;}
+  .footer p{font-size:12px;color:#aaa;margin:0;}
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="card">
+    <div class="banner">
+      <h1>Welcome aboard!</h1>
+      <p>Here is what happens next with your CWI AI setup</p>
+    </div>
+    <div class="body">
+      <p class="greeting">Hi [First Name],</p>
+      <p class="intro">
+        We are thrilled to have you set up with CWI AI. Your AI assistant is being configured right now and you will be live before you know it. Here is exactly what to expect over the next 24 hours:
+      </p>
+      <ul class="steps">
+        <li>
+          <div class="step-num">1</div>
+          <div class="step-text"><strong>Your AI bot goes live</strong> — within the next few hours your assistant will be active and ready to handle inquiries on your behalf, 24/7.</div>
+        </li>
+        <li>
+          <div class="step-num">2</div>
+          <div class="step-text"><strong>Your booking link becomes active</strong> — clients will be able to schedule directly through your personalised calendar link, synced and ready to go.</div>
+        </li>
+        <li>
+          <div class="step-num">3</div>
+          <div class="step-text"><strong>Your first follow-up sequence is configured</strong> — automated reminders and follow-ups will start running so no lead slips through the cracks.</div>
+        </li>
+      </ul>
+      <div class="cta-wrap">
+        <a href="#" class="cta-btn">View Your Setup Guide</a>
+      </div>
+      <hr class="divider"/>
+      <div class="sig">
+        Warm regards,<br/>
+        <strong>[Business Name]</strong><br/>
+        Powered by CWI AI
+      </div>
+    </div>
+    <div class="footer">
+      <p>You are receiving this because you recently onboarded with [Business Name]. &copy; [Business Name]</p>
+    </div>
+  </div>
+</div>
+</body>
+</html>
+</template>
+
+<!-- T2: APPOINTMENT REMINDER -->
+<template id="tpl-2">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Your appointment tomorrow — [Service Name]</title>
+<style>
+  body{margin:0;padding:0;background:#f6f6f8;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;}
+  .wrapper{background:#f6f6f8;padding:40px 16px;}
+  .card{background:#ffffff;max-width:600px;margin:0 auto;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.07);}
+  .top-bar{background:#FF5A1F;height:6px;}
+  .body{padding:40px 40px 32px;}
+  .icon-wrap{margin:0 0 24px;}
+  .icon-circle{width:56px;height:56px;border-radius:50%;background:#fff3ee;display:flex;align-items:center;justify-content:center;}
+  .icon-circle svg{width:28px;height:28px;}
+  h2{font-size:22px;font-weight:700;color:#1a1a1a;margin:0 0 16px;letter-spacing:-0.3px;}
+  p{font-size:15px;color:#444;line-height:1.65;margin:0 0 16px;}
+  .appt-box{background:#f9f9fb;border:1px solid #ebebf0;border-radius:10px;padding:20px 24px;margin:24px 0;}
+  .appt-row{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid #ebebf0;}
+  .appt-row:last-child{border-bottom:none;}
+  .appt-label{font-size:12px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.8px;width:90px;flex-shrink:0;}
+  .appt-value{font-size:14px;color:#1a1a1a;font-weight:500;}
+  .reschedule-note{font-size:13px;color:#888;font-style:italic;margin:20px 0 0;}
+  .divider{border:none;border-top:1px solid #ebebeb;margin:28px 0;}
+  .sig{font-size:14px;color:#555;line-height:1.6;}
+  .sig strong{color:#1a1a1a;}
+  .footer{background:#f6f6f8;padding:16px 40px;text-align:center;}
+  .footer p{font-size:12px;color:#aaa;margin:0;}
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="card">
+    <div class="top-bar"></div>
+    <div class="body">
+      <div class="icon-wrap">
+        <div class="icon-circle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#FF5A1F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+        </div>
+      </div>
+      <h2>See you tomorrow!</h2>
+      <p>Hi [Name],</p>
+      <p>Just a quick reminder about your appointment tomorrow. We are looking forward to seeing you — here are your details:</p>
+      <div class="appt-box">
+        <div class="appt-row">
+          <span class="appt-label">Service</span>
+          <span class="appt-value">[Service Name]</span>
+        </div>
+        <div class="appt-row">
+          <span class="appt-label">Date</span>
+          <span class="appt-value">Tomorrow, [Full Date]</span>
+        </div>
+        <div class="appt-row">
+          <span class="appt-label">Time</span>
+          <span class="appt-value">[Time] [Timezone]</span>
+        </div>
+        <div class="appt-row">
+          <span class="appt-label">Location</span>
+          <span class="appt-value">[Location / Meeting Link]</span>
+        </div>
+      </div>
+      <p class="reschedule-note">Need to reschedule? Simply reply to this email and we will sort it out for you.</p>
+      <hr class="divider"/>
+      <div class="sig">
+        Looking forward to it,<br/>
+        <strong>[Business Name]</strong>
+      </div>
+    </div>
+    <div class="footer">
+      <p>&copy; [Business Name] — Powered by CWI AI</p>
+    </div>
+  </div>
+</div>
+</body>
+</html>
+</template>
+
+<!-- T3: BOOKING CONFIRMATION -->
+<template id="tpl-3">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Your appointment is confirmed — [Date]</title>
+<style>
+  body{margin:0;padding:0;background:#f6f6f8;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;}
+  .wrapper{background:#f6f6f8;padding:40px 16px;}
+  .card{background:#ffffff;max-width:600px;margin:0 auto;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.07);}
+  .banner{background:linear-gradient(135deg,#FF5A1F 0%,#ff7c45 100%);padding:36px 40px;text-align:center;}
+  .banner .check{width:52px;height:52px;background:rgba(255,255,255,0.2);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;margin-bottom:14px;}
+  .banner h1{color:#fff;font-size:24px;font-weight:700;margin:0 0 6px;}
+  .banner p{color:rgba(255,255,255,0.88);font-size:14px;margin:0;}
+  .body{padding:36px 40px 28px;}
+  .greeting{font-size:15px;color:#444;line-height:1.65;margin:0 0 24px;}
+  .confirm-box{background:#f9fffe;border:2px solid #d0f0e8;border-radius:10px;padding:22px 24px;margin:0 0 28px;}
+  .confirm-row{display:flex;gap:14px;padding:9px 0;border-bottom:1px solid #e8f5f1;}
+  .confirm-row:last-child{border-bottom:none;}
+  .confirm-icon{color:#FF5A1F;font-size:16px;flex-shrink:0;margin-top:1px;}
+  .confirm-label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.7px;color:#888;margin-bottom:3px;}
+  .confirm-value{font-size:14px;color:#1a1a1a;font-weight:500;}
+  .cal-wrap{text-align:center;margin:0 0 28px;}
+  .cal-btn{display:inline-block;background:#FF5A1F;color:#fff;font-size:14px;font-weight:600;text-decoration:none;padding:13px 32px;border-radius:8px;}
+  .note{font-size:13px;color:#888;text-align:center;margin:0 0 28px;}
+  .divider{border:none;border-top:1px solid #ebebeb;margin:0 0 24px;}
+  .sig{font-size:14px;color:#555;line-height:1.6;}
+  .sig strong{color:#1a1a1a;}
+  .footer{background:#f6f6f8;padding:16px 40px;text-align:center;}
+  .footer p{font-size:12px;color:#aaa;margin:0;}
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="card">
+    <div class="banner">
+      <div class="check">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </div>
+      <h1>You are all booked!</h1>
+      <p>Your appointment is confirmed and waiting for you.</p>
+    </div>
+    <div class="body">
+      <p class="greeting">Hi [Name], great news — your appointment is officially confirmed. Here is everything you need to know:</p>
+      <div class="confirm-box">
+        <div class="confirm-row">
+          <div class="confirm-icon">&#128197;</div>
+          <div>
+            <div class="confirm-label">Date</div>
+            <div class="confirm-value">[Full Date]</div>
+          </div>
+        </div>
+        <div class="confirm-row">
+          <div class="confirm-icon">&#128336;</div>
+          <div>
+            <div class="confirm-label">Time</div>
+            <div class="confirm-value">[Time] [Timezone]</div>
+          </div>
+        </div>
+        <div class="confirm-row">
+          <div class="confirm-icon">&#128205;</div>
+          <div>
+            <div class="confirm-label">Location</div>
+            <div class="confirm-value">[Address / Meeting Link]</div>
+          </div>
+        </div>
+        <div class="confirm-row">
+          <div class="confirm-icon">&#9889;</div>
+          <div>
+            <div class="confirm-label">Service</div>
+            <div class="confirm-value">[Service Name]</div>
+          </div>
+        </div>
+      </div>
+      <div class="cal-wrap">
+        <a href="#" class="cal-btn">Add to Calendar</a>
+      </div>
+      <p class="note">Need to make a change? Reply to this email and we will take care of it.</p>
+      <hr class="divider"/>
+      <div class="sig">
+        See you soon,<br/>
+        <strong>[Business Name]</strong>
+      </div>
+    </div>
+    <div class="footer">
+      <p>&copy; [Business Name] — Powered by CWI AI</p>
+    </div>
+  </div>
+</div>
+</body>
+</html>
+</template>
+
+<!-- T4: REVIEW REQUEST -->
+<template id="tpl-4">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>How did we do? Quick review request</title>
+<style>
+  body{margin:0;padding:0;background:#f6f6f8;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;}
+  .wrapper{background:#f6f6f8;padding:40px 16px;}
+  .card{background:#ffffff;max-width:600px;margin:0 auto;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.07);}
+  .top-bar{background:#FF5A1F;height:6px;}
+  .body{padding:44px 40px 32px;}
+  .stars{font-size:32px;letter-spacing:4px;margin-bottom:20px;display:block;}
+  h2{font-size:22px;font-weight:700;color:#1a1a1a;margin:0 0 16px;letter-spacing:-0.3px;}
+  p{font-size:15px;color:#444;line-height:1.65;margin:0 0 16px;}
+  .review-box{background:#fff8f5;border:1px solid #ffd8c8;border-radius:10px;padding:24px;text-align:center;margin:28px 0;}
+  .review-box p{font-size:14px;color:#666;margin:0 0 18px;}
+  .review-btn{display:inline-block;background:#FF5A1F;color:#fff;font-size:15px;font-weight:600;text-decoration:none;padding:14px 36px;border-radius:8px;}
+  .review-note{font-size:12px;color:#aaa;margin:14px 0 0;}
+  .divider{border:none;border-top:1px solid #ebebeb;margin:28px 0;}
+  .sig{font-size:14px;color:#555;line-height:1.6;}
+  .sig strong{color:#1a1a1a;}
+  .footer{background:#f6f6f8;padding:16px 40px;text-align:center;}
+  .footer p{font-size:12px;color:#aaa;margin:0;}
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="card">
+    <div class="top-bar"></div>
+    <div class="body">
+      <span class="stars">&#11088;&#11088;&#11088;&#11088;&#11088;</span>
+      <h2>How did we do?</h2>
+      <p>Hi [Name],</p>
+      <p>
+        Thank you for choosing <strong>[Business Name]</strong> — it was a pleasure working with you. We would love to hear about your experience.
+      </p>
+      <p>
+        Reviews help us grow and allow other people to find us when they need help. If you have 30 seconds, a quick review would mean the world to us.
+      </p>
+      <div class="review-box">
+        <p>Tap the button below to share your experience on Google — it only takes a moment.</p>
+        <a href="[Google Review Link]" class="review-btn">Leave a Review</a>
+        <p class="review-note">Takes less than 30 seconds &bull; No account needed on most devices</p>
+      </div>
+      <p>Either way, thank you for your time and we hope to see you again soon.</p>
+      <hr class="divider"/>
+      <div class="sig">
+        With gratitude,<br/>
+        <strong>[Business Name]</strong>
+      </div>
+    </div>
+    <div class="footer">
+      <p>&copy; [Business Name] — Powered by CWI AI</p>
+    </div>
+  </div>
+</div>
+</body>
+</html>
+</template>
+
+<!-- T5: NO-SHOW RECOVERY -->
+<template id="tpl-5">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Let us find a better time</title>
+<style>
+  body{margin:0;padding:0;background:#f6f6f8;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;}
+  .wrapper{background:#f6f6f8;padding:40px 16px;}
+  .card{background:#ffffff;max-width:600px;margin:0 auto;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.07);}
+  .top-bar{background:#FF5A1F;height:6px;}
+  .body{padding:40px 40px 32px;}
+  h2{font-size:22px;font-weight:700;color:#1a1a1a;margin:0 0 16px;letter-spacing:-0.3px;}
+  p{font-size:15px;color:#444;line-height:1.65;margin:0 0 16px;}
+  .reschedule-box{background:#f9f9fb;border-radius:10px;border:1px solid #ebebf0;padding:24px;text-align:center;margin:24px 0;}
+  .reschedule-box p{font-size:14px;color:#666;margin:0 0 16px;}
+  .reschedule-btn{display:inline-block;background:#FF5A1F;color:#fff;font-size:15px;font-weight:600;text-decoration:none;padding:13px 34px;border-radius:8px;}
+  .divider{border:none;border-top:1px solid #ebebeb;margin:28px 0;}
+  .sig{font-size:14px;color:#555;line-height:1.6;}
+  .sig strong{color:#1a1a1a;}
+  .footer{background:#f6f6f8;padding:16px 40px;text-align:center;}
+  .footer p{font-size:12px;color:#aaa;margin:0;}
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="card">
+    <div class="top-bar"></div>
+    <div class="body">
+      <h2>No worries — let us find a better time</h2>
+      <p>Hi [Name],</p>
+      <p>
+        We noticed you were not able to make our call earlier. Absolutely no worries — things come up and life gets busy. We completely understand.
+      </p>
+      <p>
+        We would still love to connect and see how we can help you. It only takes a few minutes and there is zero pressure.
+      </p>
+      <div class="reschedule-box">
+        <p>Pick a time that actually works for you:</p>
+        <a href="[Calendly Link]" class="reschedule-btn">Book a New Time</a>
+      </div>
+      <p>If there is anything specific you would like to chat about beforehand, just hit reply and let us know. We are here whenever you are ready.</p>
+      <hr class="divider"/>
+      <div class="sig">
+        Warmly,<br/>
+        <strong>[Business Name]</strong>
+      </div>
+    </div>
+    <div class="footer">
+      <p>&copy; [Business Name] — Powered by CWI AI</p>
+    </div>
+  </div>
+</div>
+</body>
+</html>
+</template>
+
+<!-- T6: MISSED FOLLOW-UP -->
+<template id="tpl-6">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Still thinking it over? We are here to help</title>
+<style>
+  body{margin:0;padding:0;background:#f6f6f8;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;}
+  .wrapper{background:#f6f6f8;padding:40px 16px;}
+  .card{background:#ffffff;max-width:600px;margin:0 auto;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.07);}
+  .top-bar{background:#FF5A1F;height:6px;}
+  .body{padding:40px 40px 32px;}
+  h2{font-size:22px;font-weight:700;color:#1a1a1a;margin:0 0 16px;letter-spacing:-0.3px;}
+  p{font-size:15px;color:#444;line-height:1.65;margin:0 0 16px;}
+  .highlight-box{border-left:3px solid #FF5A1F;background:#fff8f5;padding:16px 20px;border-radius:0 8px 8px 0;margin:24px 0;}
+  .highlight-box p{font-size:14px;color:#555;margin:0;}
+  .cta-wrap{text-align:center;margin:28px 0;}
+  .cta-btn{display:inline-block;background:#FF5A1F;color:#fff;font-size:15px;font-weight:600;text-decoration:none;padding:13px 34px;border-radius:8px;}
+  .soft-note{font-size:13px;color:#888;text-align:center;margin:0 0 8px;}
+  .divider{border:none;border-top:1px solid #ebebeb;margin:28px 0;}
+  .sig{font-size:14px;color:#555;line-height:1.6;}
+  .sig strong{color:#1a1a1a;}
+  .footer{background:#f6f6f8;padding:16px 40px;text-align:center;}
+  .footer p{font-size:12px;color:#aaa;margin:0;}
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="card">
+    <div class="top-bar"></div>
+    <div class="body">
+      <h2>Still thinking it over?</h2>
+      <p>Hi [Name],</p>
+      <p>
+        We wanted to follow up on your recent inquiry with <strong>[Business Name]</strong>. We know it can take time to make decisions and we want to make sure you have everything you need.
+      </p>
+      <div class="highlight-box">
+        <p>Whether you have questions, need more info, or just want to talk through how we can help — we are genuinely happy to chat. No pressure, no hard sell.</p>
+      </div>
+      <p>
+        If the timing is not quite right yet, that is completely fine too. Just know we are here whenever you are ready to take the next step.
+      </p>
+      <div class="cta-wrap">
+        <a href="[Booking Link]" class="cta-btn">Book a Free Call</a>
+      </div>
+      <p class="soft-note">Or just reply to this email — we read every one.</p>
+      <hr class="divider"/>
+      <div class="sig">
+        All the best,<br/>
+        <strong>[Business Name]</strong>
+      </div>
+    </div>
+    <div class="footer">
+      <p>&copy; [Business Name] — Powered by CWI AI</p>
+    </div>
+  </div>
+</div>
+</body>
+</html>
+</template>
+
+<!-- ══════════════ JAVASCRIPT ══════════════ -->
+<script>
+  const templates = [
+    {
+      id: 'tpl-1',
+      scenario: 'scenario-h',
+      name: 'Welcome Email',
+      trigger: 'Sends on: Client onboarding',
+      subject: 'Welcome! Here is what happens next'
+    },
+    {
+      id: 'tpl-2',
+      scenario: 'scenario-m',
+      name: 'Appointment Reminder',
+      trigger: 'Sends on: Day before appointment',
+      subject: 'Your appointment tomorrow — [Service Name]'
+    },
+    {
+      id: 'tpl-3',
+      scenario: 'scenario-a',
+      name: 'Booking Confirmation',
+      trigger: 'Sends on: Immediately after booking',
+      subject: 'Your appointment is confirmed — [Date]'
+    },
+    {
+      id: 'tpl-4',
+      scenario: 'scenario-j',
+      name: 'Review Request',
+      trigger: 'Sends on: After appointment completion',
+      subject: 'How did we do? Quick review request'
+    },
+    {
+      id: 'tpl-5',
+      scenario: 'scenario-l',
+      name: 'No-Show Recovery',
+      trigger: 'Sends on: After missed/no-show appointment',
+      subject: 'Let us find a better time'
+    },
+    {
+      id: 'tpl-6',
+      scenario: 'scenario-b',
+      name: 'Missed Follow-Up',
+      trigger: 'Sends on: Unresponsive lead after inquiry',
+      subject: 'Still thinking it over? We are here to help'
+    }
+  ];
+
+  const grid = document.getElementById('cardGrid');
+
+  templates.forEach(t => {
+    const rawHTML = document.getElementById(t.id).innerHTML.trim();
+
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    card.innerHTML = `
+      <div class="card-header">
+        <div class="card-meta">
+          <span class="scenario-badge">${t.scenario}</span>
+          <div class="card-name">${t.name}</div>
+          <div class="card-trigger">${t.trigger}</div>
+        </div>
+        <button class="copy-btn" data-tpl-id="${t.id}" type="button" aria-label="Copy HTML for ${t.name}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+          </svg>
+          Copy HTML
+        </button>
+      </div>
+      <div class="preview-wrap">
+        <div class="preview-chrome">
+          <div class="preview-chrome-bar">
+            <span class="dot dot-r"></span>
+            <span class="dot dot-y"></span>
+            <span class="dot dot-g"></span>
+            <span class="preview-subject">${t.subject}</span>
+          </div>
+          <div class="preview-body">
+            <iframe title="Preview: ${t.name}" sandbox="allow-same-origin"></iframe>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Inject HTML into iframe after appending
+    grid.appendChild(card);
+
+    const iframe = card.querySelector('iframe');
+    iframe.addEventListener('load', () => {}, { once: true });
+    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+    iframeDoc.open();
+    iframeDoc.write(rawHTML);
+    iframeDoc.close();
+
+    // Copy button
+    const btn = card.querySelector('.copy-btn');
+    btn.addEventListener('click', () => {
+      navigator.clipboard.writeText(rawHTML).then(() => {
+        btn.classList.add('copied');
+        btn.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Copied!
+        `;
+        showToast();
+        setTimeout(() => {
+          btn.classList.remove('copied');
+          btn.innerHTML = `
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+            Copy HTML
+          `;
+        }, 2200);
+      }).catch(() => {
+        // Fallback for older browsers
+        const ta = document.createElement('textarea');
+        ta.value = rawHTML;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast();
+      });
+    });
+  });
+
+  const toast = document.getElementById('toast');
+  let toastTimer;
+  function showToast() {
+    clearTimeout(toastTimer);
+    toast.classList.add('show');
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 2000);
+  }
+</script>
+</body>
+</html>

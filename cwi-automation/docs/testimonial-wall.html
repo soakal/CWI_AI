@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CWI AI — Testimonial Wall</title>
+<meta name="description" content="CWI internal tool: CWI AI — Testimonial Wall. Internal use only — CWI Compute With Imagination.">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --accent: #FF5A1F;
+    --accent-dark: #e04a12;
+    --accent-light: #fff3ef;
+    --bg: #f7f8fa;
+    --card-bg: #ffffff;
+    --border: #e5e7eb;
+    --text: #1a1a2e;
+    --muted: #6b7280;
+    --published: #16a34a;
+    --star: #f59e0b;
+    --radius: 12px;
+    --shadow: 0 2px 12px rgba(0,0,0,0.07);
+    --shadow-hover: 0 8px 28px rgba(255,90,31,0.13);
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: #1a1a2e;
+    color: #fff;
+    padding: 24px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  header .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  header .logo-icon {
+    width: 42px;
+    height: 42px;
+    background: var(--accent);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 18px;
+    color: #fff;
+    letter-spacing: -1px;
+  }
+  header h1 { font-size: 1.4rem; font-weight: 700; }
+  header p { font-size: 0.85rem; color: #9ca3af; margin-top: 2px; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 10px 18px;
+    border-radius: 8px;
+    border: none;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    white-space: nowrap;
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-dark); transform: translateY(-1px); }
+  .btn-ghost { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); }
+  .btn-ghost:hover { background: rgba(255,255,255,0.18); }
+
+  /* TOOLBAR */
+  .toolbar {
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .filter-label { font-size: 0.8rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+  .filter-btn {
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    background: #fff;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--muted);
+  }
+  .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .filter-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  .toolbar-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+
+  .search-box {
+    padding: 8px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.875rem;
+    outline: none;
+    transition: border-color 0.15s;
+    width: 220px;
+  }
+  .search-box:focus { border-color: var(--accent); }
+
+  /* STATS BAR */
+  .stats-bar {
+    padding: 16px 32px;
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .stat-chip {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .stat-chip .stat-val { font-size: 1.4rem; font-weight: 800; color: var(--accent); }
+  .stat-chip .stat-lbl { font-size: 0.78rem; color: var(--muted); }
+
+  /* GRID */
+  .grid {
+    padding: 0 32px 40px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 20px;
+  }
+
+  /* CARD */
+  .card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    border: 1.5px solid var(--border);
+    box-shadow: var(--shadow);
+    transition: box-shadow 0.2s, transform 0.2s;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
+  .card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+  .card.published { border-color: #bbf7d0; }
+  .card.published::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--published);
+  }
+
+  .card-header {
+    padding: 18px 20px 12px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .stars { color: var(--star); font-size: 1rem; letter-spacing: 1px; }
+
+  .published-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--published);
+    background: #dcfce7;
+    padding: 3px 8px;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+
+  .card-body { padding: 0 20px 16px; flex: 1; }
+
+  .quote-mark {
+    font-size: 3rem;
+    line-height: 0.7;
+    color: var(--accent);
+    opacity: 0.18;
+    font-family: Georgia, serif;
+    margin-bottom: -6px;
+    display: block;
+  }
+
+  .quote-text {
+    font-size: 0.95rem;
+    line-height: 1.65;
+    color: var(--text);
+    font-style: italic;
+    margin-top: 4px;
+  }
+
+  .card-meta {
+    padding: 12px 20px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    border-top: 1px solid var(--border);
+  }
+
+  .avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-weight: 800;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .meta-info { flex: 1; min-width: 0; }
+  .meta-name { font-weight: 700; font-size: 0.9rem; }
+  .meta-loc { font-size: 0.78rem; color: var(--muted); }
+
+  .industry-badge {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 4px 9px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+  .badge-plumbing { background: #dbeafe; color: #1d4ed8; }
+  .badge-hvac { background: #fce7f3; color: #be185d; }
+  .badge-accounting { background: #d1fae5; color: #065f46; }
+
+  /* ACTION BUTTONS */
+  .card-actions {
+    padding: 10px 20px 16px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .action-btn {
+    padding: 6px 11px;
+    border-radius: 6px;
+    border: 1.5px solid var(--border);
+    background: #fff;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .action-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+  .action-btn.copied { border-color: var(--published); color: var(--published); background: #dcfce7; }
+
+  .publish-toggle {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .toggle-switch {
+    width: 34px;
+    height: 20px;
+    border-radius: 10px;
+    background: #d1d5db;
+    position: relative;
+    transition: background 0.2s;
+    flex-shrink: 0;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+  }
+  .toggle-switch::after {
+    content: '';
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #fff;
+    top: 3px;
+    left: 3px;
+    transition: transform 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  .toggle-switch.on { background: var(--published); }
+  .toggle-switch.on::after { transform: translateX(14px); }
+
+  .delete-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #d1d5db;
+    font-size: 1rem;
+    padding: 4px;
+    border-radius: 4px;
+    transition: color 0.15s;
+    line-height: 1;
+  }
+  .delete-btn:hover { color: #ef4444; }
+
+  /* EMPTY STATE */
+  .empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+  }
+  .empty-state .empty-icon { font-size: 3rem; margin-bottom: 12px; }
+  .empty-state h3 { font-size: 1.1rem; margin-bottom: 6px; color: var(--text); }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+  .modal {
+    background: #fff;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 540px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    transform: translateY(20px);
+    transition: transform 0.2s;
+  }
+  .modal-overlay.open .modal { transform: translateY(0); }
+
+  .modal-header {
+    padding: 22px 24px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .modal-header h2 { font-size: 1.1rem; font-weight: 700; }
+
+  .close-btn {
+    background: none;
+    border: none;
+    font-size: 1.4rem;
+    cursor: pointer;
+    color: var(--muted);
+    line-height: 1;
+    padding: 4px;
+    border-radius: 4px;
+    transition: color 0.15s;
+  }
+  .close-btn:hover { color: var(--text); }
+
+  .modal-body { padding: 20px 24px; display: flex; flex-direction: column; gap: 14px; }
+
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-label { font-size: 0.8rem; font-weight: 700; color: var(--text); }
+  .form-input, .form-select, .form-textarea {
+    padding: 10px 13px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.15s;
+    font-family: inherit;
+    color: var(--text);
+    background: #fff;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent); }
+  .form-textarea { resize: vertical; min-height: 90px; }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .star-picker { display: flex; gap: 6px; }
+  .star-pick {
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #d1d5db;
+    transition: color 0.12s;
+    border: none;
+    background: none;
+    padding: 2px;
+    line-height: 1;
+  }
+  .star-pick.lit { color: var(--star); }
+  .star-pick:hover { color: var(--star); }
+
+  .modal-footer {
+    padding: 16px 24px 22px;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    border-top: 1px solid var(--border);
+  }
+
+  .btn-cancel {
+    background: #f3f4f6;
+    color: var(--text);
+    padding: 10px 18px;
+    border-radius: 8px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.875rem;
+  }
+  .btn-cancel:hover { background: var(--border); }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: #1a1a2e;
+    color: #fff;
+    padding: 12px 22px;
+    border-radius: 10px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    z-index: 2000;
+    opacity: 0;
+    transition: all 0.25s;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 600px) {
+    header, .toolbar, .stats-bar, .grid { padding-left: 16px; padding-right: 16px; }
+    .grid { grid-template-columns: 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+    .search-box { width: 160px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">CWI</div>
+    <div>
+      <h1>Testimonial Wall</h1>
+      <p>Curated client wins — ready to copy and deploy</p>
+    </div>
+  </div>
+  <button class="btn btn-primary" onclick="openModal()">&#43; Add Testimonial</button>
+</header>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <span class="filter-label">Filter:</span>
+  <button class="filter-btn active" data-filter="all" onclick="setFilter('all', this)">All</button>
+  <button class="filter-btn" data-filter="Plumbing" onclick="setFilter('Plumbing', this)">Plumbing</button>
+  <button class="filter-btn" data-filter="HVAC" onclick="setFilter('HVAC', this)">HVAC</button>
+  <button class="filter-btn" data-filter="Accounting" onclick="setFilter('Accounting', this)">Accounting</button>
+  <button class="filter-btn" data-filter="published" onclick="setFilter('published', this)">Published to Website</button>
+  <div class="toolbar-right">
+    <input class="search-box" type="text" placeholder="Search testimonials..." oninput="renderGrid()" id="searchInput">
+  </div>
+</div>
+
+<!-- STATS BAR -->
+<div class="stats-bar" id="statsBar"></div>
+
+<!-- GRID -->
+<div class="grid" id="testimonialGrid"></div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalTitle">Add Testimonial</h2>
+      <button class="close-btn" onclick="closeModal()">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label" for="starPicker">Star Rating</label>
+        <div class="star-picker" id="starPicker">
+          <button class="star-pick lit" data-val="1" onclick="setStars(1)">&#9733;</button>
+          <button class="star-pick lit" data-val="2" onclick="setStars(2)">&#9733;</button>
+          <button class="star-pick lit" data-val="3" onclick="setStars(3)">&#9733;</button>
+          <button class="star-pick lit" data-val="4" onclick="setStars(4)">&#9733;</button>
+          <button class="star-pick lit" data-val="5" onclick="setStars(5)">&#9733;</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="formQuote">Quote</label>
+        <textarea class="form-textarea" id="formQuote" placeholder="What did the client say?"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="formName">Client Name</label>
+          <input class="form-input" id="formName" type="text" placeholder="e.g. Mike T.">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="formIndustry">Industry</label>
+          <select class="form-select" id="formIndustry">
+            <option value="Plumbing">Plumbing</option>
+            <option value="HVAC">HVAC</option>
+            <option value="Accounting">Accounting</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="formLocation">Location</label>
+        <input class="form-input" id="formLocation" type="text" placeholder="e.g. Dearborn, MI">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTestimonial()">Save Testimonial</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── DATA SEED ───────────────────────────────────────────────────────────────
+const SEED = [
+  {
+    id: 1,
+    stars: 5,
+    quote: "Before CWI AI, I was losing 3-4 jobs a week to voicemail. Now my bot answers at 2am and books the job. Best investment I made.",
+    name: "Mike T.",
+    industry: "Plumbing",
+    location: "Dearborn, MI",
+    published: false
+  },
+  {
+    id: 2,
+    stars: 5,
+    quote: "The monthly report alone is worth it. I finally know which leads come from Google vs referrals.",
+    name: "Sarah L.",
+    industry: "HVAC",
+    location: "Westland, MI",
+    published: false
+  },
+  {
+    id: 3,
+    stars: 5,
+    quote: "Setup took 5 days. First week, the bot booked 2 jobs I would have missed. Already paid for itself.",
+    name: "Dave K.",
+    industry: "Plumbing",
+    location: "Trenton, MI",
+    published: false
+  },
+  {
+    id: 4,
+    stars: 5,
+    quote: "My phone used to go to voicemail after 6pm. Now I get bookings while I sleep.",
+    name: "Tony R.",
+    industry: "HVAC",
+    location: "Riverview, MI",
+    published: false
+  },
+  {
+    id: 5,
+    stars: 5,
+    quote: "I was skeptical about AI for accounting. But the appointment booking alone saves me 2 hours a week.",
+    name: "Jennifer M.",
+    industry: "Accounting",
+    location: "Southgate, MI",
+    published: false
+  },
+  {
+    id: 6,
+    stars: 5,
+    quote: "The follow-up sequence recovered 2 leads that ghosted me. Pure profit.",
+    name: "Carlos P.",
+    industry: "Plumbing",
+    location: "Taylor, MI",
+    published: false
+  },
+  {
+    id: 7,
+    stars: 5,
+    quote: "30-day guarantee made it easy to try. Never looked back.",
+    name: "Lisa W.",
+    industry: "Accounting",
+    location: "Downriver, MI",
+    published: false
+  },
+  {
+    id: 8,
+    stars: 5,
+    quote: "Brian set everything up in a week. No tech skills needed on my end.",
+    name: "Frank B.",
+    industry: "HVAC",
+    location: "Wyandotte, MI",
+    published: false
+  }
+];
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let testimonials = [];
+let activeFilter = 'all';
+let editingId = null;
+let formStars = 5;
+
+const STORAGE_KEY = 'cwi_testimonials_v1';
+
+function load() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (raw) {
+    testimonials = JSON.parse(raw);
+  } else {
+    testimonials = JSON.parse(JSON.stringify(SEED));
+    save();
+  }
+}
+
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(testimonials));
+}
+
+function nextId() {
+  return testimonials.length > 0 ? Math.max(...testimonials.map(t => t.id)) + 1 : 1;
+}
+
+// ─── FILTER ───────────────────────────────────────────────────────────────────
+function setFilter(f, el) {
+  activeFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  renderGrid();
+}
+
+function getFiltered() {
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  return testimonials.filter(t => {
+    const matchFilter = activeFilter === 'all'
+      ? true
+      : activeFilter === 'published'
+      ? t.published
+      : t.industry === activeFilter;
+    const matchSearch = !q || t.quote.toLowerCase().includes(q)
+      || t.name.toLowerCase().includes(q)
+      || t.location.toLowerCase().includes(q)
+      || t.industry.toLowerCase().includes(q);
+    return matchFilter && matchSearch;
+  });
+}
+
+// ─── STATS ────────────────────────────────────────────────────────────────────
+function renderStats() {
+  const total = testimonials.length;
+  const pub = testimonials.filter(t => t.published).length;
+  const plumb = testimonials.filter(t => t.industry === 'Plumbing').length;
+  const hvac = testimonials.filter(t => t.industry === 'HVAC').length;
+  const acct = testimonials.filter(t => t.industry === 'Accounting').length;
+  document.getElementById('statsBar').innerHTML = `
+    <div class="stat-chip"><span class="stat-val">${total}</span><span class="stat-lbl">Total<br>Testimonials</span></div>
+    <div class="stat-chip"><span class="stat-val">${pub}</span><span class="stat-lbl">Published to<br>Website</span></div>
+    <div class="stat-chip"><span class="stat-val">${plumb}</span><span class="stat-lbl">Plumbing<br>Clients</span></div>
+    <div class="stat-chip"><span class="stat-val">${hvac}</span><span class="stat-lbl">HVAC<br>Clients</span></div>
+    <div class="stat-chip"><span class="stat-val">${acct}</span><span class="stat-lbl">Accounting<br>Clients</span></div>
+  `;
+}
+
+// ─── BADGE ────────────────────────────────────────────────────────────────────
+function badgeClass(industry) {
+  if (industry === 'Plumbing') return 'badge-plumbing';
+  if (industry === 'HVAC') return 'badge-hvac';
+  if (industry === 'Accounting') return 'badge-accounting';
+  return 'badge-plumbing';
+}
+
+function initials(name) {
+  return name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+}
+
+function starsHTML(n) {
+  return '&#9733;'.repeat(n) + (n < 5 ? '<span style="color:#e5e7eb">' + '&#9733;'.repeat(5-n) + '</span>' : '');
+}
+
+// ─── GRID ─────────────────────────────────────────────────────────────────────
+function renderGrid() {
+  const filtered = getFiltered();
+  const grid = document.getElementById('testimonialGrid');
+  renderStats();
+
+  if (filtered.length === 0) {
+    grid.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">&#128172;</div>
+      <h3>No testimonials found</h3>
+      <p>Try a different filter or add a new testimonial.</p>
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map(t => `
+    <div class="card${t.published ? ' published' : ''}" id="card-${t.id}">
+      <div class="card-header">
+        <div class="stars">${starsHTML(t.stars)}</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          ${t.published ? '<span class="published-badge">&#10003; On Website</span>' : ''}
+          <button class="delete-btn" onclick="deleteTestimonial(${t.id})" title="Delete">&#128465;</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <span class="quote-mark">"</span>
+        <p class="quote-text">${escapeHTML(t.quote)}"</p>
+      </div>
+      <div class="card-meta">
+        <div class="avatar">${initials(t.name)}</div>
+        <div class="meta-info">
+          <div class="meta-name">${escapeHTML(t.name)}</div>
+          <div class="meta-loc">&#128205; ${escapeHTML(t.location)}</div>
+        </div>
+        <span class="industry-badge ${badgeClass(t.industry)}">${escapeHTML(t.industry)}</span>
+      </div>
+      <div class="card-actions">
+        <button class="action-btn" onclick="copyFormat(${t.id},'email',this)" title="Copy formatted for email">
+          &#128140; Email Quote
+        </button>
+        <button class="action-btn" onclick="copyFormat(${t.id},'social',this)" title="Copy formatted for social">
+          &#128248; Social Post
+        </button>
+        <button class="action-btn" onclick="copyFormat(${t.id},'website',this)" title="Copy formatted for website">
+          &#127760; Website
+        </button>
+        <label class="publish-toggle" title="Toggle website published status">
+          <button class="toggle-switch${t.published ? ' on' : ''}" onclick="togglePublished(${t.id})" type="button"></button>
+          <span>${t.published ? 'Published' : 'Draft'}</span>
+        </label>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ─── COPY FORMATS ─────────────────────────────────────────────────────────────
+function copyFormat(id, format, btn) {
+  const t = testimonials.find(x => x.id === id);
+  if (!t) return;
+
+  let text = '';
+  const stars = '★'.repeat(t.stars);
+
+  if (format === 'email') {
+    text = `"${t.quote}"\n\n— ${t.name}, ${t.industry}, ${t.location}`;
+  } else if (format === 'social') {
+    text = `${stars}\n\n"${t.quote}"\n\n— ${t.name}, ${t.industry} contractor, ${t.location}\n\n#CWI_AI #AI #${t.industry} #SmallBusiness #AutomateYourBusiness`;
+  } else if (format === 'website') {
+    text = `<blockquote>\n  <p>"${t.quote}"</p>\n  <cite>— ${t.name}, ${t.industry}, ${t.location}</cite>\n</blockquote>`;
+  }
+
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.innerHTML;
+    btn.classList.add('copied');
+    btn.innerHTML = '&#10003; Copied!';
+    showToast('Copied to clipboard');
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.innerHTML = orig;
+    }, 2000);
+  }).catch(() => {
+    // fallback
+    const el = document.createElement('textarea');
+    el.value = text;
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+    showToast('Copied to clipboard');
+  });
+}
+
+// ─── PUBLISH TOGGLE ───────────────────────────────────────────────────────────
+function togglePublished(id) {
+  const t = testimonials.find(x => x.id === id);
+  if (!t) return;
+  t.published = !t.published;
+  save();
+  renderGrid();
+  showToast(t.published ? 'Marked as published to website' : 'Removed from website');
+}
+
+// ─── DELETE ───────────────────────────────────────────────────────────────────
+function deleteTestimonial(id) {
+  if (!confirm('Delete this testimonial? This cannot be undone.')) return;
+  testimonials = testimonials.filter(t => t.id !== id);
+  save();
+  renderGrid();
+  showToast('Testimonial deleted');
+}
+
+// ─── MODAL ────────────────────────────────────────────────────────────────────
+function openModal(id) {
+  editingId = id || null;
+  formStars = 5;
+
+  if (id) {
+    const t = testimonials.find(x => x.id === id);
+    document.getElementById('modalTitle').textContent = 'Edit Testimonial';
+    document.getElementById('formQuote').value = t.quote;
+    document.getElementById('formName').value = t.name;
+    document.getElementById('formIndustry').value = t.industry;
+    document.getElementById('formLocation').value = t.location;
+    formStars = t.stars;
+  } else {
+    document.getElementById('modalTitle').textContent = 'Add Testimonial';
+    document.getElementById('formQuote').value = '';
+    document.getElementById('formName').value = '';
+    document.getElementById('formIndustry').value = 'Plumbing';
+    document.getElementById('formLocation').value = '';
+    formStars = 5;
+  }
+
+  setStars(formStars);
+  document.getElementById('modalOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('formQuote').focus(), 200);
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+
+function setStars(n) {
+  formStars = n;
+  document.querySelectorAll('.star-pick').forEach(s => {
+    const v = parseInt(s.getAttribute('data-val'));
+    s.classList.toggle('lit', v <= n);
+  });
+}
+
+function saveTestimonial() {
+  const quote = document.getElementById('formQuote').value.trim();
+  const name = document.getElementById('formName').value.trim();
+  const industry = document.getElementById('formIndustry').value;
+  const location = document.getElementById('formLocation').value.trim();
+
+  if (!quote) { alert('Please enter a quote.'); document.getElementById('formQuote').focus(); return; }
+  if (!name) { alert('Please enter a client name.'); document.getElementById('formName').focus(); return; }
+  if (!location) { alert('Please enter a location.'); document.getElementById('formLocation').focus(); return; }
+
+  if (editingId) {
+    const t = testimonials.find(x => x.id === editingId);
+    t.quote = quote; t.name = name; t.industry = industry;
+    t.location = location; t.stars = formStars;
+    showToast('Testimonial updated');
+  } else {
+    testimonials.push({ id: nextId(), stars: formStars, quote, name, industry, location, published: false });
+    showToast('Testimonial added');
+  }
+
+  save();
+  closeModal();
+  renderGrid();
+}
+
+// ─── UTIL ─────────────────────────────────────────────────────────────────────
+function escapeHTML(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// Close modal on backdrop click
+document.getElementById('modalOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// Keyboard close
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeModal();
+});
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+load();
+renderGrid();
+</script>
+</body>
+</html>

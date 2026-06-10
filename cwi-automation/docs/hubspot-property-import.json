@@ -1,0 +1,168 @@
+{
+  "contact_properties": [
+    {
+      "name": "industry",
+      "label": "Industry",
+      "type": "enumeration",
+      "fieldType": "select",
+      "options": [
+        {"label": "Plumber", "value": "Plumber"},
+        {"label": "HVAC", "value": "HVAC"},
+        {"label": "Accountant", "value": "Accountant"},
+        {"label": "Retail", "value": "Retail"},
+        {"label": "Salon", "value": "Salon"},
+        {"label": "Other", "value": "Other"}
+      ],
+      "description": "The industry vertical of the contact's business"
+    },
+    {
+      "name": "city",
+      "label": "City",
+      "type": "string",
+      "fieldType": "text",
+      "description": "The city where the contact's business is located"
+    },
+    {
+      "name": "monthly_leads_volume",
+      "label": "Monthly Leads Volume",
+      "type": "number",
+      "fieldType": "number",
+      "description": "The estimated number of leads the contact's business receives per month"
+    },
+    {
+      "name": "number_of_locations",
+      "label": "Number of Locations",
+      "type": "number",
+      "fieldType": "number",
+      "description": "The number of physical business locations the contact operates"
+    },
+    {
+      "name": "current_software",
+      "label": "Current Software",
+      "type": "string",
+      "fieldType": "text",
+      "description": "The software or tools the contact currently uses to manage their business"
+    },
+    {
+      "name": "pricing_tier",
+      "label": "Pricing Tier",
+      "type": "enumeration",
+      "fieldType": "select",
+      "options": [
+        {"label": "Starter", "value": "Starter"},
+        {"label": "Growth", "value": "Growth"},
+        {"label": "Pro", "value": "Pro"},
+        {"label": "Custom", "value": "Custom"}
+      ],
+      "description": "The CWI AI pricing tier the contact is on or being quoted"
+    },
+    {
+      "name": "monthly_fee",
+      "label": "Monthly Fee",
+      "type": "number",
+      "fieldType": "number",
+      "description": "The monthly recurring fee (in dollars) the contact pays for CWI AI services"
+    },
+    {
+      "name": "setup_fee_collected",
+      "label": "Setup Fee Collected",
+      "type": "boolean",
+      "fieldType": "booleancheckbox",
+      "description": "Indicates whether the one-time setup fee has been collected from the contact"
+    },
+    {
+      "name": "go_live_date",
+      "label": "Go Live Date",
+      "type": "date",
+      "fieldType": "date",
+      "description": "The date the contact's CWI AI bot went live and was activated for their business"
+    },
+    {
+      "name": "nps_score",
+      "label": "NPS Score",
+      "type": "number",
+      "fieldType": "number",
+      "description": "The contact's most recent Net Promoter Score (0-10) from a satisfaction survey"
+    },
+    {
+      "name": "last_check_in",
+      "label": "Last Check-In",
+      "type": "date",
+      "fieldType": "date",
+      "description": "The date of the most recent check-in or touchpoint with this contact"
+    },
+    {
+      "name": "support_tickets_month",
+      "label": "Support Tickets This Month",
+      "type": "number",
+      "fieldType": "number",
+      "description": "The number of support tickets submitted by this contact in the current month"
+    },
+    {
+      "name": "containment_rate",
+      "label": "Containment Rate",
+      "type": "number",
+      "fieldType": "number",
+      "description": "The percentage of conversations handled by the bot without requiring human escalation, for this contact's account"
+    }
+  ],
+  "company_properties": [
+    {
+      "name": "cwi_last_report_month",
+      "label": "CWI Last Report Month",
+      "type": "string",
+      "fieldType": "text",
+      "description": "The month (e.g., 'May 2026') of the most recent performance report sent to this company"
+    },
+    {
+      "name": "cwi_total_conversations",
+      "label": "CWI Total Conversations",
+      "type": "number",
+      "fieldType": "number",
+      "description": "The total number of bot conversations handled for this company in the reporting period"
+    },
+    {
+      "name": "cwi_bot_resolved",
+      "label": "CWI Bot Resolved",
+      "type": "number",
+      "fieldType": "number",
+      "description": "The number of conversations fully resolved by the bot without human intervention"
+    },
+    {
+      "name": "cwi_containment_rate",
+      "label": "CWI Containment Rate",
+      "type": "number",
+      "fieldType": "number",
+      "description": "The percentage of total conversations resolved by the bot (bot resolved / total conversations) for this company"
+    },
+    {
+      "name": "cwi_escalation_rate",
+      "label": "CWI Escalation Rate",
+      "type": "number",
+      "fieldType": "number",
+      "description": "The percentage of conversations that required escalation to a human agent for this company"
+    },
+    {
+      "name": "cwi_appointments_booked",
+      "label": "CWI Appointments Booked",
+      "type": "number",
+      "fieldType": "number",
+      "description": "The number of appointments booked through the CWI AI bot for this company in the reporting period"
+    },
+    {
+      "name": "cwi_avg_response_time",
+      "label": "CWI Avg Response Time",
+      "type": "number",
+      "fieldType": "number",
+      "description": "The average bot response time in seconds for this company during the reporting period"
+    },
+    {
+      "name": "cwi_report_sent_date",
+      "label": "CWI Report Sent Date",
+      "type": "date",
+      "fieldType": "date",
+      "description": "The date the most recent performance report was sent to this company"
+    }
+  ],
+  "instructions": "Create these properties in HubSpot Settings > Properties. Contact properties go under Contacts, Company properties under Companies. For enumeration types, create each option exactly as listed. These property names are referenced in Make.com scenarios C, H, N, O."
+}

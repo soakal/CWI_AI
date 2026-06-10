@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CWI Automation — Pricing Calculator</title>
+  <meta name="description" content="CWI internal tool: CWI Automation — Pricing Calculator. Internal use only — CWI Compute With Imagination.">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0A0A0C;
+      --surface:   #13131A;
+      --surface2:  #1C1C27;
+      --border:    #2A2A3A;
+      --orange:    #FF5A1F;
+      --orange-dim:#CC4818;
+      --text:      #E8E8F0;
+      --muted:     #7A7A9A;
+      --green:     #2ECC71;
+      --yellow:    #F1C40F;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Sora', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 2rem 1rem 4rem;
+    }
+
+    /* ── Header ── */
+    header {
+      max-width: 980px;
+      margin: 0 auto 2.5rem;
+      text-align: center;
+    }
+    .logo-mark {
+      display: inline-block;
+      background: var(--orange);
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.85rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 4px;
+      margin-bottom: 1rem;
+    }
+    header h1 {
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
+    }
+    header h1 span { color: var(--orange); }
+    header p { color: var(--muted); font-size: 0.95rem; }
+
+    /* ── Layout ── */
+    .layout {
+      max-width: 980px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 1.5rem;
+      align-items: start;
+    }
+    @media (max-width: 760px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.5rem;
+    }
+    .card-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--orange);
+      margin-bottom: 1.25rem;
+    }
+
+    /* ── Toggle switch ── */
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+    .toggle-label { font-size: 0.85rem; color: var(--muted); }
+    .toggle-label.active { color: var(--text); font-weight: 600; }
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 46px;
+      height: 26px;
+    }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute;
+      inset: 0;
+      background: var(--border);
+      border-radius: 26px;
+      cursor: pointer;
+      transition: background 0.25s;
+    }
+    .slider::before {
+      content: '';
+      position: absolute;
+      width: 18px; height: 18px;
+      left: 4px; top: 4px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.25s;
+    }
+    .switch input:checked + .slider { background: var(--orange); }
+    .switch input:checked + .slider::before { transform: translateX(20px); }
+
+    /* ── Tier selector cards ── */
+    .tier-options { display: flex; flex-direction: column; gap: 0.85rem; }
+    .tier-option {
+      position: relative;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.1rem 1.1rem 1.1rem 3rem;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .tier-option:hover { border-color: var(--orange-dim); }
+    .tier-option.selected { border-color: var(--orange); background: #1f1a18; }
+    .tier-option input[type="radio"] {
+      position: absolute;
+      left: 1rem; top: 1.25rem;
+      accent-color: var(--orange);
+      width: 16px; height: 16px;
+      cursor: pointer;
+    }
+    .tier-option .popular {
+      position: absolute;
+      top: -10px; right: 12px;
+      background: var(--yellow);
+      color: #1a1a1a;
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 3px 9px;
+      border-radius: 20px;
+    }
+    .tier-option .to-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 0.3rem;
+    }
+    .tier-option .to-name { font-size: 1.05rem; font-weight: 700; }
+    .tier-option .to-price { font-size: 1.05rem; font-weight: 700; color: var(--orange); white-space: nowrap; }
+    .tier-option .to-price small { font-size: 0.72rem; color: var(--muted); font-weight: 400; }
+    .tier-option .to-target { font-size: 0.76rem; color: var(--muted); line-height: 1.45; margin-bottom: 0.6rem; }
+    .tier-option .to-features { list-style: none; }
+    .tier-option .to-features li {
+      font-size: 0.78rem;
+      color: var(--text);
+      padding: 0.16rem 0 0.16rem 1.1rem;
+      position: relative;
+      line-height: 1.35;
+    }
+    .tier-option .to-features li::before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      color: var(--green);
+      font-weight: 700;
+    }
+
+    /* ── Guarantee strip ── */
+    .guarantee {
+      max-width: 980px;
+      margin: 1.5rem auto 0;
+      background: #14201a;
+      border: 1px solid var(--green);
+      border-radius: 12px;
+      padding: 0.85rem 1.1rem;
+      font-size: 0.8rem;
+      color: var(--text);
+      line-height: 1.5;
+    }
+    .guarantee strong { color: var(--green); }
+
+    /* ── Results card ── */
+    .results-card { position: sticky; top: 1.5rem; }
+
+    .tier-badge {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin-bottom: 1.25rem;
+    }
+    .tier-Starter  { background: #1a2a1a; color: var(--green); border: 1px solid var(--green); }
+    .tier-Growth   { background: #2a2a10; color: var(--yellow); border: 1px solid var(--yellow); }
+    .tier-Pro      { background: #2a1a10; color: #FF8C5A; border: 1px solid #FF8C5A; }
+    .tier-Custom   { background: #2a1020; color: #C86DFF; border: 1px solid #C86DFF; }
+
+    .price-big {
+      font-size: 2.6rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1;
+      color: var(--orange);
+      margin-bottom: 0.2rem;
+    }
+    .price-big sup { font-size: 1.2rem; vertical-align: top; margin-top: 0.4rem; display: inline-block; }
+    .price-period { font-size: 0.8rem; color: var(--muted); margin-bottom: 1.5rem; }
+
+    .line-items { list-style: none; margin-bottom: 1.25rem; }
+    .line-items li {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.82rem;
+      padding: 0.35rem 0;
+      border-bottom: 1px solid var(--border);
+      color: var(--muted);
+    }
+    .line-items li:last-child { border-bottom: none; }
+    .line-items li span:last-child { color: var(--text); font-weight: 500; }
+    .line-items li.total-line {
+      font-weight: 600;
+      color: var(--text);
+      font-size: 0.88rem;
+      padding-top: 0.5rem;
+      margin-top: 0.25rem;
+      border-top: 2px solid var(--border);
+      border-bottom: none;
+    }
+    .line-items li.total-line span:last-child { color: var(--orange); }
+
+    /* ── Margin bar ── */
+    .margin-section { margin-bottom: 1.25rem; }
+    .margin-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      margin-bottom: 0.4rem;
+    }
+    .margin-label { color: var(--muted); }
+    .margin-value { font-weight: 600; color: var(--text); }
+    .margin-bar-bg {
+      background: var(--surface2);
+      border-radius: 4px;
+      height: 6px;
+      overflow: hidden;
+    }
+    .margin-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: var(--green);
+      transition: width 0.4s ease;
+    }
+    .margin-note { font-size: 0.7rem; color: var(--muted); margin-top: 0.35rem; }
+
+    /* ── Setup fee & annual ── */
+    .meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+    .meta-cell {
+      background: var(--surface2);
+      border-radius: 8px;
+      padding: 0.65rem 0.8rem;
+    }
+    .meta-cell .mc-label { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; }
+    .meta-cell .mc-value { font-size: 1.05rem; font-weight: 600; color: var(--text); margin-top: 2px; }
+
+    /* ── Copy button ── */
+    .btn-copy {
+      width: 100%;
+      background: var(--orange);
+      color: #fff;
+      font-family: 'Sora', sans-serif;
+      font-weight: 600;
+      font-size: 0.88rem;
+      border: none;
+      border-radius: 8px;
+      padding: 0.7rem;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      letter-spacing: 0.02em;
+    }
+    .btn-copy:hover  { background: var(--orange-dim); }
+    .btn-copy:active { transform: scale(0.98); }
+    .btn-copy.copied { background: var(--green); }
+
+    /* ── Discount callout ── */
+    .discount-note {
+      font-size: 0.75rem;
+      color: var(--green);
+      text-align: center;
+      margin-top: 0.6rem;
+      min-height: 1rem;
+      line-height: 1.4;
+      transition: opacity 0.3s;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo-mark">CWI Automation</div>
+  <h1>Client <span>Pricing</span> Calculator</h1>
+  <p>Pick a plan, choose billing, and get an instant quote with margins.</p>
+</header>
+
+<div class="layout">
+
+  <!-- LEFT: Plan selector -->
+  <div>
+
+    <div class="card" style="margin-bottom:1.25rem;">
+      <div class="card-title">Choose a Plan</div>
+
+      <div class="toggle-row">
+        <span class="toggle-label" id="lbl-monthly">Monthly</span>
+        <label class="switch" for="toggle-annual">
+          <input type="checkbox" id="toggle-annual" onchange="recalc()" />
+          <span class="slider"></span>
+        </label>
+        <span class="toggle-label" id="lbl-annual">Annual <span style="color:var(--green);font-size:0.75rem;">(2 months free + setup waived)</span></span>
+      </div>
+
+      <div class="tier-options" id="tier-options"></div>
+    </div>
+
+    <div class="guarantee">
+      <strong>30-Day Results Guarantee:</strong> In the first 30 days the system captures and books leads for you — if it doesn't recover at least one job-worth of value, that month is free. (Setup fee covers real build labor and is non-refundable.)
+    </div>
+
+  </div>
+
+  <!-- RIGHT: Results -->
+  <div class="results-card card">
+    <div class="card-title">Quote Summary</div>
+
+    <div id="tier-badge" class="tier-badge tier-Growth">Growth</div>
+
+    <div class="price-big" id="price-display"><sup>$</sup><span id="price-main">397</span></div>
+    <div class="price-period" id="price-period">per month</div>
+
+    <ul class="line-items" id="line-items"></ul>
+
+    <div class="meta-grid">
+      <div class="meta-cell">
+        <div class="mc-label">Setup Fee</div>
+        <div class="mc-value" id="setup-display">$499</div>
+      </div>
+      <div class="meta-cell">
+        <div class="mc-label" id="annual-label">Annual Total</div>
+        <div class="mc-value" id="annual-display">$4,764</div>
+      </div>
+    </div>
+
+    <div class="margin-section">
+      <div class="margin-header">
+        <span class="margin-label">Est. Gross Margin</span>
+        <span class="margin-value" id="margin-pct">90%</span>
+      </div>
+      <div class="margin-bar-bg">
+        <div class="margin-bar-fill" id="margin-bar" style="width:90%;"></div>
+      </div>
+      <div class="margin-note" id="margin-note">Hard cost ~$39/client · Gross profit ~$358/mo</div>
+    </div>
+
+    <button class="btn-copy" id="copy-btn" onclick="copyQuote()">Copy Quote to Clipboard</button>
+    <div class="discount-note" id="discount-note"></div>
+  </div>
+
+</div>
+
+<script>
+// ─── Pricing strategy data ─────────────────────────────────────────────────────
+// Hard cost per client: Make.com ~$11 + Resend ~$4 + Freshchat ~$19 + OpenRouter ~$5 = $39/mo (worst case)
+const HARD_COST = 39;
+
+const TIERS = {
+  Starter: {
+    name: 'Starter',
+    monthly: 197,
+    annual: 164,          // effective per-month when billed annually
+    setup: 499,
+    popular: false,
+    custom: false,
+    target: 'Solo operators & very small shops who need to stop missing after-hours calls and capture leads 24/7.',
+    features: [
+      '24/7 AI chat that captures every lead',
+      'Instant lead alerts to phone & email',
+      'Missed-call / after-hours text-back',
+      'Connects to website & Google Business Profile',
+      'Email support (24–48 hr)'
+    ]
+  },
+  Growth: {
+    name: 'Growth',
+    monthly: 397,
+    annual: 331,
+    setup: 499,
+    popular: true,
+    custom: false,
+    target: 'Established 1–2 truck HVAC/plumbing shops, busy salons & growing firms that want jobs booked and follow-up handled automatically.',
+    features: [
+      'Everything in Starter',
+      'Automated booking into your calendar',
+      'Automated follow-up (quotes, reminders, no-show recovery)',
+      'Up to 3 integrations (calendar, CRM, scheduling)',
+      'Monthly performance report',
+      'Priority email support + monthly check-in call'
+    ]
+  },
+  Pro: {
+    name: 'Pro',
+    monthly: 597,
+    annual: 497,
+    setup: 749,
+    popular: false,
+    custom: false,
+    target: 'Multi-service / high-volume single-location businesses wanting custom conversation flows and white-glove service.',
+    features: [
+      'Everything in Growth',
+      'Custom flows (emergency dispatch, qualification, intake)',
+      'Up to 6 integrations + payment/invoicing',
+      'Higher contact volume handling',
+      'Proactive monthly strategy review',
+      'Same-day priority support, all channels'
+    ]
+  },
+  Custom: {
+    name: 'Custom',
+    monthly: 0,
+    annual: 0,
+    setup: 0,
+    popular: false,
+    custom: true,
+    target: 'Multi-location, franchises & high-volume operations needing bespoke scope. Not self-serve — a scoped quote.',
+    features: [
+      'Multi-location / multi-brand support',
+      'Unlimited integrations & custom build scope',
+      'Dedicated buildout, quoted as a project',
+      'Custom SLA & reporting',
+      'Contact Brian directly for a scoped quote'
+    ]
+  }
+};
+
+let currentTier = 'Growth';
+let currentConfig = {};
+
+// ─── Render tier selector ──────────────────────────────────────────────────────
+function renderTierOptions() {
+  const wrap = document.getElementById('tier-options');
+  const isAnnual = document.getElementById('toggle-annual').checked;
+  wrap.innerHTML = Object.keys(TIERS).map(key => {
+    const t = TIERS[key];
+    const sel = key === currentTier ? ' selected' : '';
+    const popular = t.popular ? '<span class="popular">Most Popular</span>' : '';
+    let priceHtml;
+    if (t.custom) {
+      priceHtml = `<span class="to-price">Let's talk</span>`;
+    } else {
+      const p = isAnnual ? t.annual : t.monthly;
+      const suffix = isAnnual ? '<small>/mo billed annually</small>' : '<small>/mo</small>';
+      priceHtml = `<span class="to-price">$${p}${suffix}</span>`;
+    }
+    const feats = t.features.map(f => `<li>${f}</li>`).join('');
+    return `
+      <label class="tier-option${sel}" for="tier-${key}" onclick="selectTier('${key}')">
+        ${popular}
+        <input type="radio" name="tier" id="tier-${key}" value="${key}" ${key === currentTier ? 'checked' : ''} />
+        <div class="to-head">
+          <span class="to-name">${t.name}</span>
+          ${priceHtml}
+        </div>
+        <div class="to-target">${t.target}</div>
+        <ul class="to-features">${feats}</ul>
+      </label>`;
+  }).join('');
+}
+
+function selectTier(key) {
+  currentTier = key;
+  renderTierOptions();
+  recalc();
+}
+
+// ─── Calculation ─────────────────────────────────────────────────────────────
+function recalc() {
+  const t        = TIERS[currentTier];
+  const isAnnual = document.getElementById('toggle-annual').checked;
+
+  // Label highlight
+  document.getElementById('lbl-monthly').style.color = isAnnual ? 'var(--muted)' : 'var(--text)';
+  document.getElementById('lbl-annual').style.color  = isAnnual ? 'var(--text)'  : 'var(--muted)';
+
+  // Tier badge
+  const badge = document.getElementById('tier-badge');
+  badge.className = `tier-badge tier-${t.name}`;
+  badge.textContent = t.name;
+
+  // ─── Custom tier short-circuit ───
+  if (t.custom) {
+    document.getElementById('price-main').parentElement.innerHTML = `Let's talk`;
+    document.getElementById('price-display').style.fontSize = '1.8rem';
+    document.getElementById('price-period').textContent = 'Scoped per project ($1,000+ setup, $897+/mo)';
+    document.getElementById('line-items').innerHTML =
+      t.features.map(f => `<li><span>${f}</span><span></span></li>`).join('');
+    document.getElementById('setup-display').textContent = 'Custom';
+    document.getElementById('annual-label').textContent = 'Annual Total';
+    document.getElementById('annual-display').textContent = 'Quote';
+    document.getElementById('margin-pct').textContent = '—';
+    document.getElementById('margin-bar').style.width = '0%';
+    document.getElementById('margin-note').textContent = 'Scoped per project — contact Brian for a quote.';
+    document.getElementById('discount-note').textContent = '';
+    currentConfig = { tier: t.name, custom: true, isAnnual };
+    return;
+  }
+
+  // Restore standard price display structure
+  document.getElementById('price-display').innerHTML = `<sup>$</sup><span id="price-main"></span>`;
+  document.getElementById('price-display').style.fontSize = '2.6rem';
+
+  // Effective monthly price for the chosen billing
+  const monthlyList   = t.monthly;                     // month-to-month list price
+  const effectiveRate = isAnnual ? t.annual : t.monthly; // displayed per-month
+  const setupFee      = isAnnual ? 0 : t.setup;        // setup WAIVED on annual
+
+  // Annual contract total = effective rate * 12 (setup waived); monthly view = list*12 + setup
+  const annualTotal   = isAnnual
+    ? (t.annual * 12)
+    : (monthlyList * 12 + t.setup);
+
+  // Margins (gross, on hard cost only)
+  const grossProfit = effectiveRate - HARD_COST;
+  const marginPct   = Math.round((grossProfit / effectiveRate) * 100);
+
+  // ─── Price display ───
+  document.getElementById('price-main').textContent = fmt(effectiveRate);
+  document.getElementById('price-period').textContent = isAnnual
+    ? 'per month (billed annually)'
+    : 'per month';
+
+  // ─── Line items ───
+  const lines = [];
+  lines.push({ label: `${t.name} plan`, amount: monthlyList });
+  if (isAnnual) {
+    const perMoSaving = monthlyList - t.annual;
+    lines.push({ label: 'Annual discount (2 mo free)', amount: -perMoSaving, neg: true });
+  }
+  lines.push({ label: 'Monthly recurring', amount: effectiveRate, total: true });
+
+  const ul = document.getElementById('line-items');
+  ul.innerHTML = lines.map(l => {
+    if (l.total) {
+      return `<li class="total-line"><span>${l.label}</span><span>$${fmt(l.amount)}/mo</span></li>`;
+    }
+    const amtStr = l.neg
+      ? `<span style="color:var(--green);">−$${fmt(Math.abs(l.amount))}/mo</span>`
+      : `<span>$${fmt(l.amount)}/mo</span>`;
+    return `<li><span>${l.label}</span>${amtStr}</li>`;
+  }).join('');
+
+  // Setup fee line
+  if (isAnnual) {
+    ul.innerHTML += `<li><span>Setup fee</span><span style="color:var(--green);">WAIVED (−$${fmt(t.setup)})</span></li>`;
+  } else {
+    ul.innerHTML += `<li><span>One-time setup</span><span style="color:var(--yellow);">$${fmt(t.setup)}</span></li>`;
+  }
+
+  // ─── Meta cells ───
+  document.getElementById('setup-display').textContent = isAnnual ? 'Waived' : '$' + fmt(t.setup);
+  document.getElementById('annual-label').textContent  = isAnnual ? 'First-Year Total' : 'First-Year Total';
+  document.getElementById('annual-display').textContent = '$' + fmt(annualTotal);
+
+  // ─── Margin ───
+  const clampedPct = Math.max(0, Math.min(100, marginPct));
+  document.getElementById('margin-pct').textContent = clampedPct + '%';
+  const bar = document.getElementById('margin-bar');
+  bar.style.width = clampedPct + '%';
+  bar.style.background = clampedPct >= 70 ? 'var(--green)' : clampedPct >= 50 ? 'var(--yellow)' : '#E74C3C';
+  document.getElementById('margin-note').textContent =
+    `Hard cost ~$${HARD_COST}/client · Gross profit ~$${fmt(Math.round(grossProfit))}/mo`;
+
+  // ─── Discount note ───
+  if (isAnnual) {
+    const feeSaving = (monthlyList - t.annual) * 12;          // ~2 months
+    const totalFirstYear = feeSaving + t.setup;
+    document.getElementById('discount-note').textContent =
+      `Annual saves ~$${fmt(Math.round(feeSaving))} in fees + $${fmt(t.setup)} waived setup = ~$${fmt(Math.round(totalFirstYear))} first-year.`;
+  } else {
+    document.getElementById('discount-note').textContent =
+      `Go annual to save ~2 months + waive the $${fmt(t.setup)} setup.`;
+  }
+
+  // ─── Store for copy ───
+  currentConfig = {
+    tier: t.name, custom: false, isAnnual,
+    monthlyList, effectiveRate, setupFee, annualTotal,
+    marginPct, grossProfit, features: t.features
+  };
+}
+
+function fmt(n) {
+  return Math.round(n).toLocaleString('en-US');
+}
+
+// ─── Copy Quote ───────────────────────────────────────────────────────────────
+function copyQuote() {
+  const c = currentConfig;
+  const date = new Date().toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
+
+  let lines = [
+    `CWI AUTOMATION — CLIENT QUOTE`,
+    `Generated: ${date}`,
+    ``,
+    `PLAN: ${c.tier}`,
+    `─────────────────────────────────`,
+  ];
+
+  if (c.custom) {
+    lines.push(`Pricing:        Custom — scoped per project`);
+    lines.push(`Estimated:      $1,000+ setup, $897+/mo`);
+    lines.push(``);
+    lines.push(`Includes:`);
+    (TIERS.Custom.features).forEach(f => lines.push(`  • ${f}`));
+    lines.push(``);
+    lines.push(`Contact Brian directly for a scoped quote.`);
+  } else {
+    const billingNote = c.isAnnual ? 'annual billing (2 months free + setup waived)' : 'month-to-month billing';
+    lines.push(`Monthly price:  $${fmt(c.effectiveRate)}/mo  (${c.isAnnual ? 'annual rate' : 'month-to-month'})`);
+    if (c.isAnnual) {
+      lines.push(`List price:     $${fmt(c.monthlyList)}/mo month-to-month`);
+      lines.push(`Setup fee:      WAIVED (normally $${fmt(TIERS[c.tier].setup)})`);
+    } else {
+      lines.push(`Setup fee:      $${fmt(c.setupFee)} (one-time, before work begins)`);
+    }
+    lines.push(`First-year total: $${fmt(c.annualTotal)}`);
+    lines.push(``);
+    lines.push(`Includes:`);
+    c.features.forEach(f => lines.push(`  • ${f}`));
+    lines.push(``);
+    lines.push(`Billing: ${billingNote}`);
+    lines.push(`30-day results guarantee: if it doesn't recover one job-worth of`);
+    lines.push(`value in month one, that month is free.`);
+    lines.push(`Estimated gross margin: ${c.marginPct}%`);
+  }
+
+  lines.push(``);
+  lines.push(`Questions? Contact CWI Automation.`);
+
+  const text = lines.join('\n');
+  navigator.clipboard.writeText(text).then(() => {
+    flashCopied();
+  }).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    flashCopied();
+  });
+}
+
+function flashCopied() {
+  const btn = document.getElementById('copy-btn');
+  btn.textContent = 'Copied!';
+  btn.classList.add('copied');
+  setTimeout(() => {
+    btn.textContent = 'Copy Quote to Clipboard';
+    btn.classList.remove('copied');
+  }, 2200);
+}
+
+// ─── When billing toggles, re-render the tier cards (to swap prices) ────────────
+document.getElementById('toggle-annual').addEventListener('change', renderTierOptions);
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+renderTierOptions();
+recalc();
+</script>
+</body>
+</html>

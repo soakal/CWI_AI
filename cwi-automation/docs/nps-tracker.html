@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CWI AI — NPS Tracker</title>
+  <meta name="description" content="CWI internal tool: CWI AI — NPS Tracker. Internal use only — CWI Compute With Imagination.">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #0A0A0C;
+      --bg-surface:  #13131A;
+      --bg-card:     #1A1A24;
+      --bg-input:    #0F0F16;
+      --accent:      #FF5A1F;
+      --accent-dim:  #CC4718;
+      --accent-glow: rgba(255, 90, 31, 0.18);
+      --border:      #2A2A38;
+      --text:        #E8E8F0;
+      --text-muted:  #7A7A9A;
+      --text-faint:  #45455A;
+      --green:       #22C55E;
+      --green-dim:   rgba(34,197,94,0.15);
+      --yellow:      #F59E0B;
+      --yellow-dim:  rgba(245,158,11,0.15);
+      --red:         #EF4444;
+      --red-dim:     rgba(239,68,68,0.15);
+      --radius:      10px;
+      --radius-sm:   6px;
+      --shadow:      0 4px 24px rgba(0,0,0,0.5);
+    }
+
+    body {
+      font-family: 'Sora', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 0 0 60px;
+    }
+
+    /* Header */
+    header {
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -1px;
+      flex-shrink: 0;
+    }
+
+    .logo-text { font-size: 18px; font-weight: 600; letter-spacing: -0.3px; }
+    .logo-text span { color: var(--accent); }
+
+    .header-sub {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    /* Main layout */
+    .main { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+
+    /* Client selector bar */
+    .client-bar {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 28px;
+    }
+
+    .client-bar label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    select, input[type="text"], input[type="date"], textarea {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: 'Sora', sans-serif;
+      font-size: 14px;
+      padding: 9px 13px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    select:focus, input[type="text"]:focus, input[type="date"]:focus, textarea:focus {
+      border-color: var(--accent);
+    }
+
+    select { cursor: pointer; min-width: 220px; }
+
+    textarea { resize: vertical; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 9px 18px;
+      border-radius: var(--radius-sm);
+      font-family: 'Sora', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: background 0.15s, transform 0.1s;
+      white-space: nowrap;
+    }
+
+    .btn:active { transform: scale(0.97); }
+
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent-dim); }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+    .btn-danger {
+      background: transparent;
+      color: var(--red);
+      border: 1px solid var(--red-dim);
+    }
+    .btn-danger:hover { background: var(--red-dim); }
+
+    .btn-success { background: var(--green); color: #000; }
+    .btn-success:hover { background: #1aa84f; }
+
+    /* Attention banner */
+    .attention-banner {
+      background: var(--red-dim);
+      border: 1px solid var(--red);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      margin-bottom: 28px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #ff8080;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .attention-banner .icon { font-size: 20px; }
+
+    /* Stats row */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .stat-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 22px;
+    }
+
+    .stat-card .label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    .stat-card .value {
+      font-size: 32px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .stat-card .sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    .stat-nps .value { color: var(--accent); }
+    .stat-promoters .value { color: var(--green); }
+    .stat-passives .value { color: var(--yellow); }
+    .stat-detractors .value { color: var(--red); }
+
+    /* Gauge */
+    .gauge-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px 28px;
+      margin-bottom: 28px;
+    }
+
+    .gauge-title {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 18px;
+    }
+
+    .gauge-track {
+      position: relative;
+      height: 18px;
+      border-radius: 9px;
+      background: linear-gradient(to right,
+        #EF4444 0%,
+        #EF4444 30%,
+        #F59E0B 30%,
+        #F59E0B 55%,
+        #22C55E 55%,
+        #22C55E 100%
+      );
+      overflow: visible;
+      margin: 0 8px 12px;
+    }
+
+    .gauge-needle {
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 18px;
+      height: 18px;
+      background: #fff;
+      border: 3px solid #0A0A0C;
+      border-radius: 50%;
+      box-shadow: 0 0 0 2px var(--accent);
+      transition: left 0.6s cubic-bezier(0.34,1.56,0.64,1);
+      z-index: 2;
+    }
+
+    .gauge-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .gauge-zones {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      margin-top: 8px;
+    }
+
+    .zone-label {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+
+    .zone-label.det { background: var(--red-dim); color: var(--red); }
+    .zone-label.pas { background: var(--yellow-dim); color: var(--yellow); }
+    .zone-label.pro { background: var(--green-dim); color: var(--green); }
+
+    /* Two-column layout */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 28px;
+    }
+
+    @media (max-width: 740px) {
+      .two-col { grid-template-columns: 1fr; }
+    }
+
+    /* Card */
+    .card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* Add Score form */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 500px) {
+      .form-grid { grid-template-columns: 1fr; }
+    }
+
+    .form-field { display: flex; flex-direction: column; gap: 7px; }
+    .form-field.full { grid-column: 1 / -1; }
+
+    .form-field label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .form-field input[type="date"],
+    .form-field textarea { width: 100%; }
+
+    .form-field textarea { min-height: 80px; }
+
+    /* Score selector */
+    .score-grid {
+      display: grid;
+      grid-template-columns: repeat(11, 1fr);
+      gap: 4px;
+    }
+
+    .score-btn {
+      aspect-ratio: 1;
+      border-radius: var(--radius-sm);
+      border: 2px solid transparent;
+      font-family: 'Sora', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .score-btn:active { transform: scale(0.9); }
+
+    .score-btn.detractor { background: var(--red-dim); color: var(--red); }
+    .score-btn.passive   { background: var(--yellow-dim); color: var(--yellow); }
+    .score-btn.promoter  { background: var(--green-dim); color: var(--green); }
+
+    .score-btn.selected.detractor { background: var(--red); color: #fff; box-shadow: 0 0 0 2px rgba(239,68,68,0.5); border-color: var(--red); }
+    .score-btn.selected.passive   { background: var(--yellow); color: #000; box-shadow: 0 0 0 2px rgba(245,158,11,0.5); border-color: var(--yellow); }
+    .score-btn.selected.promoter  { background: var(--green); color: #000; box-shadow: 0 0 0 2px rgba(34,197,94,0.5); border-color: var(--green); }
+
+    .score-legend {
+      display: flex;
+      gap: 12px;
+      margin-top: 10px;
+      font-size: 11px;
+      flex-wrap: wrap;
+    }
+
+    .legend-item { display: flex; align-items: center; gap: 5px; color: var(--text-muted); }
+    .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+    /* History table */
+    .table-wrap { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th {
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: var(--text-muted);
+      padding: 0 14px 12px;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 13px 14px;
+      border-bottom: 1px solid rgba(42,42,56,0.5);
+      vertical-align: top;
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    tr:hover td { background: rgba(255,255,255,0.02); }
+
+    .score-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .score-badge.detractor { background: var(--red-dim); color: var(--red); }
+    .score-badge.passive   { background: var(--yellow-dim); color: var(--yellow); }
+    .score-badge.promoter  { background: var(--green-dim); color: var(--green); }
+
+    .comment-cell { max-width: 280px; color: var(--text-muted); line-height: 1.5; }
+
+    .delete-row-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-faint);
+      font-size: 16px;
+      padding: 2px 4px;
+      border-radius: 4px;
+      transition: color 0.15s;
+    }
+
+    .delete-row-btn:hover { color: var(--red); }
+
+    .empty-state {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 40px 20px;
+      font-size: 14px;
+    }
+
+    .empty-state .icon { font-size: 36px; margin-bottom: 12px; }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .modal {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: var(--shadow);
+    }
+
+    .modal h3 { font-size: 16px; font-weight: 600; margin-bottom: 18px; }
+
+    .modal input[type="text"] { width: 100%; margin-bottom: 16px; }
+
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+    .hidden { display: none !important; }
+
+    /* Manage clients section */
+    .manage-clients {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px 24px;
+      margin-bottom: 28px;
+    }
+
+    .manage-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .manage-header h3 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .client-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .client-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 5px 12px 5px 14px;
+      font-size: 13px;
+      color: var(--text);
+    }
+
+    .client-chip.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-glow);
+    }
+
+    .chip-del {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-faint);
+      font-size: 14px;
+      padding: 0;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      transition: color 0.15s;
+    }
+
+    .chip-del:hover { color: var(--red); }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-faint); }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="logo">
+      <div class="logo-icon">C</div>
+      <div>
+        <div class="logo-text"><span>CWI AI</span> — NPS Tracker</div>
+        <div class="header-sub">Net Promoter Score by client</div>
+      </div>
+    </div>
+    <button class="btn btn-success" id="exportBtn">
+      &#8659; Export CSV
+    </button>
+  </header>
+
+  <div class="main">
+
+    <!-- Client bar -->
+    <div class="client-bar">
+      <label for="clientSelect">Client</label>
+      <select id="clientSelect"></select>
+      <button class="btn btn-primary" id="addClientBtn">+ Add Client</button>
+    </div>
+
+    <!-- Manage clients -->
+    <div class="manage-clients" id="manageClientsSection">
+      <div class="manage-header">
+        <h3>Manage Clients</h3>
+      </div>
+      <div class="client-list" id="clientChips"></div>
+    </div>
+
+    <!-- Attention banner -->
+    <div class="attention-banner hidden" id="attentionBanner">
+      <span class="icon">&#9888;</span>
+      <span>This client needs attention — schedule a call</span>
+    </div>
+
+    <!-- Stats row -->
+    <div class="stats-row">
+      <div class="stat-card stat-nps">
+        <div class="label">NPS Score</div>
+        <div class="value" id="npsValue">—</div>
+        <div class="sub" id="npsSub">No data yet</div>
+      </div>
+      <div class="stat-card stat-promoters">
+        <div class="label">Promoters (9–10)</div>
+        <div class="value" id="promotersCount">0</div>
+        <div class="sub" id="promotersPct">—</div>
+      </div>
+      <div class="stat-card stat-passives">
+        <div class="label">Passives (7–8)</div>
+        <div class="value" id="passivesCount">0</div>
+        <div class="sub" id="passivesPct">—</div>
+      </div>
+      <div class="stat-card stat-detractors">
+        <div class="label">Detractors (0–6)</div>
+        <div class="value" id="detractorsCount">0</div>
+        <div class="sub" id="detractorsPct">—</div>
+      </div>
+    </div>
+
+    <!-- Gauge -->
+    <div class="gauge-card">
+      <div class="gauge-title">NPS Gauge — Score Range: −100 to +100</div>
+      <div class="gauge-track">
+        <div class="gauge-needle" id="gaugeNeedle" style="left:50%"></div>
+      </div>
+      <div class="gauge-labels">
+        <span>−100</span>
+        <span>−50</span>
+        <span>0</span>
+        <span>+50</span>
+        <span>+100</span>
+      </div>
+      <div class="gauge-zones">
+        <span class="zone-label det">Detractors dominate</span>
+        <span class="zone-label pas">Neutral</span>
+        <span class="zone-label pro">Promoters lead</span>
+      </div>
+    </div>
+
+    <!-- Two column: Add form + History -->
+    <div class="two-col">
+
+      <!-- Add Score form -->
+      <div class="card">
+        <div class="card-title">Add NPS Score</div>
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="scoreDate">Date</label>
+            <input type="date" id="scoreDate" />
+          </div>
+          <div class="form-field full">
+            <label for="scoreGrid">Score (0–10)</label>
+            <div class="score-grid" id="scoreGrid"></div>
+            <div class="score-legend">
+              <span class="legend-item"><span class="legend-dot" style="background:var(--red)"></span>Detractor (0–6)</span>
+              <span class="legend-item"><span class="legend-dot" style="background:var(--yellow)"></span>Passive (7–8)</span>
+              <span class="legend-item"><span class="legend-dot" style="background:var(--green)"></span>Promoter (9–10)</span>
+            </div>
+          </div>
+          <div class="form-field full">
+            <label for="scoreComment">Comment (optional)</label>
+            <textarea id="scoreComment" placeholder="Client feedback, context, notes…"></textarea>
+          </div>
+        </div>
+        <div style="margin-top:18px">
+          <button class="btn btn-primary" id="submitScore" style="width:100%">Save Score</button>
+        </div>
+      </div>
+
+      <!-- History table -->
+      <div class="card">
+        <div class="card-title">Score History</div>
+        <div class="table-wrap">
+          <table id="historyTable">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Score</th>
+                <th>Category</th>
+                <th>Comment</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="historyBody"></tbody>
+          </table>
+          <div class="empty-state hidden" id="emptyState">
+            <div class="icon">&#128200;</div>
+            <div>No scores recorded yet.<br>Add the first NPS score above.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Add Client Modal -->
+  <div class="modal-backdrop hidden" id="addClientModal">
+    <div class="modal">
+      <h3>Add New Client</h3>
+      <input type="text" id="newClientName" placeholder="Client name…" />
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="cancelAddClient">Cancel</button>
+        <button class="btn btn-primary" id="confirmAddClient">Add Client</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ── Storage helpers ───────────────────────────────────────────────────────
+
+    const CLIENTS_KEY = 'nps_clients';
+    const NPS_PREFIX  = 'nps_data_';
+
+    function getClients() {
+      try { return JSON.parse(localStorage.getItem(CLIENTS_KEY)) || []; }
+      catch { return []; }
+    }
+
+    function saveClients(arr) {
+      localStorage.setItem(CLIENTS_KEY, JSON.stringify(arr));
+    }
+
+    function getNPSData(client) {
+      if (!client) return [];
+      try { return JSON.parse(localStorage.getItem(NPS_PREFIX + client)) || []; }
+      catch { return []; }
+    }
+
+    function saveNPSData(client, data) {
+      localStorage.setItem(NPS_PREFIX + client, JSON.stringify(data));
+    }
+
+    // ── State ─────────────────────────────────────────────────────────────────
+
+    let selectedClient = null;
+    let selectedScore  = null;
+
+    // ── DOM refs ──────────────────────────────────────────────────────────────
+
+    const clientSelect     = document.getElementById('clientSelect');
+    const clientChips      = document.getElementById('clientChips');
+    const addClientBtn     = document.getElementById('addClientBtn');
+    const addClientModal   = document.getElementById('addClientModal');
+    const cancelAddClient  = document.getElementById('cancelAddClient');
+    const confirmAddClient = document.getElementById('confirmAddClient');
+    const newClientName    = document.getElementById('newClientName');
+    const attentionBanner  = document.getElementById('attentionBanner');
+    const npsValue         = document.getElementById('npsValue');
+    const npsSub           = document.getElementById('npsSub');
+    const promotersCount   = document.getElementById('promotersCount');
+    const promotersPct     = document.getElementById('promotersPct');
+    const passivesCount    = document.getElementById('passivesCount');
+    const passivesPct      = document.getElementById('passivesPct');
+    const detractorsCount  = document.getElementById('detractorsCount');
+    const detractorsPct    = document.getElementById('detractorsPct');
+    const gaugeNeedle      = document.getElementById('gaugeNeedle');
+    const scoreDate        = document.getElementById('scoreDate');
+    const scoreComment     = document.getElementById('scoreComment');
+    const submitScore      = document.getElementById('submitScore');
+    const historyBody      = document.getElementById('historyBody');
+    const emptyState       = document.getElementById('emptyState');
+    const exportBtn        = document.getElementById('exportBtn');
+
+    // ── Score grid ────────────────────────────────────────────────────────────
+
+    const scoreGrid = document.getElementById('scoreGrid');
+
+    function scoreCategory(s) {
+      if (s <= 6) return 'detractor';
+      if (s <= 8) return 'passive';
+      return 'promoter';
+    }
+
+    function buildScoreGrid() {
+      scoreGrid.innerHTML = '';
+      for (let i = 0; i <= 10; i++) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'score-btn ' + scoreCategory(i);
+        btn.textContent = i;
+        btn.dataset.score = i;
+        btn.addEventListener('click', () => selectScore(i, btn));
+        scoreGrid.appendChild(btn);
+      }
+    }
+
+    function selectScore(score, btn) {
+      selectedScore = score;
+      scoreGrid.querySelectorAll('.score-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+    }
+
+    // ── Client management ─────────────────────────────────────────────────────
+
+    function renderClientSelect() {
+      const clients = getClients();
+      clientSelect.innerHTML = '';
+      if (clients.length === 0) {
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = '— No clients yet —';
+        clientSelect.appendChild(opt);
+        selectedClient = null;
+      } else {
+        clients.forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c;
+          opt.textContent = c;
+          clientSelect.appendChild(opt);
+        });
+        if (!selectedClient || !clients.includes(selectedClient)) {
+          selectedClient = clients[0];
+        }
+        clientSelect.value = selectedClient;
+      }
+      renderChips();
+      renderAll();
+    }
+
+    function renderChips() {
+      const clients = getClients();
+      clientChips.innerHTML = '';
+      if (clients.length === 0) {
+        clientChips.innerHTML = '<span style="color:var(--text-faint);font-size:13px">No clients added yet.</span>';
+        return;
+      }
+      clients.forEach(c => {
+        const chip = document.createElement('span');
+        chip.className = 'client-chip' + (c === selectedClient ? ' active' : '');
+
+        const name = document.createElement('span');
+        name.textContent = c;
+        name.style.cursor = 'pointer';
+        name.addEventListener('click', () => {
+          selectedClient = c;
+          clientSelect.value = c;
+          renderAll();
+          renderChips();
+        });
+
+        const del = document.createElement('button');
+        del.className = 'chip-del';
+        del.innerHTML = '&times;';
+        del.title = 'Delete client';
+        del.addEventListener('click', () => deleteClient(c));
+
+        chip.appendChild(name);
+        chip.appendChild(del);
+        clientChips.appendChild(chip);
+      });
+    }
+
+    function addClient(name) {
+      const trimmed = name.trim();
+      if (!trimmed) return;
+      const clients = getClients();
+      if (clients.includes(trimmed)) return;
+      clients.push(trimmed);
+      saveClients(clients);
+      selectedClient = trimmed;
+      renderClientSelect();
+    }
+
+    function deleteClient(name) {
+      if (!confirm(`Delete client "${name}" and all their NPS data?`)) return;
+      const clients = getClients().filter(c => c !== name);
+      saveClients(clients);
+      localStorage.removeItem(NPS_PREFIX + name);
+      if (selectedClient === name) selectedClient = clients[0] || null;
+      renderClientSelect();
+    }
+
+    // ── Render dashboard ──────────────────────────────────────────────────────
+
+    function renderAll() {
+      const data = getNPSData(selectedClient);
+      renderStats(data);
+      renderHistory(data);
+    }
+
+    function renderStats(data) {
+      if (!data.length) {
+        npsValue.textContent = '—';
+        npsSub.textContent = 'No data yet';
+        promotersCount.textContent = '0';
+        passivesCount.textContent  = '0';
+        detractorsCount.textContent = '0';
+        promotersPct.textContent  = '—';
+        passivesPct.textContent   = '—';
+        detractorsPct.textContent = '—';
+        gaugeNeedle.style.left = '50%';
+        attentionBanner.classList.add('hidden');
+        return;
+      }
+
+      const total = data.length;
+      const promoters  = data.filter(d => d.score >= 9).length;
+      const passives   = data.filter(d => d.score >= 7 && d.score <= 8).length;
+      const detractors = data.filter(d => d.score <= 6).length;
+
+      const pPct = (promoters  / total) * 100;
+      const dPct = (detractors / total) * 100;
+      const nps  = Math.round(pPct - dPct);
+
+      npsValue.textContent = (nps >= 0 ? '+' : '') + nps;
+      npsSub.textContent   = `Based on ${total} response${total !== 1 ? 's' : ''}`;
+
+      promotersCount.textContent  = promoters;
+      passivesCount.textContent   = passives;
+      detractorsCount.textContent = detractors;
+
+      promotersPct.textContent  = Math.round(pPct) + '% of responses';
+      passivesPct.textContent   = Math.round((passives / total) * 100) + '% of responses';
+      detractorsPct.textContent = Math.round(dPct) + '% of responses';
+
+      // Gauge: map -100…+100 to 0%…100%
+      const needlePct = ((nps + 100) / 200) * 100;
+      gaugeNeedle.style.left = needlePct.toFixed(1) + '%';
+
+      // Attention banner: check latest score
+      const sorted = [...data].sort((a, b) => new Date(b.date) - new Date(a.date));
+      const latest = sorted[0];
+      if (latest && latest.score < 7) {
+        attentionBanner.classList.remove('hidden');
+      } else {
+        attentionBanner.classList.add('hidden');
+      }
+    }
+
+    function renderHistory(data) {
+      historyBody.innerHTML = '';
+
+      if (!data.length) {
+        emptyState.classList.remove('hidden');
+        document.getElementById('historyTable').style.display = 'none';
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+      document.getElementById('historyTable').style.display = '';
+
+      const sorted = [...data].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      sorted.forEach((entry, idx) => {
+        const cat = scoreCategory(entry.score);
+        const catLabel = cat.charAt(0).toUpperCase() + cat.slice(1);
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${formatDate(entry.date)}</td>
+          <td><span class="score-badge ${cat}">${entry.score}</span></td>
+          <td><span style="font-size:12px;font-weight:600;color:var(--${cat === 'detractor' ? 'red' : cat === 'passive' ? 'yellow' : 'green'})">${catLabel}</span></td>
+          <td class="comment-cell">${escapeHTML(entry.comment || '—')}</td>
+          <td><button class="delete-row-btn" title="Delete" data-date="${entry.date}" data-score="${entry.score}">&#10005;</button></td>
+        `;
+        tr.querySelector('.delete-row-btn').addEventListener('click', () => {
+          deleteEntry(entry);
+        });
+        historyBody.appendChild(tr);
+      });
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '—';
+      const [y, m, d] = dateStr.split('-');
+      return `${m}/${d}/${y}`;
+    }
+
+    function escapeHTML(str) {
+      const d = document.createElement('div');
+      d.textContent = str;
+      return d.innerHTML;
+    }
+
+    // ── Add / Delete entries ──────────────────────────────────────────────────
+
+    function deleteEntry(entry) {
+      if (!confirm('Delete this score entry?')) return;
+      const data = getNPSData(selectedClient).filter(
+        d => !(d.date === entry.date && d.score === entry.score && d.comment === entry.comment)
+      );
+      saveNPSData(selectedClient, data);
+      renderAll();
+    }
+
+    submitScore.addEventListener('click', () => {
+      if (!selectedClient) {
+        alert('Please select or add a client first.');
+        return;
+      }
+      if (selectedScore === null) {
+        alert('Please select a score (0–10).');
+        return;
+      }
+      if (!scoreDate.value) {
+        alert('Please select a date.');
+        return;
+      }
+
+      const entry = {
+        date:    scoreDate.value,
+        score:   selectedScore,
+        comment: scoreComment.value.trim()
+      };
+
+      const data = getNPSData(selectedClient);
+      data.push(entry);
+      saveNPSData(selectedClient, data);
+
+      // Reset form
+      selectedScore = null;
+      scoreGrid.querySelectorAll('.score-btn').forEach(b => b.classList.remove('selected'));
+      scoreComment.value = '';
+      scoreDate.value = todayISO();
+
+      renderAll();
+    });
+
+    // ── Client modal ──────────────────────────────────────────────────────────
+
+    addClientBtn.addEventListener('click', () => {
+      newClientName.value = '';
+      addClientModal.classList.remove('hidden');
+      newClientName.focus();
+    });
+
+    cancelAddClient.addEventListener('click', () => addClientModal.classList.add('hidden'));
+
+    confirmAddClient.addEventListener('click', () => {
+      const name = newClientName.value.trim();
+      if (!name) { newClientName.focus(); return; }
+      addClient(name);
+      addClientModal.classList.add('hidden');
+    });
+
+    newClientName.addEventListener('keydown', e => {
+      if (e.key === 'Enter') confirmAddClient.click();
+      if (e.key === 'Escape') cancelAddClient.click();
+    });
+
+    addClientModal.addEventListener('click', e => {
+      if (e.target === addClientModal) addClientModal.classList.add('hidden');
+    });
+
+    clientSelect.addEventListener('change', () => {
+      selectedClient = clientSelect.value;
+      renderChips();
+      renderAll();
+    });
+
+    // ── Export CSV ────────────────────────────────────────────────────────────
+
+    exportBtn.addEventListener('click', () => {
+      const clients = getClients();
+      if (!clients.length) { alert('No clients to export.'); return; }
+
+      const rows = [['Client', 'Date', 'Score', 'Category', 'Comment']];
+
+      clients.forEach(client => {
+        const data = getNPSData(client);
+        data.forEach(entry => {
+          const cat = scoreCategory(entry.score);
+          const catLabel = cat.charAt(0).toUpperCase() + cat.slice(1);
+          rows.push([
+            csvCell(client),
+            csvCell(entry.date),
+            entry.score,
+            csvCell(catLabel),
+            csvCell(entry.comment || '')
+          ]);
+        });
+      });
+
+      const csv = rows.map(r => r.join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = 'cwi-nps-data.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    function csvCell(val) {
+      const s = String(val);
+      if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+        return '"' + s.replace(/"/g, '""') + '"';
+      }
+      return s;
+    }
+
+    // ── Init ──────────────────────────────────────────────────────────────────
+
+    function todayISO() {
+      const d = new Date();
+      return d.toISOString().split('T')[0];
+    }
+
+    function init() {
+      buildScoreGrid();
+      scoreDate.value = todayISO();
+
+      const clients = getClients();
+      if (clients.length) selectedClient = clients[0];
+
+      renderClientSelect();
+    }
+
+    init();
+  </script>
+</body>
+</html>

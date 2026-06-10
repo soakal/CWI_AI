@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CWI AI — Social Content Calendar</title>
+<meta name="description" content="CWI internal tool: CWI AI — Social Content Calendar. Internal use only — CWI Compute With Imagination.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0A0A0C;
+  --surface: #141418;
+  --surface2: #1C1C22;
+  --surface3: #24242C;
+  --surface4: #2C2C36;
+  --text: #F4F4F6;
+  --text-muted: #8888A0;
+  --accent: #FF5A1F;
+  --accent-hover: #FF7A45;
+  --accent-glow: rgba(255,90,31,0.18);
+  --border: #2A2A34;
+  --border-light: #343442;
+  --green: #22C55E;
+  --green-bg: rgba(34,197,94,0.12);
+  --yellow: #EAB308;
+  --yellow-bg: rgba(234,179,8,0.12);
+  --blue: #3B82F6;
+  --blue-bg: rgba(59,130,246,0.12);
+  --purple: #A855F7;
+  --purple-bg: rgba(168,85,247,0.12);
+  --pink: #EC4899;
+  --pink-bg: rgba(236,72,153,0.12);
+  --linkedin: #0A66C2;
+  --facebook: #1877F2;
+  --instagram: #E1306C;
+  --font-main: 'Sora', sans-serif;
+  --font-body: 'Instrument Sans', sans-serif;
+  --radius: 10px;
+  --radius-sm: 6px;
+}
+
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ── Layout ── */
+.page-wrap {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+}
+
+/* ── Header ── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.header-left {}
+.brand {
+  font-family: var(--font-main);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+.page-title {
+  font-family: var(--font-main);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.15;
+}
+.header-right {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s;
+  border: 1px solid transparent;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.btn-primary:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--text-muted);
+  border-color: var(--border-light);
+}
+.btn-ghost:hover {
+  background: var(--surface3);
+  color: var(--text);
+  border-color: var(--border-light);
+}
+.btn-icon {
+  padding: 9px 12px;
+}
+
+/* ── Nav row ── */
+.nav-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.month-nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.month-label {
+  font-family: var(--font-main);
+  font-size: 20px;
+  font-weight: 600;
+  min-width: 200px;
+  text-align: center;
+}
+.legend {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+/* ── Calendar grid ── */
+.calendar-container {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.day-headers {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  border-bottom: 1px solid var(--border);
+}
+.day-header {
+  padding: 10px 16px;
+  font-family: var(--font-main);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  text-align: center;
+  background: var(--surface2);
+}
+.day-header:not(:last-child) {
+  border-right: 1px solid var(--border);
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+}
+.day-cell {
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  min-height: 180px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: background 0.15s;
+  position: relative;
+}
+.day-cell:nth-child(5n) {
+  border-right: none;
+}
+.day-cell.empty {
+  background: var(--surface);
+  opacity: 0.3;
+}
+.day-cell:not(.empty):hover {
+  background: var(--surface2);
+}
+
+/* ── Cell header ── */
+.cell-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.date-num {
+  font-family: var(--font-main);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  line-height: 1;
+}
+.date-num.today {
+  background: var(--accent);
+  color: #fff;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+}
+.platform-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+  color: #fff;
+}
+.platform-linkedin { background: var(--linkedin); }
+.platform-facebook { background: var(--facebook); }
+.platform-instagram { background: linear-gradient(135deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); }
+
+/* ── Post type badge ── */
+.post-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.badge-educational { background: var(--blue-bg); color: var(--blue); border: 1px solid rgba(59,130,246,0.2); }
+.badge-testimonial  { background: var(--green-bg); color: var(--green); border: 1px solid rgba(34,197,94,0.2); }
+.badge-behind       { background: var(--purple-bg); color: var(--purple); border: 1px solid rgba(168,85,247,0.2); }
+.badge-offer        { background: rgba(255,90,31,0.12); color: var(--accent); border: 1px solid rgba(255,90,31,0.25); }
+.badge-stats        { background: var(--yellow-bg); color: var(--yellow); border: 1px solid rgba(234,179,8,0.2); }
+
+/* ── Post text ── */
+.post-text {
+  flex: 1;
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 12px;
+  line-height: 1.5;
+  resize: none;
+  width: 100%;
+  min-height: 64px;
+  transition: border-color 0.15s, background 0.15s;
+  outline: none;
+}
+.post-text:focus {
+  border-color: var(--accent);
+  background: var(--surface4);
+}
+.post-text::placeholder { color: var(--text-muted); }
+
+/* ── Cell footer ── */
+.cell-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.status-toggle {
+  display: flex;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--border-light);
+  font-size: 10px;
+  font-weight: 600;
+}
+.status-btn {
+  padding: 3px 8px;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 600;
+  transition: background 0.12s, color 0.12s;
+  line-height: 1.4;
+}
+.status-btn.active-draft     { background: var(--surface4); color: var(--text); }
+.status-btn.active-scheduled { background: var(--yellow-bg); color: var(--yellow); }
+.status-btn.active-posted    { background: var(--green-bg); color: var(--green); }
+
+.copy-btn {
+  padding: 3px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--surface3);
+  border: 1px solid var(--border-light);
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+  white-space: nowrap;
+}
+.copy-btn:hover {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.copy-btn.copied {
+  background: var(--green-bg);
+  color: var(--green);
+  border-color: rgba(34,197,94,0.3);
+}
+
+/* ── Toast ── */
+#toast {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  background: var(--surface3);
+  border: 1px solid var(--border-light);
+  color: var(--text);
+  padding: 10px 18px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  z-index: 1000;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.2s, transform 0.2s;
+  pointer-events: none;
+}
+#toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Stats bar ── */
+.stats-bar {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.stat-chip {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.stat-chip .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+.stat-num {
+  font-family: var(--font-main);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+/* ── Export modal ── */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 500;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.modal-overlay.open {
+  display: flex;
+}
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  width: 100%;
+  max-width: 620px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+}
+.modal-header {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.modal-title {
+  font-family: var(--font-main);
+  font-size: 16px;
+  font-weight: 600;
+}
+.modal-close {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  line-height: 1;
+  transition: background 0.12s, color 0.12s;
+}
+.modal-close:hover { background: var(--surface4); color: var(--text); }
+.modal-body {
+  padding: 20px 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+.export-text {
+  width: 100%;
+  min-height: 300px;
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  padding: 14px;
+  resize: vertical;
+  outline: none;
+}
+.modal-footer {
+  padding: 14px 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .day-cell { min-height: 140px; }
+  .post-text { min-height: 50px; font-size: 11px; }
+  .page-title { font-size: 22px; }
+  .month-label { font-size: 16px; min-width: 160px; }
+}
+@media (max-width: 600px) {
+  .page-wrap { padding: 20px 12px 48px; }
+  .day-header { font-size: 9px; padding: 8px 6px; }
+  .day-cell { padding: 8px 6px; gap: 6px; }
+  .post-text { font-size: 10px; }
+  .legend { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="page-wrap">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <div class="brand">CWI AI LLC</div>
+      <h1 class="page-title">Social Content Calendar</h1>
+    </div>
+    <div class="header-right">
+      <button class="btn btn-ghost" onclick="exportPosts()">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 1v9M4 6l4 4 4-4M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Export Posts
+      </button>
+      <button class="btn btn-primary" onclick="resetMonth()">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 8a6 6 0 1 0 1.5-3.9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M2 4v4h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Reset Examples
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats bar -->
+  <div class="stats-bar" id="statsBar"></div>
+
+  <!-- Nav row -->
+  <div class="nav-row">
+    <div class="month-nav">
+      <button class="btn btn-ghost btn-icon" onclick="changeMonth(-1)" title="Previous month">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <span class="month-label" id="monthLabel"></span>
+      <button class="btn btn-ghost btn-icon" onclick="changeMonth(1)" title="Next month">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+    <div class="legend">
+      <span class="legend-item"><span class="legend-dot" style="background:var(--blue)"></span>Educational</span>
+      <span class="legend-item"><span class="legend-dot" style="background:var(--yellow)"></span>Stats/Pain Point</span>
+      <span class="legend-item"><span class="legend-dot" style="background:var(--green)"></span>Testimonial</span>
+      <span class="legend-item"><span class="legend-dot" style="background:var(--purple)"></span>Behind-the-Scenes</span>
+      <span class="legend-item"><span class="legend-dot" style="background:var(--accent)"></span>Offer/CTA</span>
+    </div>
+  </div>
+
+  <!-- Calendar -->
+  <div class="calendar-container">
+    <div class="day-headers">
+      <div class="day-header">Monday</div>
+      <div class="day-header">Tuesday</div>
+      <div class="day-header">Wednesday</div>
+      <div class="day-header">Thursday</div>
+      <div class="day-header">Friday</div>
+    </div>
+    <div class="calendar-grid" id="calendarGrid"></div>
+  </div>
+
+</div>
+
+<!-- Export Modal -->
+<div class="modal-overlay" id="exportModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Export Posts — Plain Text</span>
+      <button class="modal-close" onclick="closeExport()">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <textarea class="export-text" id="exportText" readonly></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeExport()">Close</button>
+      <button class="btn btn-primary" onclick="copyExport()">Copy All</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+const TODAY = new Date();
+let viewYear  = TODAY.getFullYear();
+let viewMonth = TODAY.getMonth(); // 0-indexed
+
+const PLATFORMS = ['LinkedIn', 'Facebook', 'Instagram'];
+const DOW_LABELS = ['Mon','Tue','Wed','Thu','Fri'];
+
+// Post templates keyed by day-of-week (1=Mon … 5=Fri)
+const TEMPLATES = {
+  1: { // Monday — Educational
+    type: 'Educational',
+    platform: 'LinkedIn',
+    posts: [
+      "Did you know? AI can handle up to 80% of repetitive small-business tasks — freeing your team for the work that actually grows revenue. Here are 3 automations every service business should have running this week. #AIforBusiness #SmallBusiness",
+      "Monday AI Tip: Stop copy-pasting data between apps. A simple automation stack (CRM + email + calendar) can save 6–10 hrs/week. We set these up in under a day. #Automation #BusinessEfficiency",
+      "AI Myth vs. Reality: Myth — AI is only for big corporations. Reality — Small businesses see the fastest ROI because every hour saved matters more. Start with one workflow. #AITips #SmallBiz",
+      "3 signs your business is ready for AI: 1) You're doing the same task more than 3x/week. 2) Your team copies data manually. 3) Follow-ups fall through the cracks. Sound familiar? #CWIai",
+      "This week's AI quick-win: Automate your Google review requests post-service. Set it up once, collect 5-star reviews on autopilot. Takes ~45 min to deploy. #LocalBusiness #AIAutomation",
+    ]
+  },
+  2: { // Tuesday — Stats / Pain Point
+    type: 'Stats',
+    platform: 'Facebook',
+    posts: [
+      "73% of small business owners say they spend more than 2 hours a day on admin tasks that could be automated. That's 10+ hours per week not growing your business. What's eating your time? 👇",
+      "Pain point check: How many leads slipped through because you didn't follow up fast enough? Studies show 78% of customers buy from the first business that responds. AI fixes this.",
+      "Stat of the week: Businesses using AI-powered CRM see 29% more sales and 34% faster close rates. The tools aren't expensive — the barrier is just knowing where to start.",
+      "Only 12% of small businesses currently use AI tools — but 65% of those who do report saving at least 5 hours per week. That gap is your competitive advantage.",
+      "The average service business loses $8,200/year in unbilled time and missed follow-ups. AI doesn't just save time — it protects revenue you're already earning.",
+    ]
+  },
+  3: { // Wednesday — Testimonial
+    type: 'Testimonial',
+    platform: 'LinkedIn',
+    posts: [
+      "\"Before CWI AI, I was manually sending every invoice and follow-up. Now it's all automated and I've reclaimed 8 hours every week.\" — [Client Name], HVAC Business Owner. Results like these start with one free audit call.",
+      "Client win: A local roofing company we worked with increased their Google reviews from 14 to 87 in 90 days — with zero extra effort from their team. Pure automation. Want to see how? Link in bio.",
+      "\"I was skeptical AI was for a business my size. CWI AI proved me wrong in week one.\" — [Client Name], Landscaping Co. We love proving that automation isn't just for the big guys.",
+      "Success story: A bookkeeper client automated client onboarding and intake — saving 3 hrs per new client. Over 12 months that's 36+ hours back. What would you do with that time?",
+      "\"The ROI was clear within 30 days. My team stopped dreading Mondays.\" — [Client Name], Marketing Agency. Automation should make work feel lighter, not harder.",
+    ]
+  },
+  4: { // Thursday — Behind the Scenes
+    type: 'Behind-Scenes',
+    platform: 'Instagram',
+    posts: [
+      "Behind the scenes: Here's what a client onboarding automation actually looks like at CWI AI. Form submission → CRM entry → welcome email → calendar invite → kickoff checklist. All instant, zero manual steps. 🔧",
+      "Process peek: When we audit a business, we map every repetitive task on a whiteboard first. You'd be amazed how many 'can't be automated' tasks actually can. #ProcessDesign #BehindTheScenes",
+      "A day in our world: Client calls in the morning, workflow builds in the afternoon. By Thursday we're usually deploying automations that will run forever without human touch. This is the work we love.",
+      "How we build: Every automation we create gets a 'break test' — we intentionally try to crash it before it goes live. Boring? Maybe. Effective? Always. #QualityFirst #AIConsulting",
+      "Team Thursday: Reviewing this week's client automation metrics. Emails sent, reviews collected, leads followed up — all on autopilot. This is what we mean when we say 'your business running while you sleep.'",
+    ]
+  },
+  5: { // Friday — Offer / CTA
+    type: 'Offer',
+    platform: 'LinkedIn',
+    posts: [
+      "Friday offer: Free AI Audit for your business — no strings, no pitch deck. We map your top 3 time-wasters and show you exactly what to automate first. 30 minutes. Book at the link. 🔗 #FreeAudit",
+      "This week only: Book a free 30-min Discovery Call and walk away with a custom automation roadmap — whether you work with us or not. Limited spots. Don't let this Friday pass. #BookACall #CWIai",
+      "End the week with a plan: If your business still runs on manual follow-ups and spreadsheets, it's time to change that. Free strategy call — link in bio. Let's fix the leaks. 💧➡️💰",
+      "TGIF — and a reminder that your competitors are automating while you're still doing it manually. Our free audit takes 30 minutes and could save you 10 hours a week. Grab a spot. #AIForSmallBusiness",
+      "Closing out the week with this: If you've been thinking about AI for your business, stop thinking and start doing. Free call, zero pressure, real answers. Book now before spots fill. 📅",
+    ]
+  }
+};
+
+// Rotation index per DOW (so each new week uses the next post variant)
+const rotationIndex = { 1:0, 2:0, 3:0, 4:0, 5:0 };
+
+// ── LocalStorage helpers ───────────────────────────────────────────────────
+function storageKey(year, month, day) {
+  return `cwi-cal-${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+}
+function saveCell(year, month, day, data) {
+  localStorage.setItem(storageKey(year, month, day), JSON.stringify(data));
+}
+function loadCell(year, month, day) {
+  const raw = localStorage.getItem(storageKey(year, month, day));
+  return raw ? JSON.parse(raw) : null;
+}
+function clearMonthStorage(year, month) {
+  const prefix = `cwi-cal-${year}-${String(month+1).padStart(2,'0')}-`;
+  Object.keys(localStorage)
+    .filter(k => k.startsWith(prefix))
+    .forEach(k => localStorage.removeItem(k));
+}
+
+// ── Calendar helpers ──────────────────────────────────────────────────────
+function getMonthWeekdays(year, month) {
+  // Returns array of Date objects for Mon-Fri in the month
+  const days = [];
+  const d = new Date(year, month, 1);
+  while (d.getMonth() === month) {
+    const dow = d.getDay(); // 0=Sun, 6=Sat
+    if (dow >= 1 && dow <= 5) days.push(new Date(d));
+    d.setDate(d.getDate() + 1);
+  }
+  return days;
+}
+
+function buildGridRows(weekdays) {
+  // Group into rows of 5 (Mon-Fri), padding the first row if needed
+  const rows = [];
+  if (!weekdays.length) return rows;
+
+  // Find day-of-week of first weekday (1=Mon … 5=Fri)
+  const firstDow = weekdays[0].getDay(); // 1-5
+  const startPad = firstDow - 1; // cells to pad at start
+
+  let row = [];
+  for (let i = 0; i < startPad; i++) row.push(null);
+  for (const d of weekdays) {
+    row.push(d);
+    if (row.length === 5) { rows.push(row); row = []; }
+  }
+  // Pad last row
+  while (row.length > 0 && row.length < 5) row.push(null);
+  if (row.length) rows.push(row);
+  return rows;
+}
+
+// ── Post generation ───────────────────────────────────────────────────────
+function generatePost(date) {
+  const dow = date.getDay(); // 1-5
+  const tpl = TEMPLATES[dow];
+  if (!tpl) return null;
+
+  // Use rotation index for variety across weeks
+  const idx = rotationIndex[dow] % tpl.posts.length;
+  const text = tpl.posts[idx];
+  rotationIndex[dow]++;
+
+  return {
+    platform: tpl.platform,
+    type: tpl.type,
+    text: text,
+    status: 'draft'
+  };
+}
+
+// ── Platform SVG icons ────────────────────────────────────────────────────
+function platformIcon(platform) {
+  const cls = `platform-icon platform-${platform.toLowerCase()}`;
+  let inner = '';
+  if (platform === 'LinkedIn') {
+    inner = `<svg width="12" height="12" viewBox="0 0 24 24" fill="white"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>`;
+  } else if (platform === 'Facebook') {
+    inner = `<svg width="12" height="12" viewBox="0 0 24 24" fill="white"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>`;
+  } else {
+    inner = `<svg width="12" height="12" viewBox="0 0 24 24" fill="white"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>`;
+  }
+  return `<span class="${cls}" title="${platform}">${inner}</span>`;
+}
+
+// ── Badge HTML ────────────────────────────────────────────────────────────
+function badgeHTML(type) {
+  const map = {
+    'Educational': 'educational',
+    'Stats': 'stats',
+    'Testimonial': 'testimonial',
+    'Behind-Scenes': 'behind',
+    'Offer': 'offer',
+  };
+  const cls = map[type] || 'educational';
+  return `<span class="post-badge badge-${cls}">${type}</span>`;
+}
+
+// ── Render calendar ───────────────────────────────────────────────────────
+function renderCalendar() {
+  // Reset rotation so same month always renders consistently
+  Object.keys(rotationIndex).forEach(k => rotationIndex[k] = 0);
+
+  const grid = document.getElementById('calendarGrid');
+  grid.innerHTML = '';
+
+  const monthNames = ['January','February','March','April','May','June',
+                      'July','August','September','October','November','December'];
+  document.getElementById('monthLabel').textContent =
+    `${monthNames[viewMonth]} ${viewYear}`;
+
+  const weekdays = getMonthWeekdays(viewYear, viewMonth);
+  const rows = buildGridRows(weekdays);
+
+  rows.forEach(row => {
+    row.forEach(date => {
+      const cell = document.createElement('div');
+      if (!date) {
+        cell.className = 'day-cell empty';
+        grid.appendChild(cell);
+        return;
+      }
+
+      cell.className = 'day-cell';
+      const y = date.getFullYear(), m = date.getMonth(), d = date.getDate();
+      const dow = date.getDay();
+
+      // Load from storage or generate
+      let cellData = loadCell(y, m, d);
+      if (!cellData) {
+        cellData = generatePost(date) || { platform: 'LinkedIn', type: 'Educational', text: '', status: 'draft' };
+        saveCell(y, m, d, cellData);
+      } else {
+        // Still need to advance rotation index to keep order consistent
+        if (rotationIndex[dow] !== undefined) rotationIndex[dow]++;
+      }
+
+      const isToday = (y === TODAY.getFullYear() && m === TODAY.getMonth() && d === TODAY.getDate());
+      const dateNumHTML = isToday
+        ? `<span class="date-num today">${d}</span>`
+        : `<span class="date-num">${d}</span>`;
+
+      const cellKey = `${y}-${m}-${d}`;
+
+      cell.innerHTML = `
+        <div class="cell-header">
+          ${dateNumHTML}
+          <div style="display:flex;align-items:center;gap:5px">
+            ${badgeHTML(cellData.type)}
+            ${platformIcon(cellData.platform)}
+          </div>
+        </div>
+        <textarea class="post-text" data-key="${cellKey}" placeholder="Write your post…">${cellData.text}</textarea>
+        <div class="cell-footer">
+          <div class="status-toggle" data-key="${cellKey}">
+            <button class="status-btn ${cellData.status==='draft'?'active-draft':''}" data-status="draft">Draft</button>
+            <button class="status-btn ${cellData.status==='scheduled'?'active-scheduled':''}" data-status="scheduled">Sched.</button>
+            <button class="status-btn ${cellData.status==='posted'?'active-posted':''}" data-status="posted">Posted</button>
+          </div>
+          <button class="copy-btn" data-key="${cellKey}">Copy</button>
+        </div>
+      `;
+      grid.appendChild(cell);
+    });
+  });
+
+  // Attach event listeners
+  grid.querySelectorAll('.post-text').forEach(ta => {
+    ta.addEventListener('input', () => {
+      const [y,m,d] = ta.dataset.key.split('-').map(Number);
+      const stored = loadCell(y, m, d) || {};
+      stored.text = ta.value;
+      saveCell(y, m, d, stored);
+    });
+  });
+
+  grid.querySelectorAll('.status-toggle').forEach(tog => {
+    tog.querySelectorAll('.status-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const status = btn.dataset.status;
+        const [y,m,d] = tog.dataset.key.split('-').map(Number);
+        const stored = loadCell(y, m, d) || {};
+        stored.status = status;
+        saveCell(y, m, d, stored);
+
+        // Update UI
+        tog.querySelectorAll('.status-btn').forEach(b => {
+          b.className = 'status-btn';
+          if (b.dataset.status === status) {
+            if (status === 'draft') b.classList.add('active-draft');
+            if (status === 'scheduled') b.classList.add('active-scheduled');
+            if (status === 'posted') b.classList.add('active-posted');
+          }
+        });
+        updateStats();
+      });
+    });
+  });
+
+  grid.querySelectorAll('.copy-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const [y,m,d] = btn.dataset.key.split('-').map(Number);
+      const stored = loadCell(y, m, d);
+      const text = stored ? stored.text : '';
+      if (!text.trim()) { showToast('No text to copy.'); return; }
+      navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        showToast('Post copied to clipboard.');
+        setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1800);
+      }).catch(() => {
+        showToast('Could not access clipboard.');
+      });
+    });
+  });
+
+  updateStats();
+}
+
+// ── Stats bar ─────────────────────────────────────────────────────────────
+function updateStats() {
+  const weekdays = getMonthWeekdays(viewYear, viewMonth);
+  let draft = 0, scheduled = 0, posted = 0, total = 0;
+  weekdays.forEach(date => {
+    const data = loadCell(date.getFullYear(), date.getMonth(), date.getDate());
+    if (data) {
+      total++;
+      if (data.status === 'draft') draft++;
+      else if (data.status === 'scheduled') scheduled++;
+      else if (data.status === 'posted') posted++;
+    }
+  });
+
+  document.getElementById('statsBar').innerHTML = `
+    <div class="stat-chip">
+      <span class="dot" style="background:var(--text-muted)"></span>
+      <span class="stat-num">${total}</span>
+      <span style="color:var(--text-muted)">Total Posts</span>
+    </div>
+    <div class="stat-chip">
+      <span class="dot" style="background:var(--text-muted)"></span>
+      <span class="stat-num" style="color:var(--text)">${draft}</span>
+      <span style="color:var(--text-muted)">Draft</span>
+    </div>
+    <div class="stat-chip">
+      <span class="dot" style="background:var(--yellow)"></span>
+      <span class="stat-num" style="color:var(--yellow)">${scheduled}</span>
+      <span style="color:var(--text-muted)">Scheduled</span>
+    </div>
+    <div class="stat-chip">
+      <span class="dot" style="background:var(--green)"></span>
+      <span class="stat-num" style="color:var(--green)">${posted}</span>
+      <span style="color:var(--text-muted)">Posted</span>
+    </div>
+  `;
+}
+
+// ── Month navigation ──────────────────────────────────────────────────────
+function changeMonth(delta) {
+  viewMonth += delta;
+  if (viewMonth < 0) { viewMonth = 11; viewYear--; }
+  if (viewMonth > 11) { viewMonth = 0; viewYear++; }
+  renderCalendar();
+}
+
+// ── Reset month ───────────────────────────────────────────────────────────
+function resetMonth() {
+  if (!confirm('Reset all posts for this month to example content? This cannot be undone.')) return;
+  clearMonthStorage(viewYear, viewMonth);
+  renderCalendar();
+  showToast('Month reset to example content.');
+}
+
+// ── Export ────────────────────────────────────────────────────────────────
+function exportPosts() {
+  const monthNames = ['January','February','March','April','May','June',
+                      'July','August','September','October','November','December'];
+  const weekdays = getMonthWeekdays(viewYear, viewMonth);
+  const dayNames = ['', 'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+
+  let output = `CWI AI — Social Content Calendar\n`;
+  output += `${monthNames[viewMonth]} ${viewYear}\n`;
+  output += `${'='.repeat(50)}\n\n`;
+
+  weekdays.forEach(date => {
+    const data = loadCell(date.getFullYear(), date.getMonth(), date.getDate());
+    if (!data) return;
+    const dow = dayNames[date.getDay()];
+    const dateStr = `${monthNames[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+    output += `${dow}, ${dateStr}\n`;
+    output += `Platform: ${data.platform} | Type: ${data.type} | Status: ${data.status.charAt(0).toUpperCase()+data.status.slice(1)}\n`;
+    output += `${data.text || '(no text)'}\n`;
+    output += `${'─'.repeat(50)}\n\n`;
+  });
+
+  document.getElementById('exportText').value = output;
+  document.getElementById('exportModal').classList.add('open');
+}
+
+function closeExport() {
+  document.getElementById('exportModal').classList.remove('open');
+}
+
+function copyExport() {
+  const ta = document.getElementById('exportText');
+  navigator.clipboard.writeText(ta.value).then(() => {
+    showToast('All posts copied to clipboard.');
+  }).catch(() => {
+    ta.select();
+    document.execCommand('copy');
+    showToast('All posts copied to clipboard.');
+  });
+}
+
+// Close modal on overlay click
+document.getElementById('exportModal').addEventListener('click', function(e) {
+  if (e.target === this) closeExport();
+});
+
+// ── Toast ─────────────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────
+renderCalendar();
+</script>
+</body>
+</html>

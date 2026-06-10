@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CWI AI — Referral Program Guide</title>
+  <meta name="description" content="CWI internal tool: CWI AI — Referral Program Guide. Internal use only — CWI Compute With Imagination.">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0A0A0C;
+      --surface:   #111114;
+      --surface2:  #18181D;
+      --border:    #2A2A32;
+      --accent:    #FF5A1F;
+      --accent-dim:#CC4818;
+      --text:      #E8E8EE;
+      --muted:     #888899;
+      --success:   #22C55E;
+      --warn:      #F59E0B;
+      --info:      #3B82F6;
+      --danger:    #EF4444;
+    }
+
+    body {
+      font-family: 'Sora', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 2rem 1rem 4rem;
+    }
+
+    /* ── Header ── */
+    .page-header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+    .page-header .logo-badge {
+      display: inline-block;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 0.3rem 0.8rem;
+      border-radius: 4px;
+      margin-bottom: 1rem;
+    }
+    .page-header h1 {
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .page-header h1 span { color: var(--accent); }
+    .page-header p {
+      margin-top: 0.5rem;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    /* ── Section wrapper ── */
+    .section {
+      max-width: 900px;
+      margin: 0 auto 2.5rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1.1rem 1.5rem;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+    }
+    .section-num {
+      background: var(--accent);
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 700;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .section-header h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+    }
+    .section-body { padding: 1.5rem; }
+
+    /* ── Program overview cards ── */
+    .cards-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.1rem 1.2rem;
+    }
+    .card-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+    }
+    .card-value {
+      font-size: 1rem;
+      font-weight: 500;
+      line-height: 1.5;
+      color: var(--text);
+    }
+    .flow-steps {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0;
+      align-items: stretch;
+      margin-top: 0.25rem;
+    }
+    .flow-step {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+    .flow-step-inner {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      font-size: 0.82rem;
+      line-height: 1.45;
+      flex: 1;
+    }
+    .flow-step-inner strong {
+      display: block;
+      color: var(--accent);
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.2rem;
+    }
+    .flow-arrow {
+      color: var(--muted);
+      font-size: 1.2rem;
+      flex-shrink: 0;
+      padding: 0 0.25rem;
+    }
+
+    /* ── Email templates ── */
+    .template-block {
+      margin-bottom: 1.5rem;
+    }
+    .template-block:last-child { margin-bottom: 0; }
+    .template-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+      margin-bottom: 0.6rem;
+    }
+    .template-field {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 0.5rem;
+    }
+    .template-field-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.5rem 0.85rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+    }
+    .template-field pre {
+      padding: 0.8rem 1rem;
+      font-family: 'Sora', sans-serif;
+      font-size: 0.85rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.6;
+      color: var(--text);
+    }
+    .copy-btn {
+      background: transparent;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      font-family: 'Sora', sans-serif;
+      font-size: 0.68rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 0.25rem 0.65rem;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .copy-btn:hover { background: var(--accent); color: #fff; }
+    .copy-btn.copied { background: var(--success); border-color: var(--success); color: #fff; }
+
+    /* ── Tracker toolbar ── */
+    .tracker-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+      margin-bottom: 1.2rem;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      font-family: 'Sora', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 0.55rem 1.1rem;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-primary:hover { background: var(--accent-dim); }
+    .btn-secondary {
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      font-family: 'Sora', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 500;
+      padding: 0.55rem 1.1rem;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-secondary:hover { background: var(--border); }
+    .tracker-count {
+      margin-left: auto;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    /* ── Inline add/edit form ── */
+    .referral-form {
+      background: var(--surface2);
+      border: 1px solid var(--accent);
+      border-radius: 10px;
+      padding: 1.25rem;
+      margin-bottom: 1.2rem;
+      display: none;
+    }
+    .referral-form.open { display: block; }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .form-group label {
+      display: block;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 0.35rem;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: 'Sora', sans-serif;
+      font-size: 0.85rem;
+      padding: 0.5rem 0.75rem;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus { border-color: var(--accent); }
+    .form-group textarea { resize: vertical; min-height: 64px; }
+    .form-group select option { background: #1a1a20; }
+    .form-actions { display: flex; gap: 0.6rem; }
+
+    /* ── Table ── */
+    .table-wrap { overflow-x: auto; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.83rem;
+    }
+    thead th {
+      text-align: left;
+      padding: 0.65rem 0.85rem;
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      color: var(--muted);
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.1s;
+    }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--surface2); }
+    tbody td {
+      padding: 0.75rem 0.85rem;
+      vertical-align: top;
+      line-height: 1.45;
+    }
+    .td-notes {
+      max-width: 200px;
+      word-break: break-word;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+    .td-actions { white-space: nowrap; }
+
+    /* Status badges */
+    .badge {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      padding: 0.22rem 0.55rem;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+    .badge-intro  { background: rgba(59,130,246,0.15); color: var(--info); border: 1px solid rgba(59,130,246,0.3); }
+    .badge-demo   { background: rgba(245,158,11,0.15); color: var(--warn); border: 1px solid rgba(245,158,11,0.3); }
+    .badge-signed { background: rgba(34,197,94,0.15);  color: var(--success); border: 1px solid rgba(34,197,94,0.3); }
+    .badge-reward { background: rgba(255,90,31,0.15);  color: var(--accent); border: 1px solid rgba(255,90,31,0.3); }
+
+    /* Action icon buttons */
+    .icon-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.78rem;
+      padding: 0.28rem 0.55rem;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
+      font-family: 'Sora', sans-serif;
+    }
+    .icon-btn:hover { color: var(--text); border-color: var(--text); background: var(--surface2); }
+    .icon-btn.danger:hover { color: var(--danger); border-color: var(--danger); background: rgba(239,68,68,0.08); }
+
+    /* empty state */
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+    .empty-state span { font-size: 2rem; display: block; margin-bottom: 0.5rem; opacity: 0.4; }
+
+    /* modal confirm */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.75rem;
+      max-width: 380px;
+      width: 92%;
+    }
+    .modal h3 { font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem; }
+    .modal p  { font-size: 0.85rem; color: var(--muted); margin-bottom: 1.25rem; line-height: 1.5; }
+    .modal-actions { display: flex; gap: 0.6rem; justify-content: flex-end; }
+
+    @media (max-width: 600px) {
+      .flow-steps { flex-direction: column; }
+      .flow-arrow { transform: rotate(90deg); align-self: center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- PAGE HEADER -->
+<header class="page-header">
+  <div class="logo-badge">CWI AI — Internal</div>
+  <h1>Referral Program <span>Guide</span></h1>
+  <p>Track referrals, use email templates, and manage rewards — all in one place.</p>
+</header>
+
+<!-- ══════════════════════════════════
+     SECTION 1: THE PROGRAM
+════════════════════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-num">1</div>
+    <h2>The Program</h2>
+  </div>
+  <div class="section-body">
+
+    <div class="cards-row">
+      <div class="card">
+        <div class="card-label">Reward</div>
+        <div class="card-value">1 free month for the referring client when their referral signs up and pays their first month.</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Eligibility</div>
+        <div class="card-value">Any active CWI AI client can refer a business. Reward is applied to the referring client's next billing cycle.</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Tracking</div>
+        <div class="card-value">Brian tracks all referrals manually using the tracker in Section 3 below.</div>
+      </div>
+    </div>
+
+    <div style="margin-top:0.25rem;">
+      <div class="card-label" style="margin-bottom:0.75rem;">How It Works</div>
+      <div class="flow-steps">
+        <div class="flow-step">
+          <div class="flow-step-inner">
+            <strong>Step 1</strong>
+            Client refers a local business owner to CWI AI.
+          </div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="flow-step-inner">
+            <strong>Step 2</strong>
+            Referred business signs up and pays the setup fee.
+          </div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="flow-step-inner">
+            <strong>Step 3</strong>
+            Referring client receives their next month free. Brian marks reward as given in the tracker.
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     SECTION 2: EMAIL TEMPLATES
+════════════════════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-num">2</div>
+    <h2>Referral Ask Email Templates</h2>
+  </div>
+  <div class="section-body">
+
+    <!-- Template A -->
+    <div class="template-block">
+      <div class="template-label">Template A — After a great check-in call</div>
+
+      <div class="template-field">
+        <div class="template-field-header">
+          Subject
+          <button class="copy-btn" data-target="tpl-a-subject">Copy</button>
+        </div>
+        <pre id="tpl-a-subject">Could you introduce me to one person?</pre>
+      </div>
+
+      <div class="template-field">
+        <div class="template-field-header">
+          Body
+          <button class="copy-btn" data-target="tpl-a-body">Copy</button>
+        </div>
+        <pre id="tpl-a-body">[ClientName], things have been going great with your automation. I wanted to ask — do you know any other local business owners who might benefit from what we have set up? If you refer someone and they sign up, I will give you a free month. Just forward this email or send them to cwiai.net.</pre>
+      </div>
+    </div>
+
+    <!-- Template B -->
+    <div class="template-block">
+      <div class="template-label">Template B — After a positive monthly report</div>
+
+      <div class="template-field">
+        <div class="template-field-header">
+          Subject
+          <button class="copy-btn" data-target="tpl-b-subject">Copy</button>
+        </div>
+        <pre id="tpl-b-subject">Know anyone who could use results like these?</pre>
+      </div>
+
+      <div class="template-field">
+        <div class="template-field-header">
+          Body
+          <button class="copy-btn" data-target="tpl-b-body">Copy</button>
+        </div>
+        <pre id="tpl-b-body">Hi [ClientName], your report this month showed [X conversations handled / X bookings automated]. If you know a colleague who could use the same results, send them my way. I offer a free month for any referral that converts.</pre>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     SECTION 3: REFERRAL TRACKER
+════════════════════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-num">3</div>
+    <h2>Referral Tracker</h2>
+  </div>
+  <div class="section-body">
+
+    <div class="tracker-toolbar">
+      <button class="btn-primary" id="btn-add">+ Add Referral</button>
+      <button class="btn-secondary" id="btn-export">Export CSV</button>
+      <span class="tracker-count" id="tracker-count"></span>
+    </div>
+
+    <!-- Add / Edit Form -->
+    <div class="referral-form" id="referral-form">
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="f-referring">Referring Client</label>
+          <input type="text" id="f-referring" placeholder="e.g. Sunrise Plumbing" />
+        </div>
+        <div class="form-group">
+          <label for="f-referred">Referred Business</label>
+          <input type="text" id="f-referred" placeholder="e.g. Westside HVAC" />
+        </div>
+        <div class="form-group">
+          <label for="f-date">Date</label>
+          <input type="date" id="f-date" />
+        </div>
+        <div class="form-group">
+          <label for="f-status">Status</label>
+          <select id="f-status">
+            <option value="Intro Made">Intro Made</option>
+            <option value="Demo Booked">Demo Booked</option>
+            <option value="Signed Up">Signed Up</option>
+            <option value="Reward Given">Reward Given</option>
+          </select>
+        </div>
+        <div class="form-group" style="grid-column: 1 / -1;">
+          <label for="f-notes">Notes</label>
+          <textarea id="f-notes" placeholder="Optional notes..."></textarea>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn-primary" id="btn-save-referral">Save</button>
+        <button class="btn-secondary" id="btn-cancel-form">Cancel</button>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrap" id="table-wrap">
+      <table id="referral-table">
+        <thead>
+          <tr>
+            <th>Referring Client</th>
+            <th>Referred Business</th>
+            <th>Date</th>
+            <th>Status</th>
+            <th>Notes</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="referral-tbody"></tbody>
+      </table>
+      <div class="empty-state" id="empty-state" style="display:none;">
+        <span>📋</span>
+        No referrals logged yet. Click <strong>+ Add Referral</strong> to get started.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div class="modal-overlay" id="delete-modal">
+  <div class="modal">
+    <h3>Delete Referral?</h3>
+    <p>This will permanently remove this referral record. This action cannot be undone.</p>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="btn-cancel-delete">Cancel</button>
+      <button class="btn-primary" id="btn-confirm-delete" style="background:var(--danger);">Delete</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  /* ── Storage helpers ── */
+  const STORE_KEY = 'cwi_referrals_v1';
+
+  function load() {
+    try { return JSON.parse(localStorage.getItem(STORE_KEY)) || []; }
+    catch { return []; }
+  }
+
+  function save(data) {
+    localStorage.setItem(STORE_KEY, JSON.stringify(data));
+  }
+
+  function uid() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  }
+
+  /* ── State ── */
+  let referrals = load();
+  let editingId = null;
+  let deletingId = null;
+
+  /* ── DOM refs ── */
+  const tbody         = document.getElementById('referral-tbody');
+  const emptyState    = document.getElementById('empty-state');
+  const trackerCount  = document.getElementById('tracker-count');
+  const form          = document.getElementById('referral-form');
+  const fReferring    = document.getElementById('f-referring');
+  const fReferred     = document.getElementById('f-referred');
+  const fDate         = document.getElementById('f-date');
+  const fStatus       = document.getElementById('f-status');
+  const fNotes        = document.getElementById('f-notes');
+  const btnAdd        = document.getElementById('btn-add');
+  const btnSave       = document.getElementById('btn-save-referral');
+  const btnCancel     = document.getElementById('btn-cancel-form');
+  const btnExport     = document.getElementById('btn-export');
+  const deleteModal   = document.getElementById('delete-modal');
+  const btnCancelDel  = document.getElementById('btn-cancel-delete');
+  const btnConfirmDel = document.getElementById('btn-confirm-delete');
+
+  /* ── Status badge helper ── */
+  const badgeClass = {
+    'Intro Made':   'badge-intro',
+    'Demo Booked':  'badge-demo',
+    'Signed Up':    'badge-signed',
+    'Reward Given': 'badge-reward',
+  };
+
+  /* ── Render table ── */
+  function render() {
+    tbody.innerHTML = '';
+
+    if (referrals.length === 0) {
+      document.getElementById('referral-table').style.display = 'none';
+      emptyState.style.display = 'block';
+      trackerCount.textContent = '';
+      return;
+    }
+
+    document.getElementById('referral-table').style.display = 'table';
+    emptyState.style.display = 'none';
+    trackerCount.textContent = referrals.length + ' referral' + (referrals.length !== 1 ? 's' : '');
+
+    referrals.forEach(r => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${escHtml(r.referring)}</td>
+        <td>${escHtml(r.referred)}</td>
+        <td style="white-space:nowrap;">${formatDate(r.date)}</td>
+        <td><span class="badge ${badgeClass[r.status] || ''}">${escHtml(r.status)}</span></td>
+        <td class="td-notes">${escHtml(r.notes || '—')}</td>
+        <td class="td-actions">
+          <button class="icon-btn" data-action="edit" data-id="${r.id}">Edit</button>
+          <button class="icon-btn danger" data-action="delete" data-id="${r.id}" style="margin-left:0.35rem;">Delete</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function formatDate(iso) {
+    if (!iso) return '—';
+    const [y, m, d] = iso.split('-');
+    if (!y || !m || !d) return iso;
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return `${months[parseInt(m,10)-1]} ${parseInt(d,10)}, ${y}`;
+  }
+
+  /* ── Form open/close ── */
+  function openForm(referral) {
+    editingId = referral ? referral.id : null;
+    fReferring.value = referral ? referral.referring : '';
+    fReferred.value  = referral ? referral.referred  : '';
+    fDate.value      = referral ? referral.date      : new Date().toISOString().slice(0,10);
+    fStatus.value    = referral ? referral.status    : 'Intro Made';
+    fNotes.value     = referral ? (referral.notes || '') : '';
+    form.classList.add('open');
+    fReferring.focus();
+    btnAdd.textContent = '− Cancel';
+  }
+
+  function closeForm() {
+    form.classList.remove('open');
+    editingId = null;
+    btnAdd.textContent = '+ Add Referral';
+  }
+
+  btnAdd.addEventListener('click', () => {
+    if (form.classList.contains('open') && !editingId) {
+      closeForm();
+    } else {
+      openForm(null);
+    }
+  });
+
+  btnCancel.addEventListener('click', closeForm);
+
+  /* ── Save referral ── */
+  btnSave.addEventListener('click', () => {
+    const referring = fReferring.value.trim();
+    const referred  = fReferred.value.trim();
+
+    if (!referring || !referred) {
+      fReferring.style.borderColor = referring ? '' : 'var(--danger)';
+      fReferred.style.borderColor  = referred  ? '' : 'var(--danger)';
+      return;
+    }
+    fReferring.style.borderColor = '';
+    fReferred.style.borderColor  = '';
+
+    if (editingId) {
+      referrals = referrals.map(r =>
+        r.id === editingId
+          ? { ...r, referring, referred, date: fDate.value, status: fStatus.value, notes: fNotes.value.trim() }
+          : r
+      );
+    } else {
+      referrals.push({
+        id: uid(),
+        referring,
+        referred,
+        date: fDate.value,
+        status: fStatus.value,
+        notes: fNotes.value.trim(),
+      });
+    }
+
+    save(referrals);
+    render();
+    closeForm();
+  });
+
+  /* ── Table action delegation ── */
+  tbody.addEventListener('click', e => {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    const id     = btn.dataset.id;
+    const action = btn.dataset.action;
+
+    if (action === 'edit') {
+      const referral = referrals.find(r => r.id === id);
+      if (referral) openForm(referral);
+    } else if (action === 'delete') {
+      deletingId = id;
+      deleteModal.classList.add('open');
+    }
+  });
+
+  /* ── Delete modal ── */
+  btnCancelDel.addEventListener('click', () => {
+    deletingId = null;
+    deleteModal.classList.remove('open');
+  });
+
+  btnConfirmDel.addEventListener('click', () => {
+    if (deletingId) {
+      referrals = referrals.filter(r => r.id !== deletingId);
+      save(referrals);
+      render();
+    }
+    deletingId = null;
+    deleteModal.classList.remove('open');
+  });
+
+  deleteModal.addEventListener('click', e => {
+    if (e.target === deleteModal) {
+      deletingId = null;
+      deleteModal.classList.remove('open');
+    }
+  });
+
+  /* ── Export CSV ── */
+  btnExport.addEventListener('click', () => {
+    if (referrals.length === 0) {
+      alert('No referrals to export yet.');
+      return;
+    }
+    const headers = ['Referring Client', 'Referred Business', 'Date', 'Status', 'Notes'];
+    const rows = referrals.map(r => [
+      r.referring, r.referred, r.date, r.status, r.notes || ''
+    ]);
+    const csvContent = [headers, ...rows]
+      .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+      .join('\r\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = 'cwi-referrals-' + new Date().toISOString().slice(0,10) + '.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  /* ── Copy buttons ── */
+  document.querySelectorAll('.copy-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const targetId = btn.dataset.target;
+      const el = document.getElementById(targetId);
+      if (!el) return;
+      navigator.clipboard.writeText(el.textContent.trim()).then(() => {
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = 'Copy';
+          btn.classList.remove('copied');
+        }, 2000);
+      }).catch(() => {
+        /* fallback for non-https */
+        const ta = document.createElement('textarea');
+        ta.value = el.textContent.trim();
+        ta.style.position = 'fixed';
+        ta.style.opacity  = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = 'Copy';
+          btn.classList.remove('copied');
+        }, 2000);
+      });
+    });
+  });
+
+  /* ── Initial render ── */
+  render();
+</script>
+</body>
+</html>

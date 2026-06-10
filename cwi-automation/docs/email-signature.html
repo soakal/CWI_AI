@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="CWI internal tool: CWI AI — Email Signature Generator. Internal use only — CWI Compute With Imagination.">
+  <title>CWI AI — Email Signature Generator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0A0A0C;
+      --surface:  #13131A;
+      --border:   #1E1E2A;
+      --accent:   #FF5A1F;
+      --accent2:  #FF7A45;
+      --text:     #E8E8F0;
+      --muted:    #7A7A9A;
+      --dim:      #3A3A5A;
+      --font:     'Sora', system-ui, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 1.25rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .logo-mark {
+      width: 36px; height: 36px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: grid; place-items: center;
+      font-weight: 700; font-size: 1rem; color: #fff;
+      flex-shrink: 0;
+    }
+    header h1 { font-size: 1.1rem; font-weight: 600; color: var(--text); }
+    header h1 span { color: var(--accent); }
+
+    /* ── Layout ── */
+    main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 0;
+    }
+
+    /* ── Left Panel (fields) ── */
+    .fields-panel {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 1.75rem 1.5rem;
+      overflow-y: auto;
+    }
+    .fields-panel h2 {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1.25rem;
+    }
+
+    .field-group { margin-bottom: 1rem; }
+    .field-group label {
+      display: block;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.35rem;
+    }
+    .field-group input,
+    .field-group textarea {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--dim);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 0.875rem;
+      padding: 0.55rem 0.75rem;
+      transition: border-color 0.15s;
+      outline: none;
+      resize: vertical;
+    }
+    .field-group input:focus,
+    .field-group textarea:focus {
+      border-color: var(--accent);
+    }
+    .field-group textarea { min-height: 64px; line-height: 1.5; }
+
+    /* ── Variant Selector ── */
+    .variant-section { margin-bottom: 1.5rem; }
+    .variant-section h2 {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.75rem;
+    }
+    .variant-buttons {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .variant-btn {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--dim);
+      border-radius: 6px;
+      color: var(--muted);
+      font-family: var(--font);
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 0.45rem 0.25rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .variant-btn:hover { border-color: var(--accent); color: var(--text); }
+    .variant-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    /* ── Right Panel (preview + actions) ── */
+    .preview-panel {
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      overflow-y: auto;
+    }
+    .preview-panel h2 {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* ── Preview frame ── */
+    .preview-frame {
+      background: #fff;
+      border-radius: 10px;
+      padding: 2rem 2rem 2rem 0;
+      box-shadow: 0 4px 32px rgba(0,0,0,0.5);
+      overflow: hidden;
+    }
+
+    /* ── Action Buttons ── */
+    .action-row {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .action-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--surface);
+      border: 1px solid var(--dim);
+      border-radius: 7px;
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 0.6rem 1.1rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .action-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .action-btn.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    .action-btn.primary:hover {
+      background: var(--accent2);
+      border-color: var(--accent2);
+      color: #fff;
+    }
+    .action-btn svg { width: 15px; height: 15px; }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      background: var(--accent);
+      color: #fff;
+      font-family: var(--font);
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 0.65rem 1.25rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(255,90,31,0.4);
+      opacity: 0;
+      transform: translateY(8px);
+      transition: all 0.2s ease;
+      pointer-events: none;
+      z-index: 1000;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── Instructions block ── */
+    .instructions {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem 1.5rem;
+    }
+    .instructions h3 {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.75rem;
+    }
+    .instructions ol {
+      padding-left: 1.2rem;
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.8;
+    }
+    .instructions ol li strong { color: var(--text); }
+
+    /* ── Responsive ── */
+    @media (max-width: 800px) {
+      main { grid-template-columns: 1fr; }
+      .fields-panel { border-right: none; border-bottom: 1px solid var(--border); }
+    }
+
+    /* ======================================================
+       SIGNATURE STYLES (inside .preview-frame)
+       Must survive being pasted as inline HTML into Gmail,
+       so all styles are inline on the generated output.
+       The class styles below drive the live preview only.
+    ====================================================== */
+    .sig-wrap {
+      font-family: 'Sora', Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      color: #1a1a2e;
+      display: flex;
+      border-left: 4px solid #FF5A1F;
+      padding-left: 16px;
+      max-width: 540px;
+      margin-left: 24px;
+    }
+
+    /* Full variant headshot */
+    .sig-avatar {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #FF5A1F 0%, #FF7A45 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem; font-weight: 700; color: #fff;
+      flex-shrink: 0;
+      margin-right: 16px;
+      align-self: flex-start;
+      margin-top: 2px;
+    }
+
+    .sig-body { flex: 1; min-width: 0; }
+
+    .sig-name {
+      font-weight: 700;
+      font-size: 15px;
+      color: #0A0A1A;
+      margin-bottom: 1px;
+    }
+    .sig-title {
+      font-size: 12px;
+      color: #6B6B8A;
+      margin-bottom: 8px;
+    }
+    .sig-contact {
+      font-size: 12px;
+      color: #3A3A5A;
+      margin-bottom: 6px;
+    }
+    .sig-contact a {
+      color: #3A3A5A;
+      text-decoration: none;
+    }
+    .sig-contact .sep {
+      color: #C0C0D0;
+      margin: 0 5px;
+    }
+    .sig-cta {
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+    .sig-cta a {
+      color: #FF5A1F;
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .sig-cta a:hover { text-decoration: underline; }
+
+    .sig-tagline {
+      font-size: 11px;
+      color: #8A8AAA;
+      font-style: italic;
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+
+    .sig-divider {
+      border: none;
+      border-top: 1px solid #E0E0EC;
+      margin: 6px 0;
+    }
+
+    .sig-footer {
+      font-size: 10.5px;
+      color: #AAAACC;
+      letter-spacing: 0.04em;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo-mark">C</div>
+  <h1>CWI AI <span>—</span> Email Signature Generator</h1>
+</header>
+
+<main>
+  <!-- ── Left: Fields ── -->
+  <div class="fields-panel">
+
+    <div class="variant-section">
+      <h2>Variant</h2>
+      <div class="variant-buttons">
+        <button class="variant-btn active" data-variant="professional">Professional</button>
+        <button class="variant-btn" data-variant="brief">Brief</button>
+        <button class="variant-btn" data-variant="full">Full</button>
+      </div>
+    </div>
+
+    <h2>Fields</h2>
+
+    <div class="field-group">
+      <label for="f-name">Name</label>
+      <input type="text" id="f-name" value="Brian Kalsic" />
+    </div>
+
+    <div class="field-group">
+      <label for="f-title">Title</label>
+      <input type="text" id="f-title" value="Founder, CWI AI LLC" />
+    </div>
+
+    <div class="field-group">
+      <label for="f-email">Email</label>
+      <input type="email" id="f-email" value="brian@cwiai.net" />
+    </div>
+
+    <div class="field-group">
+      <label for="f-phone">Phone</label>
+      <input type="tel" id="f-phone" value="(734) 812-9971" />
+    </div>
+
+    <div class="field-group">
+      <label for="f-website">Website</label>
+      <input type="text" id="f-website" value="cwiai.net" />
+    </div>
+
+    <div class="field-group">
+      <label for="f-calendly">Calendly Link</label>
+      <input type="text" id="f-calendly" value="calendly.com/cwiai" />
+    </div>
+
+    <div class="field-group">
+      <label for="f-tagline">Tagline</label>
+      <textarea id="f-tagline">AI automation for local businesses — 24/7 lead capture, automated booking, zero missed calls</textarea>
+    </div>
+
+  </div>
+
+  <!-- ── Right: Preview + Actions ── -->
+  <div class="preview-panel">
+
+    <div>
+      <h2 style="margin-bottom:1rem;">Live Preview</h2>
+      <div class="preview-frame" id="preview-frame">
+        <!-- signature injected here -->
+      </div>
+    </div>
+
+    <div class="action-row">
+      <button class="action-btn primary" id="btn-copy-html" title="Copy raw HTML to paste into Gmail Settings → Signature">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+        </svg>
+        Copy HTML
+      </button>
+
+      <button class="action-btn" id="btn-copy-text">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+        </svg>
+        Copy Plain Text
+      </button>
+    </div>
+
+    <div class="instructions">
+      <h3>How to use in Gmail</h3>
+      <ol>
+        <li>Edit fields on the left until the preview looks right.</li>
+        <li>Click <strong>Copy HTML</strong> above.</li>
+        <li>Open Gmail → <strong>Settings (gear icon)</strong> → <strong>See all settings</strong>.</li>
+        <li>Scroll to <strong>Signature</strong>, create or edit a signature.</li>
+        <li>Click in the signature text area, then press <strong>Ctrl+A</strong> to select all, then <strong>Ctrl+V</strong> to paste.</li>
+        <li>Scroll down and click <strong>Save Changes</strong>.</li>
+      </ol>
+    </div>
+
+  </div>
+</main>
+
+<!-- Toast notification -->
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ── State ──────────────────────────────────────────────
+  let variant = 'professional';
+
+  const fields = {
+    name:     () => document.getElementById('f-name').value.trim(),
+    title:    () => document.getElementById('f-title').value.trim(),
+    email:    () => document.getElementById('f-email').value.trim(),
+    phone:    () => document.getElementById('f-phone').value.trim(),
+    website:  () => document.getElementById('f-website').value.trim(),
+    calendly: () => document.getElementById('f-calendly').value.trim(),
+    tagline:  () => document.getElementById('f-tagline').value.trim(),
+  };
+
+  // ── Helpers ────────────────────────────────────────────
+  function initials(name) {
+    return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+  }
+
+  function websiteHref(w) {
+    return w.startsWith('http') ? w : 'https://' + w;
+  }
+
+  function calendlyHref(c) {
+    return c.startsWith('http') ? c : 'https://' + c;
+  }
+
+  // ── Build signature HTML (inline styles for email compat) ──
+  function buildSigHTML() {
+    const name     = fields.name()     || 'Your Name';
+    const title    = fields.title()    || '';
+    const email    = fields.email()    || '';
+    const phone    = fields.phone()    || '';
+    const website  = fields.website()  || '';
+    const calendly = fields.calendly() || '';
+    const tagline  = fields.tagline()  || '';
+
+    const ACCENT   = '#FF5A1F';
+    const DARK     = '#0A0A1A';
+    const GRAY     = '#6B6B8A';
+    const DIM      = '#3A3A5A';
+    const DIMMER   = '#AAAACC';
+    const LIGHT    = '#8A8AAA';
+    const DIVIDER  = '#E0E0EC';
+
+    // ── Shared parts ──
+    const nameBlock = `
+      <div style="font-family:'Sora',Arial,sans-serif;font-weight:700;font-size:15px;color:${DARK};margin-bottom:1px;">${name}</div>`;
+
+    const titleBlock = title ? `
+      <div style="font-family:'Sora',Arial,sans-serif;font-size:12px;color:${GRAY};margin-bottom:8px;">${title}</div>` : '';
+
+    // contact line
+    const contactParts = [];
+    if (email)   contactParts.push(`<a href="mailto:${email}" style="color:${DIM};text-decoration:none;">${email}</a>`);
+    if (phone)   contactParts.push(`<a href="tel:${phone.replace(/\D/g,'')}" style="color:${DIM};text-decoration:none;">${phone}</a>`);
+    if (website) contactParts.push(`<a href="${websiteHref(website)}" style="color:${DIM};text-decoration:none;">${website}</a>`);
+
+    const contactLine = contactParts.length ? `
+      <div style="font-family:'Sora',Arial,sans-serif;font-size:12px;color:${DIM};margin-bottom:6px;">
+        ${contactParts.join(`<span style="color:#C0C0D0;margin:0 5px;">|</span>`)}
+      </div>` : '';
+
+    const ctaLine = calendly ? `
+      <div style="font-family:'Sora',Arial,sans-serif;font-size:12px;margin-bottom:8px;">
+        <a href="${calendlyHref(calendly)}" style="color:${ACCENT};font-weight:600;text-decoration:none;">Book a free demo →</a>
+      </div>` : '';
+
+    const taglineBlock = tagline ? `
+      <div style="font-family:'Sora',Arial,sans-serif;font-size:11px;color:${LIGHT};font-style:italic;margin-bottom:8px;line-height:1.5;">${tagline}</div>` : '';
+
+    const footerBlock = `
+      <hr style="border:none;border-top:1px solid ${DIVIDER};margin:6px 0;" />
+      <div style="font-family:'Sora',Arial,sans-serif;font-size:10.5px;color:${DIMMER};letter-spacing:0.04em;">CWI AI LLC — ${website || 'cwiai.net'}</div>`;
+
+    // ── Variant: Brief ──
+    if (variant === 'brief') {
+      const briefParts = [];
+      if (email) briefParts.push(`<a href="mailto:${email}" style="color:${DIM};text-decoration:none;">${email}</a>`);
+      if (phone) briefParts.push(`<a href="tel:${phone.replace(/\D/g,'')}" style="color:${DIM};text-decoration:none;">${phone}</a>`);
+      const briefContact = briefParts.length ? `
+        <div style="font-family:'Sora',Arial,sans-serif;font-size:12px;color:${DIM};margin-bottom:4px;">
+          ${briefParts.join(`<span style="color:#C0C0D0;margin:0 5px;">|</span>`)}
+        </div>` : '';
+
+      return `<table border="0" cellpadding="0" cellspacing="0" style="border-collapse:collapse;"><tbody><tr>
+        <td style="border-left:4px solid ${ACCENT};padding-left:16px;padding-top:4px;padding-bottom:4px;">
+          ${nameBlock}
+          ${titleBlock}
+          ${briefContact}
+        </td></tr></tbody></table>`;
+    }
+
+    // ── Variant: Full (with headshot placeholder) ──
+    if (variant === 'full') {
+      const avatarBlock = `
+        <td style="vertical-align:top;padding-right:16px;padding-left:24px;">
+          <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,${ACCENT} 0%,#FF7A45 100%);display:table-cell;text-align:center;vertical-align:middle;font-family:'Sora',Arial,sans-serif;font-size:22px;font-weight:700;color:#fff;">
+            ${initials(name)}
+          </div>
+        </td>`;
+
+      return `<table border="0" cellpadding="0" cellspacing="0" style="border-collapse:collapse;"><tbody><tr>
+        <td style="border-left:4px solid ${ACCENT};padding:0;"></td>
+        ${avatarBlock}
+        <td style="vertical-align:top;">
+          ${nameBlock}
+          ${titleBlock}
+          ${contactLine}
+          ${ctaLine}
+          ${taglineBlock}
+          ${footerBlock}
+        </td>
+      </tr></tbody></table>`;
+    }
+
+    // ── Variant: Professional (default) ──
+    return `<table border="0" cellpadding="0" cellspacing="0" style="border-collapse:collapse;"><tbody><tr>
+      <td style="border-left:4px solid ${ACCENT};padding-left:16px;padding-top:4px;padding-bottom:4px;">
+        ${nameBlock}
+        ${titleBlock}
+        ${contactLine}
+        ${ctaLine}
+        ${taglineBlock}
+        ${footerBlock}
+      </td></tr></tbody></table>`;
+  }
+
+  // ── Plain text version ──────────────────────────────────
+  function buildPlainText() {
+    const name     = fields.name()     || '';
+    const title    = fields.title()    || '';
+    const email    = fields.email()    || '';
+    const phone    = fields.phone()    || '';
+    const website  = fields.website()  || '';
+    const calendly = fields.calendly() || '';
+    const tagline  = fields.tagline()  || '';
+
+    const lines = [];
+    if (name)  lines.push(name);
+    if (title) lines.push(title);
+
+    if (variant !== 'brief') {
+      const contact = [email, phone, website].filter(Boolean).join(' | ');
+      if (contact) lines.push(contact);
+      if (calendly) lines.push('Book a free demo: ' + calendlyHref(calendly));
+      if (tagline)  lines.push(tagline);
+      lines.push('─'.repeat(36));
+      lines.push('CWI AI LLC — ' + (website || 'cwiai.net'));
+    } else {
+      const contact = [email, phone].filter(Boolean).join(' | ');
+      if (contact) lines.push(contact);
+    }
+
+    return lines.join('\n');
+  }
+
+  // ── Render preview ──────────────────────────────────────
+  function render() {
+    const frame = document.getElementById('preview-frame');
+    frame.innerHTML = buildSigHTML();
+  }
+
+  // ── Toast ───────────────────────────────────────────────
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  // ── Copy helpers ────────────────────────────────────────
+  async function copyText(text, label) {
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast(label + ' copied!');
+    } catch {
+      // Fallback for older browsers
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast(label + ' copied!');
+    }
+  }
+
+  // ── Events ──────────────────────────────────────────────
+  // Live update on any input change
+  document.querySelectorAll('.fields-panel input, .fields-panel textarea')
+    .forEach(el => el.addEventListener('input', render));
+
+  // Variant toggle
+  document.querySelectorAll('.variant-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.variant-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      variant = btn.dataset.variant;
+      render();
+    });
+  });
+
+  // Copy HTML
+  document.getElementById('btn-copy-html').addEventListener('click', () => {
+    copyText(buildSigHTML(), 'HTML signature');
+  });
+
+  // Copy Plain Text
+  document.getElementById('btn-copy-text').addEventListener('click', () => {
+    copyText(buildPlainText(), 'Plain text signature');
+  });
+
+  // ── Initial render ──────────────────────────────────────
+  render();
+
+})();
+</script>
+</body>
+</html>

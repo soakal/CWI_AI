@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CWI AI — Client Success Tracker</title>
+  <meta name="description" content="CWI internal tool: CWI AI — Client Success Tracker. Internal use only — CWI Compute With Imagination.">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0A0A0C;
+      --surface:   #13131A;
+      --surface2:  #1C1C26;
+      --border:    #2A2A3A;
+      --accent:    #FF5A1F;
+      --accent-dim:#FF5A1F33;
+      --text:      #E8E8F0;
+      --muted:     #7A7A9A;
+      --success:   #22C55E;
+      --warning:   #FACC15;
+      --danger:    #EF4444;
+      --info:      #38BDF8;
+      --radius:    12px;
+      --radius-sm: 8px;
+    }
+
+    body {
+      font-family: 'Sora', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 24px 16px 60px;
+    }
+
+    /* ── Header ─────────────────────────────────── */
+    header {
+      max-width: 860px;
+      margin: 0 auto 32px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .logo-mark {
+      width: 44px;
+      height: 44px;
+      background: var(--accent);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 18px;
+      flex-shrink: 0;
+      letter-spacing: -0.5px;
+    }
+
+    header h1 {
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: -0.3px;
+    }
+
+    header h1 span {
+      color: var(--accent);
+    }
+
+    header .export-btn {
+      margin-left: auto;
+    }
+
+    /* ── Card ────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      max-width: 860px;
+      margin: 0 auto 20px;
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    /* ── Buttons ─────────────────────────────────── */
+    button {
+      font-family: 'Sora', sans-serif;
+      cursor: pointer;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 500;
+      transition: opacity .15s, transform .1s;
+    }
+
+    button:active { transform: scale(.97); }
+    button:disabled { opacity: .4; cursor: not-allowed; }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      padding: 9px 18px;
+    }
+
+    .btn-primary:hover:not(:disabled) { opacity: .85; }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 8px 14px;
+    }
+
+    .btn-ghost:hover:not(:disabled) { border-color: var(--accent); color: var(--text); }
+
+    .btn-danger-ghost {
+      background: transparent;
+      color: var(--danger);
+      border: 1px solid var(--danger)44;
+      padding: 8px 14px;
+    }
+
+    .btn-danger-ghost:hover:not(:disabled) { background: var(--danger)22; }
+
+    /* ── Form controls ───────────────────────────── */
+    input, select {
+      font-family: 'Sora', sans-serif;
+      font-size: 13px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      padding: 9px 12px;
+      outline: none;
+      transition: border-color .15s;
+      width: 100%;
+    }
+
+    input:focus, select:focus { border-color: var(--accent); }
+
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(.6);
+      cursor: pointer;
+    }
+
+    select option { background: var(--surface2); }
+
+    label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted);
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .form-group { margin-bottom: 14px; }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+    }
+
+    @media (max-width: 600px) {
+      .form-row { grid-template-columns: 1fr; }
+    }
+
+    /* ── Client selector bar ─────────────────────── */
+    .selector-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .selector-bar select { max-width: 280px; flex: 1; }
+
+    /* ── Add-client panel ────────────────────────── */
+    #add-panel {
+      display: none;
+      margin-top: 18px;
+      padding-top: 18px;
+      border-top: 1px solid var(--border);
+    }
+
+    #add-panel.open { display: block; }
+
+    #add-panel .actions { display: flex; gap: 8px; margin-top: 4px; }
+
+    /* ── Stats strip ─────────────────────────────── */
+    .stats-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+      max-width: 860px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    @media (max-width: 500px) {
+      .stats-strip { grid-template-columns: 1fr 1fr; }
+    }
+
+    .stat-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .stat-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+    .stat-value { font-size: 28px; font-weight: 700; letter-spacing: -1px; }
+    .stat-sub   { font-size: 12px; color: var(--muted); }
+
+    /* ── Status badge ────────────────────────────── */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 12px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .03em;
+    }
+
+    .badge::before {
+      content: '';
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .badge-onboarding { background: var(--info)22;   color: var(--info);    border: 1px solid var(--info)44; }
+    .badge-active     { background: var(--success)22; color: var(--success); border: 1px solid var(--success)44; }
+    .badge-at-risk    { background: var(--danger)22;  color: var(--danger);  border: 1px solid var(--danger)44; }
+    .badge-champion   { background: var(--accent)22;  color: var(--accent);  border: 1px solid var(--accent)44; }
+
+    /* ── Progress bar ────────────────────────────── */
+    .progress-wrap {
+      max-width: 860px;
+      margin: 0 auto 20px;
+    }
+
+    .progress-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .progress-label { font-size: 13px; font-weight: 500; color: var(--muted); }
+    .progress-pct   { font-size: 18px; font-weight: 700; color: var(--accent); }
+
+    .progress-track {
+      height: 8px;
+      background: var(--surface2);
+      border-radius: 99px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), #FF8C5A);
+      border-radius: 99px;
+      transition: width .5s cubic-bezier(.4,0,.2,1);
+    }
+
+    /* ── Milestones ──────────────────────────────── */
+    .milestones-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .milestone-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 14px 16px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      transition: border-color .15s, background .15s;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .milestone-item:hover { border-color: var(--accent)66; }
+
+    .milestone-item.done {
+      background: var(--success)0D;
+      border-color: var(--success)44;
+    }
+
+    .milestone-item.overdue {
+      background: var(--danger)0D;
+      border-color: var(--danger)44;
+    }
+
+    /* custom checkbox */
+    .m-check {
+      width: 20px;
+      height: 20px;
+      min-width: 20px;
+      border: 2px solid var(--border);
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color .15s, background .15s;
+      margin-top: 1px;
+    }
+
+    .milestone-item.done .m-check {
+      background: var(--success);
+      border-color: var(--success);
+    }
+
+    .milestone-item.overdue .m-check {
+      border-color: var(--danger);
+    }
+
+    .m-check svg { display: none; }
+    .milestone-item.done .m-check svg { display: block; }
+
+    .m-body { flex: 1; }
+
+    .m-title {
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 1.4;
+    }
+
+    .milestone-item.done .m-title {
+      color: var(--muted);
+      text-decoration: line-through;
+      text-decoration-color: var(--success)88;
+    }
+
+    .m-day {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-top: 3px;
+    }
+
+    .milestone-item.overdue .m-day { color: var(--danger); }
+    .milestone-item.done    .m-day { color: var(--success); }
+
+    .m-status-pill {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 99px;
+      white-space: nowrap;
+      align-self: center;
+    }
+
+    .pill-done    { background: var(--success)22; color: var(--success); }
+    .pill-overdue { background: var(--danger)22;  color: var(--danger);  }
+    .pill-pending { background: var(--surface);   color: var(--muted);   border: 1px solid var(--border); }
+
+    /* ── Empty state ─────────────────────────────── */
+    .empty-state {
+      max-width: 860px;
+      margin: 60px auto;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .empty-state .icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: .5;
+    }
+
+    .empty-state h2 { font-size: 18px; font-weight: 600; margin-bottom: 8px; color: var(--text); }
+    .empty-state p  { font-size: 14px; line-height: 1.6; }
+
+    /* ── No-client overlay ───────────────────────── */
+    #no-client { display: none; }
+    #client-view { display: none; }
+
+    /* ── Delete confirm ──────────────────────────── */
+    .delete-zone {
+      max-width: 860px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    /* ── Tier pill ───────────────────────────────── */
+    .tier-pill {
+      display: inline-flex;
+      padding: 2px 9px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      margin-left: 8px;
+    }
+
+    .tier-starter  { background: #6366F122; color: #818CF8; border: 1px solid #6366F144; }
+    .tier-growth   { background: var(--accent)22; color: var(--accent); border: 1px solid var(--accent)44; }
+    .tier-enterprise { background: var(--warning)22; color: var(--warning); border: 1px solid var(--warning)44; }
+
+    /* ── Scrollbar ───────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ──────────────────────────────────────────────────────────── -->
+<header>
+  <div class="logo-mark">CWI</div>
+  <h1>CWI AI — <span>Client Success Tracker</span></h1>
+  <button class="btn-ghost export-btn" id="export-btn" title="Download all clients as JSON">&#8659; Export JSON</button>
+</header>
+
+<!-- ── Client selector ─────────────────────────────────────────────────── -->
+<div class="card">
+  <div class="card-title">Client</div>
+  <div class="selector-bar">
+    <select id="client-select">
+      <option value="">— Select a client —</option>
+    </select>
+    <button class="btn-primary" id="toggle-add-btn">+ Add Client</button>
+  </div>
+
+  <div id="add-panel">
+    <div class="form-row">
+      <div class="form-group">
+        <label for="new-name">Client Name</label>
+        <input id="new-name" type="text" placeholder="Acme Corp" />
+      </div>
+      <div class="form-group">
+        <label for="new-date">Onboarding Date</label>
+        <input id="new-date" type="date" />
+      </div>
+      <div class="form-group">
+        <label for="new-tier">Tier</label>
+        <select id="new-tier">
+          <option value="starter">Starter</option>
+          <option value="growth" selected>Growth</option>
+          <option value="enterprise">Enterprise</option>
+        </select>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn-primary" id="save-client-btn">Save Client</button>
+      <button class="btn-ghost"   id="cancel-add-btn">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── No client selected ──────────────────────────────────────────────── -->
+<div id="no-client">
+  <div class="empty-state">
+    <div class="icon">&#128101;</div>
+    <h2>No client selected</h2>
+    <p>Select a client from the dropdown above, or add a new one to get started.</p>
+  </div>
+</div>
+
+<!-- ── Client view ─────────────────────────────────────────────────────── -->
+<div id="client-view">
+
+  <!-- Stats -->
+  <div class="stats-strip">
+    <div class="stat-box">
+      <span class="stat-label">Days Since Onboarding</span>
+      <span class="stat-value" id="stat-days">—</span>
+      <span class="stat-sub" id="stat-onboard-date"></span>
+    </div>
+    <div class="stat-box">
+      <span class="stat-label">Milestones Complete</span>
+      <span class="stat-value" id="stat-complete">0 / 12</span>
+      <span class="stat-sub" id="stat-tier-label"></span>
+    </div>
+    <div class="stat-box">
+      <span class="stat-label">Status</span>
+      <span id="stat-status-wrap" style="margin-top:6px;"></span>
+    </div>
+  </div>
+
+  <!-- Progress bar -->
+  <div class="progress-wrap">
+    <div class="progress-meta">
+      <span class="progress-label">Overall Progress</span>
+      <span class="progress-pct" id="progress-pct">0%</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <!-- Milestones -->
+  <div class="card">
+    <div class="card-title">90-Day Milestone Checklist</div>
+    <ul class="milestones-list" id="milestones-list"></ul>
+  </div>
+
+  <!-- Delete -->
+  <div class="delete-zone">
+    <button class="btn-danger-ghost" id="delete-client-btn">&#10005; Delete Client</button>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ── Milestone definitions ─────────────────────────────────────────────
+  const MILESTONE_DEFS = [
+    { id: 'm01', day: 0,  label: 'Contract signed + setup fee collected' },
+    { id: 'm02', day: 0,  label: 'new-client.ps1 run — folder + .env created' },
+    { id: 'm03', day: 1,  label: 'Resend domain verified (green)' },
+    { id: 'm04', day: 1,  label: 'Freshchat bot (Riley) published on client website' },
+    { id: 'm05', day: 1,  label: 'All 15 Make.com scenarios imported and ON' },
+    { id: 'm06', day: 1,  label: 'Webhooks registered (Freshchat, Stripe, Calendly)' },
+    { id: 'm07', day: 2,  label: 'End-to-end booking test passed' },
+    { id: 'm08', day: 2,  label: 'Test payment processed and logged in HubSpot' },
+    { id: 'm09', day: 7,  label: 'First weekly digest received' },
+    { id: 'm10', day: 14, label: 'Check-in call with client — review first 2 weeks' },
+    { id: 'm11', day: 30, label: 'First monthly report delivered' },
+    { id: 'm12', day: 30, label: '30-day guarantee conversation (are they happy?)' },
+  ];
+
+  const OVERDUE_GRACE = 3; // days late before "At Risk"
+
+  // ── Storage helpers ───────────────────────────────────────────────────
+  const STORAGE_KEY = 'cwi_success_tracker_v1';
+
+  function loadStore() {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY)) || { clients: [] };
+    } catch { return { clients: [] }; }
+  }
+
+  function saveStore(store) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+  }
+
+  // ── State ─────────────────────────────────────────────────────────────
+  let store = loadStore();
+  let activeClientId = null;
+
+  // ── DOM refs ──────────────────────────────────────────────────────────
+  const clientSelect    = document.getElementById('client-select');
+  const toggleAddBtn    = document.getElementById('toggle-add-btn');
+  const addPanel        = document.getElementById('add-panel');
+  const newNameInput    = document.getElementById('new-name');
+  const newDateInput    = document.getElementById('new-date');
+  const newTierInput    = document.getElementById('new-tier');
+  const saveClientBtn   = document.getElementById('save-client-btn');
+  const cancelAddBtn    = document.getElementById('cancel-add-btn');
+  const noClientView    = document.getElementById('no-client');
+  const clientView      = document.getElementById('client-view');
+  const milestonesList  = document.getElementById('milestones-list');
+  const deleteClientBtn = document.getElementById('delete-client-btn');
+  const exportBtn       = document.getElementById('export-btn');
+
+  const statDays        = document.getElementById('stat-days');
+  const statOnboard     = document.getElementById('stat-onboard-date');
+  const statComplete    = document.getElementById('stat-complete');
+  const statTierLabel   = document.getElementById('stat-tier-label');
+  const statStatusWrap  = document.getElementById('stat-status-wrap');
+  const progressPct     = document.getElementById('progress-pct');
+  const progressFill    = document.getElementById('progress-fill');
+
+  // ── Utilities ─────────────────────────────────────────────────────────
+  function uid() {
+    return 'c_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 7);
+  }
+
+  function daysSince(dateStr) {
+    if (!dateStr) return null;
+    const now   = new Date();
+    now.setHours(0, 0, 0, 0);
+    const start = new Date(dateStr + 'T00:00:00');
+    start.setHours(0, 0, 0, 0);
+    return Math.floor((now - start) / 86400000);
+  }
+
+  function formatDate(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr + 'T00:00:00');
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  function tierClass(tier) {
+    return tier === 'enterprise' ? 'tier-enterprise' : tier === 'growth' ? 'tier-growth' : 'tier-starter';
+  }
+
+  function tierLabel(tier) {
+    return tier ? tier.charAt(0).toUpperCase() + tier.slice(1) : '';
+  }
+
+  // ── Compute status ────────────────────────────────────────────────────
+  function computeStatus(client) {
+    const days      = daysSince(client.onboardingDate);
+    const checks    = client.milestones || {};
+    const total     = MILESTONE_DEFS.length;
+    const done      = MILESTONE_DEFS.filter(m => checks[m.id]).length;
+    const allDone   = done === total;
+
+    // Overdue: any unchecked milestone whose due-day + grace < daysElapsed
+    const hasOverdue = MILESTONE_DEFS.some(m => {
+      if (checks[m.id]) return false;
+      return days !== null && days > (m.day + OVERDUE_GRACE);
+    });
+
+    if (hasOverdue)              return 'at-risk';
+    if (days !== null && days >= 60 && allDone) return 'champion';
+    if (days !== null && days >= 7  && allDone) return 'active';
+    return 'onboarding';
+  }
+
+  function statusBadgeHTML(status) {
+    const map = {
+      'onboarding': ['badge-onboarding', 'Onboarding'],
+      'active':     ['badge-active',     'Active'],
+      'at-risk':    ['badge-at-risk',     'At Risk'],
+      'champion':   ['badge-champion',   'Champion'],
+    };
+    const [cls, label] = map[status] || map['onboarding'];
+    return `<span class="badge ${cls}">${label}</span>`;
+  }
+
+  // ── Populate client select ────────────────────────────────────────────
+  function populateSelect() {
+    clientSelect.innerHTML = '<option value="">— Select a client —</option>';
+    store.clients.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.id;
+      opt.textContent = c.name;
+      if (c.id === activeClientId) opt.selected = true;
+      clientSelect.appendChild(opt);
+    });
+  }
+
+  // ── Render milestone list ─────────────────────────────────────────────
+  function renderMilestones(client) {
+    const checks  = client.milestones || {};
+    const days    = daysSince(client.onboardingDate);
+    milestonesList.innerHTML = '';
+
+    MILESTONE_DEFS.forEach(m => {
+      const isDone    = !!checks[m.id];
+      const isOverdue = !isDone && days !== null && days > (m.day + OVERDUE_GRACE);
+      const li        = document.createElement('li');
+      li.className    = 'milestone-item' + (isDone ? ' done' : isOverdue ? ' overdue' : '');
+      li.dataset.id   = m.id;
+
+      let pillHTML = '';
+      if (isDone)         pillHTML = '<span class="m-status-pill pill-done">Done</span>';
+      else if (isOverdue) pillHTML = '<span class="m-status-pill pill-overdue">Overdue</span>';
+      else                pillHTML = '<span class="m-status-pill pill-pending">Pending</span>';
+
+      li.innerHTML = `
+        <div class="m-check">
+          <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
+            <path d="M1 4L4 7.5L10 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="m-body">
+          <div class="m-title">${escapeHtml(m.label)}</div>
+          <div class="m-day">Day ${m.day}</div>
+        </div>
+        ${pillHTML}
+      `;
+
+      li.addEventListener('click', () => toggleMilestone(client, m.id));
+      milestonesList.appendChild(li);
+    });
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // ── Toggle milestone ──────────────────────────────────────────────────
+  function toggleMilestone(client, milestoneId) {
+    if (!client.milestones) client.milestones = {};
+    client.milestones[milestoneId] = !client.milestones[milestoneId];
+    saveStore(store);
+    renderClientView(client);
+  }
+
+  // ── Render full client view ───────────────────────────────────────────
+  function renderClientView(client) {
+    noClientView.style.display  = 'none';
+    clientView.style.display    = 'block';
+
+    const days    = daysSince(client.onboardingDate);
+    const checks  = client.milestones || {};
+    const done    = MILESTONE_DEFS.filter(m => checks[m.id]).length;
+    const total   = MILESTONE_DEFS.length;
+    const pct     = Math.round((done / total) * 100);
+    const status  = computeStatus(client);
+
+    // Stats
+    statDays.textContent      = days !== null ? days : '—';
+    statOnboard.textContent   = 'Since ' + formatDate(client.onboardingDate);
+    statComplete.textContent  = `${done} / ${total}`;
+    statTierLabel.innerHTML   = `<span class="tier-pill ${tierClass(client.tier)}">${tierLabel(client.tier)}</span>`;
+    statStatusWrap.innerHTML  = statusBadgeHTML(status);
+
+    // Progress
+    progressPct.textContent       = pct + '%';
+    progressFill.style.width      = pct + '%';
+
+    // Milestones
+    renderMilestones(client);
+  }
+
+  // ── Show / hide views ─────────────────────────────────────────────────
+  function showNoClient() {
+    noClientView.style.display = 'block';
+    clientView.style.display   = 'none';
+  }
+
+  // ── Select a client ───────────────────────────────────────────────────
+  function selectClient(id) {
+    activeClientId = id;
+    const client = store.clients.find(c => c.id === id);
+    if (client) {
+      renderClientView(client);
+    } else {
+      showNoClient();
+    }
+  }
+
+  // ── Add client ────────────────────────────────────────────────────────
+  function openAddPanel() {
+    addPanel.classList.add('open');
+    toggleAddBtn.textContent   = '— Cancel';
+    newNameInput.value         = '';
+    newDateInput.value         = new Date().toISOString().slice(0, 10);
+    newTierInput.value         = 'growth';
+    newNameInput.focus();
+  }
+
+  function closeAddPanel() {
+    addPanel.classList.remove('open');
+    toggleAddBtn.textContent = '+ Add Client';
+  }
+
+  function saveNewClient() {
+    const name = newNameInput.value.trim();
+    const date = newDateInput.value;
+    const tier = newTierInput.value;
+
+    if (!name) { newNameInput.focus(); newNameInput.style.borderColor = 'var(--danger)'; return; }
+    newNameInput.style.borderColor = '';
+
+    if (!date) { newDateInput.focus(); newDateInput.style.borderColor = 'var(--danger)'; return; }
+    newDateInput.style.borderColor = '';
+
+    const client = { id: uid(), name, onboardingDate: date, tier, milestones: {}, createdAt: Date.now() };
+    store.clients.push(client);
+    saveStore(store);
+    populateSelect();
+    closeAddPanel();
+    clientSelect.value = client.id;
+    selectClient(client.id);
+  }
+
+  // ── Delete client ─────────────────────────────────────────────────────
+  function deleteActiveClient() {
+    const client = store.clients.find(c => c.id === activeClientId);
+    if (!client) return;
+    if (!confirm(`Delete "${client.name}"? This cannot be undone.`)) return;
+    store.clients = store.clients.filter(c => c.id !== activeClientId);
+    saveStore(store);
+    activeClientId = null;
+    populateSelect();
+    showNoClient();
+  }
+
+  // ── Export ────────────────────────────────────────────────────────────
+  function exportJSON() {
+    const data   = JSON.stringify(store, null, 2);
+    const blob   = new Blob([data], { type: 'application/json' });
+    const url    = URL.createObjectURL(blob);
+    const a      = document.createElement('a');
+    a.href       = url;
+    a.download   = 'cwi-clients-' + new Date().toISOString().slice(0, 10) + '.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // ── Event listeners ───────────────────────────────────────────────────
+  toggleAddBtn.addEventListener('click', () => {
+    addPanel.classList.contains('open') ? closeAddPanel() : openAddPanel();
+  });
+
+  cancelAddBtn.addEventListener('click', closeAddPanel);
+
+  saveClientBtn.addEventListener('click', saveNewClient);
+
+  newNameInput.addEventListener('keydown', e => { if (e.key === 'Enter') saveNewClient(); });
+
+  clientSelect.addEventListener('change', () => {
+    const val = clientSelect.value;
+    if (val) selectClient(val);
+    else     showNoClient();
+  });
+
+  deleteClientBtn.addEventListener('click', deleteActiveClient);
+  exportBtn.addEventListener('click', exportJSON);
+
+  // ── Init ──────────────────────────────────────────────────────────────
+  populateSelect();
+
+  if (store.clients.length > 0) {
+    const last = store.clients[store.clients.length - 1];
+    clientSelect.value = last.id;
+    selectClient(last.id);
+  } else {
+    showNoClient();
+  }
+
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CWI AI — Paid Ad Campaign Tracker</title>
+<meta name="description" content="CWI internal tool: CWI AI — Paid Ad Campaign Tracker. Internal use only — CWI Compute With Imagination.">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --accent: #FF5A1F;
+    --accent-dark: #d94a18;
+    --accent-light: #fff3ef;
+    --bg: #f7f8fa;
+    --surface: #ffffff;
+    --border: #e2e6ea;
+    --text: #1a1d23;
+    --muted: #6b7280;
+    --success: #16a34a;
+    --success-bg: #f0fdf4;
+    --warning: #b45309;
+    --warning-bg: #fffbeb;
+    --danger: #dc2626;
+    --radius: 10px;
+    --shadow: 0 1px 4px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.05);
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 58px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 1px 6px rgba(0,0,0,.06);
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 17px;
+    color: var(--text);
+    text-decoration: none;
+  }
+  .logo-badge {
+    background: var(--accent);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 20px;
+    letter-spacing: .4px;
+  }
+  header .tagline {
+    color: var(--muted);
+    font-size: 12px;
+    margin-left: 8px;
+    border-left: 1px solid var(--border);
+    padding-left: 12px;
+  }
+
+  main { padding: 28px; max-width: 1380px; margin: 0 auto; }
+
+  /* ── Dashboard Cards ── */
+  .dash-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .dash-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    box-shadow: var(--shadow);
+  }
+  .dash-card .label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .dash-card .value {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.1;
+  }
+  .dash-card .value.accent { color: var(--accent); }
+  .dash-card .sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  /* ── Toolbar ── */
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .toolbar select,
+  .toolbar input[type="text"] {
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 13px;
+    background: var(--surface);
+    color: var(--text);
+    outline: none;
+    transition: border-color .15s;
+  }
+  .toolbar select:focus,
+  .toolbar input[type="text"]:focus { border-color: var(--accent); }
+  .toolbar .spacer { flex: 1; }
+
+  btn, button, .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s, opacity .15s;
+    text-decoration: none;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+  }
+  .btn-primary:hover { background: var(--accent-dark); }
+  .btn-secondary {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { background: var(--bg); }
+  .btn-danger {
+    background: #fef2f2;
+    color: var(--danger);
+    border: 1px solid #fecaca;
+  }
+  .btn-danger:hover { background: #fee2e2; }
+  .btn-sm { padding: 5px 11px; font-size: 12px; }
+
+  /* ── Table ── */
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow-x: auto;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    white-space: nowrap;
+  }
+  thead th {
+    background: #f9fafb;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .55px;
+    color: var(--muted);
+    padding: 11px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+  }
+  thead th:hover { color: var(--accent); }
+  thead th.sorted { color: var(--accent); }
+  thead th .sort-arrow { margin-left: 3px; opacity: .5; }
+  thead th.sorted .sort-arrow { opacity: 1; }
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background .1s;
+  }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: #fafbfc; }
+  tbody tr.best-row { background: var(--success-bg); }
+  tbody tr.best-row td { color: var(--success); }
+  tbody tr.best-row td.name-cell { font-weight: 700; }
+  td { padding: 11px 14px; font-size: 13px; color: var(--text); vertical-align: middle; }
+  td.auto { color: var(--muted); font-style: italic; }
+  td.actions { display: flex; gap: 6px; align-items: center; }
+
+  /* Platform badges */
+  .badge {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .badge-facebook { background: #e7f0fd; color: #1877f2; }
+  .badge-instagram { background: #fce9f3; color: #c13584; }
+  .badge-google { background: #fef3e2; color: #ea4335; }
+  .badge-linkedin { background: #e8f3fb; color: #0a66c2; }
+
+  /* Status badges */
+  .status {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .status-active { background: #dcfce7; color: #16a34a; }
+  .status-paused { background: #fef9c3; color: #a16207; }
+  .status-completed { background: #f3f4f6; color: #4b5563; }
+
+  /* ── Modal ── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.4);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border-radius: 14px;
+    box-shadow: 0 8px 40px rgba(0,0,0,.18);
+    width: 100%;
+    max-width: 660px;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: slideUp .2s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(24px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px 0;
+    margin-bottom: 18px;
+  }
+  .modal-title { font-size: 17px; font-weight: 700; }
+  .modal-close {
+    background: none;
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+    color: var(--muted);
+    line-height: 1;
+    padding: 2px 6px;
+    border-radius: 6px;
+  }
+  .modal-close:hover { background: var(--bg); color: var(--text); }
+  .modal-body { padding: 0 24px 24px; }
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .form-grid .full { grid-column: 1 / -1; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
+  .form-group input,
+  .form-group select {
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 13px;
+    background: var(--surface);
+    color: var(--text);
+    outline: none;
+    transition: border-color .15s;
+    width: 100%;
+  }
+  .form-group input:focus,
+  .form-group select:focus { border-color: var(--accent); }
+  .form-hint { font-size: 11px; color: var(--muted); }
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  /* ── Empty state ── */
+  .empty {
+    text-align: center;
+    padding: 56px 24px;
+    color: var(--muted);
+  }
+  .empty svg { opacity: .3; margin-bottom: 12px; }
+  .empty p { font-size: 15px; margin-bottom: 6px; font-weight: 600; }
+  .empty span { font-size: 13px; }
+
+  /* ── Footer ── */
+  footer {
+    text-align: center;
+    padding: 28px;
+    color: var(--muted);
+    font-size: 12px;
+    border-top: 1px solid var(--border);
+    margin-top: 40px;
+  }
+  footer span { color: var(--accent); font-weight: 600; }
+
+  @media (max-width: 640px) {
+    main { padding: 16px; }
+    .form-grid { grid-template-columns: 1fr; }
+    .form-grid .full { grid-column: 1; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div style="display:flex;align-items:center;gap:14px;">
+    <div class="logo">
+      CWI AI <span class="logo-badge">ADS</span>
+    </div>
+    <span class="tagline">Paid Campaign Tracker</span>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center;">
+    <button class="btn btn-secondary btn-sm" onclick="exportCSV()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Export CSV
+    </button>
+    <button class="btn btn-primary" onclick="openModal()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add Campaign
+    </button>
+  </div>
+</header>
+
+<main>
+
+  <!-- Dashboard -->
+  <div class="dash-grid" id="dashGrid">
+    <div class="dash-card">
+      <div class="label">Total Ad Spend</div>
+      <div class="value accent" id="d-spend">$0</div>
+      <div class="sub">across all platforms</div>
+    </div>
+    <div class="dash-card">
+      <div class="label">Total Leads</div>
+      <div class="value" id="d-leads">0</div>
+      <div class="sub">from paid campaigns</div>
+    </div>
+    <div class="dash-card">
+      <div class="label">Blended CPL</div>
+      <div class="value" id="d-cpl">$0</div>
+      <div class="sub">cost per lead</div>
+    </div>
+    <div class="dash-card">
+      <div class="label">Clients Won</div>
+      <div class="value" id="d-clients">0</div>
+      <div class="sub">from ad campaigns</div>
+    </div>
+    <div class="dash-card">
+      <div class="label">Total Revenue</div>
+      <div class="value" id="d-revenue">$0</div>
+      <div class="sub">attributed to ads</div>
+    </div>
+    <div class="dash-card">
+      <div class="label">Blended ROAS</div>
+      <div class="value accent" id="d-roas">0x</div>
+      <div class="sub">return on ad spend</div>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <select id="filterPlatform" onchange="renderTable()">
+      <option value="">All Platforms</option>
+      <option value="Facebook/Instagram">Facebook / Instagram</option>
+      <option value="Google">Google</option>
+      <option value="LinkedIn">LinkedIn</option>
+    </select>
+    <select id="filterStatus" onchange="renderTable()">
+      <option value="">All Statuses</option>
+      <option value="Active">Active</option>
+      <option value="Paused">Paused</option>
+      <option value="Completed">Completed</option>
+    </select>
+    <input type="text" id="searchBox" placeholder="Search campaigns…" oninput="renderTable()" style="min-width:200px;">
+    <div class="spacer"></div>
+    <span id="campCount" style="font-size:12px;color:var(--muted);"></span>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th onclick="sortBy('name')" data-col="name">Campaign <span class="sort-arrow">↕</span></th>
+          <th onclick="sortBy('platform')" data-col="platform">Platform <span class="sort-arrow">↕</span></th>
+          <th onclick="sortBy('startDate')" data-col="startDate">Start <span class="sort-arrow">↕</span></th>
+          <th onclick="sortBy('endDate')" data-col="endDate">End <span class="sort-arrow">↕</span></th>
+          <th onclick="sortBy('budget')" data-col="budget">Budget <span class="sort-arrow">↕</span></th>
+          <th onclick="sortBy('spent')" data-col="spent">Spent <span class="sort-arrow">↕</span></th>
+          <th onclick="sortBy('impressions')" data-col="impressions">Impr. <span class="sort-arrow">↕</span></th>
+          <th onclick="sortBy('clicks')" data-col="clicks">Clicks <span class="sort-arrow">↕</span></th>
+          <th onclick="sortBy('ctr')" data-col="ctr">CTR% <span class="sort-arrow">↕</span></th>
+          <th onclick="sortBy('leads')" data-col="leads">Leads <span class="sort-arrow">↕</span></th>
+          <th onclick="sortBy('cpl')" data-col="cpl">CPL <span class="sort-arrow">↕</span></th>
+          <th onclick="sortBy('demos')" data-col="demos">Demos <span class="sort-arrow">↕</span></th>
+          <th onclick="sortBy('cpa')" data-col="cpa">CPA <span class="sort-arrow">↕</span></th>
+          <th onclick="sortBy('clients')" data-col="clients">Clients <span class="sort-arrow">↕</span></th>
+          <th onclick="sortBy('revenue')" data-col="revenue">Revenue <span class="sort-arrow">↕</span></th>
+          <th onclick="sortBy('roas')" data-col="roas" class="sorted">ROAS <span class="sort-arrow">↓</span></th>
+          <th onclick="sortBy('status')" data-col="status">Status <span class="sort-arrow">↕</span></th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+    <div id="emptyState" class="empty" style="display:none;">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      <p>No campaigns found</p>
+      <span>Try adjusting your filters or add a new campaign.</span>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  CWI AI — <span>Paid Campaign Tracker</span> &nbsp;·&nbsp; Data stored in browser localStorage &nbsp;·&nbsp; Sorted by ROAS ↓
+</footer>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay" onclick="overlayClick(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">Add Campaign</div>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editId">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label for="f-name">Campaign Name *</label>
+          <input type="text" id="f-name" placeholder="e.g. Facebook Free Audit Offer">
+        </div>
+        <div class="form-group">
+          <label for="f-platform">Platform *</label>
+          <select id="f-platform">
+            <option value="">Select platform…</option>
+            <option value="Facebook/Instagram">Facebook / Instagram</option>
+            <option value="Google">Google</option>
+            <option value="LinkedIn">LinkedIn</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="f-status">Status</label>
+          <select id="f-status">
+            <option value="Active">Active</option>
+            <option value="Paused">Paused</option>
+            <option value="Completed">Completed</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="f-startDate">Start Date</label>
+          <input type="date" id="f-startDate">
+        </div>
+        <div class="form-group">
+          <label for="f-endDate">End Date</label>
+          <input type="date" id="f-endDate">
+        </div>
+        <div class="form-group">
+          <label for="f-budget">Budget ($)</label>
+          <input type="number" id="f-budget" min="0" step="0.01" placeholder="0.00">
+        </div>
+        <div class="form-group">
+          <label for="f-spent">Spent ($)</label>
+          <input type="number" id="f-spent" min="0" step="0.01" placeholder="0.00">
+        </div>
+        <div class="form-group">
+          <label for="f-impressions">Impressions</label>
+          <input type="number" id="f-impressions" min="0" step="1" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label for="f-clicks">Clicks</label>
+          <input type="number" id="f-clicks" min="0" step="1" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label for="f-ctr-display">CTR %</label>
+          <input type="text" id="f-ctr-display" placeholder="Auto-calculated" disabled style="background:#f9fafb;color:var(--muted);">
+          <span class="form-hint">Auto = Clicks ÷ Impressions × 100</span>
+        </div>
+        <div class="form-group">
+          <label for="f-leads">Leads Generated</label>
+          <input type="number" id="f-leads" min="0" step="1" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label for="f-cpl-display">CPL $ (auto)</label>
+          <input type="text" id="f-cpl-display" placeholder="Auto-calculated" disabled style="background:#f9fafb;color:var(--muted);">
+          <span class="form-hint">Auto = Spent ÷ Leads</span>
+        </div>
+        <div class="form-group">
+          <label for="f-demos">Demos Booked</label>
+          <input type="number" id="f-demos" min="0" step="1" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label for="f-cpa-display">CPA $ (auto)</label>
+          <input type="text" id="f-cpa-display" placeholder="Auto-calculated" disabled style="background:#f9fafb;color:var(--muted);">
+          <span class="form-hint">Auto = Spent ÷ Demos</span>
+        </div>
+        <div class="form-group">
+          <label for="f-clients">Clients Won</label>
+          <input type="number" id="f-clients" min="0" step="1" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label for="f-revenue">Revenue Generated ($)</label>
+          <input type="number" id="f-revenue" min="0" step="0.01" placeholder="0.00">
+        </div>
+        <div class="form-group full">
+          <label for="f-roas-display">ROAS (auto)</label>
+          <input type="text" id="f-roas-display" placeholder="Auto-calculated" disabled style="background:#f9fafb;color:var(--muted);">
+          <span class="form-hint">Auto = Revenue ÷ Spent</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveCampaign()">Save Campaign</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Data ──────────────────────────────────────────────────────────────────────
+const STORAGE_KEY = 'cwi_ad_campaigns_v1';
+
+const defaultCampaigns = [
+  {
+    id: 'c1',
+    name: 'Facebook Free Audit Offer',
+    platform: 'Facebook/Instagram',
+    startDate: '2026-05-01',
+    endDate: '2026-05-31',
+    budget: 300,
+    spent: 187,
+    impressions: 12400,
+    clicks: 89,
+    leads: 7,
+    demos: 2,
+    clients: 1,
+    revenue: 397,
+    status: 'Completed'
+  },
+  {
+    id: 'c2',
+    name: 'Google Local Search',
+    platform: 'Google',
+    startDate: '2026-05-15',
+    endDate: '2026-06-15',
+    budget: 200,
+    spent: 200,
+    impressions: 3200,
+    clicks: 145,
+    leads: 4,
+    demos: 1,
+    clients: 0,
+    revenue: 0,
+    status: 'Completed'
+  }
+];
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return defaultCampaigns.map(c => ({...c}));
+}
+
+function saveData(data) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+let campaigns = loadData();
+let sortCol = 'roas';
+let sortDir = 'desc';
+
+// ── Computed fields ────────────────────────────────────────────────────────────
+function compute(c) {
+  const spent = parseFloat(c.spent) || 0;
+  const impressions = parseInt(c.impressions) || 0;
+  const clicks = parseInt(c.clicks) || 0;
+  const leads = parseInt(c.leads) || 0;
+  const demos = parseInt(c.demos) || 0;
+  const revenue = parseFloat(c.revenue) || 0;
+
+  const ctr = impressions > 0 ? (clicks / impressions * 100) : 0;
+  const cpl = leads > 0 ? (spent / leads) : 0;
+  const cpa = demos > 0 ? (spent / demos) : 0;
+  const roas = spent > 0 ? (revenue / spent) : 0;
+
+  return { ...c, spent, impressions, clicks, leads, demos, revenue, ctr, cpl, cpa, roas };
+}
+
+// ── Render Dashboard ──────────────────────────────────────────────────────────
+function renderDash() {
+  const all = campaigns.map(compute);
+  const totalSpent = all.reduce((s, c) => s + c.spent, 0);
+  const totalLeads = all.reduce((s, c) => s + c.leads, 0);
+  const totalClients = all.reduce((s, c) => s + (parseInt(c.clients) || 0), 0);
+  const totalRevenue = all.reduce((s, c) => s + c.revenue, 0);
+  const blendedCPL = totalLeads > 0 ? totalSpent / totalLeads : 0;
+  const blendedROAS = totalSpent > 0 ? totalRevenue / totalSpent : 0;
+
+  document.getElementById('d-spend').textContent = fmt$(totalSpent);
+  document.getElementById('d-leads').textContent = totalLeads.toLocaleString();
+  document.getElementById('d-cpl').textContent = fmt$(blendedCPL);
+  document.getElementById('d-clients').textContent = totalClients.toLocaleString();
+  document.getElementById('d-revenue').textContent = fmt$(totalRevenue);
+  document.getElementById('d-roas').textContent = blendedROAS.toFixed(2) + 'x';
+}
+
+// ── Render Table ──────────────────────────────────────────────────────────────
+function renderTable() {
+  const filterPlatform = document.getElementById('filterPlatform').value;
+  const filterStatus = document.getElementById('filterStatus').value;
+  const search = document.getElementById('searchBox').value.trim().toLowerCase();
+
+  let rows = campaigns.map(compute).filter(c => {
+    if (filterPlatform && c.platform !== filterPlatform) return false;
+    if (filterStatus && c.status !== filterStatus) return false;
+    if (search && !c.name.toLowerCase().includes(search) && !c.platform.toLowerCase().includes(search)) return false;
+    return true;
+  });
+
+  // Sort
+  rows.sort((a, b) => {
+    let va = a[sortCol], vb = b[sortCol];
+    if (typeof va === 'string') va = va.toLowerCase();
+    if (typeof vb === 'string') vb = vb.toLowerCase();
+    if (va < vb) return sortDir === 'asc' ? -1 : 1;
+    if (va > vb) return sortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  // Best performer by ROAS
+  const bestId = rows.length > 0
+    ? rows.reduce((best, c) => c.roas > best.roas ? c : best, rows[0]).id
+    : null;
+
+  const tbody = document.getElementById('tableBody');
+  const empty = document.getElementById('emptyState');
+
+  document.getElementById('campCount').textContent = rows.length
+    ? rows.length + ' campaign' + (rows.length !== 1 ? 's' : '')
+    : '';
+
+  if (rows.length === 0) {
+    tbody.innerHTML = '';
+    empty.style.display = '';
+    return;
+  }
+  empty.style.display = 'none';
+
+  tbody.innerHTML = rows.map(c => {
+    const isBest = c.id === bestId && c.roas > 0;
+    return `
+    <tr class="${isBest ? 'best-row' : ''}">
+      <td class="name-cell">${esc(c.name)}${isBest ? ' <span title="Best ROAS" style="font-size:11px;background:#16a34a;color:#fff;border-radius:20px;padding:1px 6px;font-weight:700;font-style:normal;">★ Best</span>' : ''}</td>
+      <td>${platformBadge(c.platform)}</td>
+      <td>${c.startDate || '—'}</td>
+      <td>${c.endDate || '—'}</td>
+      <td>${fmt$(c.budget)}</td>
+      <td>${fmt$(c.spent)}</td>
+      <td>${(parseInt(c.impressions)||0).toLocaleString()}</td>
+      <td>${(parseInt(c.clicks)||0).toLocaleString()}</td>
+      <td class="auto">${c.ctr.toFixed(2)}%</td>
+      <td>${(parseInt(c.leads)||0).toLocaleString()}</td>
+      <td class="auto">${c.cpl > 0 ? fmt$(c.cpl) : '—'}</td>
+      <td>${(parseInt(c.demos)||0).toLocaleString()}</td>
+      <td class="auto">${c.cpa > 0 ? fmt$(c.cpa) : '—'}</td>
+      <td>${(parseInt(c.clients)||0).toLocaleString()}</td>
+      <td>${fmt$(c.revenue)}</td>
+      <td class="auto" style="font-weight:600;">${c.roas > 0 ? c.roas.toFixed(2) + 'x' : '—'}</td>
+      <td>${statusBadge(c.status)}</td>
+      <td>
+        <div class="actions">
+          <button class="btn btn-secondary btn-sm" onclick="editCampaign('${c.id}')">Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteCampaign('${c.id}')">Delete</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  // Update sort arrow indicators
+  document.querySelectorAll('thead th[data-col]').forEach(th => {
+    th.classList.toggle('sorted', th.dataset.col === sortCol);
+    const arrow = th.querySelector('.sort-arrow');
+    if (th.dataset.col === sortCol) {
+      arrow.textContent = sortDir === 'asc' ? '↑' : '↓';
+    } else {
+      arrow.textContent = '↕';
+    }
+  });
+}
+
+function platformBadge(p) {
+  const map = {
+    'Facebook/Instagram': ['badge-facebook', 'Facebook / IG'],
+    'Google': ['badge-google', 'Google'],
+    'LinkedIn': ['badge-linkedin', 'LinkedIn']
+  };
+  const [cls, label] = map[p] || ['', p];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+
+function statusBadge(s) {
+  const map = {
+    'Active': 'status-active',
+    'Paused': 'status-paused',
+    'Completed': 'status-completed'
+  };
+  return `<span class="status ${map[s] || ''}">${s}</span>`;
+}
+
+// ── Sort ──────────────────────────────────────────────────────────────────────
+function sortBy(col) {
+  if (sortCol === col) {
+    sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortCol = col;
+    sortDir = col === 'roas' ? 'desc' : 'asc';
+  }
+  renderTable();
+}
+
+// ── Modal ─────────────────────────────────────────────────────────────────────
+function openModal(id) {
+  document.getElementById('modalTitle').textContent = id ? 'Edit Campaign' : 'Add Campaign';
+  document.getElementById('editId').value = id || '';
+  clearForm();
+  if (id) {
+    const c = campaigns.find(x => x.id === id);
+    if (c) populateForm(c);
+  }
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+
+function overlayClick(e) {
+  if (e.target === document.getElementById('modalOverlay')) closeModal();
+}
+
+function clearForm() {
+  ['name','platform','status','startDate','endDate','budget','spent',
+   'impressions','clicks','leads','demos','clients','revenue'].forEach(f => {
+    const el = document.getElementById('f-' + f);
+    if (el) el.value = '';
+  });
+  document.getElementById('f-status').value = 'Active';
+  updateAutoFields();
+}
+
+function populateForm(c) {
+  document.getElementById('f-name').value = c.name || '';
+  document.getElementById('f-platform').value = c.platform || '';
+  document.getElementById('f-status').value = c.status || 'Active';
+  document.getElementById('f-startDate').value = c.startDate || '';
+  document.getElementById('f-endDate').value = c.endDate || '';
+  document.getElementById('f-budget').value = c.budget || '';
+  document.getElementById('f-spent').value = c.spent || '';
+  document.getElementById('f-impressions').value = c.impressions || '';
+  document.getElementById('f-clicks').value = c.clicks || '';
+  document.getElementById('f-leads').value = c.leads || '';
+  document.getElementById('f-demos').value = c.demos || '';
+  document.getElementById('f-clients').value = c.clients || '';
+  document.getElementById('f-revenue').value = c.revenue || '';
+  updateAutoFields();
+}
+
+function updateAutoFields() {
+  const spent = parseFloat(document.getElementById('f-spent').value) || 0;
+  const impressions = parseInt(document.getElementById('f-impressions').value) || 0;
+  const clicks = parseInt(document.getElementById('f-clicks').value) || 0;
+  const leads = parseInt(document.getElementById('f-leads').value) || 0;
+  const demos = parseInt(document.getElementById('f-demos').value) || 0;
+  const revenue = parseFloat(document.getElementById('f-revenue').value) || 0;
+
+  const ctr = impressions > 0 ? (clicks / impressions * 100).toFixed(2) + '%' : '—';
+  const cpl = leads > 0 ? fmt$(spent / leads) : '—';
+  const cpa = demos > 0 ? fmt$(spent / demos) : '—';
+  const roas = spent > 0 ? (revenue / spent).toFixed(2) + 'x' : '—';
+
+  document.getElementById('f-ctr-display').value = ctr;
+  document.getElementById('f-cpl-display').value = cpl;
+  document.getElementById('f-cpa-display').value = cpa;
+  document.getElementById('f-roas-display').value = roas;
+}
+
+// Attach live update to form inputs
+['f-spent','f-impressions','f-clicks','f-leads','f-demos','f-revenue'].forEach(id => {
+  document.getElementById(id).addEventListener('input', updateAutoFields);
+});
+
+function saveCampaign() {
+  const name = document.getElementById('f-name').value.trim();
+  const platform = document.getElementById('f-platform').value;
+  if (!name) { alert('Please enter a campaign name.'); return; }
+  if (!platform) { alert('Please select a platform.'); return; }
+
+  const data = {
+    id: document.getElementById('editId').value || ('c' + Date.now()),
+    name,
+    platform,
+    status: document.getElementById('f-status').value,
+    startDate: document.getElementById('f-startDate').value,
+    endDate: document.getElementById('f-endDate').value,
+    budget: parseFloat(document.getElementById('f-budget').value) || 0,
+    spent: parseFloat(document.getElementById('f-spent').value) || 0,
+    impressions: parseInt(document.getElementById('f-impressions').value) || 0,
+    clicks: parseInt(document.getElementById('f-clicks').value) || 0,
+    leads: parseInt(document.getElementById('f-leads').value) || 0,
+    demos: parseInt(document.getElementById('f-demos').value) || 0,
+    clients: parseInt(document.getElementById('f-clients').value) || 0,
+    revenue: parseFloat(document.getElementById('f-revenue').value) || 0
+  };
+
+  const idx = campaigns.findIndex(c => c.id === data.id);
+  if (idx >= 0) {
+    campaigns[idx] = data;
+  } else {
+    campaigns.push(data);
+  }
+
+  saveData(campaigns);
+  closeModal();
+  renderDash();
+  renderTable();
+}
+
+function editCampaign(id) { openModal(id); }
+
+function deleteCampaign(id) {
+  const c = campaigns.find(x => x.id === id);
+  if (!c) return;
+  if (!confirm(`Delete campaign "${c.name}"? This cannot be undone.`)) return;
+  campaigns = campaigns.filter(x => x.id !== id);
+  saveData(campaigns);
+  renderDash();
+  renderTable();
+}
+
+// ── Export CSV ────────────────────────────────────────────────────────────────
+function exportCSV() {
+  const all = campaigns.map(compute);
+  const headers = ['Campaign Name','Platform','Start Date','End Date','Budget','Spent',
+    'Impressions','Clicks','CTR %','Leads','CPL','Demos','CPA','Clients Won',
+    'Revenue','ROAS','Status'];
+
+  const rows = all.map(c => [
+    `"${c.name.replace(/"/g,'""')}"`,
+    c.platform,
+    c.startDate,
+    c.endDate,
+    c.budget.toFixed(2),
+    c.spent.toFixed(2),
+    c.impressions,
+    c.clicks,
+    c.ctr.toFixed(2) + '%',
+    c.leads,
+    c.cpl.toFixed(2),
+    c.demos,
+    c.cpa.toFixed(2),
+    c.clients,
+    c.revenue.toFixed(2),
+    c.roas.toFixed(2) + 'x',
+    c.status
+  ].join(','));
+
+  const csv = [headers.join(','), ...rows].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'cwi-ad-campaigns-' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function fmt$(n) {
+  return '$' + (parseFloat(n)||0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function esc(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+renderDash();
+renderTable();
+</script>
+</body>
+</html>

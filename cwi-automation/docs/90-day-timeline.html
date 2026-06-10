@@ -1,0 +1,1695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="CWI internal tool: CWI AI LLC — 90-Day Launch Timeline. Internal use only — CWI Compute With Imagination.">
+<title>CWI AI LLC — 90-Day Launch Timeline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:           #0A0A0C;
+  --tile:         #0E0E11;
+  --surface:      #141418;
+  --surface2:     #1C1C22;
+  --border:       rgba(255,255,255,0.09);
+  --border-solid: #2A2A34;
+  --accent:       #FF5A1F;
+  --accent-hover: #FF8A3D;
+  --accent-dim:   rgba(255,90,31,0.15);
+  --text:         #F2F2F4;
+  --muted:        #85858E;
+  --green:        #22C55E;
+  --green-bg:     rgba(34,197,94,0.12);
+  --yellow:       #EAB308;
+  --yellow-bg:    rgba(234,179,8,0.12);
+  --red:          #EF4444;
+  --red-bg:       rgba(239,68,68,0.12);
+  --ph1:          rgba(255,90,31,0.18);
+  --ph2:          rgba(59,130,246,0.18);
+  --ph3:          rgba(34,197,94,0.18);
+  --ph1-accent:   #FF5A1F;
+  --ph2-accent:   #3B82F6;
+  --ph3-accent:   #22C55E;
+}
+
+html { font-size: 16px; scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Instrument Sans', sans-serif;
+  min-height: 100vh;
+  line-height: 1.55;
+}
+
+/* ── HEADER ── */
+.header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border-solid);
+  padding: 1.25rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+}
+
+.header-left { display: flex; align-items: center; gap: 0.75rem; }
+
+.logo-mark {
+  width: 38px; height: 38px;
+  background: var(--accent);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Sora', sans-serif;
+  font-weight: 700;
+  font-size: 0.75rem;
+  color: #fff;
+  letter-spacing: 0.08em;
+  flex-shrink: 0;
+}
+
+.header-title {
+  font-family: 'Sora', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.header-sub {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.btn {
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.45rem 1rem;
+  border-radius: 6px;
+  border: 1px solid var(--border-solid);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  background: var(--tile);
+  color: var(--text);
+  white-space: nowrap;
+}
+.btn:hover { border-color: var(--accent); color: var(--accent); }
+.btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.btn-accent {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.btn-accent:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: #fff; }
+
+/* ── HERO ── */
+.hero {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2.5rem 2rem 1.5rem;
+}
+
+.hero-badge {
+  display: inline-block;
+  background: var(--accent-dim);
+  color: var(--accent);
+  font-family: 'Sora', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.3rem 0.75rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.hero h1 {
+  font-family: 'Sora', sans-serif;
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  margin-bottom: 0.75rem;
+}
+
+.hero h1 span { color: var(--accent); }
+
+.hero-desc {
+  color: var(--muted);
+  font-size: 0.95rem;
+  max-width: 640px;
+  margin-bottom: 1.5rem;
+}
+
+/* ── PHASE SUMMARY STRIP ── */
+.phase-strip {
+  max-width: 1200px;
+  margin: 0 auto 2rem;
+  padding: 0 2rem;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.phase-card {
+  background: var(--tile);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.phase-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+.phase-card.ph1::before { background: var(--ph1-accent); }
+.phase-card.ph2::before { background: var(--ph2-accent); }
+.phase-card.ph3::before { background: var(--ph3-accent); }
+
+.phase-card .phase-num {
+  font-family: 'Sora', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 0.35rem;
+}
+.ph1 .phase-num { color: var(--ph1-accent); }
+.ph2 .phase-num { color: var(--ph2-accent); }
+.ph3 .phase-num { color: var(--ph3-accent); }
+
+.phase-card h3 {
+  font-family: 'Sora', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.phase-card p { font-size: 0.82rem; color: var(--muted); }
+
+.phase-progress {
+  margin-top: 0.85rem;
+  height: 4px;
+  background: var(--border-solid);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.phase-progress-bar {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+.ph1 .phase-progress-bar { background: var(--ph1-accent); }
+.ph2 .phase-progress-bar { background: var(--ph2-accent); }
+.ph3 .phase-progress-bar { background: var(--ph3-accent); }
+
+.phase-progress-label {
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-top: 0.4rem;
+  text-align: right;
+}
+
+/* ── VIEW TOGGLE ── */
+.view-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem 4rem;
+}
+
+/* ── WEEK-BY-WEEK VIEW ── */
+.phase-section { margin-bottom: 3rem; }
+
+.phase-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.phase-dot {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.ph1 .phase-dot { background: var(--ph1-accent); }
+.ph2 .phase-dot { background: var(--ph2-accent); }
+.ph3 .phase-dot { background: var(--ph3-accent); }
+
+.phase-header h2 {
+  font-family: 'Sora', sans-serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+.phase-header .phase-goal {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-top: 0.1rem;
+}
+
+.weeks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 1rem;
+}
+
+.week-card {
+  background: var(--tile);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.4rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.week-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.week-num {
+  font-family: 'Sora', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.week-title {
+  font-family: 'Sora', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-top: 0.1rem;
+}
+
+.week-check-count {
+  font-size: 0.72rem;
+  color: var(--muted);
+  background: var(--surface2);
+  padding: 0.2rem 0.5rem;
+  border-radius: 20px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.task-list { list-style: none; display: flex; flex-direction: column; gap: 0.4rem; }
+
+.task-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  cursor: pointer;
+  padding: 0.25rem 0.35rem;
+  border-radius: 6px;
+  transition: background 0.1s;
+}
+.task-item:hover { background: var(--surface2); }
+
+.task-cb {
+  width: 16px; height: 16px;
+  border: 1.5px solid var(--border-solid);
+  border-radius: 4px;
+  flex-shrink: 0;
+  margin-top: 0.15rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+
+.task-item.done .task-cb {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.task-item.done .task-cb::after {
+  content: '';
+  width: 8px; height: 5px;
+  border-left: 2px solid #fff;
+  border-bottom: 2px solid #fff;
+  transform: rotate(-45deg) translateY(-1px);
+  display: block;
+}
+
+.task-text {
+  font-size: 0.84rem;
+  color: var(--text);
+  line-height: 1.45;
+  transition: color 0.15s;
+}
+.task-item.done .task-text {
+  color: var(--muted);
+  text-decoration: line-through;
+  text-decoration-color: var(--border-solid);
+}
+
+.milestone-bar {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.65rem 0.9rem;
+  background: var(--accent-dim);
+  border-radius: 8px;
+  border-left: 3px solid var(--accent);
+}
+
+.milestone-bar .ms-icon {
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  margin-top: 0.05rem;
+}
+
+.milestone-bar .ms-text {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+/* ── KANBAN VIEW ── */
+.kanban-board {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.kanban-col {
+  background: var(--tile);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.kanban-col-header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border-solid);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.kanban-col-title {
+  font-family: 'Sora', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.col-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+}
+.col-todo .col-dot { background: var(--muted); }
+.col-inprogress .col-dot { background: var(--yellow); }
+.col-done .col-dot { background: var(--green); }
+
+.kanban-count {
+  font-size: 0.72rem;
+  color: var(--muted);
+  background: var(--surface2);
+  padding: 0.15rem 0.5rem;
+  border-radius: 20px;
+}
+
+.kanban-cards {
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  min-height: 120px;
+}
+
+.kanban-card {
+  background: var(--surface);
+  border: 1px solid var(--border-solid);
+  border-radius: 10px;
+  padding: 0.8rem 1rem;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.1s;
+}
+.kanban-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+
+.kcard-week {
+  font-size: 0.65rem;
+  color: var(--muted);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 0.25rem;
+}
+
+.kcard-title {
+  font-family: 'Sora', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 700;
+  margin-bottom: 0.4rem;
+}
+
+.kcard-milestone {
+  font-size: 0.75rem;
+  color: var(--accent);
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.kcard-progress-wrap {
+  margin-top: 0.6rem;
+  height: 3px;
+  background: var(--border-solid);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.kcard-progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+.kcard-progress-label {
+  font-size: 0.68rem;
+  color: var(--muted);
+  margin-top: 0.25rem;
+}
+
+.kcard-phase-dot {
+  display: inline-block;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  margin-right: 0.3rem;
+  vertical-align: middle;
+}
+
+/* ── TABLES SECTION ── */
+.tables-section {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem 4rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.table-card {
+  background: var(--tile);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.table-card-header {
+  padding: 1.1rem 1.4rem;
+  border-bottom: 1px solid var(--border-solid);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.table-card-header h3 {
+  font-family: 'Sora', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.table-accent-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.84rem;
+}
+
+.data-table th {
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.65rem 1.2rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-solid);
+}
+
+.data-table td {
+  padding: 0.7rem 1.2rem;
+  border-bottom: 1px solid var(--border-solid);
+  vertical-align: top;
+  line-height: 1.45;
+}
+
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tbody tr:hover { background: var(--surface2); }
+
+.revenue-amount {
+  font-family: 'Sora', sans-serif;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.risk-signal { color: var(--yellow); font-weight: 500; }
+.risk-response { color: var(--muted); font-size: 0.8rem; }
+
+/* ── KPIs SECTION ── */
+.kpi-section {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem 2rem;
+}
+
+.kpi-section h2 {
+  font-family: 'Sora', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.kpi-chip {
+  background: var(--tile);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.9rem 1.1rem;
+}
+
+.kpi-chip .kpi-label {
+  font-size: 0.72rem;
+  color: var(--muted);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 0.3rem;
+}
+
+.kpi-chip .kpi-target {
+  font-family: 'Sora', sans-serif;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+/* ── SECTION DIVIDER ── */
+.section-divider {
+  max-width: 1200px;
+  margin: 0 auto 1.5rem;
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.section-divider h2 {
+  font-family: 'Sora', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.divider-line {
+  flex: 1;
+  height: 1px;
+  background: var(--border-solid);
+}
+
+/* ── FOOTER ── */
+.footer {
+  background: var(--surface);
+  border-top: 1px solid var(--border-solid);
+  padding: 1.5rem 2rem;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.footer a { color: var(--accent); text-decoration: none; }
+.footer a:hover { color: var(--accent-hover); }
+.footer strong { color: var(--text); }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  color: var(--text);
+  padding: 0.65rem 1.1rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.25s ease;
+  z-index: 999;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .phase-strip { grid-template-columns: 1fr; }
+  .kanban-board { grid-template-columns: 1fr; }
+  .tables-section { grid-template-columns: 1fr; }
+  .weeks-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+  .header { padding: 1rem; }
+  .hero { padding: 1.5rem 1rem 1rem; }
+  .view-container, .tables-section, .kpi-section, .section-divider { padding-left: 1rem; padding-right: 1rem; }
+  .phase-strip { padding: 0 1rem; }
+}
+
+/* ── PRINT ── */
+@media print {
+  .header-controls, .toast { display: none !important; }
+  body { background: #fff; color: #000; }
+  .week-card, .table-card, .phase-card, .kpi-chip { background: #f5f5f5; border: 1px solid #ddd; }
+  .header { position: static; background: #f0f0f0; }
+  .view-btn-group { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-left">
+    <div class="logo-mark">CWI</div>
+    <div>
+      <div class="header-title">CWI AI LLC</div>
+      <div class="header-sub">90-Day Launch Timeline</div>
+    </div>
+  </div>
+  <div class="header-controls">
+    <div style="display:flex;gap:0.4rem;align-items:center;margin-right:0.5rem;">
+      <button class="btn active" id="btn-list" onclick="setView('list')">Week View</button>
+      <button class="btn" id="btn-kanban" onclick="setView('kanban')">Kanban</button>
+    </div>
+    <button class="btn btn-accent" onclick="resetAll()">Reset Checks</button>
+  </div>
+</header>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge">90-Day Roadmap</div>
+  <h1>Zero to <span>First Paying Clients</span></h1>
+  <p class="hero-desc">A week-by-week action plan for launching CWI AI's local automation service — from stack setup to 3+ clients on retainer. ~5 hours/week budget.</p>
+</div>
+
+<!-- PHASE SUMMARY STRIP -->
+<div class="phase-strip">
+  <div class="phase-card ph1">
+    <div class="phase-num">Phase 1 &mdash; Weeks 1&ndash;3</div>
+    <h3>Foundation</h3>
+    <p>Set up tools, build the first chatbot demo, and prepare outreach sequences.</p>
+    <div class="phase-progress">
+      <div class="phase-progress-bar" id="prog-ph1" style="width:0%"></div>
+    </div>
+    <div class="phase-progress-label" id="prog-ph1-label">0% complete</div>
+  </div>
+  <div class="phase-card ph2">
+    <div class="phase-num">Phase 2 &mdash; Weeks 4&ndash;8</div>
+    <h3>Outreach &amp; First Clients</h3>
+    <p>Launch email sequences, run discovery calls, close and onboard client #1.</p>
+    <div class="phase-progress">
+      <div class="phase-progress-bar" id="prog-ph2" style="width:0%"></div>
+    </div>
+    <div class="phase-progress-label" id="prog-ph2-label">0% complete</div>
+  </div>
+  <div class="phase-card ph3">
+    <div class="phase-num">Phase 3 &mdash; Weeks 9&ndash;12</div>
+    <h3>Scale to 3&ndash;5 Clients</h3>
+    <p>Close clients 2 and 3, double outreach volume, and plan the next 90 days.</p>
+    <div class="phase-progress">
+      <div class="phase-progress-bar" id="prog-ph3" style="width:0%"></div>
+    </div>
+    <div class="phase-progress-label" id="prog-ph3-label">0% complete</div>
+  </div>
+</div>
+
+<!-- MAIN VIEW AREA -->
+<div class="view-container">
+
+  <!-- WEEK-BY-WEEK LIST VIEW -->
+  <div id="view-list">
+
+    <!-- PHASE 1 -->
+    <div class="phase-section">
+      <div class="phase-header ph1">
+        <div class="phase-dot"></div>
+        <div>
+          <h2>Phase 1 &mdash; Foundation</h2>
+          <div class="phase-goal">Goal: Get tools set up, first chatbot working, outreach system ready.</div>
+        </div>
+      </div>
+      <div class="weeks-grid">
+
+        <!-- Week 1 -->
+        <div class="week-card" id="wcard-1">
+          <div class="week-header">
+            <div>
+              <div class="week-num">Week 1</div>
+              <div class="week-title">Stack Setup</div>
+            </div>
+            <div class="week-check-count" id="cc-1"></div>
+          </div>
+          <ul class="task-list" id="tasks-1">
+            <li class="task-item" data-phase="1" data-week="1" data-idx="0" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Create Make (make.com) account — start on free tier</span>
+            </li>
+            <li class="task-item" data-phase="1" data-week="1" data-idx="1" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Create Freshchat account — free tier (up to 10 agents)</span>
+            </li>
+            <li class="task-item" data-phase="1" data-week="1" data-idx="2" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Set up OpenRouter account, confirm API key works</span>
+            </li>
+            <li class="task-item" data-phase="1" data-week="1" data-idx="3" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Create Apollo.io account — free tier to start</span>
+            </li>
+            <li class="task-item" data-phase="1" data-week="1" data-idx="4" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Set up a dedicated business email domain for outreach (hello@[yourbusiness].com)</span>
+            </li>
+            <li class="task-item" data-phase="1" data-week="1" data-idx="5" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Set up email domain authentication: SPF, DKIM, DMARC records</span>
+            </li>
+            <li class="task-item" data-phase="1" data-week="1" data-idx="6" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Create a simple one-page website or landing page (can use free Carrd.co)</span>
+            </li>
+          </ul>
+          <div class="milestone-bar">
+            <span class="ms-icon">&#127937;</span>
+            <span class="ms-text">Milestone: All accounts created, API keys tested, domain authenticated</span>
+          </div>
+        </div>
+
+        <!-- Week 2 -->
+        <div class="week-card" id="wcard-2">
+          <div class="week-header">
+            <div>
+              <div class="week-num">Week 2</div>
+              <div class="week-title">First Build</div>
+            </div>
+            <div class="week-check-count" id="cc-2"></div>
+          </div>
+          <ul class="task-list" id="tasks-2">
+            <li class="task-item" data-phase="1" data-week="2" data-idx="0" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Build your first chatbot in Freshchat using your own business as the "client"</span>
+            </li>
+            <li class="task-item" data-phase="1" data-week="2" data-idx="1" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Connect it to Google Calendar via Make — test a full appointment booking flow end to end</span>
+            </li>
+            <li class="task-item" data-phase="1" data-week="2" data-idx="2" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Test edge cases: full calendar, off-script questions</span>
+            </li>
+            <li class="task-item" data-phase="1" data-week="2" data-idx="3" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Document exactly what you built — this becomes your standard "Starter" package template</span>
+            </li>
+            <li class="task-item" data-phase="1" data-week="2" data-idx="4" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Write your first client FAQ set (20–30 sample Q&amp;A for a plumber — reusable template)</span>
+            </li>
+          </ul>
+          <div class="milestone-bar">
+            <span class="ms-icon">&#127937;</span>
+            <span class="ms-text">Milestone: Working chatbot + scheduling demo you can show on a screen share</span>
+          </div>
+        </div>
+
+        <!-- Week 3 -->
+        <div class="week-card" id="wcard-3">
+          <div class="week-header">
+            <div>
+              <div class="week-num">Week 3</div>
+              <div class="week-title">Outreach Prep</div>
+            </div>
+            <div class="week-check-count" id="cc-3"></div>
+          </div>
+          <ul class="task-list" id="tasks-3">
+            <li class="task-item" data-phase="1" data-week="3" data-idx="0" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Scrape Southgate/Downriver area businesses from Google Maps (use Outscraper free tier)</span>
+            </li>
+            <li class="task-item" data-phase="1" data-week="3" data-idx="1" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Import list into Apollo — filter by industry: plumbers/HVAC and dentists</span>
+            </li>
+            <li class="task-item" data-phase="1" data-week="3" data-idx="2" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Personalize email templates from Outreach Email Sequences file per industry</span>
+            </li>
+            <li class="task-item" data-phase="1" data-week="3" data-idx="3" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Set up 3-email sequences in Apollo (one per industry: plumber, dentist, accountant)</span>
+            </li>
+            <li class="task-item" data-phase="1" data-week="3" data-idx="4" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Set up a simple calendar booking link (Calendly free tier) for discovery calls</span>
+            </li>
+            <li class="task-item" data-phase="1" data-week="3" data-idx="5" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Review and finalize your contract template, pricing calculator, and support playbook</span>
+            </li>
+          </ul>
+          <div class="milestone-bar">
+            <span class="ms-icon">&#127937;</span>
+            <span class="ms-text">Milestone: 150+ leads loaded in Apollo, sequences ready to launch, calendar link live</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- PHASE 2 -->
+    <div class="phase-section">
+      <div class="phase-header ph2">
+        <div class="phase-dot"></div>
+        <div>
+          <h2>Phase 2 &mdash; Outreach &amp; First Clients</h2>
+          <div class="phase-goal">Goal: Get your first paying client signed and live.</div>
+        </div>
+      </div>
+      <div class="weeks-grid">
+
+        <!-- Week 4 -->
+        <div class="week-card" id="wcard-4">
+          <div class="week-header">
+            <div>
+              <div class="week-num">Week 4</div>
+              <div class="week-title">Launch Outreach</div>
+            </div>
+            <div class="week-check-count" id="cc-4"></div>
+          </div>
+          <ul class="task-list" id="tasks-4">
+            <li class="task-item" data-phase="2" data-week="4" data-idx="0" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Send first batch: 25 emails per industry (75 total) — start small to test messaging</span>
+            </li>
+            <li class="task-item" data-phase="2" data-week="4" data-idx="1" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Monitor reply rates daily — target 8–12% reply rate</span>
+            </li>
+            <li class="task-item" data-phase="2" data-week="4" data-idx="2" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Respond to every reply within 24 hours</span>
+            </li>
+            <li class="task-item" data-phase="2" data-week="4" data-idx="3" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Book discovery calls with qualified leads (use qualification framework)</span>
+            </li>
+          </ul>
+          <div class="milestone-bar">
+            <span class="ms-icon">&#127937;</span>
+            <span class="ms-text">Milestone: First discovery calls booked</span>
+          </div>
+        </div>
+
+        <!-- Week 5 -->
+        <div class="week-card" id="wcard-5">
+          <div class="week-header">
+            <div>
+              <div class="week-num">Week 5</div>
+              <div class="week-title">Discovery Calls</div>
+            </div>
+            <div class="week-check-count" id="cc-5"></div>
+          </div>
+          <ul class="task-list" id="tasks-5">
+            <li class="task-item" data-phase="2" data-week="5" data-idx="0" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Run discovery calls — keep them to 20–30 minutes</span>
+            </li>
+            <li class="task-item" data-phase="2" data-week="5" data-idx="1" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Use the pricing calculator during each call to land on a monthly price</span>
+            </li>
+            <li class="task-item" data-phase="2" data-week="5" data-idx="2" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Send a follow-up email with one-page summary + price within 24 hours of each call</span>
+            </li>
+            <li class="task-item" data-phase="2" data-week="5" data-idx="3" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Continue outreach: send 25 more emails per industry</span>
+            </li>
+          </ul>
+          <div class="milestone-bar">
+            <span class="ms-icon">&#127937;</span>
+            <span class="ms-text">Milestone: First proposal sent</span>
+          </div>
+        </div>
+
+        <!-- Week 6 -->
+        <div class="week-card" id="wcard-6">
+          <div class="week-header">
+            <div>
+              <div class="week-num">Week 6</div>
+              <div class="week-title">Close First Client</div>
+            </div>
+            <div class="week-check-count" id="cc-6"></div>
+          </div>
+          <ul class="task-list" id="tasks-6">
+            <li class="task-item" data-phase="2" data-week="6" data-idx="0" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Follow up on open proposals (3-day and 7-day follow-up if no response)</span>
+            </li>
+            <li class="task-item" data-phase="2" data-week="6" data-idx="1" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Handle objections — use ROI math: "a single recovered appointment pays for this"</span>
+            </li>
+            <li class="task-item" data-phase="2" data-week="6" data-idx="2" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">When a client says yes: send contract via DocuSign/HelloSign, collect setup fee</span>
+            </li>
+            <li class="task-item" data-phase="2" data-week="6" data-idx="3" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Begin onboarding immediately once contract + setup fee received</span>
+            </li>
+            <li class="task-item" data-phase="2" data-week="6" data-idx="4" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Continue outreach (25 emails/industry)</span>
+            </li>
+          </ul>
+          <div class="milestone-bar">
+            <span class="ms-icon">&#127881;</span>
+            <span class="ms-text">Milestone: First client signed — setup fee collected</span>
+          </div>
+        </div>
+
+        <!-- Week 7 -->
+        <div class="week-card" id="wcard-7">
+          <div class="week-header">
+            <div>
+              <div class="week-num">Week 7</div>
+              <div class="week-title">First Client Go-Live</div>
+            </div>
+            <div class="week-check-count" id="cc-7"></div>
+          </div>
+          <ul class="task-list" id="tasks-7">
+            <li class="task-item" data-phase="2" data-week="7" data-idx="0" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Run onboarding: get access to their systems, build their chatbot, test end-to-end</span>
+            </li>
+            <li class="task-item" data-phase="2" data-week="7" data-idx="1" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Go live — monitor closely for the first 72 hours</span>
+            </li>
+            <li class="task-item" data-phase="2" data-week="7" data-idx="2" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Document anything that breaks or surprises you — update templates accordingly</span>
+            </li>
+            <li class="task-item" data-phase="2" data-week="7" data-idx="3" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Continue outreach, focus calls on second client</span>
+            </li>
+          </ul>
+          <div class="milestone-bar">
+            <span class="ms-icon">&#127881;</span>
+            <span class="ms-text">Milestone: First client live and paying monthly retainer</span>
+          </div>
+        </div>
+
+        <!-- Week 8 -->
+        <div class="week-card" id="wcard-8">
+          <div class="week-header">
+            <div>
+              <div class="week-num">Week 8</div>
+              <div class="week-title">Stabilize + Pipeline</div>
+            </div>
+            <div class="week-check-count" id="cc-8"></div>
+          </div>
+          <ul class="task-list" id="tasks-8">
+            <li class="task-item" data-phase="2" data-week="8" data-idx="0" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Check in with first client — how's it going? Any issues?</span>
+            </li>
+            <li class="task-item" data-phase="2" data-week="8" data-idx="1" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Collect a testimonial or early feedback quote (use it in future outreach)</span>
+            </li>
+            <li class="task-item" data-phase="2" data-week="8" data-idx="2" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Aim to have second client proposal out</span>
+            </li>
+            <li class="task-item" data-phase="2" data-week="8" data-idx="3" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Review which industry/email sequence got the best response rate — double down on that industry</span>
+            </li>
+          </ul>
+          <div class="milestone-bar">
+            <span class="ms-icon">&#127937;</span>
+            <span class="ms-text">Milestone: Second proposal sent, first client stable</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- PHASE 3 -->
+    <div class="phase-section">
+      <div class="phase-header ph3">
+        <div class="phase-dot"></div>
+        <div>
+          <h2>Phase 3 &mdash; Scale to 3&ndash;5 Clients</h2>
+          <div class="phase-goal">Goal: Get to 3 paying clients — enough to cover platform costs and prove the model.</div>
+        </div>
+      </div>
+      <div class="weeks-grid">
+
+        <!-- Week 9 -->
+        <div class="week-card" id="wcard-9">
+          <div class="week-header">
+            <div>
+              <div class="week-num">Week 9</div>
+              <div class="week-title">Client #2 Close</div>
+            </div>
+            <div class="week-check-count" id="cc-9"></div>
+          </div>
+          <ul class="task-list" id="tasks-9">
+            <li class="task-item" data-phase="3" data-week="9" data-idx="0" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Close second client, begin onboarding</span>
+            </li>
+            <li class="task-item" data-phase="3" data-week="9" data-idx="1" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Refine onboarding process based on what you learned from client #1</span>
+            </li>
+            <li class="task-item" data-phase="3" data-week="9" data-idx="2" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Increase outreach volume: 50 emails/industry/week (150 total/week)</span>
+            </li>
+          </ul>
+          <div class="milestone-bar">
+            <span class="ms-icon">&#127937;</span>
+            <span class="ms-text">Milestone: Second client signed</span>
+          </div>
+        </div>
+
+        <!-- Week 10 -->
+        <div class="week-card" id="wcard-10">
+          <div class="week-header">
+            <div>
+              <div class="week-num">Week 10</div>
+              <div class="week-title">Two Live Clients</div>
+            </div>
+            <div class="week-check-count" id="cc-10"></div>
+          </div>
+          <ul class="task-list" id="tasks-10">
+            <li class="task-item" data-phase="3" data-week="10" data-idx="0" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Second client live</span>
+            </li>
+            <li class="task-item" data-phase="3" data-week="10" data-idx="1" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Aim for third proposal out</span>
+            </li>
+            <li class="task-item" data-phase="3" data-week="10" data-idx="2" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Begin building Phase 2 service (invoicing/payment follow-up) if client #1 or #2 is interested</span>
+            </li>
+          </ul>
+          <div class="milestone-bar">
+            <span class="ms-icon">&#127937;</span>
+            <span class="ms-text">Milestone: Two clients live, third in pipeline</span>
+          </div>
+        </div>
+
+        <!-- Week 11 -->
+        <div class="week-card" id="wcard-11">
+          <div class="week-header">
+            <div>
+              <div class="week-num">Week 11</div>
+              <div class="week-title">Three Clients</div>
+            </div>
+            <div class="week-check-count" id="cc-11"></div>
+          </div>
+          <ul class="task-list" id="tasks-11">
+            <li class="task-item" data-phase="3" data-week="11" data-idx="0" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Close third client</span>
+            </li>
+            <li class="task-item" data-phase="3" data-week="11" data-idx="1" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">At 3 clients: review your platform costs vs. revenue — confirm positive margin</span>
+            </li>
+            <li class="task-item" data-phase="3" data-week="11" data-idx="2" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Identify which industries are converting best — refocus outreach there</span>
+            </li>
+            <li class="task-item" data-phase="3" data-week="11" data-idx="3" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Consider upgrading Make plan if workflow volume is growing</span>
+            </li>
+          </ul>
+          <div class="milestone-bar">
+            <span class="ms-icon">&#127881;</span>
+            <span class="ms-text">Milestone: Three clients live</span>
+          </div>
+        </div>
+
+        <!-- Week 12 -->
+        <div class="week-card" id="wcard-12">
+          <div class="week-header">
+            <div>
+              <div class="week-num">Week 12</div>
+              <div class="week-title">Review &amp; Plan Next 90 Days</div>
+            </div>
+            <div class="week-check-count" id="cc-12"></div>
+          </div>
+          <ul class="task-list" id="tasks-12">
+            <li class="task-item" data-phase="3" data-week="12" data-idx="0" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Full review: What worked in outreach? What broke in builds? What took more time than expected?</span>
+            </li>
+            <li class="task-item" data-phase="3" data-week="12" data-idx="1" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Update pricing if needed (did complexity estimates hold up?)</span>
+            </li>
+            <li class="task-item" data-phase="3" data-week="12" data-idx="2" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Update contract if anything came up that wasn't covered</span>
+            </li>
+            <li class="task-item" data-phase="3" data-week="12" data-idx="3" onclick="toggleTask(this)">
+              <div class="task-cb"></div>
+              <span class="task-text">Set target for next 90 days: 5–8 clients, first Phase 2 service upsell</span>
+            </li>
+          </ul>
+          <div class="milestone-bar">
+            <span class="ms-icon">&#127937;</span>
+            <span class="ms-text">Milestone: 90-day retrospective complete, next phase planned</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- /view-list -->
+
+  <!-- KANBAN VIEW -->
+  <div id="view-kanban" style="display:none;">
+    <div class="kanban-board">
+
+      <div class="kanban-col col-todo">
+        <div class="kanban-col-header">
+          <div class="kanban-col-title">
+            <div class="col-dot"></div>
+            To Do
+          </div>
+          <div class="kanban-count" id="kcount-todo">0</div>
+        </div>
+        <div class="kanban-cards" id="kb-todo"></div>
+      </div>
+
+      <div class="kanban-col col-inprogress">
+        <div class="kanban-col-header">
+          <div class="kanban-col-title">
+            <div class="col-dot"></div>
+            In Progress
+          </div>
+          <div class="kanban-count" id="kcount-inprogress">0</div>
+        </div>
+        <div class="kanban-cards" id="kb-inprogress"></div>
+      </div>
+
+      <div class="kanban-col col-done">
+        <div class="kanban-col-header">
+          <div class="kanban-col-title">
+            <div class="col-dot"></div>
+            Done
+          </div>
+          <div class="kanban-count" id="kcount-done">0</div>
+        </div>
+        <div class="kanban-cards" id="kb-done"></div>
+      </div>
+
+    </div>
+  </div><!-- /view-kanban -->
+
+</div><!-- /view-container -->
+
+<!-- KPI SECTION -->
+<div class="section-divider">
+  <h2><span style="color:var(--accent);">&#9632;</span> Key Numbers to Track Weekly</h2>
+  <div class="divider-line"></div>
+</div>
+<div class="kpi-section">
+  <div class="kpi-grid">
+    <div class="kpi-chip">
+      <div class="kpi-label">Emails Sent / Week</div>
+      <div class="kpi-target">75–150 at scale</div>
+    </div>
+    <div class="kpi-chip">
+      <div class="kpi-label">Reply Rate Target</div>
+      <div class="kpi-target">8–12%</div>
+    </div>
+    <div class="kpi-chip">
+      <div class="kpi-label">Discovery Calls / Week</div>
+      <div class="kpi-target">2–4 calls</div>
+    </div>
+    <div class="kpi-chip">
+      <div class="kpi-label">Proposals / Week</div>
+      <div class="kpi-target">1–2 proposals</div>
+    </div>
+    <div class="kpi-chip">
+      <div class="kpi-label">Clients Signed / Month</div>
+      <div class="kpi-target">1–2 clients</div>
+    </div>
+    <div class="kpi-chip">
+      <div class="kpi-label">Platform Margin Target</div>
+      <div class="kpi-target">75%+ margin</div>
+    </div>
+    <div class="kpi-chip">
+      <div class="kpi-label">MRR (Track Weekly)</div>
+      <div class="kpi-target">$0 &#8594; $1,500+</div>
+    </div>
+  </div>
+</div>
+
+<!-- DATA TABLES SECTION -->
+<div class="section-divider">
+  <h2><span style="color:var(--accent);">&#9632;</span> Revenue &amp; Operations</h2>
+  <div class="divider-line"></div>
+</div>
+<div class="tables-section">
+
+  <!-- Revenue Projections -->
+  <div class="table-card">
+    <div class="table-card-header">
+      <div class="table-accent-dot"></div>
+      <h3>Revenue Projections (Conservative)</h3>
+    </div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Milestone</th>
+          <th>Timing</th>
+          <th>Monthly Revenue</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>0 clients</td>
+          <td style="color:var(--muted)">Week 1–5</td>
+          <td><span class="revenue-amount">$0</span></td>
+        </tr>
+        <tr>
+          <td>1 client @ $400</td>
+          <td style="color:var(--muted)">Week 6–7</td>
+          <td><span class="revenue-amount">$400</span></td>
+        </tr>
+        <tr>
+          <td>2 clients avg $500</td>
+          <td style="color:var(--muted)">Week 8–9</td>
+          <td><span class="revenue-amount">$1,000</span></td>
+        </tr>
+        <tr>
+          <td>3 clients avg $500</td>
+          <td style="color:var(--muted)">Week 10–11</td>
+          <td><span class="revenue-amount">$1,500</span></td>
+        </tr>
+        <tr>
+          <td>5 clients avg $600</td>
+          <td style="color:var(--muted)">Month 4–5</td>
+          <td><span class="revenue-amount">$3,000</span></td>
+        </tr>
+        <tr>
+          <td>10 clients avg $700</td>
+          <td style="color:var(--muted)">Month 8–10</td>
+          <td><span class="revenue-amount">$7,000</span></td>
+        </tr>
+        <tr>
+          <td>20 clients avg $800</td>
+          <td style="color:var(--muted)">Month 12–18</td>
+          <td><span class="revenue-amount">$16,000</span></td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="padding:0.85rem 1.2rem;font-size:0.78rem;color:var(--muted);border-top:1px solid var(--border-solid);line-height:1.5;">
+      Reality check: attainable but not guaranteed. Most people take longer on the first client — that's normal. Everything gets faster after client #1.
+    </div>
+  </div>
+
+  <!-- Weekly Rhythm -->
+  <div class="table-card">
+    <div class="table-card-header">
+      <div class="table-accent-dot"></div>
+      <h3>Weekly Rhythm (5 hrs/week budget)</h3>
+    </div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Day</th>
+          <th>Activity</th>
+          <th>Time</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="font-weight:600;">Monday</td>
+          <td>Review metrics: open replies, outreach stats, support tickets</td>
+          <td style="color:var(--accent);font-weight:600;white-space:nowrap;">30 min</td>
+        </tr>
+        <tr>
+          <td style="font-weight:600;">Tuesday</td>
+          <td>Send new outreach batch, respond to replies</td>
+          <td style="color:var(--accent);font-weight:600;white-space:nowrap;">1 hr</td>
+        </tr>
+        <tr>
+          <td style="font-weight:600;">Wednesday</td>
+          <td>Discovery calls / follow-up calls</td>
+          <td style="color:var(--accent);font-weight:600;white-space:nowrap;">1 hr</td>
+        </tr>
+        <tr>
+          <td style="font-weight:600;">Thursday</td>
+          <td>Build work (chatbot setup, Make workflows, onboarding)</td>
+          <td style="color:var(--accent);font-weight:600;white-space:nowrap;">1.5 hrs</td>
+        </tr>
+        <tr>
+          <td style="font-weight:600;">Friday</td>
+          <td>Admin: invoices, docs, plan next week</td>
+          <td style="color:var(--accent);font-weight:600;white-space:nowrap;">30 min</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Risk Flags -->
+  <div class="table-card" style="grid-column: 1 / -1;">
+    <div class="table-card-header">
+      <div class="table-accent-dot" style="background:var(--red);"></div>
+      <h3>Risk Flags — Watch For These</h3>
+    </div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Risk</th>
+          <th>Signal</th>
+          <th>Response</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="font-weight:600;">Low reply rate (&lt;3%)</td>
+          <td class="risk-signal">After 100+ emails sent</td>
+          <td class="risk-response">Rewrite subject line + first line; try different industry</td>
+        </tr>
+        <tr>
+          <td style="font-weight:600;">Long sales cycle</td>
+          <td class="risk-signal">Proposals going cold after 7+ days</td>
+          <td class="risk-response">Add urgency to follow-up; offer a free 15-min demo</td>
+        </tr>
+        <tr>
+          <td style="font-weight:600;">Build taking too long</td>
+          <td class="risk-signal">First client taking &gt;2 weeks to go live</td>
+          <td class="risk-response">Simplify scope; do fewer features, more reliably</td>
+        </tr>
+        <tr>
+          <td style="font-weight:600;">Support overload</td>
+          <td class="risk-signal">Spending &gt;2 hrs/week on one client</td>
+          <td class="risk-response">Escalate their support tier or revisit pricing</td>
+        </tr>
+        <tr>
+          <td style="font-weight:600;">Churn</td>
+          <td class="risk-signal">Client cancels in first 90 days</td>
+          <td class="risk-response">Interview them — understand what failed; fix before next client</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div><!-- /tables-section -->
+
+<!-- FOOTER -->
+<footer class="footer">
+  <strong>Brian Kalsic</strong> | CWI AI LLC | Southgate, MI |
+  <a href="mailto:brian@cwiai.net">brian@cwiai.net</a> |
+  (734) 812-9971 |
+  <a href="https://cwiai.net" target="_blank">cwiai.net</a>
+  <br><br>
+  <span style="color:var(--border-solid);">90-Day Launch Timeline &mdash; Generated 2026-06-08</span>
+</footer>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────────
+const WEEKS = [
+  { week: 1, phase: 1, title: 'Stack Setup', tasks: 7,
+    milestone: 'All accounts created, API keys tested, domain authenticated' },
+  { week: 2, phase: 1, title: 'First Build', tasks: 5,
+    milestone: 'Working chatbot + scheduling demo you can show on a screen share' },
+  { week: 3, phase: 1, title: 'Outreach Prep', tasks: 6,
+    milestone: '150+ leads loaded in Apollo, sequences ready, calendar link live' },
+  { week: 4, phase: 2, title: 'Launch Outreach', tasks: 4,
+    milestone: 'First discovery calls booked' },
+  { week: 5, phase: 2, title: 'Discovery Calls', tasks: 4,
+    milestone: 'First proposal sent' },
+  { week: 6, phase: 2, title: 'Close First Client', tasks: 5,
+    milestone: 'First client signed — setup fee collected' },
+  { week: 7, phase: 2, title: 'First Client Go-Live', tasks: 4,
+    milestone: 'First client live and paying monthly retainer' },
+  { week: 8, phase: 2, title: 'Stabilize + Pipeline', tasks: 4,
+    milestone: 'Second proposal sent, first client stable' },
+  { week: 9, phase: 3, title: 'Client #2 Close', tasks: 3,
+    milestone: 'Second client signed' },
+  { week: 10, phase: 3, title: 'Two Live Clients', tasks: 3,
+    milestone: 'Two clients live, third in pipeline' },
+  { week: 11, phase: 3, title: 'Three Clients', tasks: 4,
+    milestone: 'Three clients live' },
+  { week: 12, phase: 3, title: 'Review & Plan Next 90 Days', tasks: 4,
+    milestone: '90-day retrospective complete, next phase planned' },
+];
+
+const PHASE_COLORS = { 1: '#FF5A1F', 2: '#3B82F6', 3: '#22C55E' };
+
+// ── STORAGE ───────────────────────────────────────────────────────────────────
+const STORE_KEY = 'cwi-90day-v1';
+
+function loadState() {
+  try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; }
+  catch { return {}; }
+}
+
+function saveState(state) {
+  localStorage.setItem(STORE_KEY, JSON.stringify(state));
+}
+
+function getTaskKey(week, idx) {
+  return `w${week}-t${idx}`;
+}
+
+// ── INIT CHECKBOXES ───────────────────────────────────────────────────────────
+function initCheckboxes() {
+  const state = loadState();
+  document.querySelectorAll('.task-item').forEach(item => {
+    const week = parseInt(item.dataset.week);
+    const idx  = parseInt(item.dataset.idx);
+    const key  = getTaskKey(week, idx);
+    if (state[key]) item.classList.add('done');
+  });
+  updateAllCounts();
+}
+
+// ── TOGGLE TASK ───────────────────────────────────────────────────────────────
+function toggleTask(item) {
+  const week = parseInt(item.dataset.week);
+  const idx  = parseInt(item.dataset.idx);
+  const key  = getTaskKey(week, idx);
+  const state = loadState();
+
+  if (item.classList.contains('done')) {
+    item.classList.remove('done');
+    delete state[key];
+  } else {
+    item.classList.add('done');
+    state[key] = true;
+  }
+  saveState(state);
+  updateAllCounts();
+  updateKanban();
+}
+
+// ── COUNT HELPERS ─────────────────────────────────────────────────────────────
+function getWeekProgress(week) {
+  const taskList = document.querySelectorAll(`#tasks-${week} .task-item`);
+  const total = taskList.length;
+  const done  = [...taskList].filter(t => t.classList.contains('done')).length;
+  return { done, total };
+}
+
+function updateWeekCount(week) {
+  const { done, total } = getWeekProgress(week);
+  const el = document.getElementById(`cc-${week}`);
+  if (el) el.textContent = `${done}/${total}`;
+}
+
+function updatePhaseProgress(phase) {
+  const phaseWeeks = WEEKS.filter(w => w.phase === phase).map(w => w.week);
+  let totalDone = 0, totalTasks = 0;
+  phaseWeeks.forEach(w => {
+    const { done, total } = getWeekProgress(w);
+    totalDone  += done;
+    totalTasks += total;
+  });
+  const pct = totalTasks > 0 ? Math.round((totalDone / totalTasks) * 100) : 0;
+  const bar   = document.getElementById(`prog-ph${phase}`);
+  const label = document.getElementById(`prog-ph${phase}-label`);
+  if (bar)   bar.style.width = pct + '%';
+  if (label) label.textContent = `${pct}% complete (${totalDone}/${totalTasks} tasks)`;
+}
+
+function updateAllCounts() {
+  for (let w = 1; w <= 12; w++) updateWeekCount(w);
+  [1, 2, 3].forEach(updatePhaseProgress);
+}
+
+// ── KANBAN ────────────────────────────────────────────────────────────────────
+function getWeekKanbanStatus(week) {
+  const { done, total } = getWeekProgress(week);
+  if (done === 0)     return 'todo';
+  if (done === total) return 'done';
+  return 'inprogress';
+}
+
+function renderKanbanCard(weekData) {
+  const { done, total } = getWeekProgress(weekData.week);
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  const color = PHASE_COLORS[weekData.phase];
+  return `
+    <div class="kanban-card">
+      <div class="kcard-week">
+        <span class="kcard-phase-dot" style="background:${color};"></span>
+        Week ${weekData.week} &mdash; Phase ${weekData.phase}
+      </div>
+      <div class="kcard-title">${weekData.title}</div>
+      <div class="kcard-milestone">${weekData.milestone}</div>
+      <div class="kcard-progress-wrap">
+        <div class="kcard-progress-fill" style="width:${pct}%;background:${color};"></div>
+      </div>
+      <div class="kcard-progress-label">${done}/${total} tasks complete</div>
+    </div>
+  `;
+}
+
+function updateKanban() {
+  const cols = { todo: [], inprogress: [], done: [] };
+  WEEKS.forEach(w => {
+    const status = getWeekKanbanStatus(w.week);
+    cols[status].push(renderKanbanCard(w));
+  });
+
+  document.getElementById('kb-todo').innerHTML        = cols.todo.join('') || '<div style="color:var(--muted);font-size:0.8rem;text-align:center;padding:1rem;">None</div>';
+  document.getElementById('kb-inprogress').innerHTML  = cols.inprogress.join('') || '<div style="color:var(--muted);font-size:0.8rem;text-align:center;padding:1rem;">None</div>';
+  document.getElementById('kb-done').innerHTML        = cols.done.join('') || '<div style="color:var(--muted);font-size:0.8rem;text-align:center;padding:1rem;">None</div>';
+
+  document.getElementById('kcount-todo').textContent       = cols.todo.length;
+  document.getElementById('kcount-inprogress').textContent = cols.inprogress.length;
+  document.getElementById('kcount-done').textContent       = cols.done.length;
+}
+
+// ── VIEW TOGGLE ───────────────────────────────────────────────────────────────
+function setView(view) {
+  const listView   = document.getElementById('view-list');
+  const kanbanView = document.getElementById('view-kanban');
+  const btnList    = document.getElementById('btn-list');
+  const btnKanban  = document.getElementById('btn-kanban');
+
+  if (view === 'list') {
+    listView.style.display   = '';
+    kanbanView.style.display = 'none';
+    btnList.classList.add('active');
+    btnKanban.classList.remove('active');
+  } else {
+    listView.style.display   = 'none';
+    kanbanView.style.display = '';
+    btnList.classList.remove('active');
+    btnKanban.classList.add('active');
+    updateKanban();
+  }
+  localStorage.setItem('cwi-90day-view', view);
+}
+
+// ── RESET ─────────────────────────────────────────────────────────────────────
+function resetAll() {
+  if (!confirm('Reset all checkboxes? This cannot be undone.')) return;
+  localStorage.removeItem(STORE_KEY);
+  document.querySelectorAll('.task-item.done').forEach(el => el.classList.remove('done'));
+  updateAllCounts();
+  updateKanban();
+  showToast('All tasks reset.');
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────────
+let toastTimer = null;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ── BOOTSTRAP ─────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  initCheckboxes();
+  updateKanban();
+
+  // Restore last view
+  const savedView = localStorage.getItem('cwi-90day-view') || 'list';
+  if (savedView === 'kanban') setView('kanban');
+});
+</script>
+</body>
+</html>

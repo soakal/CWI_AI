@@ -1,0 +1,923 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CWI AI — Sales One-Pager</title>
+<meta name="description" content="CWI internal tool: CWI AI — Sales One-Pager. Internal use only — CWI Compute With Imagination.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ── Reset & tokens ── */
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --accent:   #FF5A1F;
+    --ember:    #FF8A3D;
+    --ink:      #0A0A0C;
+    --surface:  #141418;
+    --steel:    #85858E;
+    --paper:    #F3F1EC;
+    --text:     #F4F4F6;
+    --text-dim: #C2C2C8;
+    --line:     rgba(255,255,255,.09);
+
+    --font-disp: 'Sora', sans-serif;
+    --font-body: 'Instrument Sans', sans-serif;
+
+    /* print page size */
+    --page-w: 8.5in;
+    --page-h: 11in;
+    --col-gap: 24px;
+    --pad: 32px;
+  }
+
+  html, body {
+    width: var(--page-w);
+    min-height: var(--page-h);
+    font-family: var(--font-body);
+    background: #fff;
+    color: var(--ink);
+    font-size: 13px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Print button ── */
+  .print-btn {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 999;
+    background: var(--accent);
+    color: #fff;
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 13px;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 22px;
+    cursor: pointer;
+    letter-spacing: .02em;
+    box-shadow: 0 4px 16px rgba(255,90,31,.35);
+    transition: background .2s;
+  }
+  .print-btn:hover { background: var(--ember); }
+
+  /* ── Outer wrapper ── */
+  .page {
+    width: var(--page-w);
+    min-height: var(--page-h);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ── Header ── */
+  .header {
+    background: var(--ink);
+    color: var(--text);
+    padding: 22px var(--pad) 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .logo-lockup {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  /* SVG waveform mark — inline, orange on dark */
+  .logo-mark {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+  }
+
+  .logo-text {
+    font-family: var(--font-disp);
+    font-weight: 800;
+    font-size: 26px;
+    letter-spacing: -.04em;
+    line-height: 1;
+    color: #fff;
+  }
+
+  .logo-text span {
+    color: var(--accent);
+  }
+
+  .tagline {
+    font-family: var(--font-body);
+    font-weight: 500;
+    font-size: 12.5px;
+    color: var(--text-dim);
+    letter-spacing: .01em;
+    margin-top: 3px;
+  }
+
+  .header-contact {
+    text-align: right;
+    font-size: 11.5px;
+    color: var(--text-dim);
+    line-height: 1.7;
+  }
+
+  .header-contact a {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  /* ── Orange rule ── */
+  .rule {
+    height: 4px;
+    background: linear-gradient(90deg, var(--accent) 0%, var(--ember) 100%);
+  }
+
+  /* ── Two-column body ── */
+  .body {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    background: #fff;
+  }
+
+  .col {
+    padding: var(--pad);
+  }
+
+  .col-left {
+    border-right: 1px solid #E8E6E0;
+  }
+
+  /* ── Section labels ── */
+  .section-label {
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 9.5px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+
+  /* ── Section headings ── */
+  .section-heading {
+    font-family: var(--font-disp);
+    font-weight: 800;
+    font-size: 17px;
+    letter-spacing: -.03em;
+    line-height: 1.1;
+    color: var(--ink);
+    margin-bottom: 14px;
+  }
+
+  /* ── Three-step process ── */
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 26px;
+  }
+
+  .step {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .step-num {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-family: var(--font-disp);
+    font-weight: 800;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+
+  .step-body {
+    padding-top: 3px;
+  }
+
+  .step-title {
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--ink);
+    margin-bottom: 2px;
+  }
+
+  .step-desc {
+    font-size: 11.5px;
+    color: #555;
+    line-height: 1.5;
+  }
+
+  /* ── Benefits grid ── */
+  .benefits {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 26px;
+  }
+
+  .benefit {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .benefit-icon {
+    font-size: 18px;
+    line-height: 1;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .benefit-body {}
+
+  .benefit-title {
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 12px;
+    color: var(--ink);
+    margin-bottom: 2px;
+  }
+
+  .benefit-desc {
+    font-size: 10.5px;
+    color: #666;
+    line-height: 1.45;
+  }
+
+  /* ── Results stat callouts ── */
+  .stats {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 26px;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .stat {
+    flex: 1;
+    background: var(--ink);
+    color: var(--text);
+    border-radius: 10px;
+    padding: 14px 12px;
+    text-align: center;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .stat-num {
+    font-family: var(--font-disp);
+    font-weight: 800;
+    font-size: 30px;
+    letter-spacing: -.04em;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .stat-label {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-dim);
+    line-height: 1.35;
+  }
+
+  /* ── Quote / social proof ── */
+  .quote-block {
+    background: #F7F5F0;
+    border-left: 3px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+    padding: 14px 16px;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .quote-text {
+    font-family: var(--font-disp);
+    font-style: italic;
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--ink);
+    line-height: 1.45;
+    margin-bottom: 8px;
+  }
+
+  .quote-attr {
+    font-size: 11px;
+    color: var(--steel);
+    font-weight: 500;
+  }
+
+  .quote-attr strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  /* ── Pricing table ── */
+  .pricing-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 22px;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .pricing-table thead tr {
+    background: var(--ink);
+    color: var(--text);
+  }
+
+  .pricing-table thead th {
+    font-family: var(--font-disp);
+    font-weight: 700;
+    font-size: 12px;
+    padding: 10px 12px;
+    text-align: left;
+    letter-spacing: -.01em;
+  }
+
+  .pricing-table thead th:first-child {
+    border-radius: 8px 0 0 0;
+  }
+
+  .pricing-table thead th:last-child {
+    border-radius: 0 8px 0 0;
+    text-align: right;
+  }
+
+  .pricing-table thead th:not(:first-child):not(:last-child) {
+    text-align: center;
+  }
+
+  .pricing-table tbody tr {
+    border-bottom: 1px solid #ECEAE4;
+  }
+
+  .pricing-table tbody tr:last-child {
+    border-bottom: none;
+  }
+
+  .pricing-table tbody tr.popular {
+    background: #FFF4EE;
+  }
+
+  .pricing-table tbody td {
+    padding: 10px 12px;
+    font-size: 12px;
+    vertical-align: middle;
+  }
+
+  .pricing-table tbody td:not(:first-child):not(:last-child) {
+    text-align: center;
+    color: #555;
+    font-size: 11.5px;
+  }
+
+  .pricing-table tbody td:last-child {
+    text-align: right;
+  }
+
+  .plan-name {
+    font-family: var(--font-disp);
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--ink);
+    margin-bottom: 2px;
+  }
+
+  .plan-setup {
+    font-size: 10.5px;
+    color: var(--steel);
+  }
+
+  .plan-price {
+    font-family: var(--font-disp);
+    font-weight: 800;
+    font-size: 16px;
+    color: var(--ink);
+    letter-spacing: -.03em;
+  }
+
+  .plan-price span {
+    font-family: var(--font-body);
+    font-weight: 400;
+    font-size: 10.5px;
+    color: var(--steel);
+    letter-spacing: 0;
+  }
+
+  .badge-popular {
+    display: inline-block;
+    background: var(--accent);
+    color: #fff;
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 8.5px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    border-radius: 99px;
+    padding: 2px 7px;
+    margin-left: 7px;
+    vertical-align: middle;
+    position: relative;
+    top: -1px;
+  }
+
+  /* ── Pricing features list ── */
+  .features-heading {
+    font-family: var(--font-disp);
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--ink);
+    margin-bottom: 10px;
+    letter-spacing: -.02em;
+  }
+
+  .features-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 22px;
+  }
+
+  .features-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 11.5px;
+    color: #444;
+    line-height: 1.4;
+  }
+
+  .features-list li::before {
+    content: "✓";
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 12px;
+    flex-shrink: 0;
+    line-height: 1.3;
+  }
+
+  /* ── Guarantee strip ── */
+  .guarantee {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #F7F5F0;
+    border: 1.5px solid #E8E4DB;
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 22px;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .guarantee-icon {
+    font-size: 28px;
+    flex-shrink: 0;
+  }
+
+  .guarantee-text {
+    font-size: 11.5px;
+    color: #444;
+    line-height: 1.45;
+  }
+
+  .guarantee-text strong {
+    font-family: var(--font-disp);
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--ink);
+    display: block;
+    margin-bottom: 2px;
+    letter-spacing: -.02em;
+  }
+
+  /* ── CTA block ── */
+  .cta-block {
+    background: var(--ink);
+    color: var(--text);
+    border-radius: 12px;
+    padding: 18px 20px;
+    text-align: center;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .cta-heading {
+    font-family: var(--font-disp);
+    font-weight: 800;
+    font-size: 16px;
+    letter-spacing: -.03em;
+    color: #fff;
+    margin-bottom: 6px;
+  }
+
+  .cta-sub {
+    font-size: 11.5px;
+    color: var(--text-dim);
+    margin-bottom: 14px;
+    line-height: 1.5;
+  }
+
+  .cta-contacts {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .cta-contact-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+  }
+
+  .cta-contact-item .ci-icon {
+    font-size: 14px;
+    opacity: .8;
+  }
+
+  .cta-contact-item a,
+  .cta-contact-item span {
+    color: var(--accent);
+    font-weight: 600;
+    text-decoration: none;
+    font-family: var(--font-body);
+  }
+
+  /* ── Footer ── */
+  .footer {
+    background: #F7F5F0;
+    border-top: 1px solid #E8E4DB;
+    padding: 10px var(--pad);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--steel);
+  }
+
+  .footer-brand {
+    font-family: var(--font-disp);
+    font-weight: 700;
+    font-size: 11px;
+    color: var(--ink);
+    letter-spacing: -.02em;
+  }
+
+  .footer-brand span { color: var(--accent); }
+
+  /* ── Divider ── */
+  .divider {
+    height: 1px;
+    background: #ECEAE4;
+    margin: 18px 0;
+  }
+
+  /* ── Print media ── */
+  @media print {
+    html, body {
+      width: 8.5in;
+      height: 11in;
+      font-size: 12.5px;
+    }
+
+    .print-btn {
+      display: none !important;
+    }
+
+    .page {
+      width: 8.5in;
+      min-height: 11in;
+    }
+
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      color-adjust: exact !important;
+    }
+
+    .step, .benefit, .stat, .quote-block,
+    .pricing-table, .guarantee, .cta-block {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    .col-left {
+      page-break-after: avoid;
+    }
+
+    .body {
+      page-break-inside: avoid;
+    }
+  }
+
+  @page {
+    size: letter portrait;
+    margin: 0;
+  }
+</style>
+</head>
+<body>
+
+<!-- Print button (hidden on print) -->
+<button class="print-btn" onclick="window.print()">Print / Save PDF</button>
+
+<div class="page">
+
+  <!-- ══ HEADER ══ -->
+  <header class="header">
+    <div class="logo-lockup">
+      <!-- CWI waveform mark — orange on dark -->
+      <svg class="logo-mark" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="CWI AI logo mark">
+        <rect width="44" height="44" rx="10" fill="#FF5A1F"/>
+        <!-- Waveform bars, ink on orange -->
+        <rect x="6"  y="20" width="4" height="10" rx="2" fill="#0A0A0C"/>
+        <rect x="12" y="14" width="4" height="16" rx="2" fill="#0A0A0C"/>
+        <rect x="18" y="8"  width="4" height="28" rx="2" fill="#0A0A0C"/>
+        <rect x="24" y="14" width="4" height="16" rx="2" fill="#0A0A0C"/>
+        <rect x="30" y="18" width="4" height="10" rx="2" fill="#0A0A0C"/>
+        <!-- Dot accent -->
+        <circle cx="38" cy="10" r="2.5" fill="#0A0A0C" opacity=".6"/>
+      </svg>
+      <div>
+        <div class="logo-text">CWI <span>AI</span></div>
+        <div class="tagline">AI Automation for Local Service Businesses</div>
+      </div>
+    </div>
+    <div class="header-contact">
+      <a href="mailto:brian@cwiai.net">brian@cwiai.net</a><br>
+      <a href="tel:7348129971">(734) 812-9971</a><br>
+      <a href="https://cwiai.net">cwiai.net</a>
+    </div>
+  </header>
+
+  <!-- Orange rule -->
+  <div class="rule"></div>
+
+  <!-- ══ BODY — two columns ══ -->
+  <main class="body">
+
+    <!-- ── LEFT COLUMN ── -->
+    <div class="col col-left">
+
+      <!-- How it works -->
+      <div class="section-label">How It Works</div>
+      <div class="section-heading">Three steps to full<br>AI automation</div>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <div class="step-title">We audit your current workflow</div>
+            <div class="step-desc">We map every touchpoint — calls, forms, follow-ups — and identify exactly where leads and revenue are slipping through the cracks.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <div class="step-title">We build your AI system</div>
+            <div class="step-desc">Custom-configured to your business: your voice, your pricing, your calendar. We handle every integration and hand you a fully tested system.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <div class="step-title">It runs 24/7 — automatically</div>
+            <div class="step-desc">Bookings come in overnight. Missed calls get followed up in minutes. Payments are collected without you lifting a finger.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Divider -->
+      <div class="divider"></div>
+
+      <!-- Key benefits -->
+      <div class="section-label">What You Get</div>
+      <div class="section-heading">Built for businesses<br>that can't miss a lead</div>
+
+      <div class="benefits">
+        <div class="benefit">
+          <div class="benefit-icon">📅</div>
+          <div class="benefit-body">
+            <div class="benefit-title">24/7 AI Booking</div>
+            <div class="benefit-desc">Capture and confirm appointments around the clock, even while you sleep.</div>
+          </div>
+        </div>
+        <div class="benefit">
+          <div class="benefit-icon">🔁</div>
+          <div class="benefit-body">
+            <div class="benefit-title">Missed Lead Recovery</div>
+            <div class="benefit-desc">Automatic follow-up texts and calls re-engage contacts within minutes.</div>
+          </div>
+        </div>
+        <div class="benefit">
+          <div class="benefit-icon">💳</div>
+          <div class="benefit-body">
+            <div class="benefit-title">Payment Automation</div>
+            <div class="benefit-desc">Invoices, reminders, and receipts sent automatically — zero chasing.</div>
+          </div>
+        </div>
+        <div class="benefit">
+          <div class="benefit-icon">📊</div>
+          <div class="benefit-body">
+            <div class="benefit-title">Monthly Reports</div>
+            <div class="benefit-desc">Clear performance dashboards delivered to your inbox every month.</div>
+          </div>
+        </div>
+        <div class="benefit">
+          <div class="benefit-icon">🏷️</div>
+          <div class="benefit-body">
+            <div class="benefit-title">White-Label Ready</div>
+            <div class="benefit-desc">Runs under your brand name — customers never know it's AI.</div>
+          </div>
+        </div>
+        <div class="benefit">
+          <div class="benefit-icon">🛡️</div>
+          <div class="benefit-body">
+            <div class="benefit-title">30-Day Guarantee</div>
+            <div class="benefit-desc">If you don't see results in 30 days, we refund your setup fee — no questions.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Divider -->
+      <div class="divider"></div>
+
+      <!-- Results -->
+      <div class="section-label">Real Results</div>
+      <div class="section-heading">Numbers that move<br>the bottom line</div>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-num">30%</div>
+          <div class="stat-label">of leads contact<br>after hours</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num">4x</div>
+          <div class="stat-label">faster lead<br>response time</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num">2hr</div>
+          <div class="stat-label">avg. time saved<br>per day</div>
+        </div>
+      </div>
+
+      <!-- Social proof -->
+      <div class="quote-block">
+        <div class="quote-text">"[Client quote placeholder — e.g., 'We booked 11 new jobs in the first week, and I didn't answer a single after-hours call myself.']"</div>
+        <div class="quote-attr"><strong>[Business Owner Name]</strong> — [Business Name], [City]</div>
+      </div>
+
+    </div><!-- /col-left -->
+
+    <!-- ── RIGHT COLUMN ── -->
+    <div class="col col-right">
+
+      <!-- Pricing -->
+      <div class="section-label">Pricing Plans</div>
+      <div class="section-heading">Simple, transparent<br>monthly pricing</div>
+
+      <table class="pricing-table">
+        <thead>
+          <tr>
+            <th>Plan</th>
+            <th style="text-align:center;">Setup</th>
+            <th style="text-align:right;">Monthly</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <div class="plan-name">Starter</div>
+              <div class="plan-setup">Everything to get started</div>
+            </td>
+            <td style="text-align:center;color:#555;font-size:11.5px;">$499</td>
+            <td>
+              <div class="plan-price">$197<span>/mo</span></div>
+            </td>
+          </tr>
+          <tr class="popular">
+            <td>
+              <div class="plan-name">
+                Growth
+                <span class="badge-popular">Most Popular</span>
+              </div>
+              <div class="plan-setup">Full automation suite</div>
+            </td>
+            <td style="text-align:center;color:#555;font-size:11.5px;">$499</td>
+            <td>
+              <div class="plan-price" style="color:var(--accent);">$397<span>/mo</span></div>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <div class="plan-name">Pro</div>
+              <div class="plan-setup">Advanced + white-label</div>
+            </td>
+            <td style="text-align:center;color:#555;font-size:11.5px;">$749</td>
+            <td>
+              <div class="plan-price">$597<span>/mo</span></div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Plan features -->
+      <div class="features-heading">All plans include:</div>
+      <ul class="features-list">
+        <li>AI-powered 24/7 booking &amp; lead capture</li>
+        <li>Automated missed-call text-back within 2 minutes</li>
+        <li>Custom voice &amp; messaging matched to your brand</li>
+        <li>CRM integration &amp; calendar sync</li>
+        <li>Monthly performance report</li>
+        <li>Dedicated onboarding support</li>
+      </ul>
+
+      <div class="features-heading">Growth &amp; Pro also include:</div>
+      <ul class="features-list">
+        <li>Payment collection &amp; invoice automation</li>
+        <li>Review request sequences post-job</li>
+        <li>Multi-channel follow-up (SMS + email)</li>
+        <li>Priority support with 4-hour response SLA</li>
+      </ul>
+
+      <div class="features-heading">Pro also includes:</div>
+      <ul class="features-list">
+        <li>Full white-label — runs under your business name</li>
+        <li>Advanced analytics dashboard &amp; custom reporting</li>
+        <li>Dedicated account manager</li>
+      </ul>
+
+      <!-- Divider -->
+      <div class="divider"></div>
+
+      <!-- Guarantee strip -->
+      <div class="guarantee">
+        <div class="guarantee-icon">🛡️</div>
+        <div class="guarantee-text">
+          <strong>30-Day Money-Back Guarantee</strong>
+          If you don't see measurable improvement in the first 30 days, we refund your setup fee — no hassle, no hard feelings.
+        </div>
+      </div>
+
+      <!-- CTA block -->
+      <div class="cta-block">
+        <div class="cta-heading">Ready to stop missing leads?</div>
+        <div class="cta-sub">Book a free 20-minute workflow audit — no pitch, no pressure.<br>We'll show you exactly where your revenue is leaking.</div>
+        <div class="cta-contacts">
+          <div class="cta-contact-item">
+            <span class="ci-icon">✉</span>
+            <a href="mailto:brian@cwiai.net">brian@cwiai.net</a>
+          </div>
+          <div class="cta-contact-item">
+            <span class="ci-icon">📞</span>
+            <a href="tel:7348129971">(734) 812-9971</a>
+          </div>
+          <div class="cta-contact-item">
+            <span class="ci-icon">🌐</span>
+            <a href="https://cwiai.net">cwiai.net</a>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /col-right -->
+
+  </main><!-- /body -->
+
+  <!-- ══ FOOTER ══ -->
+  <footer class="footer">
+    <div class="footer-brand">CWI <span>AI</span> &mdash; Compute With Imagination</div>
+    <div>AI Automation for Local Service Businesses &nbsp;·&nbsp; cwiai.net &nbsp;·&nbsp; (734) 812-9971</div>
+    <div>&copy; 2026 CWI AI. All rights reserved.</div>
+  </footer>
+
+</div><!-- /page -->
+
+</body>
+</html>

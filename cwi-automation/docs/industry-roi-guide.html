@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CWI AI — Industry ROI Talking Points Guide</title>
+<meta name="description" content="CWI internal tool: CWI AI — Industry ROI Talking Points Guide. Internal use only — CWI Compute With Imagination.">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --accent: #FF5A1F;
+    --accent-dark: #d94a15;
+    --bg: #f8f9fa;
+    --card: #ffffff;
+    --border: #e2e8f0;
+    --text: #1a202c;
+    --text-muted: #718096;
+    --green: #38a169;
+    --blue: #3182ce;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: #1a202c;
+    color: #fff;
+    padding: 20px 32px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border-bottom: 3px solid var(--accent);
+  }
+  .header-logo {
+    width: 42px; height: 42px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 18px; color: #fff;
+    flex-shrink: 0;
+  }
+  .header-title { font-size: 20px; font-weight: 700; }
+  .header-sub { font-size: 13px; color: #a0aec0; margin-top: 2px; }
+
+  /* ── TABS ── */
+  .tab-bar {
+    display: flex;
+    gap: 0;
+    background: #fff;
+    border-bottom: 2px solid var(--border);
+    padding: 0 32px;
+    overflow-x: auto;
+  }
+  .tab-btn {
+    padding: 14px 28px;
+    border: none;
+    background: transparent;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    white-space: nowrap;
+    transition: color .2s, border-color .2s;
+  }
+  .tab-btn:hover { color: var(--accent); }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* ── CONTENT ── */
+  .tab-panel { display: none; padding: 28px 32px; max-width: 1100px; }
+  .tab-panel.active { display: block; }
+
+  .panel-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  @media (max-width: 820px) {
+    .panel-grid { grid-template-columns: 1fr; }
+    .tab-bar { padding: 0 16px; }
+    .tab-panel { padding: 20px 16px; }
+  }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px 24px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  }
+  .card-header {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .card-icon {
+    width: 32px; height: 32px;
+    background: #fff5f0;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .card-title { font-size: 15px; font-weight: 700; color: var(--text); }
+
+  /* ── QUICK STATS ── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .stat-item {
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+  .stat-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); margin-bottom: 4px; }
+  .stat-value { font-size: 22px; font-weight: 800; color: var(--accent); }
+  .stat-note { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+  /* ── CALCULATOR ── */
+  .calc-inputs { display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px; }
+  .input-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+  .input-group input[type="number"] {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 7px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    background: #fff;
+    transition: border-color .2s;
+    -moz-appearance: textfield;
+  }
+  .input-group input[type="number"]::-webkit-inner-spin-button,
+  .input-group input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+  .input-group input[type="number"]:focus { outline: none; border-color: var(--accent); }
+
+  .slider-wrap { display: flex; align-items: center; gap: 12px; }
+  .input-group input[type="range"] {
+    flex: 1;
+    accent-color: var(--accent);
+    cursor: pointer;
+    height: 6px;
+  }
+  .slider-val {
+    font-size: 15px; font-weight: 700; color: var(--accent);
+    min-width: 42px; text-align: right;
+  }
+
+  .calc-outputs {
+    background: linear-gradient(135deg, #fff5f0 0%, #fff 100%);
+    border: 1.5px solid #ffd4c0;
+    border-radius: 10px;
+    padding: 16px 18px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .output-row {
+    display: flex; justify-content: space-between; align-items: baseline;
+  }
+  .output-label { font-size: 13px; color: var(--text-muted); }
+  .output-value { font-size: 16px; font-weight: 800; color: var(--text); }
+  .output-row.highlight .output-value { color: var(--green); font-size: 20px; }
+  .output-row.roi .output-value { color: var(--accent); font-size: 22px; }
+  .divider { height: 1px; background: #ffd4c0; margin: 2px 0; }
+
+  /* ── PITCH SCRIPT ── */
+  .pitch-text {
+    font-size: 14px;
+    line-height: 1.75;
+    color: var(--text);
+    background: #f7faff;
+    border-left: 4px solid var(--blue);
+    border-radius: 0 8px 8px 0;
+    padding: 14px 16px;
+    font-style: italic;
+  }
+  .pitch-meta {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 10px;
+    font-style: normal;
+  }
+
+  /* ── OBJECTIONS ── */
+  .objection {
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .objection:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+  .objection-q {
+    font-size: 13px; font-weight: 700;
+    color: #c53030;
+    margin-bottom: 6px;
+    display: flex; gap: 6px; align-items: flex-start;
+  }
+  .objection-q::before { content: "❝"; color: #fc8181; flex-shrink: 0; }
+  .objection-a {
+    font-size: 13px; line-height: 1.65; color: var(--text);
+    padding-left: 16px;
+  }
+  .objection-a strong { color: var(--accent); }
+
+  /* ── PRINT BUTTON ── */
+  .print-row {
+    display: flex; justify-content: flex-end;
+    margin-top: 20px;
+    gap: 10px;
+  }
+  .btn-print {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 22px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 8px;
+    transition: background .2s, transform .1s;
+  }
+  .btn-print:hover { background: var(--accent-dark); }
+  .btn-print:active { transform: scale(.97); }
+  .btn-print svg { width: 16px; height: 16px; fill: currentColor; }
+
+  /* ── FULL-WIDTH CARDS ── */
+  .full-col { grid-column: 1 / -1; }
+
+  /* ── PRINT STYLES ── */
+  @media print {
+    body { background: #fff; }
+    .tab-bar, .print-row { display: none !important; }
+    .tab-panel { display: block !important; padding: 0; }
+    .panel-grid { grid-template-columns: 1fr 1fr; gap: 16px; }
+    .card { box-shadow: none; break-inside: avoid; }
+    .header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-logo">CW</div>
+  <div>
+    <div class="header-title">CWI AI — Industry ROI Talking Points Guide</div>
+    <div class="header-sub">Sales Reference · Per-Industry Calculators &amp; Pitch Scripts</div>
+  </div>
+</header>
+
+<!-- TAB BAR -->
+<nav class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('plumbing', this)">🔧 Plumbing</button>
+  <button class="tab-btn" onclick="switchTab('hvac', this)">❄️ HVAC</button>
+  <button class="tab-btn" onclick="switchTab('accounting', this)">📊 Accounting</button>
+</nav>
+
+<!-- ══════════════════════════════════════════
+     PLUMBING TAB
+══════════════════════════════════════════ -->
+<section id="tab-plumbing" class="tab-panel active">
+  <div class="panel-grid">
+
+    <!-- Quick Stats -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">📊</div>
+        <div class="card-title">Quick Stats — Plumbing Industry</div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="stat-label">Avg Calls / Month</div>
+          <div class="stat-value">120</div>
+          <div class="stat-note">per small-mid shop</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">After-Hours Calls</div>
+          <div class="stat-value">35%</div>
+          <div class="stat-note">evenings + weekends</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Avg Job Value</div>
+          <div class="stat-value">$350</div>
+          <div class="stat-note">service call avg</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Leads Lost / Month</div>
+          <div class="stat-value">~34</div>
+          <div class="stat-note">without AI answering</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROI Calculator -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">🧮</div>
+        <div class="card-title">ROI Calculator</div>
+      </div>
+      <div class="calc-inputs">
+        <div class="input-group">
+          <label for="p-calls">Monthly Call Volume</label>
+          <input type="number" id="p-calls" value="120" min="1" oninput="calcROI('p')">
+        </div>
+        <div class="input-group">
+          <label for="p-jobval">Average Job Value ($)</label>
+          <input type="number" id="p-jobval" value="350" min="1" oninput="calcROI('p')">
+        </div>
+        <div class="input-group">
+          <label for="p-close">Current Close Rate (%)</label>
+          <input type="number" id="p-close" value="65" min="1" max="100" oninput="calcROI('p')">
+        </div>
+        <div class="input-group">
+          <label for="p-ah">After-Hours Call % — <span id="p-ah-disp">35%</span></label>
+          <div class="slider-wrap">
+            <input type="range" id="p-ah" value="35" min="0" max="100"
+              oninput="document.getElementById('p-ah-disp').textContent=this.value+'%'; calcROI('p')">
+          </div>
+        </div>
+      </div>
+      <div class="calc-outputs">
+        <div class="output-row">
+          <span class="output-label">After-hours calls / mo</span>
+          <span class="output-value" id="p-out-ah">42</span>
+        </div>
+        <div class="output-row">
+          <span class="output-label">Leads captured after-hours / mo</span>
+          <span class="output-value" id="p-out-leads">27</span>
+        </div>
+        <div class="divider"></div>
+        <div class="output-row highlight">
+          <span class="output-label">Revenue recovered / month</span>
+          <span class="output-value" id="p-out-monthly">$0</span>
+        </div>
+        <div class="output-row highlight">
+          <span class="output-label">Annual value</span>
+          <span class="output-value" id="p-out-annual">$0</span>
+        </div>
+        <div class="divider"></div>
+        <div class="output-row roi">
+          <span class="output-label">ROI Multiple (vs $397/mo plan)</span>
+          <span class="output-value" id="p-out-roi">0×</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pitch Script -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">🎤</div>
+        <div class="card-title">Pitch Script</div>
+      </div>
+      <div class="pitch-text" id="p-pitch">Loading…</div>
+      <p class="pitch-meta">* Numbers update live from your calculator inputs above.</p>
+    </div>
+
+    <!-- Objections -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">🛡️</div>
+        <div class="card-title">Objection Responses</div>
+      </div>
+
+      <div class="objection">
+        <div class="objection-q">We already have an answering service.</div>
+        <div class="objection-a">Answering services take messages — CWI AI <strong>books the job</strong>. It collects the address, confirms availability, and gets a commitment from the caller while they're still in emergency mode. By the time your tech calls back, the job is already scheduled. The difference shows up on your revenue line, not your message log.</div>
+      </div>
+
+      <div class="objection">
+        <div class="objection-q">My guys handle calls just fine.</div>
+        <div class="objection-a">During business hours, absolutely. But <strong>35% of plumbing calls come in after hours</strong>, and a missed burst-pipe call at 9 PM is a job that goes to whoever picks up first. CWI AI never sleeps, never misses a call, and never costs you a $350 job because someone was on another line or off the clock.</div>
+      </div>
+
+      <div class="objection">
+        <div class="objection-q">I don't think my customers will talk to a bot.</div>
+        <div class="objection-a">Our AI sounds like a knowledgeable dispatcher, not a phone tree. Callers don't get "press 1" — they get a natural conversation that gathers their issue, confirms urgency, and schedules service. <strong>Most callers don't realize they're not talking to a person</strong>, and the ones who do still appreciate getting an immediate, helpful response at 10 PM instead of voicemail.</div>
+      </div>
+    </div>
+
+  </div><!-- /panel-grid -->
+  <div class="print-row">
+    <button class="btn-print" onclick="printTab('plumbing')">
+      <svg viewBox="0 0 24 24"><path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/></svg>
+      Print / Save PDF
+    </button>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════
+     HVAC TAB
+══════════════════════════════════════════ -->
+<section id="tab-hvac" class="tab-panel">
+  <div class="panel-grid">
+
+    <!-- Quick Stats -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">📊</div>
+        <div class="card-title">Quick Stats — HVAC Industry</div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="stat-label">Avg Calls / Month</div>
+          <div class="stat-value">85</div>
+          <div class="stat-note">per small-mid shop</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">After-Hours Calls</div>
+          <div class="stat-value">40%</div>
+          <div class="stat-note">peak: summer &amp; winter</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Avg Job Value</div>
+          <div class="stat-value">$600</div>
+          <div class="stat-note">service + parts avg</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Leads Lost / Month</div>
+          <div class="stat-value">~20</div>
+          <div class="stat-note">without AI answering</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROI Calculator -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">🧮</div>
+        <div class="card-title">ROI Calculator</div>
+      </div>
+      <div class="calc-inputs">
+        <div class="input-group">
+          <label for="h-calls">Monthly Call Volume</label>
+          <input type="number" id="h-calls" value="85" min="1" oninput="calcROI('h')">
+        </div>
+        <div class="input-group">
+          <label for="h-jobval">Average Job Value ($)</label>
+          <input type="number" id="h-jobval" value="600" min="1" oninput="calcROI('h')">
+        </div>
+        <div class="input-group">
+          <label for="h-close">Current Close Rate (%)</label>
+          <input type="number" id="h-close" value="60" min="1" max="100" oninput="calcROI('h')">
+        </div>
+        <div class="input-group">
+          <label for="h-ah">After-Hours Call % — <span id="h-ah-disp">40%</span></label>
+          <div class="slider-wrap">
+            <input type="range" id="h-ah" value="40" min="0" max="100"
+              oninput="document.getElementById('h-ah-disp').textContent=this.value+'%'; calcROI('h')">
+          </div>
+        </div>
+      </div>
+      <div class="calc-outputs">
+        <div class="output-row">
+          <span class="output-label">After-hours calls / mo</span>
+          <span class="output-value" id="h-out-ah">34</span>
+        </div>
+        <div class="output-row">
+          <span class="output-label">Leads captured after-hours / mo</span>
+          <span class="output-value" id="h-out-leads">20</span>
+        </div>
+        <div class="divider"></div>
+        <div class="output-row highlight">
+          <span class="output-label">Revenue recovered / month</span>
+          <span class="output-value" id="h-out-monthly">$0</span>
+        </div>
+        <div class="output-row highlight">
+          <span class="output-label">Annual value</span>
+          <span class="output-value" id="h-out-annual">$0</span>
+        </div>
+        <div class="divider"></div>
+        <div class="output-row roi">
+          <span class="output-label">ROI Multiple (vs $397/mo plan)</span>
+          <span class="output-value" id="h-out-roi">0×</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pitch Script -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">🎤</div>
+        <div class="card-title">Pitch Script</div>
+      </div>
+      <div class="pitch-text" id="h-pitch">Loading…</div>
+      <p class="pitch-meta">* Numbers update live from your calculator inputs above.</p>
+    </div>
+
+    <!-- Objections -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">🛡️</div>
+        <div class="card-title">Objection Responses</div>
+      </div>
+
+      <div class="objection">
+        <div class="objection-q">We're too busy during peak season to need this.</div>
+        <div class="objection-a">Peak season is exactly when you lose the most revenue. When your dispatcher is juggling 15 calls and a customer in Phoenix dials at 6 PM with a failed AC unit, that's a <strong>$600+ job walking out the door</strong> if nobody picks up. CWI AI handles the overflow instantly — no hold times, no missed calls, and your techs stay focused on jobs already on the board.</div>
+      </div>
+
+      <div class="objection">
+        <div class="objection-q">$397 a month feels expensive.</div>
+        <div class="objection-a">It's only expensive if you're not closing jobs. Based on your numbers, capturing just <strong>one additional after-hours job per week</strong> at your average ticket value more than covers the plan — and our calculator shows you're likely missing far more than that. The question isn't whether $397 is expensive; it's whether you can afford to keep leaving that revenue on the table.</div>
+      </div>
+
+      <div class="objection">
+        <div class="objection-q">We already use a CRM / dispatch software.</div>
+        <div class="objection-a">CWI AI works alongside your existing tools — it's the front door, not a replacement for your back office. It <strong>captures the lead and books the call</strong>, then your CRM takes over from there. Most of our HVAC clients plug it in alongside ServiceTitan or Housecall Pro without changing a single existing workflow.</div>
+      </div>
+    </div>
+
+  </div>
+  <div class="print-row">
+    <button class="btn-print" onclick="printTab('hvac')">
+      <svg viewBox="0 0 24 24"><path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/></svg>
+      Print / Save PDF
+    </button>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════
+     ACCOUNTING TAB
+══════════════════════════════════════════ -->
+<section id="tab-accounting" class="tab-panel">
+  <div class="panel-grid">
+
+    <!-- Quick Stats -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">📊</div>
+        <div class="card-title">Quick Stats — Accounting Industry</div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="stat-label">Avg Calls / Month</div>
+          <div class="stat-value">55</div>
+          <div class="stat-note">per small-mid firm</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">After-Hours Calls</div>
+          <div class="stat-value">25%</div>
+          <div class="stat-note">spikes near tax deadlines</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Avg Engagement Value</div>
+          <div class="stat-value">$150</div>
+          <div class="stat-note">per new client inquiry</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Leads Lost / Month</div>
+          <div class="stat-value">~10</div>
+          <div class="stat-note">without AI answering</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROI Calculator -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">🧮</div>
+        <div class="card-title">ROI Calculator</div>
+      </div>
+      <div class="calc-inputs">
+        <div class="input-group">
+          <label for="a-calls">Monthly Call Volume</label>
+          <input type="number" id="a-calls" value="55" min="1" oninput="calcROI('a')">
+        </div>
+        <div class="input-group">
+          <label for="a-jobval">Average Engagement Value ($)</label>
+          <input type="number" id="a-jobval" value="150" min="1" oninput="calcROI('a')">
+        </div>
+        <div class="input-group">
+          <label for="a-close">Current Close Rate (%)</label>
+          <input type="number" id="a-close" value="70" min="1" max="100" oninput="calcROI('a')">
+        </div>
+        <div class="input-group">
+          <label for="a-ah">After-Hours Call % — <span id="a-ah-disp">25%</span></label>
+          <div class="slider-wrap">
+            <input type="range" id="a-ah" value="25" min="0" max="100"
+              oninput="document.getElementById('a-ah-disp').textContent=this.value+'%'; calcROI('a')">
+          </div>
+        </div>
+      </div>
+      <div class="calc-outputs">
+        <div class="output-row">
+          <span class="output-label">After-hours calls / mo</span>
+          <span class="output-value" id="a-out-ah">14</span>
+        </div>
+        <div class="output-row">
+          <span class="output-label">Leads captured after-hours / mo</span>
+          <span class="output-value" id="a-out-leads">10</span>
+        </div>
+        <div class="divider"></div>
+        <div class="output-row highlight">
+          <span class="output-label">Revenue recovered / month</span>
+          <span class="output-value" id="a-out-monthly">$0</span>
+        </div>
+        <div class="output-row highlight">
+          <span class="output-label">Annual value</span>
+          <span class="output-value" id="a-out-annual">$0</span>
+        </div>
+        <div class="divider"></div>
+        <div class="output-row roi">
+          <span class="output-label">ROI Multiple (vs $397/mo plan)</span>
+          <span class="output-value" id="a-out-roi">0×</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pitch Script -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">🎤</div>
+        <div class="card-title">Pitch Script</div>
+      </div>
+      <div class="pitch-text" id="a-pitch">Loading…</div>
+      <p class="pitch-meta">* Numbers update live from your calculator inputs above.</p>
+    </div>
+
+    <!-- Objections -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">🛡️</div>
+        <div class="card-title">Objection Responses</div>
+      </div>
+
+      <div class="objection">
+        <div class="objection-q">Our clients expect to talk to a real person.</div>
+        <div class="objection-a">They expect a prompt, professional response — and CWI AI delivers that instantly, any time of day. A new prospect calling after hours about their business taxes doesn't want voicemail; they want to feel heard and get a consultation booked. <strong>Our AI greets them by firm name, qualifies their need, and schedules a callback</strong> — so by the time your CPA follows up, the prospect already feels like a client.</div>
+      </div>
+
+      <div class="objection">
+        <div class="objection-q">Tax season is our only busy period — we don't need this year-round.</div>
+        <div class="objection-a">Tax season is when the revenue is highest, but year-round intake matters too — bookkeeping onboarding, business advisory, amended returns. And at <strong>$397/month, capturing even two or three new engagements during the off-season pays for the entire year</strong>. Many accounting firms find that consistent after-hours availability actually smooths out seasonal peaks rather than adding to them.</div>
+      </div>
+
+      <div class="objection">
+        <div class="objection-q">I'm worried about confidentiality with an AI handling calls.</div>
+        <div class="objection-a">CWI AI is designed to <strong>intake, not advise</strong> — it collects contact info, notes the general topic of inquiry, and books the appointment. No sensitive financial data is discussed or stored during the intake call. It's the same information your receptionist would gather before transferring to an advisor, just available around the clock and documented automatically.</div>
+      </div>
+    </div>
+
+  </div>
+  <div class="print-row">
+    <button class="btn-print" onclick="printTab('accounting')">
+      <svg viewBox="0 0 24 24"><path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/></svg>
+      Print / Save PDF
+    </button>
+  </div>
+</section>
+
+
+<script>
+// ── TAB SWITCHING ──
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── PRINT ──
+function printTab(id) {
+  // Hide all panels except the target, print, restore
+  const panels = document.querySelectorAll('.tab-panel');
+  const orig = [];
+  panels.forEach(p => {
+    orig.push(p.style.display);
+    p.style.display = (p.id === 'tab-' + id) ? 'block' : 'none';
+  });
+  window.print();
+  panels.forEach((p, i) => { p.style.display = orig[i]; });
+  // Re-show active tab
+  document.getElementById('tab-' + id).style.display = 'block';
+}
+
+// ── CALCULATION ENGINE ──
+const PLAN_COST = 397;
+
+function fmt$(n) {
+  return '$' + Math.round(n).toLocaleString();
+}
+function fmtX(n) {
+  return n.toFixed(1) + '×';
+}
+
+function calcROI(prefix) {
+  const calls   = parseFloat(document.getElementById(prefix + '-calls').value)   || 0;
+  const jobval  = parseFloat(document.getElementById(prefix + '-jobval').value)  || 0;
+  const close   = parseFloat(document.getElementById(prefix + '-close').value)   || 0;
+  const ahPct   = parseFloat(document.getElementById(prefix + '-ah').value)      || 0;
+
+  const ahCalls    = calls * (ahPct / 100);
+  const leadsWon   = ahCalls * (close / 100);
+  const monthly    = leadsWon * jobval;
+  const annual     = monthly * 12;
+  const roi        = PLAN_COST > 0 ? monthly / PLAN_COST : 0;
+
+  document.getElementById(prefix + '-out-ah').textContent     = Math.round(ahCalls);
+  document.getElementById(prefix + '-out-leads').textContent  = Math.round(leadsWon);
+  document.getElementById(prefix + '-out-monthly').textContent = fmt$(monthly);
+  document.getElementById(prefix + '-out-annual').textContent  = fmt$(annual);
+  document.getElementById(prefix + '-out-roi').textContent     = fmtX(roi);
+
+  updatePitch(prefix, Math.round(ahCalls), Math.round(leadsWon), fmt$(monthly), fmt$(annual), fmtX(roi), jobval, ahPct);
+}
+
+// ── PITCH GENERATORS ──
+function updatePitch(prefix, ahCalls, leads, monthly, annual, roi, jobval, ahPct) {
+  let text = '';
+
+  if (prefix === 'p') {
+    text = `Right now, based on your call volume, roughly <strong>${ahCalls} plumbing calls come in after hours every month</strong> — and without someone answering 24/7, most of those go to voicemail or straight to a competitor.
+    CWI AI answers every call instantly, day or night, qualifies the emergency, and books the job while the customer is still on the line.
+    At your average job value, that translates to <strong>${monthly} in recovered revenue every single month</strong> — <strong>${annual} per year</strong> — for a plan that costs $397.
+    That's a <strong>${roi} return on investment</strong>, and the first recovered job this month likely pays for the entire year.`;
+  } else if (prefix === 'h') {
+    text = `HVAC customers calling at ${ahPct}% after-hours don't wait — a failed AC unit in summer or a broken furnace in winter is a same-day decision, and they'll book with whoever answers first.
+    Right now you're likely missing <strong>${ahCalls} calls every month</strong> that go unanswered after hours; CWI AI captures those calls, confirms urgency, and gets the appointment locked in.
+    Based on your numbers, that's <strong>${monthly} in revenue you're recovering every month</strong> and <strong>${annual} annually</strong>.
+    At $397/month, that's a <strong>${roi} ROI</strong> — and unlike hiring another dispatcher, this solution never calls in sick on Christmas Eve.`;
+  } else if (prefix === 'a') {
+    text = `Accounting prospects searching for help with their taxes or books often call outside business hours — and a voicemail means they move on to the next firm on Google.
+    CWI AI answers after hours on behalf of your firm, captures the inquiry details, and schedules a consultation, so you wake up to booked appointments instead of missed opportunities.
+    Based on your call volume, you're likely missing <strong>${ahCalls} inbound calls per month after hours</strong>; closing those at your current rate adds <strong>${monthly} per month</strong> — <strong>${annual} per year</strong>.
+    For $397/month, that's a <strong>${roi} return</strong>, and your clients experience the same professional, responsive intake they'd expect from a much larger firm.`;
+  }
+
+  document.getElementById(prefix + '-pitch').innerHTML = text;
+}
+
+// ── INITIALISE ON LOAD ──
+window.addEventListener('DOMContentLoaded', () => {
+  calcROI('p');
+  calcROI('h');
+  calcROI('a');
+});
+</script>
+</body>
+</html>

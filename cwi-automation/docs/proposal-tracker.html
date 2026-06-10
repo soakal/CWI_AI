@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CWI AI — Proposal Tracker</title>
+<meta name="description" content="CWI internal tool: CWI AI — Proposal Tracker. Internal use only — CWI Compute With Imagination.">
+<style>
+  :root {
+    --accent: #FF5A1F;
+    --accent-dark: #d94a18;
+    --accent-light: #fff3ef;
+    --bg: #f8f8f8;
+    --card: #ffffff;
+    --border: #e2e2e2;
+    --text: #1a1a1a;
+    --muted: #666;
+    --won: #16a34a;
+    --lost: #dc2626;
+    --due: #d97706;
+    --overdue: #dc2626;
+    --sent: #2563eb;
+    --radius: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; }
+  header { background: #1a1a1a; color: #fff; padding: 16px 24px; display: flex; align-items: center; gap: 12px; }
+  header .logo { color: var(--accent); font-weight: 800; font-size: 20px; letter-spacing: -0.5px; }
+  header h1 { font-size: 18px; font-weight: 600; color: #fff; }
+  header .sep { color: #555; }
+  .main { max-width: 1400px; margin: 0 auto; padding: 24px 20px; }
+
+  /* Summary */
+  .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px; }
+  .stat-card .label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .stat-card .value { font-size: 28px; font-weight: 700; color: var(--text); }
+  .stat-card .sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .stat-card.accent { border-top: 3px solid var(--accent); }
+
+  /* Today Panel */
+  .today-panel { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 24px; overflow: hidden; }
+  .today-panel .panel-header { background: var(--accent); color: #fff; padding: 12px 20px; display: flex; align-items: center; gap: 10px; }
+  .today-panel .panel-header h2 { font-size: 15px; font-weight: 700; }
+  .today-panel .panel-header .badge { background: rgba(255,255,255,0.25); border-radius: 12px; padding: 2px 10px; font-size: 12px; font-weight: 600; }
+  .today-panel .empty { padding: 20px; color: var(--muted); font-size: 13px; text-align: center; }
+  .today-list { padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; }
+  .today-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 6px; background: #fafafa; border: 1px solid var(--border); }
+  .today-item.overdue { background: #fff5f5; border-color: #fca5a5; }
+  .today-item .ti-name { font-weight: 600; min-width: 150px; }
+  .today-item .ti-biz { color: var(--muted); min-width: 130px; font-size: 13px; }
+  .today-item .ti-step { font-size: 12px; font-weight: 600; padding: 3px 8px; border-radius: 4px; }
+  .step-fu1 { background: #fef3c7; color: #92400e; }
+  .step-fu2 { background: #ffe4cc; color: #7c2d12; }
+  .step-fu3 { background: #fee2e2; color: #7f1d1d; }
+  .today-item .ti-value { margin-left: auto; font-weight: 700; color: var(--accent); min-width: 80px; text-align: right; }
+  .today-item .ti-overdue-label { font-size: 11px; color: var(--overdue); font-weight: 600; }
+  .today-item .ti-action { margin-left: 10px; }
+
+  /* Controls */
+  .controls { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  .controls input[type=text] { border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; font-size: 13px; width: 220px; outline: none; }
+  .controls input[type=text]:focus { border-color: var(--accent); }
+  .controls select { border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; font-size: 13px; outline: none; background: #fff; }
+  .controls select:focus { border-color: var(--accent); }
+  .btn { display: inline-flex; align-items: center; gap: 6px; border: none; border-radius: 6px; padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.15s, transform 0.1s; }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-dark); }
+  .btn-secondary { background: #fff; color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { background: #f0f0f0; }
+  .btn-sm { padding: 4px 10px; font-size: 12px; border-radius: 4px; }
+  .controls .spacer { flex: 1; }
+
+  /* Table */
+  .table-wrap { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; }
+  thead { background: #1a1a1a; color: #fff; }
+  thead th { padding: 11px 12px; text-align: left; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; white-space: nowrap; cursor: pointer; user-select: none; }
+  thead th:hover { background: #2a2a2a; }
+  thead th .sort-icon { opacity: 0.4; margin-left: 4px; }
+  thead th.sorted .sort-icon { opacity: 1; color: var(--accent); }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: #fafafa; }
+  tbody tr.row-due { background: #fffbeb !important; }
+  tbody tr.row-overdue { background: #fff5f5 !important; }
+  tbody tr.row-won { background: #f0fdf4 !important; }
+  tbody tr.row-lost { background: #fef2f2 !important; }
+  td { padding: 10px 12px; vertical-align: middle; }
+  td.name { font-weight: 600; }
+  td.biz { color: var(--muted); font-size: 13px; }
+  td.mono { font-family: monospace; font-size: 12px; }
+  td.value { font-weight: 700; color: var(--accent); white-space: nowrap; }
+  .fu-date { display: flex; flex-direction: column; gap: 2px; font-size: 12px; }
+  .fu-date .due-badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 3px; background: var(--due); color: #fff; }
+  .fu-date .overdue-badge { background: var(--overdue); color: #fff; }
+
+  /* Status badge */
+  .status-badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 4px; white-space: nowrap; }
+  .status-Sent { background: #dbeafe; color: #1e40af; }
+  .status-Follow-up-1-Due { background: #fef3c7; color: #92400e; }
+  .status-Follow-up-2-Due { background: #ffe4cc; color: #7c2d12; }
+  .status-Follow-up-3-Due { background: #fee2e2; color: #991b1b; }
+  .status-Won { background: #dcfce7; color: #15803d; }
+  .status-Lost { background: #fee2e2; color: #b91c1c; }
+  .status-No-Response { background: #f3f4f6; color: #374151; }
+
+  /* Row actions */
+  .row-actions { display: flex; gap: 4px; flex-wrap: wrap; }
+
+  /* Modal */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .modal-overlay.hidden { display: none; }
+  .modal { background: #fff; border-radius: 12px; width: 100%; max-width: 680px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+  .modal-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .modal-header h2 { font-size: 18px; font-weight: 700; }
+  .modal-close { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--muted); line-height: 1; padding: 4px 8px; border-radius: 4px; }
+  .modal-close:hover { background: #f0f0f0; }
+  .modal-body { padding: 20px 24px; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group.full { grid-column: 1 / -1; }
+  .form-group label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; }
+  .form-group input, .form-group select, .form-group textarea { border: 1px solid var(--border); border-radius: 6px; padding: 9px 12px; font-size: 14px; font-family: inherit; outline: none; transition: border-color 0.15s; background: #fff; }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--accent); }
+  .form-group textarea { resize: vertical; min-height: 70px; }
+  .form-group .hint { font-size: 11px; color: var(--muted); }
+  .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; }
+  .form-section { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--accent); margin: 16px 0 8px; grid-column: 1 / -1; border-top: 1px solid var(--border); padding-top: 14px; }
+  .fu-dates-row { background: #f8f8f8; border-radius: 6px; padding: 10px 14px; grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+  .fu-dates-row .fu-item label { font-size: 11px; color: var(--muted); font-weight: 600; display: block; margin-bottom: 4px; }
+  .fu-dates-row .fu-item span { font-size: 13px; font-weight: 600; color: var(--text); }
+
+  /* Status quick-update */
+  .status-modal { max-width: 400px; }
+  .status-options { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+  .status-option { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border: 2px solid var(--border); border-radius: 6px; cursor: pointer; transition: border-color 0.15s, background 0.15s; font-weight: 600; font-size: 14px; }
+  .status-option:hover { border-color: var(--accent); background: var(--accent-light); }
+  .status-option input[type=radio] { accent-color: var(--accent); width: 16px; height: 16px; }
+  .lost-reason-group { margin-top: 10px; }
+
+  /* Toast */
+  .toast { position: fixed; bottom: 24px; right: 24px; background: #1a1a1a; color: #fff; padding: 12px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; z-index: 200; opacity: 0; transform: translateY(10px); transition: opacity 0.2s, transform 0.2s; pointer-events: none; }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  /* Empty state */
+  .empty-table { text-align: center; padding: 48px; color: var(--muted); }
+  .empty-table .big { font-size: 40px; margin-bottom: 8px; }
+
+  @media (max-width: 900px) {
+    .summary-grid { grid-template-columns: repeat(2, 1fr); }
+    .form-grid { grid-template-columns: 1fr; }
+    .fu-dates-row { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 600px) {
+    .summary-grid { grid-template-columns: 1fr; }
+    table { font-size: 12px; }
+    td, thead th { padding: 8px 8px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="logo">CWI AI</span>
+  <span class="sep">/</span>
+  <h1>Proposal Tracker</h1>
+</header>
+
+<div class="main">
+
+  <!-- Summary -->
+  <div class="summary-grid">
+    <div class="stat-card accent">
+      <div class="label">Total Proposals Sent</div>
+      <div class="value" id="stat-total">0</div>
+      <div class="sub">all time</div>
+    </div>
+    <div class="stat-card accent">
+      <div class="label">Win Rate</div>
+      <div class="value" id="stat-winrate">0%</div>
+      <div class="sub" id="stat-winrate-sub">of closed deals</div>
+    </div>
+    <div class="stat-card accent">
+      <div class="label">Avg Deal Size</div>
+      <div class="value" id="stat-avg">$0</div>
+      <div class="sub">monthly value (won)</div>
+    </div>
+    <div class="stat-card accent">
+      <div class="label">Pipeline Value</div>
+      <div class="value" id="stat-pipeline">$0</div>
+      <div class="sub">active / sent proposals</div>
+    </div>
+  </div>
+
+  <!-- Today Panel -->
+  <div class="today-panel">
+    <div class="panel-header">
+      <h2>Follow-ups Due Today</h2>
+      <span class="badge" id="today-badge">0</span>
+    </div>
+    <div id="today-content"><div class="empty">No follow-ups due today. Great work!</div></div>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <input type="text" id="search-input" placeholder="Search name, business, email..." oninput="renderTable()">
+    <select id="filter-status" onchange="renderTable()">
+      <option value="">All Statuses</option>
+      <option value="Sent">Sent</option>
+      <option value="Follow-up 1 Due">Follow-up 1 Due</option>
+      <option value="Follow-up 2 Due">Follow-up 2 Due</option>
+      <option value="Follow-up 3 Due">Follow-up 3 Due</option>
+      <option value="Won">Won</option>
+      <option value="Lost">Lost</option>
+      <option value="No Response">No Response</option>
+    </select>
+    <select id="filter-industry" onchange="renderTable()">
+      <option value="">All Industries</option>
+    </select>
+    <div class="spacer"></div>
+    <button class="btn btn-secondary" onclick="exportCSV()">&#8595; Export CSV</button>
+    <button class="btn btn-primary" onclick="openAddModal()">+ Add Proposal</button>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrap">
+    <table id="proposals-table">
+      <thead>
+        <tr>
+          <th onclick="sortBy('prospectName')">Prospect <span class="sort-icon" id="sort-prospectName">&#8597;</span></th>
+          <th onclick="sortBy('businessName')">Business <span class="sort-icon" id="sort-businessName">&#8597;</span></th>
+          <th onclick="sortBy('industry')">Industry <span class="sort-icon" id="sort-industry">&#8597;</span></th>
+          <th onclick="sortBy('tierProposed')">Tier <span class="sort-icon" id="sort-tierProposed">&#8597;</span></th>
+          <th onclick="sortBy('monthlyValue')">Monthly <span class="sort-icon" id="sort-monthlyValue">&#8597;</span></th>
+          <th onclick="sortBy('setupFee')">Setup <span class="sort-icon" id="sort-setupFee">&#8597;</span></th>
+          <th onclick="sortBy('dateSent')">Sent <span class="sort-icon" id="sort-dateSent">&#8597;</span></th>
+          <th>Follow-up 1</th>
+          <th>Follow-up 2</th>
+          <th>Follow-up 3</th>
+          <th onclick="sortBy('status')">Status <span class="sort-icon" id="sort-status">&#8597;</span></th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal-overlay hidden" id="proposal-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modal-title">New Proposal</h2>
+      <button class="modal-close" onclick="closeModal('proposal-modal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-section">Contact Info</div>
+
+        <div class="form-group">
+          <label for="f-prospectName">Prospect Name *</label>
+          <input type="text" id="f-prospectName" placeholder="Jane Smith" required>
+        </div>
+        <div class="form-group">
+          <label for="f-businessName">Business Name *</label>
+          <input type="text" id="f-businessName" placeholder="Acme Corp">
+        </div>
+        <div class="form-group">
+          <label for="f-industry">Industry</label>
+          <select id="f-industry">
+            <option value="">Select...</option>
+            <option>HVAC</option>
+            <option>Plumbing</option>
+            <option>Electrical</option>
+            <option>Roofing</option>
+            <option>Landscaping</option>
+            <option>Cleaning</option>
+            <option>Pest Control</option>
+            <option>Auto Repair</option>
+            <option>Dental</option>
+            <option>Legal</option>
+            <option>Real Estate</option>
+            <option>Insurance</option>
+            <option>Retail</option>
+            <option>Restaurant</option>
+            <option>Fitness</option>
+            <option>Spa / Beauty</option>
+            <option>Contractor</option>
+            <option>Consulting</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="f-email">Email</label>
+          <input type="email" id="f-email" placeholder="jane@acme.com">
+        </div>
+        <div class="form-group">
+          <label for="f-phone">Phone</label>
+          <input type="tel" id="f-phone" placeholder="(555) 000-0000">
+        </div>
+
+        <div class="form-section">Proposal Details</div>
+
+        <div class="form-group">
+          <label for="f-tierProposed">Tier Proposed</label>
+          <select id="f-tierProposed">
+            <option value="">Select...</option>
+            <option>Starter</option>
+            <option>Growth</option>
+            <option>Pro</option>
+            <option>Enterprise</option>
+            <option>Custom</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="f-monthlyValue">Monthly Value ($)</label>
+          <input type="number" id="f-monthlyValue" placeholder="1500" min="0">
+        </div>
+        <div class="form-group">
+          <label for="f-setupFee">Setup Fee ($)</label>
+          <input type="number" id="f-setupFee" placeholder="500" min="0">
+        </div>
+        <div class="form-group">
+          <label for="f-dateSent">Date Sent *</label>
+          <input type="date" id="f-dateSent" oninput="updateFUDates()">
+        </div>
+
+        <div class="fu-dates-row" id="fu-preview">
+          <div class="fu-item"><label>Follow-up 1 (Day 3)</label><span id="fu1-preview">—</span></div>
+          <div class="fu-item"><label>Follow-up 2 (Day 7)</label><span id="fu2-preview">—</span></div>
+          <div class="fu-item"><label>Follow-up 3 (Day 14)</label><span id="fu3-preview">—</span></div>
+        </div>
+
+        <div class="form-section">Status & Notes</div>
+
+        <div class="form-group">
+          <label for="f-status">Status</label>
+          <select id="f-status" onchange="toggleLostReason()">
+            <option value="Sent">Sent</option>
+            <option value="Follow-up 1 Due">Follow-up 1 Due</option>
+            <option value="Follow-up 2 Due">Follow-up 2 Due</option>
+            <option value="Follow-up 3 Due">Follow-up 3 Due</option>
+            <option value="Won">Won</option>
+            <option value="Lost">Lost</option>
+            <option value="No Response">No Response</option>
+          </select>
+        </div>
+        <div class="form-group" id="lost-reason-group" style="display:none;">
+          <label for="f-lostReason">Lost Reason</label>
+          <select id="f-lostReason">
+            <option value="">Select...</option>
+            <option>Price</option>
+            <option>Timing</option>
+            <option>Competitor</option>
+            <option>No Budget</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label for="f-notes">Notes</label>
+          <textarea id="f-notes" placeholder="Any relevant notes about this prospect or proposal..."></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('proposal-modal')">Cancel</button>
+      <button class="btn btn-primary" id="save-btn" onclick="saveProposal()">Save Proposal</button>
+    </div>
+  </div>
+</div>
+
+<!-- Status Update Modal -->
+<div class="modal-overlay hidden" id="status-modal">
+  <div class="modal status-modal">
+    <div class="modal-header">
+      <h2>Update Status</h2>
+      <button class="modal-close" onclick="closeModal('status-modal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div id="status-prospect-info" style="margin-bottom:14px;font-size:13px;color:var(--muted);"></div>
+      <div class="status-options" id="status-options-list"></div>
+      <div class="lost-reason-group" id="status-lost-reason" style="display:none;">
+        <div class="form-group">
+          <label for="sm-lostReason">Lost Reason</label>
+          <select id="sm-lostReason">
+            <option value="">Select...</option>
+            <option>Price</option>
+            <option>Timing</option>
+            <option>Competitor</option>
+            <option>No Budget</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('status-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="applyStatusUpdate()">Update Status</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── Data ───────────────────────────────────────────────────────────────────
+
+const STORE_KEY = 'cwi_proposals_v1';
+let proposals = [];
+let editingId = null;
+let statusEditId = null;
+let sortField = 'dateSent';
+let sortDir = -1; // -1 = desc
+
+function load() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    proposals = raw ? JSON.parse(raw) : [];
+  } catch(e) { proposals = []; }
+  if (!proposals.length) seedData();
+}
+
+function save() {
+  localStorage.setItem(STORE_KEY, JSON.stringify(proposals));
+}
+
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+}
+
+// ─── Seed Data ───────────────────────────────────────────────────────────────
+
+function seedData() {
+  const today = new Date();
+  const d = (offset) => {
+    const dt = new Date(today);
+    dt.setDate(dt.getDate() + offset);
+    return dt.toISOString().split('T')[0];
+  };
+
+  proposals = [
+    {
+      id: uid(),
+      prospectName: 'Marcus Rivera',
+      businessName: 'Rivera HVAC Services',
+      industry: 'HVAC',
+      email: 'marcus@riverahvac.com',
+      phone: '(512) 555-0142',
+      tierProposed: 'Growth',
+      monthlyValue: 2200,
+      setupFee: 750,
+      dateSent: d(-5),
+      fu1: d(-2),
+      fu2: d(2),
+      fu3: d(9),
+      status: 'Follow-up 1 Due',
+      lostReason: '',
+      notes: 'Very interested in AI receptionist. Said to follow up after the weekend.'
+    },
+    {
+      id: uid(),
+      prospectName: 'Sandra Okafor',
+      businessName: 'Okafor Legal Group',
+      industry: 'Legal',
+      email: 'sandra@okafarlegal.com',
+      phone: '(737) 555-0289',
+      tierProposed: 'Pro',
+      monthlyValue: 3800,
+      setupFee: 1200,
+      dateSent: d(-12),
+      fu1: d(-9),
+      fu2: d(-5),
+      fu3: d(2),
+      status: 'Won',
+      lostReason: '',
+      notes: 'Signed contract. Onboarding scheduled for next week. Referral from Apex Plumbing.'
+    },
+    {
+      id: uid(),
+      prospectName: 'Derek Calloway',
+      businessName: 'Calloway Roofing & Gutters',
+      industry: 'Roofing',
+      email: 'derek@callowayroofing.net',
+      phone: '(903) 555-0374',
+      tierProposed: 'Starter',
+      monthlyValue: 997,
+      setupFee: 299,
+      dateSent: d(-18),
+      fu1: d(-15),
+      fu2: d(-11),
+      fu3: d(-4),
+      status: 'Lost',
+      lostReason: 'Price',
+      notes: 'Said budget too tight this quarter. Revisit in Q4. Keep warm.'
+    }
+  ];
+  save();
+}
+
+// ─── Date Helpers ────────────────────────────────────────────────────────────
+
+function today() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function addDays(dateStr, n) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  d.setDate(d.getDate() + n);
+  return d.toISOString().split('T')[0];
+}
+
+function formatDate(d) {
+  if (!d) return '—';
+  const [y,m,day] = d.split('-');
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${months[parseInt(m)-1]} ${parseInt(day)}, ${y}`;
+}
+
+function isOverdue(dateStr) {
+  return dateStr && dateStr < today();
+}
+
+function isDueToday(dateStr) {
+  return dateStr && dateStr === today();
+}
+
+// ─── Auto-status Logic ───────────────────────────────────────────────────────
+
+function computeAutoStatus(p) {
+  const closed = ['Won','Lost','No Response'];
+  if (closed.includes(p.status)) return p.status;
+
+  const t = today();
+  if (p.fu3 && p.fu3 <= t) return 'Follow-up 3 Due';
+  if (p.fu2 && p.fu2 <= t) return 'Follow-up 2 Due';
+  if (p.fu1 && p.fu1 <= t) return 'Follow-up 1 Due';
+  return 'Sent';
+}
+
+function refreshStatuses() {
+  proposals.forEach(p => {
+    const closed = ['Won','Lost','No Response'];
+    if (!closed.includes(p.status)) {
+      p.status = computeAutoStatus(p);
+    }
+  });
+  save();
+}
+
+// ─── Summary Stats ───────────────────────────────────────────────────────────
+
+function renderStats() {
+  const total = proposals.length;
+  const won = proposals.filter(p => p.status === 'Won');
+  const lost = proposals.filter(p => p.status === 'Lost');
+  const closed = won.length + lost.length;
+  const winRate = closed ? Math.round((won.length / closed) * 100) : 0;
+  const avgDeal = won.length ? Math.round(won.reduce((a,p) => a + p.monthlyValue, 0) / won.length) : 0;
+  const activeSent = ['Sent','Follow-up 1 Due','Follow-up 2 Due','Follow-up 3 Due'];
+  const pipeline = proposals.filter(p => activeSent.includes(p.status)).reduce((a,p) => a + p.monthlyValue, 0);
+
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-winrate').textContent = winRate + '%';
+  document.getElementById('stat-winrate-sub').textContent = `${won.length} won / ${closed} closed`;
+  document.getElementById('stat-avg').textContent = '$' + avgDeal.toLocaleString();
+  document.getElementById('stat-pipeline').textContent = '$' + pipeline.toLocaleString();
+}
+
+// ─── Today Panel ─────────────────────────────────────────────────────────────
+
+function renderTodayPanel() {
+  const t = today();
+  const fuSteps = [
+    { field: 'fu1', label: 'Follow-up 1', cls: 'step-fu1' },
+    { field: 'fu2', label: 'Follow-up 2', cls: 'step-fu2' },
+    { field: 'fu3', label: 'Follow-up 3', cls: 'step-fu3' },
+  ];
+
+  let items = [];
+  const active = ['Sent','Follow-up 1 Due','Follow-up 2 Due','Follow-up 3 Due'];
+  proposals.filter(p => active.includes(p.status)).forEach(p => {
+    fuSteps.forEach(s => {
+      if (p[s.field] && p[s.field] <= t) {
+        items.push({ p, step: s, dateVal: p[s.field] });
+      }
+    });
+  });
+
+  // Sort by value desc
+  items.sort((a,b) => b.p.monthlyValue - a.p.monthlyValue);
+
+  document.getElementById('today-badge').textContent = items.length;
+
+  const el = document.getElementById('today-content');
+  if (!items.length) {
+    el.innerHTML = '<div class="empty">No follow-ups due today or overdue. Nice!</div>';
+    return;
+  }
+
+  const rows = items.map(item => {
+    const overdue = item.dateVal < t;
+    const label = overdue ? `Overdue (${formatDate(item.dateVal)})` : 'Due Today';
+    return `
+      <div class="today-item ${overdue ? 'overdue' : ''}">
+        <div class="ti-name">${esc(item.p.prospectName)}</div>
+        <div class="ti-biz">${esc(item.p.businessName)}</div>
+        <span class="ti-step ${item.step.cls}">${item.step.label}</span>
+        <span class="ti-overdue-label">${label}</span>
+        <div class="ti-value">$${item.p.monthlyValue.toLocaleString()}/mo</div>
+        <div class="ti-action">
+          <button class="btn btn-secondary btn-sm" onclick="openStatusModal('${item.p.id}')">Update</button>
+        </div>
+      </div>`;
+  }).join('');
+
+  el.innerHTML = `<div class="today-list">${rows}</div>`;
+}
+
+// ─── Table ───────────────────────────────────────────────────────────────────
+
+function sortBy(field) {
+  if (sortField === field) sortDir *= -1;
+  else { sortField = field; sortDir = 1; }
+  renderTable();
+}
+
+function renderTable() {
+  const search = document.getElementById('search-input').value.toLowerCase();
+  const statusFilter = document.getElementById('filter-status').value;
+  const industryFilter = document.getElementById('filter-industry').value;
+  const t = today();
+
+  let rows = proposals.filter(p => {
+    const matchSearch = !search ||
+      p.prospectName.toLowerCase().includes(search) ||
+      p.businessName.toLowerCase().includes(search) ||
+      (p.email || '').toLowerCase().includes(search) ||
+      (p.industry || '').toLowerCase().includes(search);
+    const matchStatus = !statusFilter || p.status === statusFilter;
+    const matchIndustry = !industryFilter || p.industry === industryFilter;
+    return matchSearch && matchStatus && matchIndustry;
+  });
+
+  rows.sort((a,b) => {
+    let av = a[sortField], bv = b[sortField];
+    if (typeof av === 'number') return (av - bv) * sortDir;
+    return String(av||'').localeCompare(String(bv||'')) * sortDir;
+  });
+
+  // Update sort icons
+  document.querySelectorAll('.sort-icon').forEach(el => el.parentElement.classList.remove('sorted'));
+  const si = document.getElementById('sort-' + sortField);
+  if (si) {
+    si.textContent = sortDir === 1 ? '↑' : '↓';
+    si.parentElement.classList.add('sorted');
+  }
+
+  const tbody = document.getElementById('table-body');
+
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="12"><div class="empty-table"><div class="big">📋</div>No proposals found.</div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = rows.map(p => {
+    const rowClass = rowClassName(p, t);
+    const fu1Html = fuCell(p.fu1, t);
+    const fu2Html = fuCell(p.fu2, t);
+    const fu3Html = fuCell(p.fu3, t);
+    const statusKey = p.status.replace(/\s+/g,'-');
+    const lostTag = p.status === 'Lost' && p.lostReason ? `<div style="font-size:11px;color:#6b7280;margin-top:3px;">${esc(p.lostReason)}</div>` : '';
+    const notesTitle = p.notes ? ` title="${esc(p.notes)}"` : '';
+
+    return `<tr class="${rowClass}" id="row-${p.id}">
+      <td class="name"${notesTitle}>${esc(p.prospectName)}<br><span style="font-size:11px;color:var(--muted);font-weight:400;">${esc(p.email||'')}</span></td>
+      <td class="biz">${esc(p.businessName)}</td>
+      <td>${esc(p.industry||'')}</td>
+      <td>${esc(p.tierProposed||'')}</td>
+      <td class="value">$${(p.monthlyValue||0).toLocaleString()}</td>
+      <td style="color:var(--muted);">$${(p.setupFee||0).toLocaleString()}</td>
+      <td class="mono">${formatDate(p.dateSent)}</td>
+      <td>${fu1Html}</td>
+      <td>${fu2Html}</td>
+      <td>${fu3Html}</td>
+      <td><span class="status-badge status-${statusKey}">${esc(p.status)}</span>${lostTag}</td>
+      <td>
+        <div class="row-actions">
+          <button class="btn btn-secondary btn-sm" onclick="openStatusModal('${p.id}')">Status</button>
+          <button class="btn btn-secondary btn-sm" onclick="openEditModal('${p.id}')">Edit</button>
+          <button class="btn btn-sm" style="background:#fee2e2;color:#b91c1c;font-weight:600;" onclick="deleteProposal('${p.id}')">Del</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function fuCell(dateStr, t) {
+  if (!dateStr) return '<span style="color:#ccc">—</span>';
+  const over = dateStr < t;
+  const due = dateStr === t;
+  let badge = '';
+  if (over) badge = '<span class="fu-date"><span class="due-badge overdue-badge">Overdue</span></span>';
+  else if (due) badge = '<span class="fu-date"><span class="due-badge">Today</span></span>';
+  return `<div class="fu-date">${formatDate(dateStr)}${badge ? '<br>'+badge : ''}</div>`;
+}
+
+function rowClassName(p, t) {
+  if (p.status === 'Won') return 'row-won';
+  if (p.status === 'Lost') return 'row-lost';
+  const active = ['Sent','Follow-up 1 Due','Follow-up 2 Due','Follow-up 3 Due'];
+  if (!active.includes(p.status)) return '';
+  const fuDates = [p.fu1, p.fu2, p.fu3].filter(Boolean);
+  if (fuDates.some(d => d < t)) return 'row-overdue';
+  if (fuDates.some(d => d === t)) return 'row-due';
+  return '';
+}
+
+// ─── Industry Filter ─────────────────────────────────────────────────────────
+
+function refreshIndustryFilter() {
+  const sel = document.getElementById('filter-industry');
+  const current = sel.value;
+  const industries = [...new Set(proposals.map(p => p.industry).filter(Boolean))].sort();
+  sel.innerHTML = '<option value="">All Industries</option>' +
+    industries.map(i => `<option value="${esc(i)}" ${i===current?'selected':''}>${esc(i)}</option>`).join('');
+}
+
+// ─── Add/Edit Modal ───────────────────────────────────────────────────────────
+
+function openAddModal() {
+  editingId = null;
+  document.getElementById('modal-title').textContent = 'New Proposal';
+  document.getElementById('save-btn').textContent = 'Save Proposal';
+  clearForm();
+  document.getElementById('f-dateSent').value = today();
+  updateFUDates();
+  document.getElementById('proposal-modal').classList.remove('hidden');
+}
+
+function openEditModal(id) {
+  const p = proposals.find(x => x.id === id);
+  if (!p) return;
+  editingId = id;
+  document.getElementById('modal-title').textContent = 'Edit Proposal';
+  document.getElementById('save-btn').textContent = 'Save Changes';
+  document.getElementById('f-prospectName').value = p.prospectName;
+  document.getElementById('f-businessName').value = p.businessName;
+  document.getElementById('f-industry').value = p.industry || '';
+  document.getElementById('f-email').value = p.email || '';
+  document.getElementById('f-phone').value = p.phone || '';
+  document.getElementById('f-tierProposed').value = p.tierProposed || '';
+  document.getElementById('f-monthlyValue').value = p.monthlyValue || '';
+  document.getElementById('f-setupFee').value = p.setupFee || '';
+  document.getElementById('f-dateSent').value = p.dateSent || '';
+  document.getElementById('f-status').value = p.status || 'Sent';
+  document.getElementById('f-lostReason').value = p.lostReason || '';
+  document.getElementById('f-notes').value = p.notes || '';
+  updateFUDates();
+  toggleLostReason();
+  document.getElementById('proposal-modal').classList.remove('hidden');
+}
+
+function clearForm() {
+  ['f-prospectName','f-businessName','f-email','f-phone','f-monthlyValue','f-setupFee','f-notes'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('f-industry').value = '';
+  document.getElementById('f-tierProposed').value = '';
+  document.getElementById('f-status').value = 'Sent';
+  document.getElementById('f-lostReason').value = '';
+  document.getElementById('lost-reason-group').style.display = 'none';
+}
+
+function updateFUDates() {
+  const ds = document.getElementById('f-dateSent').value;
+  document.getElementById('fu1-preview').textContent = ds ? formatDate(addDays(ds,3)) : '—';
+  document.getElementById('fu2-preview').textContent = ds ? formatDate(addDays(ds,7)) : '—';
+  document.getElementById('fu3-preview').textContent = ds ? formatDate(addDays(ds,14)) : '—';
+}
+
+function toggleLostReason() {
+  const v = document.getElementById('f-status').value;
+  document.getElementById('lost-reason-group').style.display = v === 'Lost' ? 'block' : 'none';
+}
+
+function saveProposal() {
+  const name = document.getElementById('f-prospectName').value.trim();
+  const biz = document.getElementById('f-businessName').value.trim();
+  const ds = document.getElementById('f-dateSent').value;
+  if (!name) { showToast('Prospect name is required.'); return; }
+  if (!ds) { showToast('Date sent is required.'); return; }
+
+  const status = document.getElementById('f-status').value;
+
+  const data = {
+    prospectName: name,
+    businessName: biz,
+    industry: document.getElementById('f-industry').value,
+    email: document.getElementById('f-email').value.trim(),
+    phone: document.getElementById('f-phone').value.trim(),
+    tierProposed: document.getElementById('f-tierProposed').value,
+    monthlyValue: parseFloat(document.getElementById('f-monthlyValue').value) || 0,
+    setupFee: parseFloat(document.getElementById('f-setupFee').value) || 0,
+    dateSent: ds,
+    fu1: addDays(ds, 3),
+    fu2: addDays(ds, 7),
+    fu3: addDays(ds, 14),
+    status: status,
+    lostReason: status === 'Lost' ? document.getElementById('f-lostReason').value : '',
+    notes: document.getElementById('f-notes').value.trim(),
+  };
+
+  if (editingId) {
+    const idx = proposals.findIndex(p => p.id === editingId);
+    if (idx !== -1) proposals[idx] = { ...proposals[idx], ...data };
+    showToast('Proposal updated.');
+  } else {
+    proposals.unshift({ id: uid(), ...data });
+    showToast('Proposal added.');
+  }
+
+  save();
+  closeModal('proposal-modal');
+  renderAll();
+}
+
+// ─── Status Modal ─────────────────────────────────────────────────────────────
+
+const STATUS_LIST = ['Sent','Follow-up 1 Due','Follow-up 2 Due','Follow-up 3 Due','Won','Lost','No Response'];
+
+function openStatusModal(id) {
+  statusEditId = id;
+  const p = proposals.find(x => x.id === id);
+  if (!p) return;
+
+  document.getElementById('status-prospect-info').textContent =
+    `${p.prospectName} — ${p.businessName} ($${p.monthlyValue.toLocaleString()}/mo)`;
+
+  document.getElementById('status-options-list').innerHTML = STATUS_LIST.map(s => `
+    <label class="status-option">
+      <input type="radio" name="sm-status" value="${s}" ${p.status===s?'checked':''} onchange="toggleStatusLostReason()">
+      <span class="status-badge status-${s.replace(/\s+/g,'-')}">${esc(s)}</span>
+      ${s}
+    </label>`).join('');
+
+  const lr = document.getElementById('sm-lostReason');
+  lr.value = p.lostReason || '';
+  document.getElementById('status-lost-reason').style.display = p.status === 'Lost' ? 'block' : 'none';
+  document.getElementById('status-modal').classList.remove('hidden');
+}
+
+function toggleStatusLostReason() {
+  const checked = document.querySelector('input[name="sm-status"]:checked');
+  document.getElementById('status-lost-reason').style.display =
+    checked && checked.value === 'Lost' ? 'block' : 'none';
+}
+
+function applyStatusUpdate() {
+  const checked = document.querySelector('input[name="sm-status"]:checked');
+  if (!checked) { showToast('Select a status.'); return; }
+  const idx = proposals.findIndex(p => p.id === statusEditId);
+  if (idx === -1) return;
+  proposals[idx].status = checked.value;
+  if (checked.value === 'Lost') {
+    proposals[idx].lostReason = document.getElementById('sm-lostReason').value;
+  } else {
+    proposals[idx].lostReason = '';
+  }
+  save();
+  closeModal('status-modal');
+  showToast('Status updated.');
+  renderAll();
+}
+
+// ─── Delete ───────────────────────────────────────────────────────────────────
+
+function deleteProposal(id) {
+  const p = proposals.find(x => x.id === id);
+  if (!p) return;
+  if (!confirm(`Delete proposal for ${p.prospectName}? This cannot be undone.`)) return;
+  proposals = proposals.filter(x => x.id !== id);
+  save();
+  showToast('Proposal deleted.');
+  renderAll();
+}
+
+// ─── Export CSV ───────────────────────────────────────────────────────────────
+
+function exportCSV() {
+  const headers = ['Prospect Name','Business Name','Industry','Email','Phone','Tier Proposed','Monthly Value','Setup Fee','Date Sent','Follow-up 1','Follow-up 2','Follow-up 3','Status','Lost Reason','Notes'];
+  const rows = proposals.map(p => [
+    p.prospectName, p.businessName, p.industry, p.email, p.phone,
+    p.tierProposed, p.monthlyValue, p.setupFee,
+    p.dateSent, p.fu1, p.fu2, p.fu3,
+    p.status, p.lostReason, p.notes
+  ].map(v => `"${String(v||'').replace(/"/g,'""')}"`));
+
+  const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `cwi-proposals-${today()}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('CSV exported.');
+}
+
+// ─── Utilities ────────────────────────────────────────────────────────────────
+
+function closeModal(id) {
+  document.getElementById(id).classList.add('hidden');
+}
+
+function esc(str) {
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// Close modal on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) overlay.classList.add('hidden');
+  });
+});
+
+// ─── Render All ───────────────────────────────────────────────────────────────
+
+function renderAll() {
+  refreshStatuses();
+  refreshIndustryFilter();
+  renderStats();
+  renderTodayPanel();
+  renderTable();
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+
+load();
+renderAll();
+</script>
+</body>
+</html>

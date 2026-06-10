@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Google Business Profile Checklist — CWI AI</title>
+<meta name="description" content="Google Business Profile optimization checklist for CWI AI clients. Track your GBP setup, photos, posts, reviews, and services.">
+<link rel="icon" type="image/png" href="../assets/cwi-favicon-64.png">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   TOKENS
+   ============================================================ */
+:root {
+  --ink: #0A0A0C;
+  --ink-2: #0E0E11;
+  --surface: #141418;
+  --surface-2: #191920;
+  --line: rgba(255,255,255,.09);
+  --line-2: rgba(255,255,255,.14);
+  --accent: #FF5A1F;
+  --ember: #FF8A3D;
+  --steel: #85858E;
+  --text: #F4F4F6;
+  --text-dim: #C2C2C8;
+  --green: #34C759;
+  --green-dim: rgba(52,199,89,.12);
+  --font-disp: 'Sora', sans-serif;
+  --font-body: 'Instrument Sans', sans-serif;
+  --r-sm: 12px;
+  --r-md: 18px;
+  --r-lg: 26px;
+  --r-pill: 999px;
+  --wrap: 860px;
+  --ease: cubic-bezier(.22,.61,.36,1);
+}
+
+/* ============================================================
+   RESET + BASE
+   ============================================================ */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font-body);
+  background: var(--ink);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+h1, h2, h3, h4 { font-family: var(--font-disp); letter-spacing: -.03em; line-height: 1.1; font-weight: 800; }
+a { color: inherit; text-decoration: none; }
+img, svg { display: block; }
+
+/* ============================================================
+   AMBIENT BACKGROUND
+   ============================================================ */
+.bg-field {
+  position: fixed; inset: 0; z-index: -1; pointer-events: none;
+}
+.bg-field::before {
+  content: "";
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(720px 460px at 82% -6%, rgba(255,90,31,.13), transparent 60%),
+    radial-gradient(620px 520px at 6% 8%, rgba(255,90,31,.05), transparent 60%);
+}
+.bg-field::after {
+  content: "";
+  position: absolute; inset: 0; opacity: .45;
+  background-image:
+    linear-gradient(rgba(255,255,255,.022) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.022) 1px, transparent 1px);
+  background-size: 58px 58px;
+  mask-image: radial-gradient(900px 700px at 72% 2%, #000, transparent 78%);
+}
+
+/* ============================================================
+   NAV
+   ============================================================ */
+.nav {
+  position: sticky; top: 0; z-index: 50;
+  backdrop-filter: blur(14px);
+  background: rgba(10,10,12,.8);
+  border-bottom: 1px solid var(--line);
+}
+.nav-in {
+  max-width: var(--wrap);
+  margin: 0 auto;
+  padding: 14px 28px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.brand {
+  display: flex; align-items: center; gap: 10px;
+  text-decoration: none;
+}
+.brand-mark {
+  width: 34px; height: 34px;
+  background: var(--accent);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.brand-mark svg { width: 20px; height: 20px; }
+.brand-wm {
+  font-family: var(--font-disp);
+  font-weight: 800;
+  font-size: 18px;
+  letter-spacing: -.05em;
+  color: #fff;
+  line-height: 1;
+}
+.brand-wm small {
+  display: block;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 8px;
+  letter-spacing: .26em;
+  text-transform: uppercase;
+  color: var(--steel);
+  margin-top: 3px;
+}
+.nav-pill {
+  margin-left: auto;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: rgba(255,90,31,.1);
+  border: 1px solid rgba(255,90,31,.22);
+  padding: 6px 14px;
+  border-radius: var(--r-pill);
+}
+
+/* ============================================================
+   LAYOUT
+   ============================================================ */
+.wrap {
+  max-width: var(--wrap);
+  margin: 0 auto;
+  padding: 0 28px;
+}
+
+/* ============================================================
+   HERO
+   ============================================================ */
+.hero {
+  padding: 72px 0 48px;
+  text-align: center;
+}
+.hero-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--steel);
+  border: 1px solid var(--line);
+  padding: 8px 16px;
+  border-radius: var(--r-pill);
+  background: rgba(255,255,255,.015);
+  margin-bottom: 28px;
+}
+.pip {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 12px var(--accent);
+  animation: blink 2s infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+.hero h1 {
+  font-size: clamp(30px, 5.5vw, 52px);
+  max-width: 18ch;
+  margin: 0 auto 18px;
+}
+.hero h1 span { color: var(--accent); }
+.hero p {
+  font-size: clamp(15px, 2vw, 17px);
+  color: var(--text-dim);
+  max-width: 52ch;
+  margin: 0 auto;
+  line-height: 1.7;
+}
+
+/* ============================================================
+   CLIENT INPUT CARD
+   ============================================================ */
+.client-card {
+  background: var(--surface);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-lg);
+  padding: 28px 32px;
+  margin: 40px 0 32px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.client-card label {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-dim);
+  white-space: nowrap;
+  letter-spacing: .01em;
+}
+.client-card input[type="text"] {
+  flex: 1;
+  min-width: 200px;
+  background: var(--ink-2);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-sm);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 15px;
+  padding: 12px 16px;
+  outline: none;
+  transition: border-color .2s;
+}
+.client-card input[type="text"]:focus {
+  border-color: var(--accent);
+}
+.client-card input[type="text"]::placeholder {
+  color: var(--steel);
+}
+.btn-load {
+  background: var(--accent);
+  color: #fff;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 14px;
+  padding: 12px 22px;
+  border: none;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: background .2s, transform .15s;
+  white-space: nowrap;
+}
+.btn-load:hover { background: var(--ember); transform: translateY(-1px); }
+.btn-load:active { transform: translateY(0); }
+
+/* ============================================================
+   PROGRESS BAR
+   ============================================================ */
+.progress-wrap {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: 24px 28px;
+  margin-bottom: 36px;
+}
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 14px;
+}
+.progress-label {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-dim);
+}
+.progress-pct {
+  font-family: var(--font-disp);
+  font-weight: 800;
+  font-size: 28px;
+  color: var(--accent);
+  letter-spacing: -.04em;
+  line-height: 1;
+}
+.progress-pct span {
+  font-size: 14px;
+  font-family: var(--font-body);
+  font-weight: 500;
+  color: var(--steel);
+}
+.progress-track {
+  background: rgba(255,255,255,.07);
+  border-radius: var(--r-pill);
+  height: 10px;
+  overflow: hidden;
+}
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--ember));
+  border-radius: var(--r-pill);
+  width: 0%;
+  transition: width .5s var(--ease);
+  box-shadow: 0 0 18px rgba(255,90,31,.4);
+}
+.progress-counts {
+  margin-top: 10px;
+  font-size: 12.5px;
+  color: var(--steel);
+}
+
+/* ============================================================
+   SECTIONS
+   ============================================================ */
+.section {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  margin-bottom: 24px;
+  overflow: hidden;
+  transition: border-color .2s;
+}
+.section:hover { border-color: var(--line-2); }
+.section-header {
+  padding: 22px 28px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  cursor: pointer;
+  user-select: none;
+  background: rgba(255,255,255,.015);
+  border-bottom: 1px solid var(--line);
+  transition: background .2s;
+}
+.section-header:hover { background: rgba(255,255,255,.03); }
+.section-icon {
+  width: 42px; height: 42px;
+  border-radius: 11px;
+  background: rgba(255,90,31,.12);
+  border: 1px solid rgba(255,90,31,.2);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  font-size: 19px;
+}
+.section-title-group { flex: 1; }
+.section-title {
+  font-family: var(--font-disp);
+  font-weight: 700;
+  font-size: 17px;
+  color: var(--text);
+  letter-spacing: -.02em;
+}
+.section-subtitle {
+  font-size: 12px;
+  color: var(--steel);
+  margin-top: 2px;
+}
+.section-badge {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: var(--r-pill);
+  background: rgba(255,255,255,.06);
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.section-badge.complete {
+  background: var(--green-dim);
+  color: var(--green);
+}
+.section-chevron {
+  color: var(--steel);
+  font-size: 14px;
+  transition: transform .25s var(--ease);
+  flex-shrink: 0;
+}
+.section.open .section-chevron { transform: rotate(180deg); }
+.section-body {
+  display: none;
+  padding: 8px 0;
+}
+.section.open .section-body { display: block; }
+
+/* ============================================================
+   CHECKLIST ITEMS
+   ============================================================ */
+.check-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 28px;
+  border-bottom: 1px solid rgba(255,255,255,.04);
+  transition: background .15s;
+  cursor: pointer;
+}
+.check-item:last-child { border-bottom: none; }
+.check-item:hover { background: rgba(255,255,255,.02); }
+.check-item input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255,255,255,.2);
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-top: 1px;
+  position: relative;
+  transition: background .15s, border-color .15s;
+}
+.check-item input[type="checkbox"]:checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.check-item input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  left: 4px; top: 1px;
+  width: 8px; height: 12px;
+  border: 2px solid #fff;
+  border-top: none;
+  border-left: none;
+  transform: rotate(42deg);
+}
+.check-item input[type="checkbox"]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.check-label {
+  flex: 1;
+  font-size: 14.5px;
+  color: var(--text-dim);
+  line-height: 1.55;
+  padding-top: 1px;
+  transition: color .15s;
+}
+.check-item:has(input:checked) .check-label {
+  color: var(--steel);
+  text-decoration: line-through;
+  text-decoration-color: rgba(133,133,142,.4);
+}
+.check-hint {
+  display: block;
+  font-size: 12px;
+  color: var(--steel);
+  margin-top: 3px;
+  font-style: italic;
+}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+.footer {
+  text-align: center;
+  padding: 56px 28px 72px;
+  color: var(--steel);
+  font-size: 13px;
+}
+.footer a { color: var(--accent); }
+.footer a:hover { color: var(--ember); }
+.footer-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.footer-mark {
+  width: 28px; height: 28px;
+  background: var(--accent);
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+}
+.footer-mark svg { width: 16px; height: 16px; }
+.footer-wm {
+  font-family: var(--font-disp);
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: -.04em;
+  color: var(--text);
+}
+
+/* ============================================================
+   SAVE TOAST
+   ============================================================ */
+.toast {
+  position: fixed;
+  bottom: 28px; right: 28px;
+  background: var(--surface-2);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-md);
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-dim);
+  box-shadow: 0 8px 40px rgba(0,0,0,.45);
+  z-index: 200;
+  transform: translateY(80px);
+  opacity: 0;
+  transition: transform .3s var(--ease), opacity .3s;
+  pointer-events: none;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 10px var(--green);
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 600px) {
+  .client-card { flex-direction: column; align-items: stretch; }
+  .section-header { padding: 18px 20px; }
+  .check-item { padding: 13px 20px; }
+  .progress-wrap { padding: 20px; }
+  .hero { padding: 52px 0 36px; }
+}
+</style>
+</head>
+<body>
+
+<div class="bg-field" aria-hidden="true"></div>
+
+<!-- NAV -->
+<nav class="nav" role="navigation">
+  <div class="nav-in">
+    <a href="../index.html" class="brand" aria-label="CWI AI home">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3 10 Q5 6 7 10 Q9 14 11 10 Q13 6 15 10 Q17 14 17 10" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </svg>
+      </div>
+      <div class="brand-wm">CWI AI<small>Compute With Imagination</small></div>
+    </a>
+    <span class="nav-pill">Client Resource</span>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header class="hero wrap">
+  <div class="hero-kicker">
+    <span class="pip" aria-hidden="true"></span>
+    Google Business Profile
+  </div>
+  <h1>Google Business Profile <span>Checklist</span></h1>
+  <p>Work through each section to fully optimize your GBP listing. Progress saves automatically per client.</p>
+</header>
+
+<main class="wrap">
+
+  <!-- CLIENT INPUT -->
+  <div class="client-card" role="group" aria-label="Client selection">
+    <label for="client-name">Client name</label>
+    <input
+      type="text"
+      id="client-name"
+      placeholder="e.g. Acme Plumbing Co."
+      autocomplete="off"
+      aria-describedby="client-hint"
+    >
+    <button class="btn-load" id="btn-load" type="button">Load Client</button>
+  </div>
+  <p id="client-hint" style="font-size:12px;color:var(--steel);margin-top:-18px;margin-bottom:32px;">
+    Enter a client name and click Load Client — your progress is saved in the browser per client.
+  </p>
+
+  <!-- PROGRESS -->
+  <div class="progress-wrap" role="region" aria-label="Overall progress">
+    <div class="progress-header">
+      <div class="progress-label">Overall completion</div>
+      <div class="progress-pct" id="pct-display">0<span>%</span></div>
+    </div>
+    <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress-track">
+      <div class="progress-bar" id="progress-bar"></div>
+    </div>
+    <div class="progress-counts" id="progress-counts">0 of 30 items complete</div>
+  </div>
+
+  <!-- SECTION 1: BASIC SETUP -->
+  <div class="section open" id="sec-basic" role="region">
+    <div class="section-header" tabindex="0" role="button" aria-expanded="true" aria-controls="body-basic" onclick="toggleSection('basic')" onkeydown="keyToggle(event,'basic')">
+      <div class="section-icon" aria-hidden="true">🏢</div>
+      <div class="section-title-group">
+        <div class="section-title">1. Basic Setup</div>
+        <div class="section-subtitle">Foundation — get the core fields right first</div>
+      </div>
+      <span class="section-badge" id="badge-basic">0 / 8</span>
+      <span class="section-chevron" aria-hidden="true">▼</span>
+    </div>
+    <div class="section-body" id="body-basic">
+      <div class="check-item" onclick="toggleCheck(this)">
+        <input type="checkbox" data-section="basic" data-key="name">
+        <div class="check-label">
+          Business name matches legal / DBA name exactly
+          <span class="check-hint">Avoid keyword stuffing — Google may suspend listings that add extra words.</span>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <input type="checkbox" data-section="basic" data-key="category">
+        <div class="check-label">
+          Primary category set to core service
+          <span class="check-hint">Choose the most specific category available; add secondary categories as needed.</span>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <input type="checkbox" data-section="basic" data-key="phone">
+        <div class="check-label">
+          Phone number added and verified
+          <span class="check-hint">Use a local number when possible; toll-free is fine but local builds trust.</span>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <input type="checkbox" data-section="basic" data-key="website">
+        <div class="check-label">
+          Website URL linked and resolving correctly
+          <span class="check-hint">Use the canonical URL with https://. Avoid redirect chains.</span>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <input type="checkbox" data-section="basic" data-key="service-area">
+        <div class="check-label">
+          Service area defined (for service-area businesses)
+          <span class="check-hint">Add all zip codes or cities served. Keep the radius realistic.</span>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <input type="checkbox" data-section="basic" data-key="hours">
+        <div class="check-label">
+          Regular business hours set accurately
+          <span class="check-hint">Incorrect hours are a top complaint and can trigger negative reviews.</span>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <input type="checkbox" data-section="basic" data-key="holiday">
+        <div class="check-label">
+          Holiday / special hours added for upcoming dates
+          <span class="check-hint">Set at least 90 days ahead; Google may show a "Hours may differ" warning otherwise.</span>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <input type="checkbox" data-section="basic" data-key="desc">
+        <div class="check-label">
+          Business description written (aim for 750 characters)
+          <span class="check-hint">Lead with what you do and who you serve. Include 1–2 natural keywords.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 2: PHOTOS -->
+  <div class="section" id="sec-photos" role="region">
+    <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="body-photos" onclick="toggleSection('photos')" onkeydown="keyToggle(event,'photos')">
+      <div class="section-icon" aria-hidden="true">📷</div>
+      <div class="section-title-group">
+        <div class="section-title">2. Photos</div>
+        <div class="section-subtitle">Visual trust signals that drive clicks</div>
+      </div>
+      <span class="section-badge" id="badge-photos">0 / 6</span>
+      <span class="section-chevron" aria-hidden="true">▼</span>
+    </div>
+    <div class="section-body" id="body-photos">
+      <div class="check-item" onclick="toggleCheck(this)">
+        <input type="checkbox" data-section="photos" data-key="logo">
+        <div class="check-label">
+          Logo uploaded (PNG, square, 720×720 min)
+          <span class="check-hint">Your logo appears in search results and on the knowledge panel.</span>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <input type="checkbox" data-section="photos" data-key="cover">
+        <div class="check-label">
+          Cover photo uploaded (1332×750 recommended)
+          <span class="check-hint">Choose an image that represents your brand — your storefront or team in action.</span>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <input type="checkbox" data-section="photos" data-key="interior">
+        <div class="check-label">
+          Interior photos added (3+ images)
+          <span class="check-hint">Helps customers know what to expect and builds confidence before visiting.</span>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <input type="checkbox" data-section="photos" data-key="exterior">
+        <div class="check-label">
+          Exterior / storefront photos added
+          <span class="check-hint">Include from multiple angles and times of day if possible.</span>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <input type="checkbox" data-section="photos" data-key="team">
+        <div class="check-label">
+          Team photo uploaded
+          <span class="check-hint">People connect with faces — a team shot increases perceived trustworthiness.</span>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <input type="checkbox" data-section="photos" data-key="before-after">
+        <div class="check-label">
+          Before-and-after or work-sample photos added
+          <span class="check-hint">Demonstrates expertise and gives prospects social proof of results.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 3: POSTS -->
+  <div class="section" id="sec-posts" role="region">
+    <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="body-posts" onclick="toggleSection('posts')" onkeydown="keyToggle(event,'posts')">
+      <div class="section-icon" aria-hidden="true">📝</div>
+      <div class="section-title-group">
+        <div class="section-title">3. Posts</div>
+        <div class="section-subtitle">Keep the listing fresh and signals active</div>
+      </div>
+      <span class="section-badge" id="badge-posts">0 / 5</span>
+      <span class="section-chevron" aria-hidden="true">▼</span>
+    </div>
+    <div class="section-body" id="body-posts">
+      <div class="check-item" onclick="toggleCheck(this)">
+        <input type="checkbox" data-section="posts" data-key="weekly">
+        <div class="check-label">
+          Weekly update post published this week
+          <span class="check-hint">GBP posts expire after 7 days — publish at least one per week to stay current.</span>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <input type="checkbox" data-section="posts" data-key="offer">
+        <div class="check-label">
+          Offer post live with coupon or promotion
+          <span class="check-hint">Offer posts include a redemption link and start/end date — great for conversions.</span>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <input type="checkbox" data-section="posts" data-key="event">
+        <div class="check-label">
+          Event post created (if applicable)
+          <span class="check-hint">Use for workshops, open houses, webinars, or seasonal events.</span>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <input type="checkbox" data-section="posts" data-key="cta">
+        <div class="check-label">
+          Each post includes a clear call-to-action button
+          <span class="check-hint">Options: Book, Order, Learn More, Sign Up, Get Offer, Call Now.</span>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <input type="checkbox" data-section="posts" data-key="image">
+        <div class="check-label">
+          Posts use high-quality branded images (no stock photos)
+          <span class="check-hint">Real photos outperform stock by 3–5x in click-through rate.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 4: REVIEWS -->
+  <div class="section" id="sec-reviews" role="region">
+    <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="body-reviews" onclick="toggleSection('reviews')" onkeydown="keyToggle(event,'reviews')">
+      <div class="section-icon" aria-hidden="true">⭐</div>
+      <div class="section-title-group">
+        <div class="section-title">4. Reviews</div>
+        <div class="section-subtitle">The #1 local ranking and trust factor</div>
+      </div>
+      <span class="section-badge" id="badge-reviews">0 / 6</span>
+      <span class="section-chevron" aria-hidden="true">▼</span>
+    </div>
+    <div class="section-body" id="body-reviews">
+      <div class="check-item" onclick="toggleCheck(this)">
+        <input type="checkbox" data-section="reviews" data-key="link">
+        <div class="check-label">
+          Google review short-link generated and saved
+          <span class="check-hint">Find it in GBP dashboard under "Get more reviews." Save to CRM for reuse.</span>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <input type="checkbox" data-section="reviews" data-key="request">
+        <div class="check-label">
+          Review request sent to recent clients (last 30 days)
+          <span class="check-hint">Personalized SMS or email outperforms generic blast campaigns.</span>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <input type="checkbox" data-section="reviews" data-key="respond">
+        <div class="check-label">
+          All reviews responded to (positive and negative)
+          <span class="check-hint">Respond within 24–48 hours. Mention the business name and service in replies for SEO.</span>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <input type="checkbox" data-section="reviews" data-key="fake">
+        <div class="check-label">
+          Fake or spam reviews flagged for removal
+          <span class="check-hint">Use the "Report review" option. Document each flagged review with a screenshot.</span>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <input type="checkbox" data-section="reviews" data-key="showcase">
+        <div class="check-label">
+          Top reviews showcased on client's website
+          <span class="check-hint">Embed Google reviews widget or copy 3–5 star quotes to the testimonials page.</span>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <input type="checkbox" data-section="reviews" data-key="average">
+        <div class="check-label">
+          Average star rating is 4.0 or above
+          <span class="check-hint">Below 4.0 significantly reduces click-through. Prioritize getting new 5-star reviews.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 5: Q&A AND SERVICES -->
+  <div class="section" id="sec-qa" role="region">
+    <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="body-qa" onclick="toggleSection('qa')" onkeydown="keyToggle(event,'qa')">
+      <div class="section-icon" aria-hidden="true">🔧</div>
+      <div class="section-title-group">
+        <div class="section-title">5. Q&amp;A and Services</div>
+        <div class="section-subtitle">Depth signals that improve local search ranking</div>
+      </div>
+      <span class="section-badge" id="badge-qa">0 / 5</span>
+      <span class="section-chevron" aria-hidden="true">▼</span>
+    </div>
+    <div class="section-body" id="body-qa">
+      <div class="check-item" onclick="toggleCheck(this)">
+        <input type="checkbox" data-section="qa" data-key="services">
+        <div class="check-label">
+          Services list complete with descriptions and prices (if applicable)
+          <span class="check-hint">Each service should have a name, short description, and optional price or range.</span>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <input type="checkbox" data-section="qa" data-key="faq">
+        <div class="check-label">
+          Q&amp;A seeded with at least 5 common questions (and answers)
+          <span class="check-hint">Post and answer questions yourself — prevents customers from leaving unanswered questions.</span>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <input type="checkbox" data-section="qa" data-key="products">
+        <div class="check-label">
+          Products listed (if applicable) with photos and prices
+          <span class="check-hint">Use the Products tab for physical goods or packaged service offerings.</span>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <input type="checkbox" data-section="qa" data-key="attributes">
+        <div class="check-label">
+          Business attributes set (accessibility, payment, amenities)
+          <span class="check-hint">Attributes like "Women-owned," "Wheelchair accessible," and "Free Wi-Fi" filter search results.</span>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <input type="checkbox" data-section="qa" data-key="booking">
+        <div class="check-label">
+          Booking button enabled and linked to scheduling system
+          <span class="check-hint">Connects to Google's booking partners or your own URL — reduces friction to convert.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-logo">
+    <div class="footer-mark" aria-hidden="true">
+      <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M3 10 Q5 6 7 10 Q9 14 11 10 Q13 6 15 10 Q17 14 17 10" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      </svg>
+    </div>
+    <div class="footer-wm">CWI AI</div>
+  </div>
+  <p>Client resource provided by <a href="../index.html">CWI AI</a> &mdash; Compute With Imagination.</p>
+  <p style="margin-top:8px;">Progress is saved locally in your browser. No data is transmitted.</p>
+</footer>
+
+<!-- SAVE TOAST -->
+<div class="toast" id="toast" role="status" aria-live="polite">
+  <span class="toast-dot" aria-hidden="true"></span>
+  Progress saved
+</div>
+
+<script>
+/* ============================================================
+   STATE
+   ============================================================ */
+const SECTIONS = ['basic', 'photos', 'posts', 'reviews', 'qa'];
+const SECTION_COUNTS = { basic: 8, photos: 6, posts: 5, reviews: 6, qa: 5 };
+const TOTAL = Object.values(SECTION_COUNTS).reduce((a, b) => a + b, 0); // 30
+
+let currentClient = '';
+
+/* ============================================================
+   STORAGE HELPERS
+   ============================================================ */
+function storageKey() {
+  return 'cwi-gbp-' + currentClient.trim().toLowerCase().replace(/\s+/g, '-');
+}
+
+function loadState() {
+  if (!currentClient.trim()) return {};
+  try {
+    return JSON.parse(localStorage.getItem(storageKey()) || '{}');
+  } catch (e) {
+    return {};
+  }
+}
+
+function saveState() {
+  if (!currentClient.trim()) return;
+  const state = {};
+  document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+    const key = cb.dataset.section + '.' + cb.dataset.key;
+    state[key] = cb.checked;
+  });
+  localStorage.setItem(storageKey(), JSON.stringify(state));
+  showToast();
+}
+
+/* ============================================================
+   RENDER STATE
+   ============================================================ */
+function applyState(state) {
+  document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+    const key = cb.dataset.section + '.' + cb.dataset.key;
+    cb.checked = !!state[key];
+  });
+  updateProgress();
+}
+
+function clearCheckboxes() {
+  document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+    cb.checked = false;
+  });
+  updateProgress();
+}
+
+/* ============================================================
+   PROGRESS
+   ============================================================ */
+function updateProgress() {
+  let total = 0;
+  let checked = 0;
+
+  SECTIONS.forEach(sec => {
+    const items = document.querySelectorAll(`input[data-section="${sec}"]`);
+    let secChecked = 0;
+    items.forEach(cb => {
+      if (cb.checked) { secChecked++; checked++; }
+      total++;
+    });
+    const badge = document.getElementById('badge-' + sec);
+    const max = SECTION_COUNTS[sec];
+    badge.textContent = secChecked + ' / ' + max;
+    badge.classList.toggle('complete', secChecked === max);
+  });
+
+  const pct = total > 0 ? Math.round((checked / total) * 100) : 0;
+
+  document.getElementById('progress-bar').style.width = pct + '%';
+  document.getElementById('pct-display').innerHTML = pct + '<span>%</span>';
+  document.getElementById('progress-counts').textContent =
+    checked + ' of ' + total + ' items complete';
+
+  const track = document.getElementById('progress-track');
+  track.setAttribute('aria-valuenow', pct);
+}
+
+/* ============================================================
+   SECTION TOGGLE
+   ============================================================ */
+function toggleSection(id) {
+  const sec = document.getElementById('sec-' + id);
+  const header = sec.querySelector('.section-header');
+  const isOpen = sec.classList.contains('open');
+  sec.classList.toggle('open', !isOpen);
+  header.setAttribute('aria-expanded', String(!isOpen));
+}
+
+function keyToggle(e, id) {
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    toggleSection(id);
+  }
+}
+
+/* ============================================================
+   CHECKBOX TOGGLE
+   ============================================================ */
+function toggleCheck(item) {
+  const cb = item.querySelector('input[type="checkbox"]');
+  // If the click was directly on the checkbox, don't double-toggle
+  if (event.target === cb) return;
+  cb.checked = !cb.checked;
+  updateProgress();
+  saveState();
+}
+
+// Also handle direct checkbox clicks
+document.addEventListener('change', function(e) {
+  if (e.target.type === 'checkbox' && e.target.dataset.section) {
+    updateProgress();
+    saveState();
+  }
+});
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+let toastTimer;
+function showToast() {
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+/* ============================================================
+   CLIENT LOAD
+   ============================================================ */
+function loadClient() {
+  const name = document.getElementById('client-name').value.trim();
+  if (!name) {
+    document.getElementById('client-name').focus();
+    return;
+  }
+  currentClient = name;
+  const state = loadState();
+  applyState(state);
+
+  // Open first section if nothing is saved yet
+  const hasAny = Object.keys(state).length > 0;
+  if (!hasAny) {
+    SECTIONS.forEach(sec => {
+      const el = document.getElementById('sec-' + sec);
+      const header = el.querySelector('.section-header');
+      if (sec === 'basic') {
+        el.classList.add('open');
+        header.setAttribute('aria-expanded', 'true');
+      } else {
+        el.classList.remove('open');
+        header.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+}
+
+document.getElementById('btn-load').addEventListener('click', loadClient);
+document.getElementById('client-name').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') loadClient();
+});
+
+/* ============================================================
+   INIT
+   ============================================================ */
+updateProgress();
+</script>
+</body>
+</html>

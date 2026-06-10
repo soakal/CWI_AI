@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CWI AI LLC — Quarterly Tax & Expense Tracker 2026</title>
+<meta name="description" content="CWI internal tool: CWI AI LLC — Quarterly Tax & Expense Tracker 2026. Internal use only — CWI Compute With Imagination.">
+<style>
+  :root {
+    --accent: #FF5A1F;
+    --accent-dark: #d44a18;
+    --accent-light: #fff3ef;
+    --bg: #f8f9fa;
+    --surface: #ffffff;
+    --border: #e2e5e9;
+    --text: #1a1d23;
+    --muted: #6b7280;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --row-alt: #fafbfc;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    font-size: 14px;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+  }
+
+  /* ── HEADER ── */
+  .app-header {
+    background: var(--text);
+    color: #fff;
+    padding: 16px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .app-header .brand { display: flex; align-items: center; gap: 12px; }
+  .app-header .brand-logo {
+    width: 38px; height: 38px; background: var(--accent);
+    border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 16px; color: #fff; flex-shrink: 0;
+  }
+  .app-header .brand-name { font-size: 18px; font-weight: 700; }
+  .app-header .brand-sub { font-size: 12px; color: #9ca3af; margin-top: 1px; }
+  .header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  /* ── QUARTER SELECTOR ── */
+  .quarter-bar {
+    background: var(--surface);
+    border-bottom: 2px solid var(--border);
+    padding: 14px 28px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .quarter-bar label { font-weight: 600; font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  .q-btn {
+    padding: 7px 18px;
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--muted);
+    transition: all .15s;
+  }
+  .q-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .q-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .quarter-dates { margin-left: auto; font-size: 12px; color: var(--muted); font-style: italic; }
+
+  /* ── LAYOUT ── */
+  .app-body { max-width: 1200px; margin: 0 auto; padding: 24px 28px; display: flex; flex-direction: column; gap: 24px; }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .card-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: #fafbfc;
+  }
+  .card-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title .dot {
+    width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+  }
+  .card-body { padding: 20px; }
+
+  /* ── REVENUE ── */
+  .revenue-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr) auto;
+    gap: 16px;
+    align-items: end;
+  }
+  .field-group { display: flex; flex-direction: column; gap: 5px; }
+  .field-group label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  .field-group input[type="number"], .field-group input[type="text"], .field-group input[type="date"], .field-group select {
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 14px;
+    color: var(--text);
+    width: 100%;
+    transition: border-color .15s;
+    background: var(--surface);
+  }
+  .field-group input:focus, .field-group select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(255,90,31,.1);
+  }
+  .revenue-total {
+    background: var(--accent-light);
+    border: 1.5px solid #ffd4c2;
+    border-radius: 8px;
+    padding: 10px 16px;
+    text-align: center;
+    min-width: 130px;
+  }
+  .revenue-total .rt-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--accent); }
+  .revenue-total .rt-value { font-size: 22px; font-weight: 800; color: var(--accent); margin-top: 2px; }
+
+  /* ── EXPENSE TABLE ── */
+  .expense-section { display: flex; flex-direction: column; gap: 20px; }
+  .category-block { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .cat-header {
+    padding: 10px 16px;
+    background: #f3f4f6;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .cat-header:hover { background: #eaecef; }
+  .cat-name { font-weight: 700; font-size: 13px; display: flex; align-items: center; gap: 8px; }
+  .cat-badge {
+    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+    padding: 2px 7px; border-radius: 20px; background: var(--accent-light); color: var(--accent);
+  }
+  .cat-note { font-size: 11px; color: var(--warning); font-weight: 600; }
+  .cat-total-label { font-size: 12px; color: var(--muted); }
+  .cat-total-value { font-size: 15px; font-weight: 800; color: var(--text); }
+  .cat-chevron { color: var(--muted); transition: transform .2s; font-size: 12px; }
+  .cat-chevron.open { transform: rotate(180deg); }
+
+  .expense-table-wrap { overflow-x: auto; }
+  .expense-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .expense-table th {
+    background: #f9fafb;
+    border-bottom: 1.5px solid var(--border);
+    padding: 8px 10px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .expense-table td {
+    padding: 7px 10px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .expense-table tr:last-child td { border-bottom: none; }
+  .expense-table tbody tr:nth-child(even) { background: var(--row-alt); }
+  .expense-table tbody tr:hover { background: var(--accent-light); }
+  .expense-table input[type="date"],
+  .expense-table input[type="text"],
+  .expense-table input[type="number"] {
+    border: 1.5px solid var(--border);
+    border-radius: 5px;
+    padding: 5px 8px;
+    font-size: 13px;
+    color: var(--text);
+    background: var(--surface);
+    width: 100%;
+    transition: border-color .15s;
+  }
+  .expense-table input:focus { outline: none; border-color: var(--accent); }
+  .expense-table input[type="date"] { width: 130px; }
+  .expense-table .amount-input { width: 100px; text-align: right; }
+  .expense-table input[type="checkbox"] {
+    width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer;
+  }
+  .expense-table .col-date { width: 140px; }
+  .expense-table .col-desc { min-width: 180px; }
+  .expense-table .col-amount { width: 110px; }
+  .expense-table .col-receipt { width: 70px; text-align: center; }
+  .expense-table .col-action { width: 40px; text-align: center; }
+  .del-row-btn {
+    background: none;
+    border: none;
+    color: #d1d5db;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: color .15s;
+  }
+  .del-row-btn:hover { color: var(--danger); background: #fef2f2; }
+  .add-row-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    margin: 8px 12px;
+    background: none;
+    border: 1.5px dashed var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 600;
+    transition: all .15s;
+    width: calc(100% - 24px);
+    justify-content: center;
+  }
+  .add-row-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+
+  /* ── SUMMARY ── */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 640px) { .summary-grid { grid-template-columns: 1fr; } }
+  .summary-table { width: 100%; border-collapse: collapse; }
+  .summary-table tr { border-bottom: 1px solid var(--border); }
+  .summary-table tr:last-child { border-bottom: none; }
+  .summary-table td { padding: 10px 0; font-size: 14px; }
+  .summary-table td:last-child { text-align: right; font-weight: 700; }
+  .summary-table .row-divider td { border-top: 2px solid var(--border); padding-top: 12px; }
+  .summary-table .row-accent td { color: var(--accent); font-weight: 800; font-size: 15px; }
+  .summary-table .row-muted td { color: var(--muted); font-size: 12px; font-weight: 400; }
+  .summary-table .row-muted td:last-child { font-weight: 600; }
+
+  .qbi-note {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 12px;
+    color: #92400e;
+    line-height: 1.6;
+  }
+  .qbi-note strong { font-weight: 700; }
+
+  /* ── CATEGORY BREAKDOWN ── */
+  .breakdown-list { display: flex; flex-direction: column; gap: 8px; }
+  .breakdown-item { display: flex; align-items: center; gap: 10px; }
+  .breakdown-bar-wrap { flex: 1; background: var(--border); border-radius: 3px; height: 6px; overflow: hidden; }
+  .breakdown-bar { height: 100%; background: var(--accent); border-radius: 3px; transition: width .4s ease; }
+  .breakdown-name { font-size: 12px; color: var(--text); width: 220px; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .breakdown-val { font-size: 12px; font-weight: 700; color: var(--text); width: 80px; text-align: right; flex-shrink: 0; }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all .15s;
+    white-space: nowrap;
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-dark); }
+  .btn-outline {
+    background: var(--surface);
+    color: var(--text);
+    border: 1.5px solid var(--border);
+  }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-ghost { background: transparent; color: #fff; border: 1.5px solid rgba(255,255,255,.3); }
+  .btn-ghost:hover { background: rgba(255,255,255,.1); }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+  /* ── PRINT ── */
+  @media print {
+    body { background: #fff; font-size: 12px; }
+    .app-header, .quarter-bar, .expense-section, .no-print, .add-row-btn, .del-row-btn { display: none !important; }
+    .app-body { padding: 0; }
+    .card { box-shadow: none; border: 1px solid #ddd; }
+    .summary-grid { grid-template-columns: 1fr 1fr; }
+    .print-header { display: block !important; }
+  }
+  .print-header { display: none; padding: 0 0 16px 0; }
+  .print-header h2 { font-size: 18px; font-weight: 800; }
+  .print-header p { font-size: 13px; color: var(--muted); }
+
+  /* ── MISC ── */
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    background: var(--accent-light);
+    color: var(--accent);
+  }
+  .stat-row { display: flex; gap: 16px; flex-wrap: wrap; }
+  .stat-box {
+    flex: 1; min-width: 120px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+  }
+  .stat-box .sb-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  .stat-box .sb-value { font-size: 20px; font-weight: 800; margin-top: 4px; }
+  .stat-box.accent { background: var(--accent-light); border-color: #ffd4c2; }
+  .stat-box.accent .sb-value { color: var(--accent); }
+  .stat-box.danger .sb-value { color: var(--danger); }
+  .stat-box.success .sb-value { color: var(--success); }
+
+  .collapsed { display: none; }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header class="app-header no-print">
+  <div class="brand">
+    <div class="brand-logo">CWI</div>
+    <div>
+      <div class="brand-name">CWI AI LLC</div>
+      <div class="brand-sub">Quarterly Tax &amp; Expense Tracker — 2026</div>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-ghost btn-sm" onclick="exportCSV()">&#8595; Export CSV</button>
+    <button class="btn btn-ghost btn-sm" onclick="window.print()">&#9113; Print Summary</button>
+  </div>
+</header>
+
+<div class="quarter-bar no-print">
+  <label>Quarter:</label>
+  <button class="q-btn" data-q="Q1" onclick="switchQuarter('Q1')">Q1</button>
+  <button class="q-btn" data-q="Q2" onclick="switchQuarter('Q2')">Q2</button>
+  <button class="q-btn" data-q="Q3" onclick="switchQuarter('Q3')">Q3</button>
+  <button class="q-btn" data-q="Q4" onclick="switchQuarter('Q4')">Q4</button>
+  <span class="quarter-dates" id="quarterDateRange"></span>
+</div>
+
+<div class="app-body">
+
+  <!-- Print header (only visible when printing) -->
+  <div class="print-header">
+    <h2>CWI AI LLC — Quarterly Tax Summary</h2>
+    <p id="printSubtitle"></p>
+  </div>
+
+  <!-- REVENUE -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><span class="dot"></span>Quarterly Revenue</div>
+      <span class="tag" id="quarterLabel">Q1 2026</span>
+    </div>
+    <div class="card-body">
+      <div class="revenue-grid">
+        <div class="field-group">
+          <label id="month1Label" for="rev1">January</label>
+          <input type="number" id="rev1" min="0" step="0.01" placeholder="0.00" oninput="updateRevenue()">
+        </div>
+        <div class="field-group">
+          <label id="month2Label" for="rev2">February</label>
+          <input type="number" id="rev2" min="0" step="0.01" placeholder="0.00" oninput="updateRevenue()">
+        </div>
+        <div class="field-group">
+          <label id="month3Label" for="rev3">March</label>
+          <input type="number" id="rev3" min="0" step="0.01" placeholder="0.00" oninput="updateRevenue()">
+        </div>
+        <div class="revenue-total">
+          <div class="rt-label">Q Revenue</div>
+          <div class="rt-value" id="revenueTotal">$0.00</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXPENSES -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><span class="dot"></span>Business Expenses</div>
+      <button class="btn btn-primary btn-sm no-print" onclick="addExpenseRow(null)">+ Add Expense</button>
+    </div>
+    <div class="card-body" style="padding:0;">
+      <div class="expense-section" id="expenseSection"></div>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stat-row">
+    <div class="stat-box">
+      <div class="sb-label">Gross Revenue</div>
+      <div class="sb-value" id="statRevenue">$0.00</div>
+    </div>
+    <div class="stat-box danger">
+      <div class="sb-label">Total Expenses</div>
+      <div class="sb-value" id="statExpenses">$0.00</div>
+    </div>
+    <div class="stat-box success">
+      <div class="sb-label">Net Profit</div>
+      <div class="sb-value" id="statProfit">$0.00</div>
+    </div>
+    <div class="stat-box accent">
+      <div class="sb-label">Est. Tax Due</div>
+      <div class="sb-value" id="statTax">$0.00</div>
+    </div>
+  </div>
+
+  <!-- SUMMARY + BREAKDOWN -->
+  <div class="summary-grid">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><span class="dot"></span>Quarterly Tax Summary</div>
+      </div>
+      <div class="card-body">
+        <table class="summary-table">
+          <tr>
+            <td>Gross Revenue</td>
+            <td id="sumRevenue">$0.00</td>
+          </tr>
+          <tr>
+            <td>Total Business Expenses</td>
+            <td id="sumExpenses">- $0.00</td>
+          </tr>
+          <tr class="row-divider">
+            <td><strong>Net Profit</strong></td>
+            <td id="sumProfit"><strong>$0.00</strong></td>
+          </tr>
+          <tr class="row-muted">
+            <td>QBI Deduction (20% of net profit)</td>
+            <td id="sumQBI">- $0.00</td>
+          </tr>
+          <tr>
+            <td>SE Tax Base (92.35% of net)</td>
+            <td id="sumSEBase">$0.00</td>
+          </tr>
+          <tr>
+            <td>Self-Employment Tax (15.3%)</td>
+            <td id="sumSETax">$0.00</td>
+          </tr>
+          <tr class="row-muted">
+            <td>SE Tax Deduction (50% of SE Tax)</td>
+            <td id="sumSEDed">- $0.00</td>
+          </tr>
+          <tr>
+            <td>Taxable Income (after deductions)</td>
+            <td id="sumTaxable">$0.00</td>
+          </tr>
+          <tr>
+            <td>Federal Income Tax (22%)</td>
+            <td id="sumIncomeTax">$0.00</td>
+          </tr>
+          <tr class="row-divider row-accent">
+            <td>Total Annual Tax Estimate</td>
+            <td id="sumTotalTax">$0.00</td>
+          </tr>
+          <tr>
+            <td><strong>Recommended Quarterly Payment</strong></td>
+            <td id="sumQPayment"><strong>$0.00</strong></td>
+          </tr>
+          <tr class="row-muted">
+            <td>Meals &amp; Entertainment (50% deductible)</td>
+            <td id="sumMeals">$0.00</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><span class="dot"></span>Expense Breakdown by Category</div>
+      </div>
+      <div class="card-body">
+        <div class="breakdown-list" id="breakdownList"></div>
+        <div class="qbi-note" style="margin-top:16px;">
+          <strong>QBI Deduction Note:</strong> As a sole proprietor / single-member LLC, you may deduct up to 20% of qualified business income (net profit) under IRC §199A. This reduces federal taxable income but does <em>not</em> reduce self-employment tax. Consult your CPA — phase-outs, W-2 wage tests, and service business rules may apply.
+        </div>
+        <div class="qbi-note" style="margin-top:10px; background:#f0fdf4; border-color:#86efac; color:#14532d;">
+          <strong>Home Office Deduction:</strong> Use the simplified method ($5/sq ft, max 300 sq ft = $1,500/yr) or actual expense method (business-use % × total home expenses). Record your square footage ratio and keep utility/rent records.
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// DATA MODEL
+// ─────────────────────────────────────────────────────────────────────────────
+const CATEGORIES = [
+  { id: 'software',    name: 'Software & Subscriptions',    badge: 'SaaS',    note: null,              examples: 'Make, Resend, OpenRouter, Hosting, SaaS tools' },
+  { id: 'advertising', name: 'Advertising & Marketing',     badge: 'Mktg',    note: null,              examples: 'Ads, social, content, SEO, design' },
+  { id: 'professional',name: 'Professional Services',       badge: 'Prof',    note: null,              examples: 'Accountant, attorney, consulting' },
+  { id: 'office',      name: 'Office & Equipment',          badge: 'Office',  note: null,              examples: 'Hardware, peripherals, supplies, furniture' },
+  { id: 'education',   name: 'Education & Training',        badge: 'EDU',     note: null,              examples: 'Courses, books, conferences, certifications' },
+  { id: 'meals',       name: 'Meals & Entertainment',       badge: '50%',     note: '50% deductible',  examples: 'Business meals, client entertainment (50% deductible)' },
+  { id: 'homeoffice',  name: 'Home Office',                 badge: 'Home',    note: 'Calculate %',     examples: 'Rent%, utilities%, internet allocated to office use' },
+  { id: 'contractors', name: 'Contractor Payments',         badge: '1099',    note: null,              examples: 'Freelancers, subcontractors — issue 1099-NEC if ≥$600' },
+  { id: 'other',       name: 'Other Business Expenses',     badge: 'Other',   note: null,              examples: 'Business insurance, bank fees, misc' },
+];
+
+const QUARTER_MONTHS = {
+  Q1: ['January',   'February',  'March'],
+  Q2: ['April',     'May',       'June'],
+  Q3: ['July',      'August',    'September'],
+  Q4: ['October',   'November',  'December'],
+};
+const QUARTER_DATES = {
+  Q1: 'Jan 1 – Mar 31, 2026  •  Estimated tax due: Apr 15',
+  Q2: 'Apr 1 – Jun 30, 2026  •  Estimated tax due: Jun 16',
+  Q3: 'Jul 1 – Sep 30, 2026  •  Estimated tax due: Sep 15',
+  Q4: 'Oct 1 – Dec 31, 2026  •  Estimated tax due: Jan 15, 2027',
+};
+
+let currentQ = 'Q1';
+
+function storageKey(q) { return `cwi_tax_2026_${q}`; }
+
+function loadData(q) {
+  try {
+    const raw = localStorage.getItem(storageKey(q));
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return {
+    revenue: [0, 0, 0],
+    expenses: CATEGORIES.reduce((acc, c) => { acc[c.id] = []; return acc; }, {}),
+  };
+}
+
+function saveData() {
+  const data = readFormData();
+  try { localStorage.setItem(storageKey(currentQ), JSON.stringify(data)); } catch(e) {}
+}
+
+function readFormData() {
+  const revenue = [
+    parseFloat(document.getElementById('rev1').value) || 0,
+    parseFloat(document.getElementById('rev2').value) || 0,
+    parseFloat(document.getElementById('rev3').value) || 0,
+  ];
+  const expenses = {};
+  CATEGORIES.forEach(cat => {
+    expenses[cat.id] = [];
+    const rows = document.querySelectorAll(`.expense-row[data-cat="${cat.id}"]`);
+    rows.forEach(row => {
+      expenses[cat.id].push({
+        date:    row.querySelector('.e-date').value,
+        desc:    row.querySelector('.e-desc').value,
+        amount:  parseFloat(row.querySelector('.e-amount').value) || 0,
+        receipt: row.querySelector('.e-receipt').checked,
+      });
+    });
+  });
+  return { revenue, expenses };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RENDER
+// ─────────────────────────────────────────────────────────────────────────────
+function renderApp(q) {
+  currentQ = q;
+  const data = loadData(q);
+  const months = QUARTER_MONTHS[q];
+
+  // Quarter selector
+  document.querySelectorAll('.q-btn').forEach(b => b.classList.toggle('active', b.dataset.q === q));
+  document.getElementById('quarterDateRange').textContent = QUARTER_DATES[q];
+  document.getElementById('quarterLabel').textContent = `${q} 2026`;
+  document.getElementById('printSubtitle').textContent = `${q} 2026  •  ${QUARTER_DATES[q]}`;
+
+  // Month labels
+  document.getElementById('month1Label').textContent = months[0];
+  document.getElementById('month2Label').textContent = months[1];
+  document.getElementById('month3Label').textContent = months[2];
+
+  // Revenue
+  document.getElementById('rev1').value = data.revenue[0] || '';
+  document.getElementById('rev2').value = data.revenue[1] || '';
+  document.getElementById('rev3').value = data.revenue[2] || '';
+
+  // Expenses
+  const section = document.getElementById('expenseSection');
+  section.innerHTML = '';
+  CATEGORIES.forEach(cat => {
+    const rows = data.expenses[cat.id] || [];
+    section.appendChild(buildCategoryBlock(cat, rows));
+  });
+
+  updateRevenue();
+  updateSummary();
+}
+
+function buildCategoryBlock(cat, rows) {
+  const wrap = document.createElement('div');
+  wrap.className = 'category-block';
+  wrap.dataset.cat = cat.id;
+
+  const header = document.createElement('div');
+  header.className = 'cat-header';
+  header.innerHTML = `
+    <div class="cat-name">
+      ${cat.name}
+      <span class="cat-badge">${cat.badge}</span>
+      ${cat.note ? `<span class="cat-note">⚠ ${cat.note}</span>` : ''}
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <span class="cat-total-label">Total: </span>
+      <span class="cat-total-value" id="catTotal_${cat.id}">$0.00</span>
+      <span class="cat-chevron open" id="chevron_${cat.id}">▼</span>
+    </div>`;
+  wrap.appendChild(header);
+
+  const body = document.createElement('div');
+  body.className = 'cat-body';
+  body.id = `catBody_${cat.id}`;
+
+  const tableWrap = document.createElement('div');
+  tableWrap.className = 'expense-table-wrap';
+
+  const table = document.createElement('table');
+  table.className = 'expense-table';
+  table.innerHTML = `
+    <thead>
+      <tr>
+        <th class="col-date">Date</th>
+        <th class="col-desc">Description</th>
+        <th class="col-amount">Amount ($)</th>
+        <th class="col-receipt">Receipt?</th>
+        <th class="col-action no-print"></th>
+      </tr>
+    </thead>
+    <tbody id="tbody_${cat.id}"></tbody>`;
+  tableWrap.appendChild(table);
+  body.appendChild(tableWrap);
+
+  const addBtn = document.createElement('button');
+  addBtn.className = 'add-row-btn no-print';
+  addBtn.dataset.cat = cat.id;
+  addBtn.innerHTML = '+ Add Row';
+  addBtn.onclick = () => { addRowToCategory(cat.id, {}); saveData(); updateSummary(); };
+  body.appendChild(addBtn);
+  wrap.appendChild(body);
+
+  // Toggle collapse
+  header.addEventListener('click', () => {
+    body.classList.toggle('collapsed');
+    document.getElementById(`chevron_${cat.id}`).classList.toggle('open', !body.classList.contains('collapsed'));
+  });
+
+  rows.forEach(r => addRowToCategory(cat.id, r, wrap));
+  updateCatTotal(cat.id);
+
+  return wrap;
+}
+
+function addRowToCategory(catId, data = {}, container = null) {
+  const tbody = document.getElementById(`tbody_${catId}`);
+  if (!tbody) return;
+  const tr = document.createElement('tr');
+  tr.className = 'expense-row';
+  tr.dataset.cat = catId;
+  tr.innerHTML = `
+    <td class="col-date"><input type="date" class="e-date" value="${data.date || ''}"></td>
+    <td class="col-desc"><input type="text" class="e-desc" placeholder="Description…" value="${escHtml(data.desc || '')}"></td>
+    <td class="col-amount"><input type="number" class="e-amount amount-input" min="0" step="0.01" placeholder="0.00" value="${data.amount || ''}"></td>
+    <td class="col-receipt" style="text-align:center;"><input type="checkbox" class="e-receipt" ${data.receipt ? 'checked' : ''}></td>
+    <td class="col-action no-print"><button class="del-row-btn" title="Delete row">✕</button></td>`;
+  tr.querySelector('.del-row-btn').addEventListener('click', () => {
+    tr.remove(); saveData(); updateSummary();
+  });
+  tr.querySelectorAll('input').forEach(inp => {
+    inp.addEventListener('input', () => { saveData(); updateSummary(); });
+    inp.addEventListener('change', () => { saveData(); updateSummary(); });
+  });
+  tbody.appendChild(tr);
+}
+
+function addExpenseRow(catId) {
+  if (!catId) {
+    catId = prompt('Enter category ID:\n' + CATEGORIES.map(c => c.id).join('\n'));
+    if (!catId || !CATEGORIES.find(c => c.id === catId)) return;
+  }
+  addRowToCategory(catId, {});
+  saveData();
+  updateSummary();
+}
+
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CALCULATIONS
+// ─────────────────────────────────────────────────────────────────────────────
+function updateRevenue() {
+  const r1 = parseFloat(document.getElementById('rev1').value) || 0;
+  const r2 = parseFloat(document.getElementById('rev2').value) || 0;
+  const r3 = parseFloat(document.getElementById('rev3').value) || 0;
+  document.getElementById('revenueTotal').textContent = fmt(r1 + r2 + r3);
+  saveData();
+  updateSummary();
+}
+
+function getCatTotal(catId) {
+  let total = 0;
+  document.querySelectorAll(`.expense-row[data-cat="${catId}"] .e-amount`).forEach(inp => {
+    total += parseFloat(inp.value) || 0;
+  });
+  return total;
+}
+
+function updateCatTotal(catId) {
+  const el = document.getElementById(`catTotal_${catId}`);
+  if (el) el.textContent = fmt(getCatTotal(catId));
+}
+
+function updateSummary() {
+  CATEGORIES.forEach(cat => updateCatTotal(cat.id));
+
+  const r1 = parseFloat(document.getElementById('rev1').value) || 0;
+  const r2 = parseFloat(document.getElementById('rev2').value) || 0;
+  const r3 = parseFloat(document.getElementById('rev3').value) || 0;
+  const grossRevenue = r1 + r2 + r3;
+
+  let totalExpenses = 0;
+  let mealsTotal = 0;
+  CATEGORIES.forEach(cat => {
+    const t = getCatTotal(cat.id);
+    if (cat.id === 'meals') {
+      mealsTotal = t;
+      totalExpenses += t * 0.5; // 50% deductible
+    } else {
+      totalExpenses += t;
+    }
+  });
+
+  const netProfit = Math.max(0, grossRevenue - totalExpenses);
+  const qbi = netProfit * 0.20;
+  const seBase = netProfit * 0.9235;
+  const seTax = seBase * 0.153;
+  const seDed = seTax * 0.5;
+  const taxableIncome = Math.max(0, netProfit - qbi - seDed);
+  const incomeTax = taxableIncome * 0.22;
+  const totalTax = seTax + incomeTax;
+  const qPayment = totalTax / 4;
+
+  // Stats row
+  document.getElementById('statRevenue').textContent = fmt(grossRevenue);
+  document.getElementById('statExpenses').textContent = fmt(totalExpenses);
+  document.getElementById('statProfit').textContent = fmt(netProfit);
+  document.getElementById('statTax').textContent = fmt(qPayment);
+
+  // Summary table
+  document.getElementById('sumRevenue').textContent = fmt(grossRevenue);
+  document.getElementById('sumExpenses').textContent = `- ${fmt(totalExpenses)}`;
+  document.getElementById('sumProfit').innerHTML = `<strong>${fmt(netProfit)}</strong>`;
+  document.getElementById('sumQBI').textContent = `- ${fmt(qbi)}`;
+  document.getElementById('sumSEBase').textContent = fmt(seBase);
+  document.getElementById('sumSETax').textContent = fmt(seTax);
+  document.getElementById('sumSEDed').textContent = `- ${fmt(seDed)}`;
+  document.getElementById('sumTaxable').textContent = fmt(taxableIncome);
+  document.getElementById('sumIncomeTax').textContent = fmt(incomeTax);
+  document.getElementById('sumTotalTax').textContent = fmt(totalTax);
+  document.getElementById('sumQPayment').innerHTML = `<strong>${fmt(qPayment)}</strong>`;
+  document.getElementById('sumMeals').textContent = `${fmt(mealsTotal)} (deducting ${fmt(mealsTotal*0.5)})`;
+
+  // Breakdown
+  renderBreakdown(totalExpenses);
+}
+
+function renderBreakdown(totalExpenses) {
+  const list = document.getElementById('breakdownList');
+  list.innerHTML = '';
+  const entries = CATEGORIES.map(cat => ({
+    name: cat.name,
+    value: getCatTotal(cat.id),
+    deductible: cat.id === 'meals' ? getCatTotal(cat.id) * 0.5 : getCatTotal(cat.id),
+  })).sort((a,b) => b.value - a.value);
+
+  const maxVal = Math.max(...entries.map(e => e.value), 1);
+  entries.forEach(e => {
+    if (e.value <= 0 && totalExpenses > 0) return;
+    const pct = (e.value / maxVal) * 100;
+    const item = document.createElement('div');
+    item.className = 'breakdown-item';
+    item.innerHTML = `
+      <div class="breakdown-name" title="${e.name}">${e.name}</div>
+      <div class="breakdown-bar-wrap"><div class="breakdown-bar" style="width:${pct}%"></div></div>
+      <div class="breakdown-val">${fmt(e.value)}</div>`;
+    list.appendChild(item);
+  });
+  if (entries.every(e => e.value === 0)) {
+    list.innerHTML = '<p style="color:var(--muted);font-size:13px;text-align:center;padding:20px 0;">No expenses recorded yet.</p>';
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// QUARTER SWITCH
+// ─────────────────────────────────────────────────────────────────────────────
+function switchQuarter(q) {
+  saveData();
+  renderApp(q);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// EXPORT CSV
+// ─────────────────────────────────────────────────────────────────────────────
+function exportCSV() {
+  const data = readFormData();
+  const months = QUARTER_MONTHS[currentQ];
+  const rows = [
+    ['CWI AI LLC', `${currentQ} 2026 — Quarterly Tax & Expense Report`],
+    [],
+    ['REVENUE'],
+    ['Month', 'Amount'],
+    [months[0], fmtNum(data.revenue[0])],
+    [months[1], fmtNum(data.revenue[1])],
+    [months[2], fmtNum(data.revenue[2])],
+    ['Total Revenue', fmtNum(data.revenue.reduce((a,b)=>a+b,0))],
+    [],
+    ['EXPENSES'],
+    ['Date', 'Description', 'Category', 'Amount', 'Deductible Amount', 'Receipt?'],
+  ];
+
+  CATEGORIES.forEach(cat => {
+    (data.expenses[cat.id] || []).forEach(row => {
+      const ded = cat.id === 'meals' ? row.amount * 0.5 : row.amount;
+      rows.push([row.date, row.desc, cat.name, fmtNum(row.amount), fmtNum(ded), row.receipt ? 'Yes' : 'No']);
+    });
+  });
+
+  let totalExp = 0;
+  CATEGORIES.forEach(cat => {
+    (data.expenses[cat.id] || []).forEach(r => {
+      totalExp += cat.id === 'meals' ? r.amount * 0.5 : r.amount;
+    });
+  });
+  const rev = data.revenue.reduce((a,b)=>a+b,0);
+  const net = Math.max(0, rev - totalExp);
+  const qbi = net * 0.2;
+  const seBase = net * 0.9235;
+  const seTax = seBase * 0.153;
+  const seDed = seTax * 0.5;
+  const taxable = Math.max(0, net - qbi - seDed);
+  const incTax = taxable * 0.22;
+
+  rows.push([], ['TAX SUMMARY']);
+  rows.push(['Gross Revenue', fmtNum(rev)]);
+  rows.push(['Total Deductible Expenses', fmtNum(totalExp)]);
+  rows.push(['Net Profit', fmtNum(net)]);
+  rows.push(['QBI Deduction (20%)', fmtNum(qbi)]);
+  rows.push(['SE Tax (15.3% on 92.35%)', fmtNum(seTax)]);
+  rows.push(['Federal Income Tax (22%)', fmtNum(incTax)]);
+  rows.push(['Total Annual Tax Estimate', fmtNum(seTax + incTax)]);
+  rows.push(['Recommended Quarterly Payment', fmtNum((seTax + incTax) / 4)]);
+
+  const csv = rows.map(r => r.map(cell => `"${String(cell || '').replace(/"/g,'""')}"`).join(',')).join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `CWI-AI-LLC_${currentQ}-2026_Expenses.csv`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────────────────────────────────────
+function fmt(n) { return '$' + (n || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+function fmtNum(n) { return (n || 0).toFixed(2); }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────────────────────────────
+renderApp('Q1');
+</script>
+</body>
+</html>

@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CWI AI — Client Training Guide</title>
+  <meta name="description" content="CWI internal tool: CWI AI — Client Training Guide. Internal use only — CWI Compute With Imagination.">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --orange: #FF5A1F;
+      --orange-light: #FFF3EE;
+      --orange-mid: #FFD9C7;
+      --text-dark: #1A1A1A;
+      --text-mid: #444;
+      --text-light: #666;
+      --border: #E5E5E5;
+      --green: #16A34A;
+      --green-light: #F0FDF4;
+      --blue: #1D4ED8;
+      --blue-light: #EFF6FF;
+      --yellow: #CA8A04;
+      --yellow-light: #FEFCE8;
+      --red: #DC2626;
+      --red-light: #FEF2F2;
+    }
+
+    body {
+      font-family: 'Sora', sans-serif;
+      background: #F8F8F8;
+      color: var(--text-dark);
+      font-size: 15px;
+      line-height: 1.65;
+    }
+
+    /* ── PRINT BUTTON ── */
+    .print-bar {
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      padding: 12px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .print-bar-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--orange);
+      letter-spacing: -0.01em;
+    }
+    .print-bar-logo span { color: var(--text-dark); }
+    .print-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--orange);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 9px 20px;
+      font-family: 'Sora', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 0.02em;
+      transition: background 0.18s;
+    }
+    .print-btn:hover { background: #e04a10; }
+
+    /* ── PAGE WRAPPER ── */
+    .page {
+      max-width: 860px;
+      margin: 28px auto 60px;
+      padding: 0 20px;
+    }
+
+    /* ── HEADER ── */
+    .guide-header {
+      background: var(--orange);
+      border-radius: 12px 12px 0 0;
+      padding: 36px 40px 28px;
+      color: #fff;
+    }
+    .guide-header-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .guide-title {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+    .guide-subtitle {
+      font-size: 14px;
+      font-weight: 400;
+      opacity: 0.88;
+      margin-top: 6px;
+    }
+    .guide-badge {
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.35);
+      border-radius: 6px;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .client-field-row {
+      margin-top: 22px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .client-field-label {
+      font-size: 13px;
+      font-weight: 600;
+      opacity: 0.8;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+    }
+    .client-field-input {
+      flex: 1;
+      min-width: 200px;
+      max-width: 400px;
+      background: rgba(255,255,255,0.2);
+      border: 1.5px solid rgba(255,255,255,0.45);
+      border-radius: 6px;
+      padding: 8px 14px;
+      font-family: 'Sora', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      color: #fff;
+      outline: none;
+    }
+    .client-field-input::placeholder { color: rgba(255,255,255,0.55); }
+    .client-field-input:focus { border-color: rgba(255,255,255,0.8); }
+    .guide-date {
+      font-size: 12px;
+      opacity: 0.7;
+      margin-top: 10px;
+    }
+
+    /* ── CARD BODY ── */
+    .guide-body {
+      background: #fff;
+      border-radius: 0 0 12px 12px;
+      border: 1px solid var(--border);
+      border-top: none;
+      padding: 40px 40px 48px;
+    }
+
+    /* ── SECTION ── */
+    .section { margin-bottom: 44px; }
+    .section:last-child { margin-bottom: 0; }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding-bottom: 14px;
+      border-bottom: 2px solid var(--border);
+    }
+    .section-num {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--orange);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--text-dark);
+    }
+    .section-desc {
+      font-size: 13.5px;
+      color: var(--text-light);
+      margin-left: auto;
+    }
+
+    /* ── AUTO ITEMS (Section 1) ── */
+    .auto-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 14px;
+    }
+    .auto-card {
+      background: var(--orange-light);
+      border: 1px solid var(--orange-mid);
+      border-radius: 10px;
+      padding: 16px 18px;
+    }
+    .auto-card-icon {
+      font-size: 26px;
+      line-height: 1;
+      margin-bottom: 10px;
+    }
+    .auto-card-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 5px;
+    }
+    .auto-card-desc {
+      font-size: 13px;
+      color: var(--text-mid);
+      line-height: 1.55;
+    }
+
+    /* ── TODO LIST (Section 2) ── */
+    .todo-list { display: flex; flex-direction: column; gap: 10px; }
+    .todo-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      background: var(--green-light);
+      border: 1px solid #BBF7D0;
+      border-radius: 8px;
+      padding: 14px 16px;
+    }
+    .todo-icon {
+      font-size: 20px;
+      line-height: 1;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .todo-text { flex: 1; }
+    .todo-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 3px;
+    }
+    .todo-desc { font-size: 13px; color: var(--text-mid); line-height: 1.5; }
+
+    /* ── DASHBOARD (Section 3) ── */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 12px;
+    }
+    .dash-card {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: border-color 0.15s;
+    }
+    .dash-card:hover { border-color: var(--orange); }
+    .dash-card-top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .dash-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .dash-icon.orange { background: var(--orange-light); }
+    .dash-icon.blue { background: var(--blue-light); }
+    .dash-icon.green { background: var(--green-light); }
+    .dash-icon.yellow { background: var(--yellow-light); }
+    .dash-icon.red { background: var(--red-light); }
+    .dash-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-dark);
+    }
+    .dash-link {
+      font-size: 12px;
+      color: var(--orange);
+      font-weight: 500;
+      text-decoration: none;
+      word-break: break-all;
+    }
+    .dash-link:hover { text-decoration: underline; }
+    .dash-desc { font-size: 13px; color: var(--text-mid); line-height: 1.5; }
+
+    /* ── CONTACT US (Section 4) ── */
+    .contact-intro {
+      background: var(--red-light);
+      border: 1px solid #FECACA;
+      border-radius: 8px;
+      padding: 14px 18px;
+      font-size: 13.5px;
+      color: var(--text-mid);
+      margin-bottom: 16px;
+    }
+    .contact-triggers { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+    .trigger-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      border-left: 3px solid var(--red);
+      padding: 10px 14px;
+      background: #fff;
+      border-radius: 0 8px 8px 0;
+      border-top: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .trigger-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+    .trigger-text { flex: 1; }
+    .trigger-title { font-size: 14px; font-weight: 700; color: var(--text-dark); margin-bottom: 2px; }
+    .trigger-desc { font-size: 13px; color: var(--text-mid); }
+    .contact-box {
+      background: var(--orange-light);
+      border: 1.5px solid var(--orange-mid);
+      border-radius: 10px;
+      padding: 18px 22px;
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      flex-wrap: wrap;
+    }
+    .contact-box-label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-light);
+      margin-bottom: 3px;
+    }
+    .contact-box-value {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--orange);
+    }
+    .contact-box-value a { color: var(--orange); text-decoration: none; }
+    .contact-box-value a:hover { text-decoration: underline; }
+
+    /* ── QUICK REFERENCE (Section 5) ── */
+    .qref-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 14px;
+    }
+    .qref-card {
+      background: var(--blue-light);
+      border: 1px solid #BFDBFE;
+      border-radius: 10px;
+      padding: 16px 18px;
+    }
+    .qref-card-title {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--blue);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .qref-card-title span { font-size: 16px; }
+    .qref-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .qref-list li {
+      font-size: 13px;
+      color: var(--text-mid);
+      padding-left: 14px;
+      position: relative;
+      line-height: 1.45;
+    }
+    .qref-list li::before {
+      content: "›";
+      position: absolute;
+      left: 0;
+      color: var(--blue);
+      font-weight: 700;
+    }
+    .qref-tag {
+      display: inline-block;
+      background: #DBEAFE;
+      border: 1px solid #93C5FD;
+      border-radius: 4px;
+      padding: 1px 7px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--blue);
+      margin: 2px 2px 0 0;
+    }
+
+    /* ── CHECKLIST (Section 6) ── */
+    .checklist-intro {
+      font-size: 13.5px;
+      color: var(--text-mid);
+      margin-bottom: 16px;
+    }
+    .checklist { display: flex; flex-direction: column; gap: 10px; }
+    .check-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 16px;
+    }
+    .check-box {
+      width: 22px;
+      height: 22px;
+      border: 2px solid var(--border);
+      border-radius: 5px;
+      flex-shrink: 0;
+      margin-top: 1px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.15s, background 0.15s;
+      background: #fff;
+    }
+    .check-box.checked {
+      background: var(--green);
+      border-color: var(--green);
+    }
+    .check-box.checked::after {
+      content: "✓";
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .check-num {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--orange-light);
+      border: 1.5px solid var(--orange-mid);
+      color: var(--orange);
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .check-text { flex: 1; }
+    .check-title { font-size: 14px; font-weight: 700; color: var(--text-dark); margin-bottom: 3px; }
+    .check-desc { font-size: 13px; color: var(--text-mid); line-height: 1.5; }
+
+    /* ── FOOTER ── */
+    .guide-footer {
+      margin-top: 36px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-light);
+    }
+    .guide-footer a { color: var(--orange); text-decoration: none; }
+    .guide-footer strong { color: var(--orange); }
+
+    /* ── DIVIDER ── */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 36px 0;
+    }
+
+    /* ── PRINT ── */
+    @media print {
+      body { background: #fff; font-size: 13px; }
+      .print-bar { display: none !important; }
+      .page { margin: 0; padding: 0; max-width: 100%; }
+      .guide-header { border-radius: 0; }
+      .guide-body { border-radius: 0; border: none; padding: 28px 28px 36px; }
+      .section { page-break-inside: avoid; }
+      .auto-grid, .dashboard-grid, .qref-grid { grid-template-columns: repeat(2, 1fr); }
+      .check-box { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .auto-card, .todo-item, .dash-card, .qref-card, .check-item, .trigger-item, .contact-box {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .guide-header { padding: 24px 22px 20px; }
+      .guide-body { padding: 24px 20px 32px; }
+      .guide-title { font-size: 21px; }
+      .auto-grid, .dashboard-grid, .qref-grid { grid-template-columns: 1fr; }
+      .contact-box { flex-direction: column; gap: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- PRINT BAR -->
+<div class="print-bar">
+  <div class="print-bar-logo">
+    CWI&nbsp;<span>AI</span>
+    <span style="font-size:13px;font-weight:400;color:var(--text-light);margin-left:4px;">Client Training Guide</span>
+  </div>
+  <button class="print-btn" onclick="window.print()">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>
+    </svg>
+    Print / Save PDF
+  </button>
+</div>
+
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="guide-header">
+    <div class="guide-header-top">
+      <div>
+        <div class="guide-title">Your AI Automation<br>Training Guide</div>
+        <div class="guide-subtitle">Everything you need to know about working with your CWI AI system.</div>
+      </div>
+      <div class="guide-badge">CWI AI Client</div>
+    </div>
+    <div class="client-field-row">
+      <div class="client-field-label">Client:</div>
+      <input class="client-field-input" type="text" placeholder="Your business name here…" id="clientName" />
+    </div>
+    <div class="guide-date" id="guideDate"></div>
+  </div>
+
+  <!-- BODY -->
+  <div class="guide-body">
+
+    <!-- SECTION 1: What Your AI Does Automatically -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-num">1</div>
+        <div class="section-title">What Your AI Does Automatically</div>
+        <div class="section-desc">No action needed from you</div>
+      </div>
+      <div class="auto-grid">
+        <div class="auto-card">
+          <div class="auto-card-icon">📅</div>
+          <div class="auto-card-title">Booking Flow</div>
+          <div class="auto-card-desc">Qualifies new leads, sends your Calendly link, and confirms appointments — all without any manual follow-up from you.</div>
+        </div>
+        <div class="auto-card">
+          <div class="auto-card-icon">🔔</div>
+          <div class="auto-card-title">Missed Lead Recovery</div>
+          <div class="auto-card-desc">Automatically re-engages contacts who go silent or miss a scheduled call, keeping your pipeline warm around the clock.</div>
+        </div>
+        <div class="auto-card">
+          <div class="auto-card-icon">⏰</div>
+          <div class="auto-card-title">Appointment Reminders</div>
+          <div class="auto-card-desc">Sends timed reminders to booked leads before their call so no-show rates stay low and your calendar stays full.</div>
+        </div>
+        <div class="auto-card">
+          <div class="auto-card-icon">💳</div>
+          <div class="auto-card-title">Payment Alerts</div>
+          <div class="auto-card-desc">Monitors your Stripe subscription and notifies you immediately if a charge fails or a payment method needs updating.</div>
+        </div>
+        <div class="auto-card">
+          <div class="auto-card-icon">📊</div>
+          <div class="auto-card-title">Monthly Reports</div>
+          <div class="auto-card-desc">A summary report lands in your inbox each month — leads touched, conversations handled, bookings assisted, and system health.</div>
+        </div>
+        <div class="auto-card">
+          <div class="auto-card-icon">💬</div>
+          <div class="auto-card-title">Live Chat Responses</div>
+          <div class="auto-card-desc">Your AI bot handles incoming chat questions 24/7, answers FAQs, and escalates anything it cannot resolve directly to you.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- SECTION 2: What You Need to Do -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-num">2</div>
+        <div class="section-title">What You Need to Do</div>
+        <div class="section-desc">Your 4 responsibilities</div>
+      </div>
+      <div class="todo-list">
+        <div class="todo-item">
+          <div class="todo-icon">⚡</div>
+          <div class="todo-text">
+            <div class="todo-title">Respond to Escalations During Business Hours</div>
+            <div class="todo-desc">When the bot flags a conversation it cannot handle, you will receive an alert in Freshchat. Respond within business hours. Escalations left unattended for more than 4 hours during business hours can result in lost leads.</div>
+          </div>
+        </div>
+        <div class="todo-item">
+          <div class="todo-icon">📆</div>
+          <div class="todo-text">
+            <div class="todo-title">Keep Your Calendly Updated</div>
+            <div class="todo-desc">The bot sends your Calendly link to every qualified lead. If your availability is outdated, leads will book times that do not work for you. Log in to Calendly at least weekly to confirm your open slots are accurate.</div>
+          </div>
+        </div>
+        <div class="todo-item">
+          <div class="todo-icon">📬</div>
+          <div class="todo-text">
+            <div class="todo-title">Review Your Monthly Report Email</div>
+            <div class="todo-desc">Your automated report arrives on the first of each month. Open it, scan the key numbers, and reply to Brian with any feedback or concerns. This is how we catch drift early and keep your system performing well.</div>
+          </div>
+        </div>
+        <div class="todo-item">
+          <div class="todo-icon">🔑</div>
+          <div class="todo-text">
+            <div class="todo-title">Keep Your Payment Method Current in Stripe</div>
+            <div class="todo-desc">Your CWI AI subscription and any third-party tool costs are billed through Stripe. A failed charge pauses automation. Log in to Stripe whenever your card changes or expires to update billing details immediately.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- SECTION 3: Your Dashboard -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-num">3</div>
+        <div class="section-title">Your Dashboard</div>
+        <div class="section-desc">Your key tools at a glance</div>
+      </div>
+      <div class="dashboard-grid">
+        <div class="dash-card">
+          <div class="dash-card-top">
+            <div class="dash-icon orange">💬</div>
+            <div>
+              <div class="dash-name">Freshchat</div>
+              <a class="dash-link" href="https://web.freshchat.com" target="_blank">web.freshchat.com</a>
+            </div>
+          </div>
+          <div class="dash-desc">Where escalated conversations land. Check here during business hours for any chats the bot has flagged for your attention.</div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-card-top">
+            <div class="dash-icon blue">🔷</div>
+            <div>
+              <div class="dash-name">HubSpot CRM</div>
+              <a class="dash-link" href="https://app.hubspot.com" target="_blank">app.hubspot.com</a>
+            </div>
+          </div>
+          <div class="dash-desc">Your lead and contact database. Every conversation is logged here automatically. Use it to track deal stages and verify no contacts were missed.</div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-card-top">
+            <div class="dash-icon green">📅</div>
+            <div>
+              <div class="dash-name">Calendly</div>
+              <a class="dash-link" href="https://calendly.com" target="_blank">calendly.com</a>
+            </div>
+          </div>
+          <div class="dash-desc">Manages your booking availability. The bot sends your Calendly link to qualified leads — keep your schedule current here at all times.</div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-card-top">
+            <div class="dash-icon yellow">💳</div>
+            <div>
+              <div class="dash-name">Stripe</div>
+              <a class="dash-link" href="https://dashboard.stripe.com" target="_blank">dashboard.stripe.com</a>
+            </div>
+          </div>
+          <div class="dash-desc">Handles your subscription billing. Update your payment method here if a card expires or a payment fails to keep automation running uninterrupted.</div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-card-top">
+            <div class="dash-icon red">🗓️</div>
+            <div>
+              <div class="dash-name">Google Calendar</div>
+              <a class="dash-link" href="https://calendar.google.com" target="_blank">calendar.google.com</a>
+            </div>
+          </div>
+          <div class="dash-desc">Connected to your Calendly for scheduling. Booked appointments appear here automatically. Keep it open on booking days so you never double-book.</div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-card-top">
+            <div class="dash-icon orange">⚙️</div>
+            <div>
+              <div class="dash-name">Make (Automation)</div>
+              <a class="dash-link" href="https://make.com" target="_blank">make.com</a>
+            </div>
+          </div>
+          <div class="dash-desc">Powers the behind-the-scenes workflows. You generally do not need to log in here, but CWI AI monitors it on your behalf for any errors.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- SECTION 4: When to Contact Us -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-num">4</div>
+        <div class="section-title">When to Contact Us</div>
+        <div class="section-desc">Reach out any time something feels off</div>
+      </div>
+      <div class="contact-intro">
+        Your AI system is monitored by CWI AI, but you are the first to notice when something is wrong on the ground. Do not hesitate to reach out for any of the situations below.
+      </div>
+      <div class="contact-triggers">
+        <div class="trigger-item">
+          <div class="trigger-icon">🤖</div>
+          <div class="trigger-text">
+            <div class="trigger-title">Bot Gives a Wrong or Strange Answer</div>
+            <div class="trigger-desc">Screenshot the conversation and send it to Brian. We will update the bot's knowledge base immediately.</div>
+          </div>
+        </div>
+        <div class="trigger-item">
+          <div class="trigger-icon">👤</div>
+          <div class="trigger-text">
+            <div class="trigger-title">A Lead Is Not Appearing in HubSpot</div>
+            <div class="trigger-desc">If you spoke with someone who should be in the CRM but they are missing, let us know so we can trace the sync issue.</div>
+          </div>
+        </div>
+        <div class="trigger-item">
+          <div class="trigger-icon">📧</div>
+          <div class="trigger-text">
+            <div class="trigger-title">Email Delivery Problems</div>
+            <div class="trigger-desc">If automated emails are going to spam, not being received, or showing wrong content, contact us so we can investigate deliverability.</div>
+          </div>
+        </div>
+        <div class="trigger-item">
+          <div class="trigger-icon">🚨</div>
+          <div class="trigger-text">
+            <div class="trigger-title">Urgent Escalation — System Down or High-Value Lead</div>
+            <div class="trigger-desc">If automation appears completely stopped, or a major prospect is stuck in the bot with no resolution, call Brian directly.</div>
+          </div>
+        </div>
+      </div>
+      <div class="contact-box">
+        <div>
+          <div class="contact-box-label">Email</div>
+          <div class="contact-box-value"><a href="mailto:brian@cwiai.net">brian@cwiai.net</a></div>
+        </div>
+        <div>
+          <div class="contact-box-label">Phone / Text</div>
+          <div class="contact-box-value"><a href="tel:+17348129971">(734) 812-9971</a></div>
+        </div>
+        <div>
+          <div class="contact-box-label">Response Time</div>
+          <div class="contact-box-value" style="color:var(--text-dark);font-size:13px;font-weight:600;">Same business day<br><span style="font-size:12px;color:var(--text-light);font-weight:400;">Urgent calls answered as available</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- SECTION 5: Quick Reference -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-num">5</div>
+        <div class="section-title">Quick Reference</div>
+        <div class="section-desc">Bookmark this section</div>
+      </div>
+      <div class="qref-grid">
+        <div class="qref-card">
+          <div class="qref-card-title"><span>🕐</span> Business Hours the Bot Knows</div>
+          <ul class="qref-list">
+            <li>Monday – Friday: 9 AM – 6 PM local</li>
+            <li>Saturday: 10 AM – 3 PM (if configured)</li>
+            <li>Sunday: Closed by default</li>
+            <li>Outside hours: bot sets expectation of next-day reply</li>
+            <li>Holidays: contact Brian to update bot messaging</li>
+          </ul>
+        </div>
+        <div class="qref-card">
+          <div class="qref-card-title"><span>🚨</span> Emergency Escalation Keywords</div>
+          <ul class="qref-list">
+            <li>Typing <span class="qref-tag">URGENT</span> in Freshchat flags immediately</li>
+            <li><span class="qref-tag">ESCALATE</span> routes chat to your inbox</li>
+            <li><span class="qref-tag">SPEAK TO HUMAN</span> triggers handoff</li>
+            <li><span class="qref-tag">MANAGER</span> also triggers live handoff</li>
+            <li>Bot always offers human option after 2 failed attempts</li>
+          </ul>
+        </div>
+        <div class="qref-card">
+          <div class="qref-card-title"><span>📆</span> How to Update Your Availability</div>
+          <ul class="qref-list">
+            <li>Log in at calendly.com</li>
+            <li>Go to Availability → Edit event type hours</li>
+            <li>Use "Date overrides" to block specific days</li>
+            <li>Changes take effect immediately for new bookings</li>
+            <li>Notify Brian if you change your main booking link URL</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- SECTION 6: Monthly Review Checklist -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-num">6</div>
+        <div class="section-title">Monthly Review Checklist</div>
+        <div class="section-desc">5 things to do each month</div>
+      </div>
+      <p class="checklist-intro">Run through these five items at the start of each month. They take less than 15 minutes and keep your automation system healthy and effective.</p>
+      <div class="checklist" id="checklist">
+        <div class="check-item" data-idx="0">
+          <div class="check-num">1</div>
+          <div class="check-box" onclick="toggleCheck(0)" title="Click to check off"></div>
+          <div class="check-text">
+            <div class="check-title">Review Your Monthly Report Email</div>
+            <div class="check-desc">Open the automated report from CWI AI. Check lead volume, conversations handled, booking rate, and any flagged issues. Reply with questions or feedback.</div>
+          </div>
+        </div>
+        <div class="check-item" data-idx="1">
+          <div class="check-num">2</div>
+          <div class="check-box" onclick="toggleCheck(1)" title="Click to check off"></div>
+          <div class="check-text">
+            <div class="check-title">Check HubSpot for Any Missed Contacts</div>
+            <div class="check-desc">Log in to HubSpot and filter contacts created in the past 30 days. Confirm every lead you recall speaking with appears. Flag any gaps to Brian.</div>
+          </div>
+        </div>
+        <div class="check-item" data-idx="2">
+          <div class="check-num">3</div>
+          <div class="check-box" onclick="toggleCheck(2)" title="Click to check off"></div>
+          <div class="check-text">
+            <div class="check-title">Verify Calendly Slots Are Open for the Coming Month</div>
+            <div class="check-desc">Log in to Calendly and confirm you have available slots for the next 30 days. Add date overrides for vacations or known conflicts now, before leads try to book.</div>
+          </div>
+        </div>
+        <div class="check-item" data-idx="3">
+          <div class="check-num">4</div>
+          <div class="check-box" onclick="toggleCheck(3)" title="Click to check off"></div>
+          <div class="check-text">
+            <div class="check-title">Confirm Your Stripe Subscription Is Active</div>
+            <div class="check-desc">Log in to your Stripe dashboard and verify your CWI AI subscription shows as Active with no failed payments. Update your payment method if your card is expiring soon.</div>
+          </div>
+        </div>
+        <div class="check-item" data-idx="4">
+          <div class="check-num">5</div>
+          <div class="check-box" onclick="toggleCheck(4)" title="Click to check off"></div>
+          <div class="check-text">
+            <div class="check-title">Give Feedback to Brian</div>
+            <div class="check-desc">Send a quick note to brian@cwiai.net with anything the bot got wrong, any FAQs that came up repeatedly this month, or any new offers or pricing changes the bot needs to know about.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /guide-body -->
+
+  <!-- FOOTER -->
+  <div class="guide-footer">
+    <strong>CWI AI</strong> &nbsp;·&nbsp;
+    <a href="mailto:brian@cwiai.net">brian@cwiai.net</a> &nbsp;·&nbsp;
+    <a href="tel:+17348129971">(734) 812-9971</a> &nbsp;·&nbsp;
+    <a href="https://cwiai.net" target="_blank">cwiai.net</a>
+    <br style="margin-bottom:4px;" />
+    <span style="font-size:11px;">This guide is confidential and intended for CWI AI clients only. Keep a printed copy at your desk for quick reference.</span>
+  </div>
+
+</div><!-- /page -->
+
+<script>
+  // Set today's date in header
+  (function() {
+    const d = new Date();
+    const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    document.getElementById('guideDate').textContent =
+      'Prepared ' + months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+  })();
+
+  // Checklist toggle
+  function toggleCheck(idx) {
+    const items = document.querySelectorAll('.check-box');
+    const box = items[idx];
+    box.classList.toggle('checked');
+  }
+
+  // Save client name to localStorage for convenience
+  const clientInput = document.getElementById('clientName');
+  const savedName = localStorage.getItem('cwiai_client_name');
+  if (savedName) clientInput.value = savedName;
+  clientInput.addEventListener('input', function() {
+    localStorage.setItem('cwiai_client_name', this.value);
+  });
+</script>
+
+</body>
+</html>

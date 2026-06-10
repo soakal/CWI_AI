@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="CWI internal tool: CWI AI — Client Directory. Internal use only — CWI Compute With Imagination.">
+<title>CWI AI — Client Directory</title>
+<style>
+  :root {
+    --accent: #FF5A1F;
+    --accent-dark: #e04a12;
+    --accent-light: #fff3ef;
+    --bg: #f8f9fa;
+    --card: #ffffff;
+    --border: #e2e8f0;
+    --text: #1a202c;
+    --muted: #718096;
+    --success: #38a169;
+    --warning: #d69e2e;
+    --danger: #e53e3e;
+    --paused: #805ad5;
+    --radius: 8px;
+    --shadow: 0 1px 3px rgba(0,0,0,.1), 0 1px 2px rgba(0,0,0,.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,.1), 0 4px 6px -2px rgba(0,0,0,.05);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* HEADER */
+  .header {
+    background: #1a202c;
+    color: #fff;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 64px;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .header-brand { display: flex; align-items: center; gap: 10px; }
+  .header-brand .logo {
+    width: 36px; height: 36px; background: var(--accent); border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 18px; letter-spacing: -1px; flex-shrink: 0;
+  }
+  .header-brand h1 { font-size: 18px; font-weight: 700; letter-spacing: -.3px; }
+  .header-brand span { color: var(--accent); }
+  .header-stats { display: flex; gap: 24px; flex-wrap: wrap; }
+  .stat-pill {
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 20px;
+    padding: 6px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .stat-pill .val { color: var(--accent); margin-left: 4px; }
+  .header-actions { display: flex; gap: 10px; }
+  .btn {
+    padding: 8px 16px; border-radius: var(--radius); font-size: 13px;
+    font-weight: 600; cursor: pointer; border: none; transition: all .15s;
+    display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+  }
+  .btn-accent { background: var(--accent); color: #fff; }
+  .btn-accent:hover { background: var(--accent-dark); }
+  .btn-outline { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,.25); }
+  .btn-outline:hover { background: rgba(255,255,255,.08); }
+  .btn-sm { padding: 5px 11px; font-size: 12px; }
+  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+  .btn-ghost:hover { background: #f1f5f9; color: var(--text); }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-danger:hover { background: #c53030; }
+
+  /* TOOLBAR */
+  .toolbar {
+    padding: 16px 24px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+  }
+  .search-wrap { position: relative; flex: 1 1 220px; max-width: 360px; }
+  .search-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); pointer-events: none; }
+  .search-wrap input {
+    width: 100%; padding: 8px 12px 8px 34px;
+    border: 1px solid var(--border); border-radius: var(--radius);
+    font-size: 14px; background: var(--bg);
+    transition: border-color .15s;
+  }
+  .search-wrap input:focus { outline: none; border-color: var(--accent); background: #fff; }
+  select {
+    padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius);
+    font-size: 13px; background: var(--bg); cursor: pointer;
+    transition: border-color .15s;
+  }
+  select:focus { outline: none; border-color: var(--accent); }
+  .toolbar-spacer { flex: 1; }
+
+  /* MAIN */
+  .main { padding: 24px; }
+
+  /* TABLE */
+  .table-wrap { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th {
+    background: #f8fafc; padding: 11px 14px; text-align: left;
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .6px; color: var(--muted); border-bottom: 1px solid var(--border);
+    white-space: nowrap; cursor: pointer; user-select: none;
+  }
+  thead th:hover { color: var(--accent); }
+  thead th .sort-icon { margin-left: 4px; opacity: .4; }
+  thead th.sorted .sort-icon { opacity: 1; color: var(--accent); }
+  tbody tr.client-row {
+    cursor: pointer;
+    transition: background .1s;
+    border-bottom: 1px solid var(--border);
+  }
+  tbody tr.client-row:hover { background: #fafafa; }
+  tbody tr.client-row:last-child { border-bottom: none; }
+  tbody tr.client-row.expanded { background: var(--accent-light); }
+  tbody tr.client-row td { padding: 11px 14px; vertical-align: middle; }
+  tbody tr.detail-row td { padding: 0; border-bottom: 1px solid var(--border); }
+  .expand-icon { display: inline-block; transition: transform .2s; font-size: 10px; color: var(--muted); margin-right: 6px; }
+  .expanded .expand-icon { transform: rotate(90deg); }
+
+  /* BADGES */
+  .badge {
+    display: inline-block; padding: 3px 9px; border-radius: 20px;
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px;
+  }
+  .badge-starter { background: #ebf8ff; color: #2b6cb0; }
+  .badge-growth  { background: #f0fff4; color: #276749; }
+  .badge-pro     { background: #faf5ff; color: #6b46c1; }
+  .badge-active  { background: #f0fff4; color: #276749; }
+  .badge-paused  { background: #faf5ff; color: #6b46c1; }
+  .badge-churned { background: #fff5f5; color: #c53030; }
+
+  /* COPY BUTTONS */
+  .copy-btn {
+    background: none; border: none; cursor: pointer; padding: 3px 5px;
+    border-radius: 4px; color: var(--muted); transition: all .15s;
+    font-size: 12px;
+  }
+  .copy-btn:hover { background: var(--accent-light); color: var(--accent); }
+  .copy-btn.copied { color: var(--success); }
+  .action-cell { display: flex; align-items: center; gap: 4px; }
+
+  /* DETAIL CARD */
+  .detail-card {
+    padding: 20px 24px;
+    background: #fff;
+    border-top: 3px solid var(--accent);
+    animation: slideDown .15s ease;
+  }
+  @keyframes slideDown { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+  .detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px 24px;
+    margin-bottom: 16px;
+  }
+  .detail-field label {
+    display: block; font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .6px; color: var(--muted); margin-bottom: 3px;
+  }
+  .detail-field .val { font-size: 13px; font-weight: 500; color: var(--text); word-break: break-word; }
+  .detail-field .val a { color: var(--accent); text-decoration: none; }
+  .detail-field .val a:hover { text-decoration: underline; }
+  .detail-actions { display: flex; gap: 8px; flex-wrap: wrap; padding-top: 12px; border-top: 1px solid var(--border); }
+
+  /* NOTES FIELD */
+  .notes-block { grid-column: 1 / -1; }
+  .notes-block .val { color: var(--muted); font-style: italic; }
+
+  /* EMPTY STATE */
+  .empty-state { text-align: center; padding: 56px 24px; color: var(--muted); }
+  .empty-state svg { margin-bottom: 12px; opacity: .35; }
+  .empty-state p { font-size: 15px; }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.45);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000; padding: 16px;
+    animation: fadeIn .15s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .modal {
+    background: var(--card); border-radius: 12px; box-shadow: var(--shadow-lg);
+    width: 100%; max-width: 780px; max-height: 90vh; overflow-y: auto;
+    animation: slideUp .18s ease;
+  }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+  .modal-header {
+    padding: 18px 24px; border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+    position: sticky; top: 0; background: var(--card); z-index: 1;
+  }
+  .modal-header h2 { font-size: 17px; font-weight: 700; }
+  .modal-close {
+    background: none; border: none; font-size: 22px; cursor: pointer;
+    color: var(--muted); line-height: 1; padding: 2px 6px; border-radius: 4px;
+  }
+  .modal-close:hover { background: #f1f5f9; color: var(--text); }
+  .modal-body { padding: 20px 24px; }
+  .modal-footer {
+    padding: 14px 24px; border-top: 1px solid var(--border);
+    display: flex; justify-content: flex-end; gap: 10px;
+    position: sticky; bottom: 0; background: var(--card);
+  }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 20px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group.full { grid-column: 1 / -1; }
+  .form-group label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
+  .form-group input, .form-group select, .form-group textarea {
+    padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius);
+    font-size: 13px; font-family: inherit; background: var(--bg);
+    transition: border-color .15s;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    outline: none; border-color: var(--accent); background: #fff;
+  }
+  .form-group textarea { resize: vertical; min-height: 72px; }
+  .form-section-title {
+    grid-column: 1 / -1; font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .7px; color: var(--accent);
+    border-bottom: 1px solid var(--border); padding-bottom: 6px; margin-top: 6px;
+  }
+
+  /* TOAST */
+  .toast-wrap { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+  .toast {
+    background: #1a202c; color: #fff; padding: 10px 18px; border-radius: 8px;
+    font-size: 13px; font-weight: 500; box-shadow: var(--shadow-lg);
+    animation: toastIn .2s ease; border-left: 3px solid var(--accent);
+  }
+  .toast.removing { animation: toastOut .2s ease forwards; }
+  @keyframes toastIn  { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  @keyframes toastOut { to { opacity: 0; transform: translateY(10px); } }
+
+  /* CONFIRM MODAL */
+  .confirm-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.5);
+    display: flex; align-items: center; justify-content: center; z-index: 2000;
+  }
+  .confirm-box {
+    background: var(--card); border-radius: 10px; padding: 28px 32px;
+    max-width: 380px; width: 90%; box-shadow: var(--shadow-lg); text-align: center;
+  }
+  .confirm-box h3 { font-size: 16px; margin-bottom: 8px; }
+  .confirm-box p { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+  .confirm-box .actions { display: flex; gap: 10px; justify-content: center; }
+
+  @media (max-width: 700px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .form-group.full { grid-column: auto; }
+    .header { padding: 12px 16px; }
+    .toolbar, .main { padding: 12px 16px; }
+    .col-hide { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-brand">
+    <div class="logo">CWI</div>
+    <h1>CWI <span>AI</span> — Client Directory</h1>
+  </div>
+  <div class="header-stats">
+    <div class="stat-pill">Clients <span class="val" id="hdr-count">0</span></div>
+    <div class="stat-pill">Active <span class="val" id="hdr-active">0</span></div>
+    <div class="stat-pill">MRR <span class="val" id="hdr-mrr">$0</span></div>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-outline btn-sm" onclick="exportCSV()">&#8595; Export CSV</button>
+    <button class="btn btn-accent btn-sm" onclick="openModal()">+ Add Client</button>
+  </div>
+</header>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <div class="search-wrap">
+    <svg width="15" height="15" fill="none" stroke="#94a3b8" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" id="search" placeholder="Search name, email, industry…" oninput="renderTable()">
+  </div>
+  <select id="filter-tier" onchange="renderTable()">
+    <option value="">All Tiers</option>
+    <option value="Starter">Starter</option>
+    <option value="Growth">Growth</option>
+    <option value="Pro">Pro</option>
+  </select>
+  <select id="filter-status" onchange="renderTable()">
+    <option value="">All Statuses</option>
+    <option value="Active">Active</option>
+    <option value="Paused">Paused</option>
+    <option value="Churned">Churned</option>
+  </select>
+  <div class="toolbar-spacer"></div>
+  <span id="result-count" style="font-size:12px;color:var(--muted)"></span>
+</div>
+
+<!-- MAIN TABLE -->
+<div class="main">
+  <div class="table-wrap">
+    <table id="client-table">
+      <thead>
+        <tr>
+          <th style="width:32px"></th>
+          <th data-col="businessName">Business <span class="sort-icon">▾</span></th>
+          <th data-col="ownerName" class="col-hide">Owner <span class="sort-icon">▾</span></th>
+          <th data-col="industry" class="col-hide">Industry <span class="sort-icon">▾</span></th>
+          <th data-col="planTier">Tier <span class="sort-icon">▾</span></th>
+          <th data-col="monthlyFee">MRR <span class="sort-icon">▾</span></th>
+          <th data-col="status">Status <span class="sort-icon">▾</span></th>
+          <th>Quick Copy</th>
+          <th style="width:80px">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
+    <div id="empty-state" class="empty-state" style="display:none">
+      <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <p>No clients found. Add your first client or adjust filters.</p>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal-overlay" id="modal" style="display:none" onclick="overlayClose(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modal-title">Add Client</h2>
+      <button class="modal-close" onclick="closeModal()">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <form id="client-form" onsubmit="saveClient(event)">
+        <div class="form-grid">
+
+          <div class="form-section-title">Business Info</div>
+
+          <div class="form-group">
+            <label for="businessName">Business Name *</label>
+            <input type="text" id="businessName" name="businessName" required placeholder="Acme Plumbing LLC">
+          </div>
+          <div class="form-group">
+            <label for="ownerName">Owner Name *</label>
+            <input type="text" id="ownerName" name="ownerName" required placeholder="John Smith">
+          </div>
+          <div class="form-group">
+            <label for="email">Email *</label>
+            <input type="email" id="email" name="email" required placeholder="owner@business.com">
+          </div>
+          <div class="form-group">
+            <label for="phone">Phone</label>
+            <input type="tel" id="phone" name="phone" placeholder="(555) 000-0000">
+          </div>
+          <div class="form-group full">
+            <label for="address">Address</label>
+            <input type="text" id="address" name="address" placeholder="123 Main St, City, ST 00000">
+          </div>
+          <div class="form-group">
+            <label for="industry">Industry</label>
+            <input type="text" id="industry" name="industry" placeholder="Plumbing, HVAC, Roofing…">
+          </div>
+          <div class="form-group">
+            <label for="emergencyContact">Emergency Contact</label>
+            <input type="text" id="emergencyContact" name="emergencyContact" placeholder="Name — (555) 000-0000">
+          </div>
+
+          <div class="form-section-title">Contract & Billing</div>
+
+          <div class="form-group">
+            <label for="planTier">Plan Tier *</label>
+            <select id="planTier" name="planTier" required>
+              <option value="">Select tier…</option>
+              <option value="Starter">Starter</option>
+              <option value="Growth">Growth</option>
+              <option value="Pro">Pro</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="monthlyFee">Monthly Fee ($) *</label>
+            <input type="number" id="monthlyFee" name="monthlyFee" required min="0" step="0.01" placeholder="497">
+          </div>
+          <div class="form-group">
+            <label for="onboardingDate">Onboarding Date</label>
+            <input type="date" id="onboardingDate" name="onboardingDate">
+          </div>
+          <div class="form-group">
+            <label for="contractTerm">Contract Term</label>
+            <input type="text" id="contractTerm" name="contractTerm" placeholder="12 months, Month-to-Month…">
+          </div>
+          <div class="form-group">
+            <label for="status">Status *</label>
+            <select id="status" name="status" required>
+              <option value="Active">Active</option>
+              <option value="Paused">Paused</option>
+              <option value="Churned">Churned</option>
+            </select>
+          </div>
+
+          <div class="form-section-title">Integrations</div>
+
+          <div class="form-group">
+            <label for="resendDomain">Resend Domain</label>
+            <input type="text" id="resendDomain" name="resendDomain" placeholder="send.clientdomain.com">
+          </div>
+          <div class="form-group">
+            <label for="hubspotId">HubSpot Contact ID</label>
+            <input type="text" id="hubspotId" name="hubspotId" placeholder="12345678">
+          </div>
+          <div class="form-group">
+            <label for="stripeId">Stripe Customer ID</label>
+            <input type="text" id="stripeId" name="stripeId" placeholder="cus_XXXXXXXXXXXXXXXX">
+          </div>
+          <div class="form-group">
+            <label for="calendlyLink">Calendly Link</label>
+            <input type="url" id="calendlyLink" name="calendlyLink" placeholder="https://calendly.com/…">
+          </div>
+          <div class="form-group">
+            <label for="freshchatBotId">Freshchat Bot ID</label>
+            <input type="text" id="freshchatBotId" name="freshchatBotId" placeholder="bot_XXXXXXXX">
+          </div>
+
+          <div class="form-section-title">Notes</div>
+
+          <div class="form-group full">
+            <label for="notes">Notes</label>
+            <textarea id="notes" name="notes" placeholder="Any additional context, special requirements, internal notes…"></textarea>
+          </div>
+
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-accent" onclick="document.getElementById('client-form').requestSubmit()">Save Client</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── DATA LAYER ───────────────────────────────────────────────────────────────
+const STORAGE_KEY = 'cwi_clients_v1';
+
+const DEFAULT_CLIENTS = [
+  {
+    id: 'cli_001',
+    businessName: 'Summit Plumbing Services',
+    ownerName: 'Marcus Rivera',
+    email: 'marcus@summitplumbing.com',
+    phone: '(602) 555-0142',
+    address: '4820 N 32nd Ave, Phoenix, AZ 85019',
+    industry: 'Plumbing',
+    planTier: 'Growth',
+    monthlyFee: 997,
+    onboardingDate: '2025-11-15',
+    contractTerm: '12 months',
+    resendDomain: 'send.summitplumbing.com',
+    hubspotId: '48291037',
+    stripeId: 'cus_QjK9mTxRv3pLwN',
+    calendlyLink: 'https://calendly.com/summitplumbing/30min',
+    freshchatBotId: 'bot_SP8824',
+    emergencyContact: 'Carla Rivera — (602) 555-0199',
+    notes: 'High referral potential. Prefers morning calls. Running Facebook + Google Ads combo. Wants monthly report by 1st of month.',
+    status: 'Active',
+    createdAt: new Date('2025-11-15').toISOString()
+  },
+  {
+    id: 'cli_002',
+    businessName: 'Arctic Air HVAC',
+    ownerName: 'Donna Whitfield',
+    email: 'donna@arcticairhvac.com',
+    phone: '(713) 555-0378',
+    address: '2201 Westheimer Rd, Houston, TX 77098',
+    industry: 'HVAC',
+    planTier: 'Starter',
+    monthlyFee: 497,
+    onboardingDate: '2026-01-08',
+    contractTerm: 'Month-to-Month',
+    resendDomain: 'send.arcticairhvac.com',
+    hubspotId: '59103874',
+    stripeId: 'cus_RkM2nUyQw4qMxO',
+    calendlyLink: 'https://calendly.com/arcticairhvac/discovery',
+    freshchatBotId: 'bot_AA3317',
+    emergencyContact: 'Tom Whitfield — (713) 555-0300',
+    notes: 'New client, still completing onboarding. Needs Freshchat widget installed on website. Potential upgrade to Growth in Q3.',
+    status: 'Active',
+    createdAt: new Date('2026-01-08').toISOString()
+  }
+];
+
+function loadClients() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  const defaults = DEFAULT_CLIENTS;
+  saveClients(defaults);
+  return defaults;
+}
+
+function saveClients(clients) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(clients));
+}
+
+let clients = loadClients();
+let editingId = null;
+let sortCol = 'businessName';
+let sortDir = 1;
+let expandedId = null;
+
+// ─── RENDER ───────────────────────────────────────────────────────────────────
+function renderTable() {
+  const q = document.getElementById('search').value.trim().toLowerCase();
+  const tier = document.getElementById('filter-tier').value;
+  const status = document.getElementById('filter-status').value;
+
+  let filtered = clients.filter(c => {
+    const matchQ = !q || [c.businessName,c.ownerName,c.email,c.industry,c.phone]
+      .some(f => f && f.toLowerCase().includes(q));
+    const matchTier = !tier || c.planTier === tier;
+    const matchStatus = !status || c.status === status;
+    return matchQ && matchTier && matchStatus;
+  });
+
+  filtered.sort((a,b) => {
+    let av = a[sortCol] ?? '', bv = b[sortCol] ?? '';
+    if (sortCol === 'monthlyFee') { av = +av; bv = +bv; }
+    else { av = String(av).toLowerCase(); bv = String(bv).toLowerCase(); }
+    return av < bv ? -sortDir : av > bv ? sortDir : 0;
+  });
+
+  const tbody = document.getElementById('table-body');
+  tbody.innerHTML = '';
+
+  document.getElementById('empty-state').style.display = filtered.length ? 'none' : 'block';
+  document.getElementById('result-count').textContent = filtered.length
+    ? `${filtered.length} of ${clients.length} client${clients.length !== 1 ? 's' : ''}`
+    : '';
+
+  filtered.forEach(c => {
+    // MAIN ROW
+    const tr = document.createElement('tr');
+    tr.className = 'client-row' + (expandedId === c.id ? ' expanded' : '');
+    tr.dataset.id = c.id;
+    tr.innerHTML = `
+      <td style="text-align:center;width:32px">
+        <span class="expand-icon">&#9658;</span>
+      </td>
+      <td>
+        <div style="font-weight:600;font-size:13px">${esc(c.businessName)}</div>
+        <div style="font-size:11px;color:var(--muted)">${esc(c.ownerName)}</div>
+      </td>
+      <td class="col-hide">${esc(c.ownerName)}</td>
+      <td class="col-hide"><span style="font-size:12px">${esc(c.industry)}</span></td>
+      <td><span class="badge badge-${c.planTier.toLowerCase()}">${esc(c.planTier)}</span></td>
+      <td style="font-weight:600">$${Number(c.monthlyFee).toLocaleString()}</td>
+      <td><span class="badge badge-${c.status.toLowerCase()}">${esc(c.status)}</span></td>
+      <td>
+        <div class="action-cell">
+          <button class="copy-btn" title="Copy Email" onclick="copyField(event,'${esc(c.email)}','Email')">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </button>
+          <button class="copy-btn" title="Copy Phone" onclick="copyField(event,'${esc(c.phone)}','Phone')">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.41 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6.18 6.18l.95-.95a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          </button>
+          <button class="copy-btn" title="Copy Calendly" onclick="copyField(event,'${esc(c.calendlyLink)}','Calendly')">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </button>
+        </div>
+      </td>
+      <td>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-ghost btn-sm" onclick="editClient(event,'${c.id}')">Edit</button>
+          <button class="btn btn-ghost btn-sm" style="color:var(--danger)" onclick="deleteClient(event,'${c.id}')">Del</button>
+        </div>
+      </td>
+    `;
+    tr.addEventListener('click', (e) => {
+      if (e.target.closest('button')) return;
+      toggleExpand(c.id);
+    });
+    tbody.appendChild(tr);
+
+    // DETAIL ROW
+    const det = document.createElement('tr');
+    det.className = 'detail-row';
+    det.dataset.detailFor = c.id;
+    det.style.display = expandedId === c.id ? '' : 'none';
+    det.innerHTML = `<td colspan="9"><div class="detail-card">${buildDetailCard(c)}</div></td>`;
+    tbody.appendChild(det);
+  });
+
+  updateHeader();
+  updateSortIndicators();
+}
+
+function buildDetailCard(c) {
+  const fields = [
+    ['Email', c.email ? `<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>` : '—'],
+    ['Phone', c.phone ? `<a href="tel:${esc(c.phone)}">${esc(c.phone)}</a>` : '—'],
+    ['Address', esc(c.address) || '—'],
+    ['Industry', esc(c.industry) || '—'],
+    ['Onboarding Date', c.onboardingDate ? new Date(c.onboardingDate+'T00:00:00').toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}) : '—'],
+    ['Contract Term', esc(c.contractTerm) || '—'],
+    ['Resend Domain', c.resendDomain ? `<a href="https://${esc(c.resendDomain)}" target="_blank">${esc(c.resendDomain)}</a>` : '—'],
+    ['HubSpot Contact ID', esc(c.hubspotId) || '—'],
+    ['Stripe Customer ID', c.stripeId ? `<code style="font-size:12px;background:#f1f5f9;padding:2px 6px;border-radius:4px">${esc(c.stripeId)}</code>` : '—'],
+    ['Calendly Link', c.calendlyLink ? `<a href="${esc(c.calendlyLink)}" target="_blank">Open Link</a>` : '—'],
+    ['Freshchat Bot ID', esc(c.freshchatBotId) || '—'],
+    ['Emergency Contact', esc(c.emergencyContact) || '—'],
+  ];
+
+  const grid = fields.map(([lbl, val]) => `
+    <div class="detail-field">
+      <label>${lbl}</label>
+      <div class="val">${val}</div>
+    </div>
+  `).join('');
+
+  const notes = `
+    <div class="detail-field notes-block">
+      <label>Notes</label>
+      <div class="val">${esc(c.notes) || '<em>No notes.</em>'}</div>
+    </div>
+  `;
+
+  const actions = `
+    <div class="detail-actions">
+      ${c.email ? `<button class="btn btn-ghost btn-sm" onclick="copyField(event,'${esc(c.email)}','Email')">Copy Email</button>` : ''}
+      ${c.phone ? `<button class="btn btn-ghost btn-sm" onclick="copyField(event,'${esc(c.phone)}','Phone')">Copy Phone</button>` : ''}
+      ${c.calendlyLink ? `<button class="btn btn-ghost btn-sm" onclick="copyField(event,'${esc(c.calendlyLink)}','Calendly Link')">Copy Calendly</button>` : ''}
+      ${c.stripeId ? `<button class="btn btn-ghost btn-sm" onclick="copyField(event,'${esc(c.stripeId)}','Stripe ID')">Copy Stripe ID</button>` : ''}
+      <button class="btn btn-accent btn-sm" onclick="editClient(event,'${c.id}')">Edit Client</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteClient(event,'${c.id}')">Delete</button>
+    </div>
+  `;
+
+  return `<div class="detail-grid">${grid}${notes}</div>${actions}`;
+}
+
+function toggleExpand(id) {
+  expandedId = expandedId === id ? null : id;
+  renderTable();
+}
+
+function updateHeader() {
+  const active = clients.filter(c => c.status === 'Active');
+  const mrr = active.reduce((s,c) => s + (+c.monthlyFee||0), 0);
+  document.getElementById('hdr-count').textContent = clients.length;
+  document.getElementById('hdr-active').textContent = active.length;
+  document.getElementById('hdr-mrr').textContent = '$' + mrr.toLocaleString();
+}
+
+function updateSortIndicators() {
+  document.querySelectorAll('thead th').forEach(th => {
+    th.classList.remove('sorted');
+    const icon = th.querySelector('.sort-icon');
+    if (icon) icon.textContent = '▾';
+  });
+  const sorted = document.querySelector(`thead th[data-col="${sortCol}"]`);
+  if (sorted) {
+    sorted.classList.add('sorted');
+    const icon = sorted.querySelector('.sort-icon');
+    if (icon) icon.textContent = sortDir === 1 ? '▲' : '▼';
+  }
+}
+
+// SORT
+document.querySelectorAll('thead th[data-col]').forEach(th => {
+  th.addEventListener('click', () => {
+    const col = th.dataset.col;
+    if (sortCol === col) sortDir = -sortDir;
+    else { sortCol = col; sortDir = 1; }
+    renderTable();
+  });
+});
+
+// ─── MODAL ───────────────────────────────────────────────────────────────────
+function openModal(id) {
+  editingId = id || null;
+  const form = document.getElementById('client-form');
+  form.reset();
+  document.getElementById('modal-title').textContent = id ? 'Edit Client' : 'Add Client';
+
+  if (id) {
+    const c = clients.find(x => x.id === id);
+    if (c) {
+      Object.keys(c).forEach(k => {
+        const el = form.elements[k];
+        if (el) el.value = c[k] ?? '';
+      });
+    }
+  }
+
+  document.getElementById('modal').style.display = 'flex';
+  requestAnimationFrame(() => form.elements['businessName'].focus());
+}
+
+function closeModal() {
+  document.getElementById('modal').style.display = 'none';
+  editingId = null;
+}
+
+function overlayClose(e) {
+  if (e.target.id === 'modal') closeModal();
+}
+
+function saveClient(e) {
+  e.preventDefault();
+  const form = e.target;
+  const data = {};
+  new FormData(form).forEach((v, k) => data[k] = v.trim());
+
+  if (editingId) {
+    const idx = clients.findIndex(c => c.id === editingId);
+    if (idx !== -1) {
+      clients[idx] = { ...clients[idx], ...data };
+      toast('Client updated.');
+    }
+  } else {
+    clients.push({
+      id: 'cli_' + Date.now(),
+      ...data,
+      createdAt: new Date().toISOString()
+    });
+    toast('Client added.');
+  }
+
+  saveClients(clients);
+  closeModal();
+  renderTable();
+}
+
+function editClient(e, id) {
+  e.stopPropagation();
+  openModal(id);
+}
+
+// ─── DELETE ───────────────────────────────────────────────────────────────────
+function deleteClient(e, id) {
+  e.stopPropagation();
+  const c = clients.find(x => x.id === id);
+  if (!c) return;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'confirm-overlay';
+  overlay.innerHTML = `
+    <div class="confirm-box">
+      <h3>Delete Client?</h3>
+      <p>Remove <strong>${esc(c.businessName)}</strong> from the directory? This cannot be undone.</p>
+      <div class="actions">
+        <button class="btn btn-ghost">Cancel</button>
+        <button class="btn btn-danger" id="confirm-del-btn">Delete</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  overlay.querySelector('.btn-ghost').onclick = () => overlay.remove();
+  overlay.querySelector('#confirm-del-btn').onclick = () => {
+    clients = clients.filter(x => x.id !== id);
+    if (expandedId === id) expandedId = null;
+    saveClients(clients);
+    renderTable();
+    overlay.remove();
+    toast('Client deleted.');
+  };
+}
+
+// ─── COPY ─────────────────────────────────────────────────────────────────────
+function copyField(e, val, label) {
+  e.stopPropagation();
+  if (!val) { toast('Nothing to copy.'); return; }
+  navigator.clipboard.writeText(val).then(() => {
+    toast(`${label} copied!`);
+    const btn = e.currentTarget;
+    btn.classList.add('copied');
+    setTimeout(() => btn.classList.remove('copied'), 1200);
+  }).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = val; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); ta.remove();
+    toast(`${label} copied!`);
+  });
+}
+
+// ─── EXPORT CSV ───────────────────────────────────────────────────────────────
+function exportCSV() {
+  const cols = ['businessName','ownerName','email','phone','address','industry',
+    'planTier','monthlyFee','onboardingDate','contractTerm','resendDomain',
+    'hubspotId','stripeId','calendlyLink','freshchatBotId','emergencyContact','notes','status'];
+  const headers = ['Business Name','Owner Name','Email','Phone','Address','Industry',
+    'Plan Tier','Monthly Fee','Onboarding Date','Contract Term','Resend Domain',
+    'HubSpot Contact ID','Stripe Customer ID','Calendly Link','Freshchat Bot ID',
+    'Emergency Contact','Notes','Status'];
+
+  const rows = [headers.join(',')];
+  clients.forEach(c => {
+    rows.push(cols.map(col => {
+      const v = (c[col] ?? '').toString().replace(/"/g, '""');
+      return `"${v}"`;
+    }).join(','));
+  });
+
+  const blob = new Blob([rows.join('\r\n')], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `cwi-client-directory-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('CSV exported.');
+}
+
+// ─── TOAST ────────────────────────────────────────────────────────────────────
+function toast(msg) {
+  const wrap = document.getElementById('toast-wrap');
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  wrap.appendChild(t);
+  setTimeout(() => {
+    t.classList.add('removing');
+    setTimeout(() => t.remove(), 200);
+  }, 2400);
+}
+
+// ─── UTILS ───────────────────────────────────────────────────────────────────
+function esc(s) {
+  if (!s) return '';
+  return String(s)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
+// ─── KEYBOARD ────────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+});
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+renderTable();
+</script>
+</body>
+</html>

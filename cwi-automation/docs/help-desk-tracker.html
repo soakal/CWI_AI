@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CWI AI — Help Desk Tracker</title>
+  <meta name="description" content="CWI internal tool: CWI AI — Help Desk Tracker. Internal use only — CWI Compute With Imagination.">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #0A0A0C;
+      --surface:     #13131A;
+      --surface2:    #1C1C26;
+      --border:      #2A2A3A;
+      --accent:      #FF5A1F;
+      --accent-dim:  #FF5A1F22;
+      --text:        #E8E8F0;
+      --muted:       #7A7A9A;
+      --green:       #22C55E;
+      --green-dim:   #22C55E22;
+      --yellow:      #FACC15;
+      --yellow-dim:  #FACC1522;
+      --red:         #EF4444;
+      --red-dim:     #EF444422;
+      --blue:        #3B82F6;
+      --blue-dim:    #3B82F622;
+      --purple:      #A855F7;
+      --purple-dim:  #A855F722;
+      --radius:      12px;
+      --radius-sm:   8px;
+    }
+
+    body {
+      font-family: 'Sora', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── TOP BAR ── */
+    .topbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 200;
+    }
+    .topbar-brand { display: flex; align-items: center; gap: 10px; }
+    .topbar-logo {
+      width: 32px; height: 32px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; font-weight: 700; color: #fff;
+    }
+    .topbar-title { font-size: 15px; font-weight: 600; color: var(--text); }
+    .topbar-sub { font-size: 12px; color: var(--muted); margin-top: 1px; }
+    .topbar-actions { display: flex; gap: 10px; align-items: center; }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 16px; border-radius: var(--radius-sm);
+      font-family: 'Sora', sans-serif; font-size: 13px; font-weight: 500;
+      cursor: pointer; border: none; transition: all 0.15s;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: #e0481a; }
+    .btn-ghost {
+      background: transparent; color: var(--muted);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { color: var(--text); border-color: var(--muted); }
+    .btn-danger { background: var(--red-dim); color: var(--red); border: 1px solid var(--red); }
+    .btn-danger:hover { background: var(--red); color: #fff; }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+    /* ── LAYOUT ── */
+    .main { padding: 28px 32px; max-width: 1400px; margin: 0 auto; }
+
+    /* ── DASHBOARD STATS ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+    }
+    .stat-card.accent::before { background: var(--accent); }
+    .stat-card.green::before  { background: var(--green); }
+    .stat-card.blue::before   { background: var(--blue); }
+    .stat-card.red::before    { background: var(--red); }
+    .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+    .stat-value { font-size: 32px; font-weight: 700; color: var(--text); line-height: 1; }
+    .stat-value.red-val  { color: var(--red); }
+    .stat-value.green-val{ color: var(--green); }
+    .stat-sub { font-size: 11px; color: var(--muted); margin-top: 6px; }
+
+    /* ── SLA ALERTS ── */
+    .sla-banner {
+      background: var(--red-dim);
+      border: 1px solid var(--red);
+      border-radius: var(--radius-sm);
+      padding: 10px 16px;
+      font-size: 13px;
+      color: var(--red);
+      margin-bottom: 12px;
+      display: none;
+    }
+    .sla-banner.show { display: flex; align-items: center; gap: 8px; }
+    .sla-warn {
+      background: var(--yellow-dim);
+      border: 1px solid var(--yellow);
+      border-radius: var(--radius-sm);
+      padding: 10px 16px;
+      font-size: 13px;
+      color: var(--yellow);
+      margin-bottom: 12px;
+      display: none;
+    }
+    .sla-warn.show { display: flex; align-items: center; gap: 8px; }
+
+    /* ── FILTER BAR ── */
+    .filter-bar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .filter-bar label { font-size: 12px; color: var(--muted); margin-right: 4px; }
+    .filter-select, .filter-input {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: var(--radius-sm);
+      padding: 7px 12px;
+      font-family: 'Sora', sans-serif;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .filter-select:focus, .filter-input:focus { border-color: var(--accent); }
+    .filter-group { display: flex; align-items: center; gap: 6px; }
+    .filter-sep { width: 1px; height: 28px; background: var(--border); }
+
+    /* ── SECTION HEADER ── */
+    .section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .section-title { font-size: 15px; font-weight: 600; color: var(--text); }
+    .section-count {
+      background: var(--accent-dim);
+      color: var(--accent);
+      font-size: 11px; font-weight: 600;
+      padding: 3px 8px; border-radius: 20px;
+      margin-left: 8px;
+    }
+
+    /* ── TABLE ── */
+    .table-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      background: var(--surface2);
+      padding: 12px 14px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+    }
+    thead th:hover { color: var(--text); }
+    thead th .sort-icon { margin-left: 4px; opacity: 0.4; }
+    thead th.active .sort-icon { opacity: 1; color: var(--accent); }
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.1s;
+    }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--surface2); }
+    tbody tr.sla-critical { background: #EF444408; }
+    tbody tr.sla-critical:hover { background: #EF444414; }
+    tbody tr.sla-high { background: #FACC1508; }
+    tbody tr.sla-high:hover { background: #FACC1514; }
+    td {
+      padding: 12px 14px;
+      font-size: 13px;
+      color: var(--text);
+      vertical-align: middle;
+    }
+    .td-id { color: var(--muted); font-size: 12px; font-family: monospace; }
+    .td-client {
+      color: var(--accent);
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .td-client:hover { text-decoration: underline; }
+
+    /* ── BADGES ── */
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 8px; border-radius: 20px;
+      font-size: 11px; font-weight: 600;
+      white-space: nowrap;
+    }
+    .badge-open     { background: var(--blue-dim);   color: var(--blue); }
+    .badge-progress { background: var(--yellow-dim); color: var(--yellow); }
+    .badge-resolved { background: var(--green-dim);  color: var(--green); }
+    .badge-closed   { background: #2A2A3A;            color: var(--muted); }
+    .badge-low      { background: var(--green-dim);  color: var(--green); }
+    .badge-medium   { background: var(--blue-dim);   color: var(--blue); }
+    .badge-high     { background: var(--yellow-dim); color: var(--yellow); }
+    .badge-critical { background: var(--red-dim);    color: var(--red); }
+
+    .sla-dot {
+      display: inline-block;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      margin-right: 4px;
+    }
+    .sla-dot.red    { background: var(--red); box-shadow: 0 0 6px var(--red); animation: pulse 1.5s infinite; }
+    .sla-dot.yellow { background: var(--yellow); box-shadow: 0 0 6px var(--yellow); }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.4; }
+    }
+
+    .td-actions { display: flex; gap: 6px; }
+    .td-time { color: var(--muted); font-size: 12px; }
+
+    /* ── EMPTY STATE ── */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+    }
+    .empty-state .empty-icon { font-size: 36px; margin-bottom: 12px; }
+    .empty-state p { font-size: 13px; }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 500;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      width: 100%;
+      max-width: 620px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+    }
+    .modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0;
+      background: var(--surface);
+      z-index: 1;
+    }
+    .modal-title { font-size: 16px; font-weight: 600; }
+    .modal-close {
+      background: none; border: none; color: var(--muted);
+      font-size: 20px; cursor: pointer; padding: 4px;
+      line-height: 1; transition: color 0.15s;
+    }
+    .modal-close:hover { color: var(--text); }
+    .modal-body { padding: 24px; }
+    .modal-footer {
+      display: flex; justify-content: flex-end; gap: 10px;
+      padding: 16px 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group.full { grid-column: 1 / -1; }
+    .form-label { font-size: 12px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .form-control {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: var(--radius-sm);
+      padding: 9px 12px;
+      font-family: 'Sora', sans-serif;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.15s;
+      width: 100%;
+    }
+    .form-control:focus { border-color: var(--accent); }
+    textarea.form-control { resize: vertical; min-height: 80px; }
+    .form-hint { font-size: 11px; color: var(--muted); }
+
+    /* ── CLIENT HISTORY PANEL ── */
+    .panel-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 400;
+      display: none;
+    }
+    .panel-overlay.open { display: block; }
+    .side-panel {
+      position: fixed;
+      right: -520px; top: 0; bottom: 0;
+      width: 500px;
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      z-index: 410;
+      transition: right 0.25s ease;
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+    .side-panel.open { right: 0; }
+    .panel-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .panel-title { font-size: 15px; font-weight: 600; }
+    .panel-body { padding: 20px 24px; overflow-y: auto; flex: 1; }
+    .panel-stat-row {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 12px; margin-bottom: 20px;
+    }
+    .panel-stat {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      text-align: center;
+    }
+    .panel-stat-val { font-size: 22px; font-weight: 700; color: var(--text); }
+    .panel-stat-lbl { font-size: 11px; color: var(--muted); margin-top: 4px; }
+    .panel-ticket {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      margin-bottom: 10px;
+    }
+    .panel-ticket-head {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .panel-ticket-id { font-size: 12px; color: var(--muted); font-family: monospace; }
+    .panel-ticket-desc { font-size: 13px; color: var(--text); margin-bottom: 6px; }
+    .panel-ticket-meta { font-size: 11px; color: var(--muted); display: flex; gap: 12px; flex-wrap: wrap; }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 18px;
+      font-size: 13px; color: var(--text);
+      z-index: 600;
+      transform: translateY(80px); opacity: 0;
+      transition: all 0.3s ease;
+      pointer-events: none;
+      max-width: 320px;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { border-color: var(--green); color: var(--green); }
+    .toast.error   { border-color: var(--red);   color: var(--red); }
+
+    /* ── MANAGE CLIENTS MODAL ── */
+    .client-list-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 14px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      margin-bottom: 8px;
+    }
+    .client-list-name { font-size: 13px; font-weight: 500; }
+
+    /* ── MISC ── */
+    .no-wrap { white-space: nowrap; }
+    .text-muted { color: var(--muted); }
+    .d-flex { display: flex; }
+    .align-center { align-items: center; }
+    .gap-8 { gap: 8px; }
+
+    @media (max-width: 900px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .form-grid   { grid-template-columns: 1fr; }
+      .main        { padding: 16px; }
+      .topbar      { padding: 12px 16px; }
+    }
+    @media (max-width: 600px) {
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .filter-bar { flex-direction: column; align-items: stretch; }
+      .side-panel { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-brand">
+    <div class="topbar-logo">C</div>
+    <div>
+      <div class="topbar-title">CWI AI — Help Desk Tracker</div>
+      <div class="topbar-sub">Support issue management</div>
+    </div>
+  </div>
+  <div class="topbar-actions">
+    <button class="btn btn-ghost btn-sm" onclick="openManageClients()">Manage Clients</button>
+    <button class="btn btn-ghost btn-sm" onclick="exportCSV()">Export CSV</button>
+    <button class="btn btn-primary" onclick="openNewTicket()">+ New Ticket</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- STATS -->
+  <div class="stats-grid">
+    <div class="stat-card accent">
+      <div class="stat-label">Open Tickets</div>
+      <div class="stat-value" id="stat-open">0</div>
+      <div class="stat-sub">Awaiting resolution</div>
+    </div>
+    <div class="stat-card blue">
+      <div class="stat-label">Avg Resolution Time</div>
+      <div class="stat-value" id="stat-avg-time">—</div>
+      <div class="stat-sub">Hours (resolved tickets)</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-label">Tickets This Month</div>
+      <div class="stat-value" id="stat-month">0</div>
+      <div class="stat-sub" id="stat-month-sub">June 2026</div>
+    </div>
+    <div class="stat-card red">
+      <div class="stat-label">Critical Open</div>
+      <div class="stat-value red-val" id="stat-critical">0</div>
+      <div class="stat-sub">Needs immediate attention</div>
+    </div>
+  </div>
+
+  <!-- SLA ALERTS -->
+  <div class="sla-banner" id="sla-critical-banner">
+    <span>&#9888;</span>
+    <span id="sla-critical-text">Critical tickets are breaching 4-hour SLA!</span>
+  </div>
+  <div class="sla-warn" id="sla-high-banner">
+    <span>&#9888;</span>
+    <span id="sla-high-text">High priority tickets are breaching 24-hour SLA!</span>
+  </div>
+
+  <!-- FILTER BAR -->
+  <div class="filter-bar">
+    <div class="filter-group">
+      <label for="filter-client">Client</label>
+      <select class="filter-select" id="filter-client" onchange="applyFilters()">
+        <option value="">All Clients</option>
+      </select>
+    </div>
+    <div class="filter-sep"></div>
+    <div class="filter-group">
+      <label for="filter-status">Status</label>
+      <select class="filter-select" id="filter-status" onchange="applyFilters()">
+        <option value="">All Statuses</option>
+        <option value="Open">Open</option>
+        <option value="In Progress">In Progress</option>
+        <option value="Resolved">Resolved</option>
+        <option value="Closed">Closed</option>
+      </select>
+    </div>
+    <div class="filter-sep"></div>
+    <div class="filter-group">
+      <label for="filter-priority">Priority</label>
+      <select class="filter-select" id="filter-priority" onchange="applyFilters()">
+        <option value="">All Priorities</option>
+        <option value="Critical">Critical</option>
+        <option value="High">High</option>
+        <option value="Medium">Medium</option>
+        <option value="Low">Low</option>
+      </select>
+    </div>
+    <div class="filter-sep"></div>
+    <div class="filter-group">
+      <label for="filter-type">Issue Type</label>
+      <select class="filter-select" id="filter-type" onchange="applyFilters()">
+        <option value="">All Types</option>
+        <option>Bot not responding</option>
+        <option>Wrong answer</option>
+        <option>Email not sending</option>
+        <option>HubSpot sync issue</option>
+        <option>Scenario error</option>
+        <option>Billing</option>
+        <option>Other</option>
+      </select>
+    </div>
+    <div class="filter-sep"></div>
+    <div class="filter-group">
+      <label for="sort-field">Sort</label>
+      <select class="filter-select" id="sort-field" onchange="applyFilters()">
+        <option value="dateOpened-desc">Date (Newest)</option>
+        <option value="dateOpened-asc">Date (Oldest)</option>
+        <option value="priority-desc">Priority (High→Low)</option>
+        <option value="priority-asc">Priority (Low→High)</option>
+        <option value="id-desc">Ticket # (Desc)</option>
+        <option value="id-asc">Ticket # (Asc)</option>
+      </select>
+    </div>
+    <div class="filter-sep"></div>
+    <button class="btn btn-ghost btn-sm" onclick="clearFilters()">Clear Filters</button>
+  </div>
+
+  <!-- TABLE -->
+  <div class="section-header">
+    <div class="d-flex align-center gap-8">
+      <span class="section-title">Support Tickets</span>
+      <span class="section-count" id="table-count">0</span>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table id="ticket-table">
+      <thead>
+        <tr>
+          <th onclick="sortBy('id')">Ticket # <span class="sort-icon">↕</span></th>
+          <th onclick="sortBy('client')">Client <span class="sort-icon">↕</span></th>
+          <th onclick="sortBy('dateOpened')">Date Opened <span class="sort-icon">↕</span></th>
+          <th>Issue Type</th>
+          <th onclick="sortBy('priority')">Priority <span class="sort-icon">↕</span></th>
+          <th>Description</th>
+          <th onclick="sortBy('status')">Status <span class="sort-icon">↕</span></th>
+          <th>SLA</th>
+          <th onclick="sortBy('dateResolved')">Date Resolved <span class="sort-icon">↕</span></th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="ticket-tbody"></tbody>
+    </table>
+    <div id="empty-state" class="empty-state" style="display:none;">
+      <div class="empty-icon">🎫</div>
+      <p>No tickets found. Create your first ticket or adjust filters.</p>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<!-- ── NEW / EDIT TICKET MODAL ── -->
+<div class="modal-overlay" id="ticket-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-title">New Ticket</span>
+      <button class="modal-close" onclick="closeModal('ticket-modal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label" for="f-client">Client Name *</label>
+          <select class="form-control" id="f-client" required>
+            <option value="">Select client…</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="f-date-opened">Date Opened *</label>
+          <input type="datetime-local" class="form-control" id="f-date-opened" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="f-issue-type">Issue Type *</label>
+          <select class="form-control" id="f-issue-type" required>
+            <option value="">Select…</option>
+            <option>Bot not responding</option>
+            <option>Wrong answer</option>
+            <option>Email not sending</option>
+            <option>HubSpot sync issue</option>
+            <option>Scenario error</option>
+            <option>Billing</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="f-priority">Priority *</label>
+          <select class="form-control" id="f-priority" required>
+            <option value="">Select…</option>
+            <option>Low</option>
+            <option>Medium</option>
+            <option>High</option>
+            <option>Critical</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label class="form-label" for="f-description">Description *</label>
+          <textarea class="form-control" id="f-description" placeholder="Describe the issue in detail…" required></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="f-status">Status</label>
+          <select class="form-control" id="f-status">
+            <option>Open</option>
+            <option>In Progress</option>
+            <option>Resolved</option>
+            <option>Closed</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="f-date-resolved">Date Resolved</label>
+          <input type="datetime-local" class="form-control" id="f-date-resolved" />
+          <span class="form-hint">Fill when status is Resolved/Closed</span>
+        </div>
+        <div class="form-group full">
+          <label class="form-label" for="f-resolution">Resolution Notes</label>
+          <textarea class="form-control" id="f-resolution" placeholder="How was this resolved?…"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('ticket-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTicket()" id="save-btn">Save Ticket</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MANAGE CLIENTS MODAL ── -->
+<div class="modal-overlay" id="clients-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Manage Clients</span>
+      <button class="modal-close" onclick="closeModal('clients-modal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid" style="margin-bottom:20px;">
+        <div class="form-group full">
+          <label class="form-label" for="new-client-name">Add New Client</label>
+          <div style="display:flex;gap:8px;">
+            <input type="text" class="form-control" id="new-client-name" placeholder="Client name…" onkeydown="if(event.key==='Enter')addClient()" />
+            <button class="btn btn-primary btn-sm" onclick="addClient()" style="white-space:nowrap;flex-shrink:0;">Add</button>
+          </div>
+        </div>
+      </div>
+      <div id="clients-list"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('clients-modal')">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── CLIENT HISTORY PANEL ── -->
+<div class="panel-overlay" id="panel-overlay" onclick="closeSidePanel()"></div>
+<div class="side-panel" id="side-panel">
+  <div class="panel-header">
+    <div class="panel-title" id="panel-client-name">Client History</div>
+    <button class="modal-close" onclick="closeSidePanel()">&times;</button>
+  </div>
+  <div class="panel-body" id="panel-body"></div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let tickets  = JSON.parse(localStorage.getItem('cwi_tickets')  || '[]');
+let clients  = JSON.parse(localStorage.getItem('cwi_clients')  || '["Joes Plumbing"]');
+let editingId = null;
+let currentSort = { field: 'dateOpened', dir: 'desc' };
+
+const PRIORITY_ORDER = { Critical: 4, High: 3, Medium: 2, Low: 1 };
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+function init() {
+  populateClientDropdowns();
+  populateFilterClients();
+  updateDashboard();
+  renderTable();
+  setDefaultDateTime();
+}
+
+function setDefaultDateTime() {
+  const now = new Date();
+  const local = toLocalDatetimeValue(now);
+  document.getElementById('f-date-opened').value = local;
+}
+
+function toLocalDatetimeValue(date) {
+  const d = new Date(date);
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0, 16);
+}
+
+// ─── CLIENTS ─────────────────────────────────────────────────────────────────
+function saveClients() { localStorage.setItem('cwi_clients', JSON.stringify(clients)); }
+
+function populateClientDropdowns() {
+  const sorted = [...clients].sort();
+  ['f-client'].forEach(id => {
+    const sel = document.getElementById(id);
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">Select client…</option>';
+    sorted.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c; opt.textContent = c;
+      sel.appendChild(opt);
+    });
+    if (cur) sel.value = cur;
+  });
+}
+
+function populateFilterClients() {
+  const sorted = [...clients].sort();
+  const sel = document.getElementById('filter-client');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">All Clients</option>';
+  sorted.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c; opt.textContent = c;
+    sel.appendChild(opt);
+  });
+  if (cur) sel.value = cur;
+}
+
+function addClient() {
+  const input = document.getElementById('new-client-name');
+  const name = input.value.trim();
+  if (!name) return;
+  if (clients.includes(name)) { showToast('Client already exists', 'error'); return; }
+  clients.push(name);
+  saveClients();
+  input.value = '';
+  renderClientsList();
+  populateClientDropdowns();
+  populateFilterClients();
+  showToast('Client added');
+}
+
+function removeClient(name) {
+  const used = tickets.some(t => t.client === name);
+  if (used) { showToast('Cannot remove — client has tickets', 'error'); return; }
+  if (!confirm(`Remove "${name}"?`)) return;
+  clients = clients.filter(c => c !== name);
+  saveClients();
+  renderClientsList();
+  populateClientDropdowns();
+  populateFilterClients();
+  showToast('Client removed');
+}
+
+function renderClientsList() {
+  const el = document.getElementById('clients-list');
+  if (!clients.length) { el.innerHTML = '<p class="text-muted" style="font-size:13px;">No clients yet.</p>'; return; }
+  el.innerHTML = [...clients].sort().map(c => `
+    <div class="client-list-item">
+      <span class="client-list-name">${esc(c)}</span>
+      <button class="btn btn-danger btn-sm" onclick="removeClient('${esc(c).replace(/'/g,"\\'")}')">Remove</button>
+    </div>
+  `).join('');
+}
+
+// ─── TICKETS ─────────────────────────────────────────────────────────────────
+function saveTickets() { localStorage.setItem('cwi_tickets', JSON.stringify(tickets)); }
+
+function nextId() {
+  if (!tickets.length) return 1;
+  return Math.max(...tickets.map(t => t.id)) + 1;
+}
+
+function openNewTicket() {
+  editingId = null;
+  document.getElementById('modal-title').textContent = 'New Ticket';
+  document.getElementById('save-btn').textContent = 'Save Ticket';
+  clearForm();
+  setDefaultDateTime();
+  openModal('ticket-modal');
+}
+
+function openEditTicket(id) {
+  const t = tickets.find(x => x.id === id);
+  if (!t) return;
+  editingId = id;
+  document.getElementById('modal-title').textContent = `Edit Ticket #${id}`;
+  document.getElementById('save-btn').textContent = 'Update Ticket';
+  document.getElementById('f-client').value       = t.client || '';
+  document.getElementById('f-date-opened').value  = toLocalDatetimeValue(t.dateOpened);
+  document.getElementById('f-issue-type').value   = t.issueType || '';
+  document.getElementById('f-priority').value     = t.priority || '';
+  document.getElementById('f-description').value  = t.description || '';
+  document.getElementById('f-status').value       = t.status || 'Open';
+  document.getElementById('f-date-resolved').value= t.dateResolved ? toLocalDatetimeValue(t.dateResolved) : '';
+  document.getElementById('f-resolution').value   = t.resolution || '';
+  openModal('ticket-modal');
+}
+
+function saveTicket() {
+  const client      = document.getElementById('f-client').value.trim();
+  const dateOpened  = document.getElementById('f-date-opened').value;
+  const issueType   = document.getElementById('f-issue-type').value;
+  const priority    = document.getElementById('f-priority').value;
+  const description = document.getElementById('f-description').value.trim();
+  const status      = document.getElementById('f-status').value;
+  const dateResolved= document.getElementById('f-date-resolved').value;
+  const resolution  = document.getElementById('f-resolution').value.trim();
+
+  if (!client)      { showToast('Select a client', 'error'); return; }
+  if (!dateOpened)  { showToast('Set date opened', 'error'); return; }
+  if (!issueType)   { showToast('Select issue type', 'error'); return; }
+  if (!priority)    { showToast('Select priority', 'error'); return; }
+  if (!description) { showToast('Enter a description', 'error'); return; }
+
+  if (editingId !== null) {
+    const idx = tickets.findIndex(t => t.id === editingId);
+    if (idx > -1) {
+      tickets[idx] = { ...tickets[idx], client, dateOpened, issueType, priority, description, status, dateResolved, resolution };
+    }
+    showToast('Ticket updated');
+  } else {
+    tickets.push({
+      id: nextId(),
+      client, dateOpened, issueType, priority, description,
+      status, dateResolved, resolution,
+      createdAt: new Date().toISOString()
+    });
+    showToast('Ticket created');
+  }
+
+  saveTickets();
+  closeModal('ticket-modal');
+  updateDashboard();
+  renderTable();
+}
+
+function deleteTicket(id) {
+  if (!confirm(`Delete ticket #${id}? This cannot be undone.`)) return;
+  tickets = tickets.filter(t => t.id !== id);
+  saveTickets();
+  updateDashboard();
+  renderTable();
+  showToast('Ticket deleted');
+}
+
+function clearForm() {
+  ['f-client','f-issue-type','f-priority','f-status'].forEach(id => document.getElementById(id).value = '');
+  ['f-description','f-resolution'].forEach(id => document.getElementById(id).value = '');
+  ['f-date-opened','f-date-resolved'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-status').value = 'Open';
+}
+
+// ─── DASHBOARD ───────────────────────────────────────────────────────────────
+function updateDashboard() {
+  const now = new Date();
+  const openTickets     = tickets.filter(t => t.status === 'Open' || t.status === 'In Progress');
+  const criticalOpen    = openTickets.filter(t => t.priority === 'Critical');
+  const thisMonth       = tickets.filter(t => {
+    const d = new Date(t.dateOpened);
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+  });
+
+  // Avg resolution time
+  const resolved = tickets.filter(t => t.dateResolved && t.dateOpened);
+  let avgHours = '—';
+  if (resolved.length) {
+    const total = resolved.reduce((sum, t) => {
+      const diff = new Date(t.dateResolved) - new Date(t.dateOpened);
+      return sum + diff;
+    }, 0);
+    const hrs = total / resolved.length / 3600000;
+    avgHours = hrs < 1 ? hrs.toFixed(1) : Math.round(hrs);
+  }
+
+  document.getElementById('stat-open').textContent     = openTickets.length;
+  document.getElementById('stat-avg-time').textContent  = avgHours;
+  document.getElementById('stat-month').textContent     = thisMonth.length;
+  document.getElementById('stat-critical').textContent  = criticalOpen.length;
+  document.getElementById('stat-month-sub').textContent =
+    now.toLocaleString('default', { month: 'long' }) + ' ' + now.getFullYear();
+
+  // SLA alerts
+  const slaViolCritical = criticalOpen.filter(t => {
+    const hrs = (now - new Date(t.dateOpened)) / 3600000;
+    return hrs > 4;
+  });
+  const highOpen = openTickets.filter(t => t.priority === 'High');
+  const slaViolHigh = highOpen.filter(t => {
+    const hrs = (now - new Date(t.dateOpened)) / 3600000;
+    return hrs > 24;
+  });
+
+  const cb = document.getElementById('sla-critical-banner');
+  const hb = document.getElementById('sla-high-banner');
+  if (slaViolCritical.length) {
+    cb.classList.add('show');
+    document.getElementById('sla-critical-text').textContent =
+      `${slaViolCritical.length} Critical ticket${slaViolCritical.length>1?'s':''} breaching 4-hour SLA: ${slaViolCritical.map(t=>'#'+t.id).join(', ')}`;
+  } else { cb.classList.remove('show'); }
+
+  if (slaViolHigh.length) {
+    hb.classList.add('show');
+    document.getElementById('sla-high-text').textContent =
+      `${slaViolHigh.length} High priority ticket${slaViolHigh.length>1?'s':''} breaching 24-hour SLA: ${slaViolHigh.map(t=>'#'+t.id).join(', ')}`;
+  } else { hb.classList.remove('show'); }
+}
+
+// ─── TABLE ────────────────────────────────────────────────────────────────────
+function getFilteredSorted() {
+  const fClient   = document.getElementById('filter-client').value;
+  const fStatus   = document.getElementById('filter-status').value;
+  const fPriority = document.getElementById('filter-priority').value;
+  const fType     = document.getElementById('filter-type').value;
+  const sortVal   = document.getElementById('sort-field').value;
+
+  let list = tickets.filter(t => {
+    if (fClient   && t.client    !== fClient)   return false;
+    if (fStatus   && t.status    !== fStatus)   return false;
+    if (fPriority && t.priority  !== fPriority) return false;
+    if (fType     && t.issueType !== fType)     return false;
+    return true;
+  });
+
+  const [sf, sd] = sortVal.split('-');
+  list.sort((a, b) => {
+    let va, vb;
+    if (sf === 'id')           { va = a.id; vb = b.id; }
+    else if (sf === 'priority'){ va = PRIORITY_ORDER[a.priority]||0; vb = PRIORITY_ORDER[b.priority]||0; }
+    else if (sf === 'client')  { va = a.client||''; vb = b.client||''; }
+    else if (sf === 'status')  { va = a.status||''; vb = b.status||''; }
+    else if (sf === 'dateResolved') { va = a.dateResolved||''; vb = b.dateResolved||''; }
+    else                       { va = a.dateOpened||''; vb = b.dateOpened||''; }
+
+    if (typeof va === 'string') {
+      return sd === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
+    }
+    return sd === 'asc' ? va - vb : vb - va;
+  });
+
+  return list;
+}
+
+function renderTable() {
+  const list = getFilteredSorted();
+  const tbody = document.getElementById('ticket-tbody');
+  const empty = document.getElementById('empty-state');
+  document.getElementById('table-count').textContent = list.length;
+
+  if (!list.length) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  const now = new Date();
+  tbody.innerHTML = list.map(t => {
+    const isOpenish = t.status === 'Open' || t.status === 'In Progress';
+    const hoursOpen = isOpenish ? (now - new Date(t.dateOpened)) / 3600000 : 0;
+    const slaClass =
+      (isOpenish && t.priority === 'Critical' && hoursOpen > 4)  ? 'sla-critical' :
+      (isOpenish && t.priority === 'High'     && hoursOpen > 24) ? 'sla-high'     : '';
+
+    const slaDot =
+      (isOpenish && t.priority === 'Critical' && hoursOpen > 4)  ? '<span class="sla-dot red"></span>SLA Breach' :
+      (isOpenish && t.priority === 'High'     && hoursOpen > 24) ? '<span class="sla-dot yellow"></span>Warning'  :
+      isOpenish ? '<span style="color:var(--muted);font-size:12px;">OK</span>' : '—';
+
+    const desc = t.description.length > 60 ? t.description.slice(0, 57) + '…' : t.description;
+
+    return `<tr class="${slaClass}">
+      <td class="td-id no-wrap">#${String(t.id).padStart(4,'0')}</td>
+      <td><span class="td-client" onclick="openClientHistory('${esc(t.client).replace(/'/g,"\\'")}')">
+        ${esc(t.client)}</span></td>
+      <td class="td-time no-wrap">${fmtDate(t.dateOpened)}</td>
+      <td class="no-wrap" style="font-size:12px;">${esc(t.issueType)}</td>
+      <td><span class="badge badge-${t.priority.toLowerCase()}">${esc(t.priority)}</span></td>
+      <td style="max-width:220px;font-size:12px;" title="${esc(t.description)}">${esc(desc)}</td>
+      <td><span class="badge badge-${statusKey(t.status)}">${esc(t.status)}</span></td>
+      <td class="no-wrap" style="font-size:12px;">${slaDot}</td>
+      <td class="td-time no-wrap">${t.dateResolved ? fmtDate(t.dateResolved) : '<span class="text-muted">—</span>'}</td>
+      <td>
+        <div class="td-actions">
+          <button class="btn btn-ghost btn-sm" onclick="openEditTicket(${t.id})">Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteTicket(${t.id})">Del</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function statusKey(s) {
+  if (s === 'Open')        return 'open';
+  if (s === 'In Progress') return 'progress';
+  if (s === 'Resolved')    return 'resolved';
+  if (s === 'Closed')      return 'closed';
+  return 'open';
+}
+
+function applyFilters() { renderTable(); }
+
+function clearFilters() {
+  document.getElementById('filter-client').value   = '';
+  document.getElementById('filter-status').value   = '';
+  document.getElementById('filter-priority').value = '';
+  document.getElementById('filter-type').value     = '';
+  document.getElementById('sort-field').value      = 'dateOpened-desc';
+  renderTable();
+}
+
+function sortBy(field) {
+  const sel = document.getElementById('sort-field');
+  const cur = sel.value.split('-');
+  const dir = cur[0] === field && cur[1] === 'desc' ? 'asc' : 'desc';
+  sel.value = field + '-' + dir;
+  applyFilters();
+}
+
+// ─── CLIENT HISTORY PANEL ────────────────────────────────────────────────────
+function openClientHistory(name) {
+  const clientTickets = tickets.filter(t => t.client === name);
+  const open     = clientTickets.filter(t => t.status === 'Open' || t.status === 'In Progress').length;
+  const resolved = clientTickets.filter(t => t.dateResolved && t.dateOpened);
+  let avgHrs = '—';
+  if (resolved.length) {
+    const total = resolved.reduce((s,t) => s + (new Date(t.dateResolved) - new Date(t.dateOpened)), 0);
+    const hrs = total / resolved.length / 3600000;
+    avgHrs = (hrs < 1 ? hrs.toFixed(1) : Math.round(hrs)) + 'h';
+  }
+
+  document.getElementById('panel-client-name').textContent = name + ' — History';
+
+  const sorted = [...clientTickets].sort((a,b) => new Date(b.dateOpened) - new Date(a.dateOpened));
+
+  document.getElementById('panel-body').innerHTML = `
+    <div class="panel-stat-row">
+      <div class="panel-stat">
+        <div class="panel-stat-val">${clientTickets.length}</div>
+        <div class="panel-stat-lbl">Total Tickets</div>
+      </div>
+      <div class="panel-stat">
+        <div class="panel-stat-val" style="color:var(--accent)">${open}</div>
+        <div class="panel-stat-lbl">Open / In Progress</div>
+      </div>
+      <div class="panel-stat">
+        <div class="panel-stat-val">${avgHrs}</div>
+        <div class="panel-stat-lbl">Avg Resolution</div>
+      </div>
+    </div>
+    ${sorted.length ? sorted.map(t => `
+      <div class="panel-ticket">
+        <div class="panel-ticket-head">
+          <span class="panel-ticket-id">#${String(t.id).padStart(4,'0')}</span>
+          <div style="display:flex;gap:6px;">
+            <span class="badge badge-${t.priority.toLowerCase()}">${esc(t.priority)}</span>
+            <span class="badge badge-${statusKey(t.status)}">${esc(t.status)}</span>
+          </div>
+        </div>
+        <div class="panel-ticket-desc">${esc(t.issueType)} — ${esc(t.description)}</div>
+        ${t.resolution ? `<div style="font-size:12px;color:var(--green);margin-bottom:6px;">Resolution: ${esc(t.resolution)}</div>` : ''}
+        <div class="panel-ticket-meta">
+          <span>Opened: ${fmtDate(t.dateOpened)}</span>
+          ${t.dateResolved ? `<span>Resolved: ${fmtDate(t.dateResolved)}</span>` : ''}
+        </div>
+      </div>
+    `).join('') : '<p class="text-muted" style="font-size:13px;">No tickets for this client.</p>'}
+  `;
+
+  document.getElementById('panel-overlay').classList.add('open');
+  document.getElementById('side-panel').classList.add('open');
+}
+
+function closeSidePanel() {
+  document.getElementById('panel-overlay').classList.remove('open');
+  document.getElementById('side-panel').classList.remove('open');
+}
+
+// ─── EXPORT CSV ───────────────────────────────────────────────────────────────
+function exportCSV() {
+  const list = getFilteredSorted();
+  if (!list.length) { showToast('No tickets to export', 'error'); return; }
+
+  const headers = ['Ticket ID','Client','Date Opened','Issue Type','Priority','Description','Status','Date Resolved','Resolution Notes'];
+  const rows = list.map(t => [
+    '#' + String(t.id).padStart(4,'0'),
+    t.client, t.dateOpened, t.issueType, t.priority,
+    '"' + (t.description||'').replace(/"/g,'""') + '"',
+    t.status, t.dateResolved||'',
+    '"' + (t.resolution||'').replace(/"/g,'""') + '"'
+  ]);
+
+  const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = `cwi-helpdesk-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('CSV exported');
+}
+
+// ─── MODAL HELPERS ────────────────────────────────────────────────────────────
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function openManageClients() {
+  renderClientsList();
+  openModal('clients-modal');
+}
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) closeModal(el.id); });
+});
+
+// ─── TOAST ────────────────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ─── UTILS ────────────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function fmtDate(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })
+       + ' ' + d.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', hour12:true });
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeModal('ticket-modal');
+    closeModal('clients-modal');
+    closeSidePanel();
+  }
+  if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+    e.preventDefault();
+    openNewTicket();
+  }
+});
+
+// Auto-refresh dashboard every minute (SLA timers)
+setInterval(() => { updateDashboard(); renderTable(); }, 60000);
+
+// Boot
+init();
+</script>
+</body>
+</html>

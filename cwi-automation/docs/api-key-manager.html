@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>API Key Manager — CWI AI</title>
+<meta name="description" content="CWI internal tool: API Key Manager — CWI AI. Internal use only — CWI Compute With Imagination.">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --accent: #FF5A1F;
+    --accent-dark: #d94a17;
+    --accent-light: #fff0eb;
+    --bg: #f8f9fa;
+    --surface: #ffffff;
+    --border: #e2e8f0;
+    --text: #1a202c;
+    --text-muted: #64748b;
+    --green: #10b981;
+    --green-bg: #ecfdf5;
+    --yellow: #f59e0b;
+    --yellow-bg: #fffbeb;
+    --red: #ef4444;
+    --red-bg: #fef2f2;
+    --blue: #3b82f6;
+    --radius: 8px;
+    --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05);
+    --shadow-md: 0 4px 6px rgba(0,0,0,.07), 0 2px 4px rgba(0,0,0,.05);
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0 0 60px;
+  }
+
+  /* ── Header ── */
+  .site-header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow);
+  }
+  .logo {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: -0.3px;
+  }
+  .logo span { color: var(--text); }
+  .header-meta {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  /* ── Main layout ── */
+  .container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 28px 24px;
+  }
+
+  .page-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .page-sub {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-bottom: 24px;
+  }
+
+  /* ── Alert banner ── */
+  #alert-banner {
+    display: none;
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.5;
+    border-left: 4px solid;
+  }
+  #alert-banner.has-overdue {
+    display: block;
+    background: var(--red-bg);
+    border-color: var(--red);
+    color: #991b1b;
+  }
+  #alert-banner.has-due-soon {
+    display: block;
+    background: var(--yellow-bg);
+    border-color: var(--yellow);
+    color: #92400e;
+  }
+  .alert-icon { margin-right: 6px; }
+
+  /* ── Stats row ── */
+  .stats-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    min-width: 140px;
+    box-shadow: var(--shadow);
+    flex: 1;
+  }
+  .stat-card .value {
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .stat-card .label {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .stat-card.ok .value { color: var(--green); }
+  .stat-card.warn .value { color: var(--yellow); }
+  .stat-card.danger .value { color: var(--red); }
+  .stat-card.total .value { color: var(--accent); }
+
+  /* ── Toolbar ── */
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .15s;
+    border: none;
+    text-decoration: none;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+  }
+  .btn-primary:hover { background: var(--accent-dark); }
+  .btn-secondary {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { background: var(--bg); border-color: #cbd5e1; }
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid transparent;
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  .btn-ghost:hover { background: var(--bg); color: var(--text); }
+
+  .search-box {
+    flex: 1;
+    min-width: 200px;
+    position: relative;
+  }
+  .search-box input {
+    width: 100%;
+    padding: 8px 12px 8px 34px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 13px;
+    background: var(--surface);
+    color: var(--text);
+    outline: none;
+    transition: border-color .15s;
+  }
+  .search-box input:focus { border-color: var(--accent); }
+  .search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    pointer-events: none;
+    font-size: 14px;
+  }
+
+  /* ── Table wrapper ── */
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+  }
+  .table-scroll { overflow-x: auto; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+  thead th {
+    background: #f1f5f9;
+    padding: 11px 14px;
+    text-align: left;
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+  }
+  thead th:hover { color: var(--text); }
+  thead th .sort-icon { margin-left: 4px; opacity: .4; font-size: 10px; }
+  thead th.sorted .sort-icon { opacity: 1; color: var(--accent); }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background .1s;
+  }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: #fafbfc; }
+  tbody tr.overdue { background: #fff5f5; }
+  tbody tr.due-soon { background: #fffcf0; }
+
+  td {
+    padding: 12px 14px;
+    vertical-align: middle;
+  }
+
+  /* ── Service cell ── */
+  .service-name {
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+  }
+  .service-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    margin-right: 8px;
+    flex-shrink: 0;
+    vertical-align: middle;
+  }
+
+  /* ── Key name cell ── */
+  .key-name-cell {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .key-name {
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 12px;
+    background: #f1f5f9;
+    color: #334155;
+    padding: 3px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+  .copy-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-size: 13px;
+    transition: all .15s;
+    flex-shrink: 0;
+  }
+  .copy-btn:hover { background: var(--accent-light); color: var(--accent); }
+  .copy-btn.copied { color: var(--green); }
+
+  /* ── Date inputs ── */
+  .date-input {
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 5px 8px;
+    font-size: 13px;
+    color: var(--text);
+    background: var(--surface);
+    outline: none;
+    transition: border-color .15s;
+    width: 130px;
+  }
+  .date-input:focus { border-color: var(--accent); }
+
+  .next-date {
+    font-size: 13px;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+  .next-date.overdue { color: var(--red); font-weight: 600; }
+  .next-date.due-soon { color: var(--yellow); font-weight: 600; }
+  .next-date.ok { color: var(--green); }
+  .next-date.na { color: var(--text-muted); font-style: italic; }
+
+  /* ── Status badge ── */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 100px;
+    font-size: 11.5px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .badge-ok { background: var(--green-bg); color: #065f46; }
+  .badge-soon { background: var(--yellow-bg); color: #92400e; }
+  .badge-overdue { background: var(--red-bg); color: #991b1b; }
+  .badge-na { background: #f1f5f9; color: var(--text-muted); }
+  .badge-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .badge-ok .badge-dot { background: var(--green); }
+  .badge-soon .badge-dot { background: var(--yellow); }
+  .badge-overdue .badge-dot { background: var(--red); }
+  .badge-na .badge-dot { background: #cbd5e1; }
+
+  /* ── Scenarios tags ── */
+  .scenario-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    max-width: 260px;
+  }
+  .scenario-tag {
+    font-size: 11px;
+    padding: 1px 6px;
+    background: var(--accent-light);
+    color: var(--accent-dark);
+    border-radius: 3px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  /* ── Notes cell ── */
+  .notes-input {
+    border: 1px solid transparent;
+    border-radius: 5px;
+    padding: 4px 6px;
+    font-size: 12.5px;
+    color: var(--text);
+    background: transparent;
+    outline: none;
+    transition: all .15s;
+    width: 100%;
+    min-width: 140px;
+    resize: none;
+    font-family: inherit;
+    line-height: 1.4;
+  }
+  .notes-input:hover { border-color: var(--border); background: var(--surface); }
+  .notes-input:focus { border-color: var(--accent); background: var(--surface); }
+
+  /* ── Row actions ── */
+  .row-actions {
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity .15s;
+  }
+  tbody tr:hover .row-actions { opacity: 1; }
+  .action-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--text-muted);
+    transition: all .15s;
+  }
+  .action-btn:hover { background: var(--bg); color: var(--text); }
+  .action-btn.delete:hover { background: var(--red-bg); color: var(--red); }
+  .action-btn.rotate:hover { background: var(--green-bg); color: var(--green); }
+
+  /* ── Add key modal ── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border-radius: 12px;
+    width: 100%;
+    max-width: 540px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.2);
+    overflow: hidden;
+  }
+  .modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .modal-title { font-size: 16px; font-weight: 700; }
+  .modal-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 20px;
+    color: var(--text-muted);
+    line-height: 1;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  .modal-close:hover { background: var(--bg); color: var(--text); }
+  .modal-body { padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+  .modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+  }
+
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-label { font-size: 13px; font-weight: 600; color: var(--text); }
+  .form-hint { font-size: 11.5px; color: var(--text-muted); margin-top: 2px; }
+  .form-input, .form-select {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 9px 12px;
+    font-size: 13.5px;
+    color: var(--text);
+    background: var(--surface);
+    outline: none;
+    transition: border-color .15s;
+    font-family: inherit;
+    width: 100%;
+  }
+  .form-input:focus, .form-select:focus { border-color: var(--accent); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  /* ── Rotate modal ── */
+  .rotate-confirm {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    z-index: 300;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .rotate-confirm.open { display: flex; }
+  .rotate-box {
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 28px;
+    max-width: 420px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,.2);
+    text-align: center;
+  }
+  .rotate-icon { font-size: 40px; margin-bottom: 12px; }
+  .rotate-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+  .rotate-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 20px; }
+  .rotate-actions { display: flex; gap: 10px; justify-content: center; }
+
+  /* ── Toast ── */
+  .toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 500;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .toast {
+    background: #1e293b;
+    color: #fff;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0,0,0,.25);
+    animation: slideIn .2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .toast.success { background: #065f46; }
+  .toast.warning { background: #92400e; }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  /* ── Last updated ── */
+  .last-updated {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-align: right;
+    margin-top: 12px;
+  }
+
+  /* ── Rotation schedule legend ── */
+  .legend {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    font-size: 12.5px;
+    color: var(--text-muted);
+    align-items: center;
+  }
+  .legend-item { display: flex; align-items: center; gap: 5px; }
+  .legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  /* ── Empty state ── */
+  .empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    .container { padding: 16px; }
+    .form-row { grid-template-columns: 1fr; }
+    .stats-row .stat-card { min-width: 120px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="logo">CWI <span>AI</span></div>
+  <div class="header-meta">API Key Manager &amp; Rotation Tracker</div>
+</header>
+
+<div class="container">
+  <h1 class="page-title">API Key Inventory</h1>
+  <p class="page-sub">Track rotation schedules, statuses, and usage for all CWI AI integration keys.</p>
+
+  <!-- Alert Banner -->
+  <div id="alert-banner" role="alert">
+    <span class="alert-icon">⚠</span>
+    <span id="alert-text"></span>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card total">
+      <div class="value" id="stat-total">0</div>
+      <div class="label">Total Keys</div>
+    </div>
+    <div class="stat-card ok">
+      <div class="value" id="stat-ok">0</div>
+      <div class="label">OK</div>
+    </div>
+    <div class="stat-card warn">
+      <div class="value" id="stat-soon">0</div>
+      <div class="label">Due Soon</div>
+    </div>
+    <div class="stat-card danger">
+      <div class="value" id="stat-overdue">0</div>
+      <div class="label">Overdue</div>
+    </div>
+    <div class="stat-card" style="border-left: 3px solid #cbd5e1;">
+      <div class="value" id="stat-na" style="color:#94a3b8;">0</div>
+      <div class="label">No Rotation</div>
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <strong style="color:var(--text);">Status:</strong>
+    <span class="legend-item"><span class="legend-dot" style="background:var(--green)"></span> OK — rotation not due</span>
+    <span class="legend-item"><span class="legend-dot" style="background:var(--yellow)"></span> Due Soon — within 30 days</span>
+    <span class="legend-item"><span class="legend-dot" style="background:var(--red)"></span> Overdue — past rotation date</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#cbd5e1"></span> No rotation schedule</span>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="search-input" placeholder="Search services, key names, scenarios…" oninput="filterTable()">
+    </div>
+    <button class="btn btn-secondary" onclick="exportCSV()">⬇ Export CSV</button>
+    <button class="btn btn-primary" onclick="openAddModal()">＋ Add Key</button>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrap">
+    <div class="table-scroll">
+      <table id="keys-table">
+        <thead>
+          <tr>
+            <th onclick="sortTable('service')" data-col="service">Service <span class="sort-icon">▲</span></th>
+            <th onclick="sortTable('keyName')" data-col="keyName">Key Name <span class="sort-icon">▲</span></th>
+            <th onclick="sortTable('lastRotated')" data-col="lastRotated">Last Rotated <span class="sort-icon">▲</span></th>
+            <th onclick="sortTable('nextRotation')" data-col="nextRotation">Next Rotation <span class="sort-icon">▲</span></th>
+            <th onclick="sortTable('status')" data-col="status">Status <span class="sort-icon">▲</span></th>
+            <th>Scenarios Using</th>
+            <th>Notes</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="table-body">
+          <!-- Populated by JS -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="last-updated">Last saved: <span id="last-saved">Never</span></div>
+</div>
+
+<!-- Add Key Modal -->
+<div class="modal-overlay" id="add-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Add New API Key</div>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="f-service">Service Name *</label>
+          <input class="form-input" id="f-service" placeholder="e.g. Twilio" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="f-keyname">Key / Env Variable Name *</label>
+          <input class="form-input" id="f-keyname" placeholder="e.g. TWILIO_AUTH_TOKEN" required>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="f-last-rotated">Last Rotated</label>
+          <input class="form-input" id="f-last-rotated" type="date">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="f-freq">Rotation Frequency</label>
+          <select class="form-select" id="f-freq">
+            <option value="90">Every 90 days</option>
+            <option value="180">Every 180 days</option>
+            <option value="365">Annually (365 days)</option>
+            <option value="0">If compromised only</option>
+            <option value="custom">Custom (days)</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group" id="custom-days-group" style="display:none;">
+        <label class="form-label" for="f-custom-days">Custom Rotation (days)</label>
+        <input class="form-input" id="f-custom-days" type="number" min="1" placeholder="e.g. 60">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="f-scenarios">Scenarios Using</label>
+        <input class="form-input" id="f-scenarios" placeholder="e.g. A, B, C (comma-separated)">
+        <span class="form-hint">Enter scenario letters separated by commas.</span>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="f-color">Icon Color</label>
+        <input class="form-input" id="f-color" type="color" value="#FF5A1F" style="height:40px;padding:4px 8px;cursor:pointer;">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="f-notes">Notes</label>
+        <textarea class="form-input" id="f-notes" rows="2" placeholder="Any additional context…"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveKey()">Save Key</button>
+    </div>
+  </div>
+</div>
+
+<!-- Rotate Confirm -->
+<div class="rotate-confirm" id="rotate-confirm">
+  <div class="rotate-box">
+    <div class="rotate-icon">🔄</div>
+    <div class="rotate-title">Mark Key as Rotated?</div>
+    <div class="rotate-sub" id="rotate-sub-text">This will set the Last Rotated date to today and recalculate the Next Rotation date.</div>
+    <div class="rotate-actions">
+      <button class="btn btn-secondary" onclick="closeRotateConfirm()">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmRotate()" style="background:var(--green);">✓ Confirm Rotation</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+// ── Data ──────────────────────────────────────────────────────────────────────
+const SERVICE_COLORS = {
+  'OpenRouter':       '#7c3aed',
+  'Resend':           '#0ea5e9',
+  'HubSpot':          '#ff7a59',
+  'Stripe':           '#6772e5',
+  'Freshchat':        '#22c55e',
+  'Apollo':           '#f59e0b',
+  'Calendly':         '#006bff',
+  'Google OAuth':     '#ea4335',
+};
+
+const DEFAULT_KEYS = [
+  {
+    id: genId(),
+    service:      'OpenRouter',
+    keyName:      'OPENROUTER_API_KEY',
+    lastRotated:  '',
+    freqDays:     90,
+    scenarios:    'All scenarios (AI responses)',
+    notes:        'Used by every Make scenario for LLM calls.',
+    color:        '#7c3aed',
+  },
+  {
+    id: genId(),
+    service:      'Resend',
+    keyName:      'RESEND_API_KEY',
+    lastRotated:  '',
+    freqDays:     180,
+    scenarios:    'All email scenarios',
+    notes:        'Transactional email delivery for all outbound automations.',
+    color:        '#0ea5e9',
+  },
+  {
+    id: genId(),
+    service:      'HubSpot',
+    keyName:      'HUBSPOT_API_KEY',
+    lastRotated:  '',
+    freqDays:     365,
+    scenarios:    'A, D, E, G, H, N, O, Q, R, S, U, X, Y',
+    notes:        'Private App token — scopes: contacts, deals, timeline, emails.',
+    color:        '#ff7a59',
+  },
+  {
+    id: genId(),
+    service:      'Stripe',
+    keyName:      'STRIPE_API_KEY',
+    lastRotated:  '',
+    freqDays:     0,
+    scenarios:    'F, I, Z',
+    notes:        'Restricted key — rotate only if compromised. Store in Make vault.',
+    color:        '#6772e5',
+  },
+  {
+    id: genId(),
+    service:      'Freshchat',
+    keyName:      'FRESHCHAT_API_KEY',
+    lastRotated:  '',
+    freqDays:     180,
+    scenarios:    'A, B',
+    notes:        'Incoming chat trigger + conversation reply for live-chat scenarios.',
+    color:        '#22c55e',
+  },
+  {
+    id: genId(),
+    service:      'Apollo',
+    keyName:      'APOLLO_API_KEY',
+    lastRotated:  '',
+    freqDays:     180,
+    scenarios:    'D, E',
+    notes:        'Prospecting & enrichment API — monitor rate limits monthly.',
+    color:        '#f59e0b',
+  },
+  {
+    id: genId(),
+    service:      'Calendly',
+    keyName:      'CALENDLY_API_KEY',
+    lastRotated:  '',
+    freqDays:     365,
+    scenarios:    'G, J, K, L, M',
+    notes:        'Personal Access Token for booking & event webhooks.',
+    color:        '#006bff',
+  },
+  {
+    id: genId(),
+    service:      'Google OAuth',
+    keyName:      'GOOGLE_CLIENT_SECRET',
+    lastRotated:  '',
+    freqDays:     365,
+    scenarios:    'A (Calendar)',
+    notes:        'OAuth 2.0 client secret for Google Calendar integration. Refresh token stored separately.',
+    color:        '#ea4335',
+  },
+];
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let keys = [];
+let sortCol = 'status';
+let sortAsc = true;
+let filterText = '';
+let editingId = null;
+let rotatingId = null;
+
+function genId() {
+  return '_' + Math.random().toString(36).slice(2, 11);
+}
+
+function today() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+// ── localStorage ──────────────────────────────────────────────────────────────
+function loadData() {
+  try {
+    const stored = localStorage.getItem('cwi_api_keys');
+    if (stored) {
+      keys = JSON.parse(stored);
+    } else {
+      keys = JSON.parse(JSON.stringify(DEFAULT_KEYS)).map(k => ({ ...k, id: genId() }));
+      saveData();
+    }
+  } catch(e) {
+    keys = JSON.parse(JSON.stringify(DEFAULT_KEYS)).map(k => ({ ...k, id: genId() }));
+  }
+}
+
+function saveData() {
+  localStorage.setItem('cwi_api_keys', JSON.stringify(keys));
+  const ts = new Date().toLocaleString();
+  const el = document.getElementById('last-saved');
+  if (el) el.textContent = ts;
+}
+
+// ── Date helpers ──────────────────────────────────────────────────────────────
+function calcNextRotation(lastRotated, freqDays) {
+  if (!freqDays || freqDays === 0) return null;
+  if (!lastRotated) return null;
+  const d = new Date(lastRotated);
+  d.setDate(d.getDate() + freqDays);
+  return d.toISOString().slice(0, 10);
+}
+
+function getStatus(lastRotated, freqDays) {
+  if (!freqDays || freqDays === 0) return 'na';
+  if (!lastRotated) return 'na';
+  const next = calcNextRotation(lastRotated, freqDays);
+  if (!next) return 'na';
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const nextD = new Date(next);
+  const diffMs = nextD - now;
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  if (diffDays < 0) return 'overdue';
+  if (diffDays <= 30) return 'soon';
+  return 'ok';
+}
+
+function daysUntil(dateStr) {
+  if (!dateStr) return null;
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const d = new Date(dateStr);
+  return Math.floor((d - now) / (1000 * 60 * 60 * 24));
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function badgeHTML(status) {
+  const map = {
+    ok:      ['badge-ok',      '✓ OK'],
+    soon:    ['badge-soon',    '⏰ Due Soon'],
+    overdue: ['badge-overdue', '✗ Overdue'],
+    na:      ['badge-na',      '— N/A'],
+  };
+  const [cls, label] = map[status] || map.na;
+  return `<span class="badge ${cls}"><span class="badge-dot"></span>${label}</span>`;
+}
+
+function serviceInitial(name) {
+  return name.replace('Google ', 'G ').split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+}
+
+function scenarioTagsHTML(scenarios) {
+  if (!scenarios) return '<span style="color:var(--text-muted);font-size:12px;">—</span>';
+  // Check if it's a descriptive string (contains spaces in a non-list way)
+  const raw = scenarios.trim();
+  // Try to detect comma-separated single-letter or short codes
+  const parts = raw.split(',').map(s => s.trim()).filter(Boolean);
+  if (parts.length <= 1 && raw.length > 12 && !raw.match(/^[A-Z](,\s*[A-Z])*$/)) {
+    // descriptive
+    return `<span style="font-size:12.5px;color:var(--text-muted);">${escapeHTML(raw)}</span>`;
+  }
+  return `<div class="scenario-tags">${parts.map(p => `<span class="scenario-tag">${escapeHTML(p)}</span>`).join('')}</div>`;
+}
+
+function escapeHTML(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function freqLabel(freqDays) {
+  if (!freqDays || freqDays === 0) return 'If compromised only';
+  if (freqDays === 90)  return '90 days';
+  if (freqDays === 180) return '180 days';
+  if (freqDays === 365) return 'Annual';
+  return `${freqDays} days`;
+}
+
+function renderTable() {
+  const tbody = document.getElementById('table-body');
+  let filtered = keys.filter(k => {
+    if (!filterText) return true;
+    const q = filterText.toLowerCase();
+    return (
+      k.service.toLowerCase().includes(q) ||
+      k.keyName.toLowerCase().includes(q) ||
+      (k.scenarios || '').toLowerCase().includes(q) ||
+      (k.notes || '').toLowerCase().includes(q)
+    );
+  });
+
+  // Sort
+  filtered.sort((a, b) => {
+    let va, vb;
+    if (sortCol === 'status') {
+      const order = { overdue: 0, soon: 1, ok: 2, na: 3 };
+      va = order[getStatus(a.lastRotated, a.freqDays)] ?? 4;
+      vb = order[getStatus(b.lastRotated, b.freqDays)] ?? 4;
+    } else if (sortCol === 'nextRotation') {
+      va = calcNextRotation(a.lastRotated, a.freqDays) || '9999';
+      vb = calcNextRotation(b.lastRotated, b.freqDays) || '9999';
+    } else {
+      va = (a[sortCol] || '').toString().toLowerCase();
+      vb = (b[sortCol] || '').toString().toLowerCase();
+    }
+    if (va < vb) return sortAsc ? -1 : 1;
+    if (va > vb) return sortAsc ? 1 : -1;
+    return 0;
+  });
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" class="empty-state">No keys match your search. <a href="#" onclick="document.getElementById('search-input').value='';filterTable();return false;">Clear filter</a></td></tr>`;
+    updateStats();
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(k => {
+    const status = getStatus(k.lastRotated, k.freqDays);
+    const next = calcNextRotation(k.lastRotated, k.freqDays);
+    const rowClass = status === 'overdue' ? 'overdue' : status === 'soon' ? 'due-soon' : '';
+
+    let nextDisplay = '—';
+    let nextClass = 'na';
+    if (next) {
+      const days = daysUntil(next);
+      nextClass = status;
+      if (status === 'overdue') {
+        nextDisplay = `${formatDate(next)} <small style="opacity:.8">(${Math.abs(days)}d ago)</small>`;
+      } else if (status === 'soon') {
+        nextDisplay = `${formatDate(next)} <small style="opacity:.8">(in ${days}d)</small>`;
+      } else {
+        nextDisplay = formatDate(next);
+      }
+    } else if (!k.freqDays || k.freqDays === 0) {
+      nextDisplay = 'On compromise';
+      nextClass = 'na';
+    }
+
+    const iconColor = k.color || '#888';
+    const initials = serviceInitial(k.service);
+
+    return `<tr class="${rowClass}" data-id="${k.id}">
+      <td>
+        <div style="display:flex;align-items:center;">
+          <span class="service-icon" style="background:${iconColor}">${initials}</span>
+          <div>
+            <div class="service-name">${escapeHTML(k.service)}</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:1px;">${freqLabel(k.freqDays)}</div>
+          </div>
+        </div>
+      </td>
+      <td>
+        <div class="key-name-cell">
+          <span class="key-name">${escapeHTML(k.keyName)}</span>
+          <button class="copy-btn" onclick="copyKey('${k.id}', this)" title="Copy key name">⎘</button>
+        </div>
+      </td>
+      <td>
+        <input
+          type="date"
+          class="date-input"
+          value="${escapeHTML(k.lastRotated || '')}"
+          onchange="updateLastRotated('${k.id}', this.value)"
+          title="Click to set last rotation date"
+        >
+      </td>
+      <td>
+        <span class="next-date ${nextClass}">${nextDisplay}</span>
+      </td>
+      <td>${badgeHTML(status)}</td>
+      <td>${scenarioTagsHTML(k.scenarios)}</td>
+      <td>
+        <textarea
+          class="notes-input"
+          rows="2"
+          onchange="updateNotes('${k.id}', this.value)"
+          placeholder="Add notes…"
+        >${escapeHTML(k.notes || '')}</textarea>
+      </td>
+      <td>
+        <div class="row-actions" style="opacity:1;">
+          <button class="action-btn rotate" onclick="openRotateConfirm('${k.id}')" title="Mark as rotated today">🔄</button>
+          <button class="action-btn" onclick="openEditModal('${k.id}')" title="Edit key details">✎</button>
+          <button class="action-btn delete" onclick="deleteKey('${k.id}')" title="Delete key">✕</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  updateStats();
+  updateAlertBanner();
+}
+
+function updateStats() {
+  const total = keys.length;
+  let ok = 0, soon = 0, overdue = 0, na = 0;
+  keys.forEach(k => {
+    const s = getStatus(k.lastRotated, k.freqDays);
+    if (s === 'ok')      ok++;
+    else if (s === 'soon')    soon++;
+    else if (s === 'overdue') overdue++;
+    else                     na++;
+  });
+  document.getElementById('stat-total').textContent   = total;
+  document.getElementById('stat-ok').textContent      = ok;
+  document.getElementById('stat-soon').textContent    = soon;
+  document.getElementById('stat-overdue').textContent = overdue;
+  document.getElementById('stat-na').textContent      = na;
+}
+
+function updateAlertBanner() {
+  const banner = document.getElementById('alert-banner');
+  const alertText = document.getElementById('alert-text');
+
+  const overdueKeys = keys.filter(k => getStatus(k.lastRotated, k.freqDays) === 'overdue');
+  const soonKeys    = keys.filter(k => getStatus(k.lastRotated, k.freqDays) === 'soon');
+
+  banner.className = '';
+
+  if (overdueKeys.length > 0) {
+    const names = overdueKeys.map(k => k.service).join(', ');
+    alertText.textContent = `${overdueKeys.length} key${overdueKeys.length > 1 ? 's are' : ' is'} overdue for rotation: ${names}. Rotate immediately to maintain security posture.`;
+    banner.classList.add('has-overdue');
+  } else if (soonKeys.length > 0) {
+    const names = soonKeys.map(k => k.service).join(', ');
+    alertText.textContent = `${soonKeys.length} key${soonKeys.length > 1 ? 's are' : ' is'} due for rotation within 30 days: ${names}. Schedule rotation soon.`;
+    banner.classList.add('has-due-soon');
+  }
+}
+
+// ── Table interactions ────────────────────────────────────────────────────────
+function sortTable(col) {
+  if (sortCol === col) {
+    sortAsc = !sortAsc;
+  } else {
+    sortCol = col;
+    sortAsc = true;
+  }
+  document.querySelectorAll('thead th').forEach(th => {
+    th.classList.remove('sorted');
+    const icon = th.querySelector('.sort-icon');
+    if (icon) icon.textContent = '▲';
+  });
+  const activeHeader = document.querySelector(`thead th[data-col="${col}"]`);
+  if (activeHeader) {
+    activeHeader.classList.add('sorted');
+    const icon = activeHeader.querySelector('.sort-icon');
+    if (icon) icon.textContent = sortAsc ? '▲' : '▼';
+  }
+  renderTable();
+}
+
+function filterTable() {
+  filterText = document.getElementById('search-input').value;
+  renderTable();
+}
+
+function updateLastRotated(id, value) {
+  const k = keys.find(k => k.id === id);
+  if (k) {
+    k.lastRotated = value;
+    saveData();
+    renderTable();
+  }
+}
+
+function updateNotes(id, value) {
+  const k = keys.find(k => k.id === id);
+  if (k) {
+    k.notes = value;
+    saveData();
+  }
+}
+
+// ── Copy ──────────────────────────────────────────────────────────────────────
+function copyKey(id, btn) {
+  const k = keys.find(k => k.id === id);
+  if (!k) return;
+  navigator.clipboard.writeText(k.keyName).then(() => {
+    btn.textContent = '✓';
+    btn.classList.add('copied');
+    showToast(`Copied "${k.keyName}" to clipboard`, 'success');
+    setTimeout(() => { btn.textContent = '⎘'; btn.classList.remove('copied'); }, 1800);
+  }).catch(() => {
+    // Fallback
+    const ta = document.createElement('textarea');
+    ta.value = k.keyName;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    btn.textContent = '✓';
+    btn.classList.add('copied');
+    showToast(`Copied "${k.keyName}" to clipboard`, 'success');
+    setTimeout(() => { btn.textContent = '⎘'; btn.classList.remove('copied'); }, 1800);
+  });
+}
+
+// ── Delete ────────────────────────────────────────────────────────────────────
+function deleteKey(id) {
+  const k = keys.find(k => k.id === id);
+  if (!k) return;
+  if (!confirm(`Delete "${k.service}" (${k.keyName})?\n\nThis cannot be undone.`)) return;
+  keys = keys.filter(k => k.id !== id);
+  saveData();
+  renderTable();
+  showToast(`Deleted ${k.service}`, 'warning');
+}
+
+// ── Rotate confirm ────────────────────────────────────────────────────────────
+function openRotateConfirm(id) {
+  rotatingId = id;
+  const k = keys.find(k => k.id === id);
+  if (k) {
+    document.getElementById('rotate-sub-text').textContent =
+      `Mark "${k.service}" (${k.keyName}) as rotated today (${formatDate(today())})?` +
+      (k.freqDays ? ` Next rotation will be set to ${formatDate(calcNextRotation(today(), k.freqDays) || '')}.` : '');
+  }
+  document.getElementById('rotate-confirm').classList.add('open');
+}
+
+function closeRotateConfirm() {
+  rotatingId = null;
+  document.getElementById('rotate-confirm').classList.remove('open');
+}
+
+function confirmRotate() {
+  if (!rotatingId) return;
+  const k = keys.find(k => k.id === rotatingId);
+  if (k) {
+    k.lastRotated = today();
+    saveData();
+    renderTable();
+    showToast(`✓ ${k.service} marked as rotated`, 'success');
+  }
+  closeRotateConfirm();
+}
+
+// ── Add / Edit modal ──────────────────────────────────────────────────────────
+function openAddModal() {
+  editingId = null;
+  document.getElementById('modal-title').textContent = 'Add New API Key';
+  document.getElementById('f-service').value = '';
+  document.getElementById('f-keyname').value = '';
+  document.getElementById('f-last-rotated').value = '';
+  document.getElementById('f-freq').value = '90';
+  document.getElementById('f-scenarios').value = '';
+  document.getElementById('f-notes').value = '';
+  document.getElementById('f-color').value = '#FF5A1F';
+  document.getElementById('custom-days-group').style.display = 'none';
+  document.getElementById('add-modal').classList.add('open');
+}
+
+function openEditModal(id) {
+  editingId = id;
+  const k = keys.find(k => k.id === id);
+  if (!k) return;
+  document.getElementById('modal-title').textContent = `Edit — ${k.service}`;
+  document.getElementById('f-service').value = k.service;
+  document.getElementById('f-keyname').value = k.keyName;
+  document.getElementById('f-last-rotated').value = k.lastRotated || '';
+  document.getElementById('f-notes').value = k.notes || '';
+  document.getElementById('f-scenarios').value = k.scenarios || '';
+  document.getElementById('f-color').value = k.color || '#FF5A1F';
+
+  const freqSel = document.getElementById('f-freq');
+  const stdValues = ['90', '180', '365', '0'];
+  if (stdValues.includes(String(k.freqDays))) {
+    freqSel.value = String(k.freqDays);
+    document.getElementById('custom-days-group').style.display = 'none';
+  } else {
+    freqSel.value = 'custom';
+    document.getElementById('f-custom-days').value = k.freqDays || '';
+    document.getElementById('custom-days-group').style.display = 'block';
+  }
+  document.getElementById('add-modal').classList.add('open');
+}
+
+function closeModal() {
+  editingId = null;
+  document.getElementById('add-modal').classList.remove('open');
+}
+
+document.getElementById('f-freq').addEventListener('change', function() {
+  document.getElementById('custom-days-group').style.display = this.value === 'custom' ? 'block' : 'none';
+});
+
+function saveKey() {
+  const service = document.getElementById('f-service').value.trim();
+  const keyName = document.getElementById('f-keyname').value.trim();
+  if (!service || !keyName) {
+    showToast('Service name and key name are required.', 'warning');
+    return;
+  }
+
+  const freqSel = document.getElementById('f-freq').value;
+  let freqDays = parseInt(freqSel, 10);
+  if (freqSel === 'custom') {
+    freqDays = parseInt(document.getElementById('f-custom-days').value, 10) || 0;
+  }
+
+  const data = {
+    service,
+    keyName,
+    lastRotated:  document.getElementById('f-last-rotated').value,
+    freqDays,
+    scenarios:    document.getElementById('f-scenarios').value.trim(),
+    notes:        document.getElementById('f-notes').value.trim(),
+    color:        document.getElementById('f-color').value,
+  };
+
+  if (editingId) {
+    const idx = keys.findIndex(k => k.id === editingId);
+    if (idx !== -1) keys[idx] = { ...keys[idx], ...data };
+    showToast(`Updated ${service}`, 'success');
+  } else {
+    keys.push({ id: genId(), ...data });
+    showToast(`Added ${service}`, 'success');
+  }
+
+  saveData();
+  renderTable();
+  closeModal();
+}
+
+// ── Export CSV ────────────────────────────────────────────────────────────────
+function exportCSV() {
+  const headers = ['Service', 'Key Name', 'Last Rotated', 'Next Rotation', 'Status', 'Rotation Frequency', 'Scenarios', 'Notes'];
+  const rows = keys.map(k => {
+    const status = getStatus(k.lastRotated, k.freqDays);
+    const statusLabel = { ok: 'OK', soon: 'Due Soon', overdue: 'Overdue', na: 'N/A' }[status];
+    return [
+      k.service,
+      k.keyName,
+      k.lastRotated || '',
+      calcNextRotation(k.lastRotated, k.freqDays) || '',
+      statusLabel,
+      freqLabel(k.freqDays),
+      k.scenarios || '',
+      k.notes || '',
+    ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(',');
+  });
+  const csv = [headers.join(','), ...rows].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `cwi-api-keys-${today()}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('CSV exported', 'success');
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function showToast(msg, type = '') {
+  const container = document.getElementById('toast-container');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  container.appendChild(el);
+  setTimeout(() => el.remove(), 3200);
+}
+
+// ── Close modal on overlay click ──────────────────────────────────────────────
+document.getElementById('add-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+document.getElementById('rotate-confirm').addEventListener('click', function(e) {
+  if (e.target === this) closeRotateConfirm();
+});
+
+// ── Keyboard ──────────────────────────────────────────────────────────────────
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    closeModal();
+    closeRotateConfirm();
+  }
+});
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+loadData();
+sortTable('status');
+</script>
+</body>
+</html>

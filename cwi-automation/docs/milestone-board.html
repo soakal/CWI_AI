@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CWI AI — Milestone Board</title>
+<meta name="description" content="CWI internal tool: CWI AI — Milestone Board. Internal use only — CWI Compute With Imagination.">
+<style>
+  :root {
+    --accent: #FF5A1F;
+    --accent-dark: #cc4718;
+    --accent-light: #ff7a4a;
+    --gold: #FFD700;
+    --bg: #0f0f14;
+    --surface: #1a1a24;
+    --surface2: #22222f;
+    --border: #2e2e3e;
+    --text: #f0f0f5;
+    --muted: #8888aa;
+    --green: #22c55e;
+    --radius: 14px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0 0 60px;
+  }
+
+  /* ── Header ── */
+  .header {
+    background: linear-gradient(135deg, #1a0a04 0%, #2a1208 40%, #1a0a04 100%);
+    border-bottom: 2px solid var(--accent);
+    padding: 36px 40px 28px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% -20%, rgba(255,90,31,0.18) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header-logo {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+  .header h1 {
+    font-size: clamp(26px, 4vw, 42px);
+    font-weight: 800;
+    letter-spacing: -1px;
+    background: linear-gradient(90deg, #fff 30%, var(--accent-light) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+  }
+  .header p {
+    color: var(--muted);
+    font-size: 15px;
+  }
+
+  /* ── Progress Bar ── */
+  .progress-wrap {
+    max-width: 860px;
+    margin: 32px auto 0;
+    padding: 0 24px;
+    position: relative;
+    z-index: 1;
+  }
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .progress-label span {
+    font-size: 14px;
+    color: var(--muted);
+  }
+  .progress-label strong {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--accent);
+  }
+  .progress-bar-bg {
+    width: 100%;
+    height: 14px;
+    background: var(--surface2);
+    border-radius: 99px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent) 0%, var(--gold) 100%);
+    border-radius: 99px;
+    transition: width 0.6s cubic-bezier(.4,0,.2,1);
+    position: relative;
+  }
+  .progress-bar-fill::after {
+    content: '';
+    position: absolute;
+    right: 0; top: 0; bottom: 0;
+    width: 20px;
+    background: rgba(255,255,255,0.3);
+    border-radius: 99px;
+  }
+
+  /* ── Controls ── */
+  .controls {
+    max-width: 860px;
+    margin: 20px auto 0;
+    padding: 0 24px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .btn {
+    padding: 9px 20px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    letter-spacing: 0.3px;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+  }
+  .btn-primary:hover { background: var(--accent-dark); transform: translateY(-1px); }
+  .btn-secondary {
+    background: var(--surface2);
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { background: var(--border); color: var(--text); }
+  .btn-print {
+    background: transparent;
+    color: var(--accent);
+    border: 1.5px solid var(--accent);
+  }
+  .btn-print:hover { background: rgba(255,90,31,0.1); }
+
+  /* ── Sections ── */
+  .main {
+    max-width: 860px;
+    margin: 32px auto;
+    padding: 0 24px;
+  }
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-icon {
+    font-size: 24px;
+  }
+  .section-title h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .section-title .section-count {
+    margin-left: auto;
+    font-size: 13px;
+    color: var(--muted);
+    background: var(--surface2);
+    padding: 4px 12px;
+    border-radius: 99px;
+    border: 1px solid var(--border);
+  }
+
+  /* ── Milestone Grid ── */
+  .milestones {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 16px;
+    margin-bottom: 48px;
+  }
+
+  .milestone-card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+    user-select: none;
+  }
+  .milestone-card:hover:not(.achieved) {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(255,90,31,0.12);
+  }
+  .milestone-card.achieved {
+    background: linear-gradient(135deg, #1a2a1a 0%, #162116 100%);
+    border-color: var(--green);
+    cursor: default;
+  }
+  .milestone-card.achieved::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at top right, rgba(34,197,94,0.07) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .milestone-card .card-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+  .milestone-card .emoji {
+    font-size: 28px;
+    line-height: 1;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .milestone-card .card-info { flex: 1; min-width: 0; }
+  .milestone-card .card-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.3;
+    margin-bottom: 4px;
+  }
+  .milestone-card.achieved .card-title { color: #86efac; }
+  .milestone-card .card-desc {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .milestone-card .card-check {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+    font-size: 12px;
+  }
+  .milestone-card.achieved .card-check {
+    background: var(--green);
+    border-color: var(--green);
+    color: #fff;
+  }
+  .milestone-card .card-dates {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .milestone-card.achieved .card-dates { border-color: rgba(34,197,94,0.2); }
+  .date-field { flex: 1; min-width: 90px; }
+  .date-field label {
+    display: block;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .date-field input[type="date"] {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 8px;
+    font-size: 12px;
+    color: var(--text);
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .date-field input[type="date"]:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .milestone-card.achieved .date-field input[type="date"] {
+    border-color: rgba(34,197,94,0.3);
+    background: rgba(34,197,94,0.05);
+    color: #86efac;
+  }
+  .achieved-badge {
+    display: none;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: var(--green);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 3px 8px;
+    border-radius: 99px;
+    text-transform: uppercase;
+  }
+  .milestone-card.achieved .achieved-badge { display: block; }
+
+  /* ── Unlock Button ── */
+  .unlock-btn {
+    display: block;
+    width: 100%;
+    margin-top: 14px;
+    padding: 8px;
+    background: transparent;
+    border: 1.5px dashed var(--border);
+    border-radius: 8px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .unlock-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(255,90,31,0.05);
+  }
+  .milestone-card.achieved .unlock-btn {
+    display: none;
+  }
+
+  /* ── Confetti ── */
+  #confetti-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* ── Congrats Flash ── */
+  #congrats-flash {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.8);
+    background: linear-gradient(135deg, #1a2a1a, #112011);
+    border: 2px solid var(--green);
+    border-radius: 20px;
+    padding: 32px 48px;
+    text-align: center;
+    z-index: 10000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s, transform 0.3s;
+    box-shadow: 0 0 60px rgba(34,197,94,0.3), 0 20px 60px rgba(0,0,0,0.5);
+    max-width: 380px;
+    width: 90%;
+  }
+  #congrats-flash.show {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+    pointer-events: auto;
+  }
+  #congrats-flash .flash-emoji { font-size: 48px; margin-bottom: 12px; }
+  #congrats-flash h3 { font-size: 22px; font-weight: 800; color: #86efac; margin-bottom: 6px; }
+  #congrats-flash p { font-size: 14px; color: var(--muted); line-height: 1.5; }
+  #congrats-flash .flash-milestone-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+    margin: 12px 0;
+    padding: 10px 16px;
+    background: rgba(34,197,94,0.08);
+    border-radius: 8px;
+    border: 1px solid rgba(34,197,94,0.2);
+  }
+  #congrats-flash .flash-close {
+    margin-top: 20px;
+    padding: 10px 28px;
+    background: var(--green);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.2s;
+  }
+  #congrats-flash .flash-close:hover { background: #16a34a; }
+
+  /* ── Overlay ── */
+  #overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 9998;
+  }
+  #overlay.show { display: block; }
+
+  /* ── Print ── */
+  @media print {
+    body { background: #fff; color: #000; padding: 0; }
+    .header { background: #fff; border-bottom: 2px solid #FF5A1F; }
+    .header h1 { -webkit-text-fill-color: #000; background: none; color: #000; }
+    .controls, .unlock-btn, #confetti-canvas, #congrats-flash, #overlay { display: none !important; }
+    .milestone-card { border: 1px solid #ddd; background: #fff; break-inside: avoid; }
+    .milestone-card.achieved { background: #f0fff4; border-color: #22c55e; }
+    .card-title { color: #000; }
+    .card-desc { color: #555; }
+    .muted, .section-count { color: #777 !important; }
+    .date-field input { border: 1px solid #ddd; background: transparent; color: #000; }
+    .progress-bar-bg { background: #eee; }
+    .surface, .surface2 { background: #f9f9f9; }
+  }
+
+  /* ── Section spacer ── */
+  .section-block { margin-bottom: 16px; }
+</style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+<div id="overlay"></div>
+<div id="congrats-flash">
+  <div class="flash-emoji">🎉</div>
+  <h3>Milestone Unlocked!</h3>
+  <div class="flash-milestone-title" id="flash-title"></div>
+  <p>Another step forward for CWI AI. Keep pushing!</p>
+  <button class="flash-close" onclick="closeFlash()">Celebrate!</button>
+</div>
+
+<div class="header">
+  <div class="header-logo">CWI AI</div>
+  <h1>Milestone Board</h1>
+  <p>Track every win — from first line of code to $50K MRR.</p>
+  <div class="progress-wrap">
+    <div class="progress-label">
+      <span>Overall Progress</span>
+      <strong><span id="achieved-count">0</span> <span style="font-weight:400;color:var(--muted);font-size:14px;">of 25 milestones</span></strong>
+    </div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+    </div>
+  </div>
+</div>
+
+<div class="controls">
+  <button class="btn btn-secondary" onclick="resetAll()">Reset All</button>
+  <button class="btn btn-print" onclick="window.print()">🖨 Print Board</button>
+</div>
+
+<div class="main" id="main-content">
+
+  <!-- REVENUE SECTION -->
+  <div class="section-block">
+    <div class="section-title">
+      <span class="section-icon">💰</span>
+      <h2>Revenue Milestones</h2>
+      <span class="section-count" id="rev-count">0 / 15 achieved</span>
+    </div>
+    <div class="milestones" id="revenue-milestones"></div>
+  </div>
+
+  <!-- ACTIVITY SECTION -->
+  <div class="section-block">
+    <div class="section-title">
+      <span class="section-icon">⚡</span>
+      <h2>Activity Milestones</h2>
+      <span class="section-count" id="act-count">0 / 10 achieved</span>
+    </div>
+    <div class="milestones" id="activity-milestones"></div>
+  </div>
+
+</div>
+
+<script>
+const REVENUE_MILESTONES = [
+  {
+    id: 'rev-01',
+    emoji: '💻',
+    title: '$0 — First Line of Code',
+    desc: 'The journey starts here. The very first line of CWI AI code is written and the vision becomes real.',
+  },
+  {
+    id: 'rev-02',
+    emoji: '🤝',
+    title: 'First Client Signed',
+    desc: 'A paying customer believes in the product. First contract signed, first real revenue on the horizon.',
+  },
+  {
+    id: 'rev-03',
+    emoji: '📈',
+    title: '$500 MRR',
+    desc: 'Half-thousand in monthly recurring revenue. Proof of value and the engine is starting to turn.',
+  },
+  {
+    id: 'rev-04',
+    emoji: '⭐',
+    title: 'First 5-Star Review',
+    desc: 'A client loves the results enough to shout about it. Social proof begins here.',
+  },
+  {
+    id: 'rev-05',
+    emoji: '🚀',
+    title: '$1,000 MRR',
+    desc: 'Four-figure monthly revenue. The business is real and the model is working.',
+  },
+  {
+    id: 'rev-06',
+    emoji: '👥',
+    title: '5 Active Clients',
+    desc: 'Five businesses trust CWI AI to power their operations. Scalability is being proven.',
+  },
+  {
+    id: 'rev-07',
+    emoji: '💪',
+    title: '$2,000 MRR',
+    desc: 'Two thousand a month in reliable revenue. Operations can be funded from the business itself.',
+  },
+  {
+    id: 'rev-08',
+    emoji: '🗣',
+    title: 'First Referral Client',
+    desc: 'A happy client sends someone new. Word-of-mouth flywheel starts spinning.',
+  },
+  {
+    id: 'rev-09',
+    emoji: '🏆',
+    title: '$5,000 MRR',
+    desc: 'Five-K monthly recurring. A significant business milestone and hiring becomes feasible.',
+  },
+  {
+    id: 'rev-10',
+    emoji: '🏢',
+    title: '10 Active Clients',
+    desc: 'Ten businesses automated and growing. Processes and systems are scaling with demand.',
+  },
+  {
+    id: 'rev-11',
+    emoji: '💎',
+    title: '$10,000 MRR',
+    desc: 'Five-figure monthly revenue. CWI AI is a serious, sustainable business.',
+  },
+  {
+    id: 'rev-12',
+    emoji: '📖',
+    title: 'First Case Study Published',
+    desc: 'A documented client transformation story goes live. Proof of ROI in your prospects\' hands.',
+  },
+  {
+    id: 'rev-13',
+    emoji: '🔥',
+    title: '$20,000 MRR',
+    desc: 'Twenty-K a month. A full-time team can be funded and growth accelerates.',
+  },
+  {
+    id: 'rev-14',
+    emoji: '🌐',
+    title: '25 Active Clients',
+    desc: 'Twenty-five businesses running on CWI AI automation. Market leadership is visible on the horizon.',
+  },
+  {
+    id: 'rev-15',
+    emoji: '👑',
+    title: '$50,000 MRR',
+    desc: 'Fifty-K monthly recurring revenue. Six-figure annual run rate. CWI AI has arrived.',
+  }
+];
+
+const ACTIVITY_MILESTONES = [
+  {
+    id: 'act-01',
+    emoji: '⚙️',
+    title: 'First Make Scenario Imported',
+    desc: 'The automation engine fires up. First Make.com scenario is live and running in production.',
+  },
+  {
+    id: 'act-02',
+    emoji: '📅',
+    title: 'First Automated Booking',
+    desc: 'A client books without any manual intervention. The calendar fills itself.',
+  },
+  {
+    id: 'act-03',
+    emoji: '💸',
+    title: 'First Dunning Email Sent',
+    desc: 'First automated payment recovery email goes out. Revenue leakage starts getting plugged.',
+  },
+  {
+    id: 'act-04',
+    emoji: '📊',
+    title: 'First NPS Survey Sent',
+    desc: 'Client satisfaction measurement begins. Data-driven improvement loop is open.',
+  },
+  {
+    id: 'act-05',
+    emoji: '🔄',
+    title: 'First Win-Back Attempt',
+    desc: 'First automated re-engagement campaign fires for a churned or at-risk client.',
+  },
+  {
+    id: 'act-06',
+    emoji: '✅',
+    title: 'All 32 Scenarios Active',
+    desc: 'The full automation stack is deployed. Every workflow is live across the platform.',
+  },
+  {
+    id: 'act-07',
+    emoji: '⭐',
+    title: 'First Google Review Requested',
+    desc: 'Automated review request goes out to a happy client. Reputation engine is live.',
+  },
+  {
+    id: 'act-08',
+    emoji: '🤝',
+    title: 'First Partnership Referral',
+    desc: 'A partner sends a client our way. The referral network is paying dividends.',
+  },
+  {
+    id: 'act-09',
+    emoji: '📰',
+    title: 'First Press Mention',
+    desc: 'CWI AI appears in a publication, blog, or media outlet. Brand authority grows.',
+  },
+  {
+    id: 'act-10',
+    emoji: '📬',
+    title: 'First Product Update Email',
+    desc: 'First feature announcement email goes to the client list. Retention and upsell loop activated.',
+  }
+];
+
+// ── State ──────────────────────────────────────────────────────────────────
+let state = {};
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem('cwi-milestone-board-v1');
+    if (raw) state = JSON.parse(raw);
+  } catch(e) { state = {}; }
+}
+
+function saveState() {
+  localStorage.setItem('cwi-milestone-board-v1', JSON.stringify(state));
+}
+
+function getMilestoneState(id) {
+  return state[id] || { achieved: false, achievedDate: '', targetDate: '' };
+}
+
+// ── Render ─────────────────────────────────────────────────────────────────
+function renderMilestone(m) {
+  const s = getMilestoneState(m.id);
+  const card = document.createElement('div');
+  card.className = 'milestone-card' + (s.achieved ? ' achieved' : '');
+  card.id = 'card-' + m.id;
+
+  card.innerHTML = `
+    <span class="achieved-badge">✓ Done</span>
+    <div class="card-top">
+      <span class="emoji">${m.emoji}</span>
+      <div class="card-info">
+        <div class="card-title">${m.title}</div>
+        <div class="card-desc">${m.desc}</div>
+      </div>
+      <div class="card-check">${s.achieved ? '✓' : ''}</div>
+    </div>
+    <div class="card-dates">
+      <div class="date-field">
+        <label for="target-${m.id}">Target Date</label>
+        <input type="date" id="target-${m.id}" value="${s.targetDate || ''}" onclick="event.stopPropagation()" onchange="setTargetDate('${m.id}', this.value)">
+      </div>
+      <div class="date-field">
+        <label for="achieved-${m.id}">Achieved Date</label>
+        <input type="date" id="achieved-${m.id}" value="${s.achievedDate || ''}" onclick="event.stopPropagation()" onchange="setAchievedDate('${m.id}', this.value)" ${s.achieved ? '' : 'readonly'} style="${s.achieved ? '' : 'opacity:0.4;cursor:not-allowed;'}">
+      </div>
+    </div>
+    ${s.achieved ? '' : `<button class="unlock-btn" onclick="event.stopPropagation(); unlockMilestone('${m.id}', '${escHtml(m.title)}')">🎉 Mark as Achieved</button>`}
+  `;
+
+  if (!s.achieved) {
+    card.addEventListener('click', () => unlockMilestone(m.id, m.title));
+  }
+
+  return card;
+}
+
+function escHtml(s) {
+  return s.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+}
+
+function renderAll() {
+  const revEl = document.getElementById('revenue-milestones');
+  const actEl = document.getElementById('activity-milestones');
+  revEl.innerHTML = '';
+  actEl.innerHTML = '';
+  REVENUE_MILESTONES.forEach(m => revEl.appendChild(renderMilestone(m)));
+  ACTIVITY_MILESTONES.forEach(m => actEl.appendChild(renderMilestone(m)));
+  updateProgress();
+}
+
+function updateProgress() {
+  const all = [...REVENUE_MILESTONES, ...ACTIVITY_MILESTONES];
+  const achieved = all.filter(m => getMilestoneState(m.id).achieved).length;
+  const revAchieved = REVENUE_MILESTONES.filter(m => getMilestoneState(m.id).achieved).length;
+  const actAchieved = ACTIVITY_MILESTONES.filter(m => getMilestoneState(m.id).achieved).length;
+
+  document.getElementById('achieved-count').textContent = achieved;
+  document.getElementById('progress-fill').style.width = ((achieved / 25) * 100) + '%';
+  document.getElementById('rev-count').textContent = `${revAchieved} / 15 achieved`;
+  document.getElementById('act-count').textContent = `${actAchieved} / 10 achieved`;
+}
+
+// ── Interactions ───────────────────────────────────────────────────────────
+function unlockMilestone(id, title) {
+  const s = getMilestoneState(id);
+  if (s.achieved) return;
+
+  const today = new Date().toISOString().split('T')[0];
+  state[id] = { ...s, achieved: true, achievedDate: today };
+  saveState();
+
+  // Re-render just this card
+  const all = [...REVENUE_MILESTONES, ...ACTIVITY_MILESTONES];
+  const m = all.find(x => x.id === id);
+  const oldCard = document.getElementById('card-' + id);
+  if (oldCard && m) {
+    const newCard = renderMilestone(m);
+    oldCard.replaceWith(newCard);
+  }
+
+  updateProgress();
+  showCongrats(title);
+  launchConfetti();
+}
+
+function setTargetDate(id, val) {
+  const s = getMilestoneState(id);
+  state[id] = { ...s, targetDate: val };
+  saveState();
+}
+
+function setAchievedDate(id, val) {
+  const s = getMilestoneState(id);
+  state[id] = { ...s, achievedDate: val };
+  saveState();
+}
+
+function resetAll() {
+  if (!confirm('Reset all milestones? This cannot be undone.')) return;
+  state = {};
+  saveState();
+  renderAll();
+}
+
+// ── Congrats Flash ─────────────────────────────────────────────────────────
+function showCongrats(title) {
+  document.getElementById('flash-title').textContent = title;
+  document.getElementById('congrats-flash').classList.add('show');
+  document.getElementById('overlay').classList.add('show');
+}
+
+function closeFlash() {
+  document.getElementById('congrats-flash').classList.remove('show');
+  document.getElementById('overlay').classList.remove('show');
+}
+
+document.getElementById('overlay').addEventListener('click', closeFlash);
+
+// ── Confetti ───────────────────────────────────────────────────────────────
+function launchConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const COLORS = ['#FF5A1F', '#FFD700', '#22c55e', '#60a5fa', '#f472b6', '#a78bfa', '#fb923c', '#fff'];
+  const SHAPES = ['rect', 'circle', 'star'];
+
+  const particles = [];
+  const count = 180;
+
+  for (let i = 0; i < count; i++) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: -20 - Math.random() * 200,
+      vx: (Math.random() - 0.5) * 6,
+      vy: 2 + Math.random() * 5,
+      color: COLORS[Math.floor(Math.random() * COLORS.length)],
+      shape: SHAPES[Math.floor(Math.random() * SHAPES.length)],
+      size: 6 + Math.random() * 10,
+      rotation: Math.random() * Math.PI * 2,
+      rotSpeed: (Math.random() - 0.5) * 0.2,
+      alpha: 1,
+      decay: 0.008 + Math.random() * 0.005,
+    });
+  }
+
+  let frame;
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let alive = false;
+    particles.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.12; // gravity
+      p.rotation += p.rotSpeed;
+      p.alpha -= p.decay;
+      if (p.alpha <= 0) return;
+      alive = true;
+
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, p.alpha);
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rotation);
+      ctx.fillStyle = p.color;
+
+      if (p.shape === 'rect') {
+        ctx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
+      } else if (p.shape === 'circle') {
+        ctx.beginPath();
+        ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        // star
+        ctx.beginPath();
+        for (let j = 0; j < 5; j++) {
+          const angle = (j * 4 * Math.PI) / 5 - Math.PI / 2;
+          const r = j % 2 === 0 ? p.size / 2 : p.size / 4;
+          ctx.lineTo(Math.cos(angle) * r, Math.sin(angle) * r);
+        }
+        ctx.closePath();
+        ctx.fill();
+      }
+      ctx.restore();
+    });
+
+    if (alive) {
+      frame = requestAnimationFrame(draw);
+    } else {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+  }
+
+  if (frame) cancelAnimationFrame(frame);
+  draw();
+  setTimeout(() => {
+    cancelAnimationFrame(frame);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }, 5000);
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────
+loadState();
+renderAll();
+</script>
+</body>
+</html>

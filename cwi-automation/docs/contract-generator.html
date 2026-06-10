@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CWI AI LLC — Contract Generator</title>
+  <meta name="description" content="CWI internal tool: CWI AI LLC — Contract Generator. Internal use only — CWI Compute With Imagination.">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* =========================================================
+       RESET & BASE
+    ========================================================= */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0A0A0C;
+      --surface:   #111114;
+      --border:    #2a2a30;
+      --orange:    #FF5A1F;
+      --orange-dk: #cc4515;
+      --text:      #e8e8ec;
+      --muted:     #888898;
+      --radius:    8px;
+      --font-ui:   'Sora', system-ui, sans-serif;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: var(--font-ui);
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    /* =========================================================
+       LAYOUT — SPLIT PANE
+    ========================================================= */
+    .shell {
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    /* --- LEFT: FORM PANEL --- */
+    .form-panel {
+      width: 360px;
+      min-width: 320px;
+      max-width: 400px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .form-header {
+      padding: 20px 22px 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+
+    .form-header .logo-line {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+
+    .logo-mark {
+      width: 32px;
+      height: 32px;
+      background: var(--orange);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.5px;
+      flex-shrink: 0;
+    }
+
+    .form-header h1 {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.2;
+    }
+
+    .form-header p {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .form-body {
+      overflow-y: auto;
+      flex: 1;
+      padding: 18px 22px 24px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+
+    .form-body::-webkit-scrollbar { width: 5px; }
+    .form-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    /* --- FORM SECTIONS --- */
+    .section-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--orange);
+      margin: 20px 0 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-label:first-child { margin-top: 0; }
+
+    .field {
+      margin-bottom: 12px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--muted);
+      margin-bottom: 4px;
+      letter-spacing: 0.02em;
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+      background: #18181e;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: var(--font-ui);
+      font-size: 13px;
+      padding: 8px 11px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .field input:focus,
+    .field select:focus {
+      border-color: var(--orange);
+    }
+
+    .field input::placeholder { color: #444455; }
+
+    .field select option { background: #18181e; }
+
+    /* Inline pair */
+    .field-row {
+      display: flex;
+      gap: 10px;
+    }
+    .field-row .field { flex: 1; }
+
+    /* Checkboxes */
+    .checks {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .check-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      cursor: pointer;
+      padding: 7px 10px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: #18181e;
+      transition: border-color 0.15s, background 0.15s;
+      user-select: none;
+    }
+
+    .check-item:hover { border-color: var(--orange); background: #1e1a18; }
+
+    .check-item input[type="checkbox"] {
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border: 1.5px solid var(--border);
+      border-radius: 4px;
+      background: transparent;
+      cursor: pointer;
+      flex-shrink: 0;
+      position: relative;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .check-item input[type="checkbox"]:checked {
+      background: var(--orange);
+      border-color: var(--orange);
+    }
+
+    .check-item input[type="checkbox"]:checked::after {
+      content: '';
+      position: absolute;
+      top: 1px;
+      left: 4px;
+      width: 5px;
+      height: 9px;
+      border: 2px solid #fff;
+      border-top: none;
+      border-left: none;
+      transform: rotate(45deg);
+    }
+
+    .check-item span {
+      font-size: 12px;
+      color: var(--text);
+      line-height: 1.3;
+    }
+
+    /* Price fields with $ prefix */
+    .price-wrap {
+      position: relative;
+    }
+
+    .price-wrap .prefix {
+      position: absolute;
+      left: 11px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 13px;
+      pointer-events: none;
+    }
+
+    .price-wrap input {
+      padding-left: 22px;
+    }
+
+    /* --- FORM FOOTER BUTTONS --- */
+    .form-footer {
+      padding: 14px 22px;
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      width: 100%;
+      padding: 10px 16px;
+      border-radius: var(--radius);
+      font-family: var(--font-ui);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    .btn:active { transform: scale(0.98); }
+
+    .btn-primary {
+      background: var(--orange);
+      color: #fff;
+    }
+
+    .btn-primary:hover { background: var(--orange-dk); }
+
+    .btn-secondary {
+      background: #1e1e24;
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover { background: #26262e; color: var(--text); }
+
+    .save-indicator {
+      text-align: center;
+      font-size: 10px;
+      color: var(--muted);
+      padding-top: 2px;
+    }
+
+    /* --- RIGHT: PREVIEW PANEL --- */
+    .preview-panel {
+      flex: 1;
+      background: #d4cfc8;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 24px 48px;
+      scrollbar-width: thin;
+      scrollbar-color: #b0aaa0 #d4cfc8;
+    }
+
+    .preview-panel::-webkit-scrollbar { width: 7px; }
+    .preview-panel::-webkit-scrollbar-thumb { background: #b0aaa0; border-radius: 4px; }
+
+    /* --- CONTRACT PAGE --- */
+    .contract-page {
+      width: 100%;
+      max-width: 760px;
+      background: #fff;
+      box-shadow: 0 4px 32px rgba(0,0,0,0.22);
+      border-radius: 3px;
+      padding: 64px 72px 72px;
+      font-family: 'Georgia', 'Times New Roman', serif;
+      font-size: 11.5px;
+      line-height: 1.65;
+      color: #1a1a1a;
+    }
+
+    /* Contract header */
+    .ct-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      border-bottom: 2.5px solid #FF5A1F;
+      padding-bottom: 18px;
+      margin-bottom: 22px;
+    }
+
+    .ct-brand {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .ct-brand .mark {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 3px;
+    }
+
+    .ct-brand .mark .box {
+      width: 36px;
+      height: 36px;
+      background: #FF5A1F;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Sora', 'Segoe UI', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.5px;
+    }
+
+    .ct-brand .mark .company {
+      font-family: 'Sora', 'Segoe UI', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: #0A0A0C;
+      letter-spacing: -0.3px;
+    }
+
+    .ct-brand .tagline {
+      font-family: 'Sora', 'Segoe UI', sans-serif;
+      font-size: 9.5px;
+      color: #888;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-left: 46px;
+    }
+
+    .ct-header-right {
+      text-align: right;
+    }
+
+    .ct-doc-title {
+      font-family: 'Sora', 'Segoe UI', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      color: #0A0A0C;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .ct-doc-sub {
+      font-family: 'Sora', 'Segoe UI', sans-serif;
+      font-size: 9px;
+      color: #999;
+      margin-top: 2px;
+    }
+
+    /* Parties block */
+    .ct-parties {
+      background: #f9f8f6;
+      border: 1px solid #e5e0d8;
+      border-left: 3px solid #FF5A1F;
+      border-radius: 0 4px 4px 0;
+      padding: 14px 18px;
+      margin-bottom: 22px;
+      font-size: 10.5px;
+    }
+
+    .ct-parties .parties-title {
+      font-family: 'Sora', 'Segoe UI', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #FF5A1F;
+      margin-bottom: 10px;
+    }
+
+    .ct-party-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 5px;
+      line-height: 1.5;
+    }
+
+    .ct-party-row:last-child { margin-bottom: 0; }
+
+    .ct-party-label {
+      font-weight: 700;
+      color: #333;
+      white-space: nowrap;
+      font-family: 'Sora', 'Segoe UI', sans-serif;
+      font-size: 9.5px;
+      padding-top: 1px;
+      min-width: 120px;
+    }
+
+    .ct-party-val {
+      color: #1a1a1a;
+    }
+
+    /* Section headings */
+    .ct-section {
+      margin-bottom: 16px;
+    }
+
+    .ct-section-title {
+      font-family: 'Sora', 'Segoe UI', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #0A0A0C;
+      border-bottom: 1px solid #e0dbd3;
+      padding-bottom: 5px;
+      margin-bottom: 9px;
+    }
+
+    .ct-section-num {
+      color: #FF5A1F;
+      margin-right: 4px;
+    }
+
+    .ct-section p {
+      margin-bottom: 6px;
+      color: #2a2a2a;
+    }
+
+    .ct-section p:last-child { margin-bottom: 0; }
+
+    /* Services list */
+    .ct-services-list {
+      list-style: none;
+      margin: 6px 0 8px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .ct-services-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 7px;
+      font-size: 11px;
+      color: #1a1a1a;
+    }
+
+    .ct-services-list li::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      background: #FF5A1F;
+      border-radius: 50%;
+      margin-top: 5px;
+      flex-shrink: 0;
+    }
+
+    /* Tier row */
+    .ct-tier-row {
+      display: flex;
+      gap: 0;
+      margin-top: 10px;
+      border: 1px solid #e5e0d8;
+      border-radius: 4px;
+      overflow: hidden;
+      font-family: 'Sora', 'Segoe UI', sans-serif;
+    }
+
+    .ct-tier-cell {
+      flex: 1;
+      padding: 8px 12px;
+      border-right: 1px solid #e5e0d8;
+      background: #f9f8f6;
+    }
+
+    .ct-tier-cell:last-child { border-right: none; }
+
+    .ct-tier-cell .tc-label {
+      font-size: 8.5px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #999;
+      margin-bottom: 2px;
+    }
+
+    .ct-tier-cell .tc-val {
+      font-size: 12px;
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+
+    /* Signature block */
+    .ct-signatures {
+      margin-top: 28px;
+      border-top: 1.5px solid #e0dbd3;
+      padding-top: 22px;
+    }
+
+    .ct-sig-title {
+      font-family: 'Sora', 'Segoe UI', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #FF5A1F;
+      margin-bottom: 18px;
+    }
+
+    .ct-sig-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+    }
+
+    .ct-sig-block .sig-party {
+      font-family: 'Sora', 'Segoe UI', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #888;
+      margin-bottom: 10px;
+    }
+
+    .ct-sig-block .sig-name {
+      font-size: 12px;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-bottom: 2px;
+    }
+
+    .ct-sig-block .sig-title-co {
+      font-size: 10px;
+      color: #555;
+      margin-bottom: 24px;
+    }
+
+    .sig-line-group {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .sig-line {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .sig-line .line-bar {
+      height: 1px;
+      background: #ccc;
+      width: 100%;
+      margin-bottom: 3px;
+    }
+
+    .sig-line .line-label {
+      font-size: 9px;
+      color: #aaa;
+      font-family: 'Sora', 'Segoe UI', sans-serif;
+      letter-spacing: 0.06em;
+    }
+
+    /* Footer of contract */
+    .ct-footer {
+      margin-top: 28px;
+      padding-top: 12px;
+      border-top: 1px solid #e0dbd3;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .ct-footer-left {
+      font-family: 'Sora', 'Segoe UI', sans-serif;
+      font-size: 8.5px;
+      color: #bbb;
+    }
+
+    .ct-footer-right {
+      font-family: 'Sora', 'Segoe UI', sans-serif;
+      font-size: 8.5px;
+      color: #bbb;
+    }
+
+    /* Placeholder text style */
+    .blank {
+      color: #bbb;
+      font-style: italic;
+    }
+
+    /* =========================================================
+       PRINT STYLES
+    ========================================================= */
+    @media print {
+      html, body {
+        height: auto;
+        overflow: visible;
+        background: #fff;
+      }
+
+      .form-panel,
+      .preview-panel > *:not(.contract-page) {
+        display: none !important;
+      }
+
+      .shell {
+        display: block;
+        height: auto;
+      }
+
+      .preview-panel {
+        display: block;
+        background: #fff;
+        padding: 0;
+        overflow: visible;
+      }
+
+      .contract-page {
+        box-shadow: none;
+        border-radius: 0;
+        max-width: 100%;
+        padding: 0;
+        margin: 0;
+        font-size: 11pt;
+        page-break-inside: avoid;
+      }
+
+      .ct-header { border-bottom-color: #FF5A1F !important; }
+      .ct-brand .box { background: #FF5A1F !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .ct-parties { background: #f9f8f6 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .ct-tier-cell { background: #f9f8f6 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .ct-services-list li::before { background: #FF5A1F !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- ======================================================
+       LEFT: FORM PANEL
+  ====================================================== -->
+  <aside class="form-panel" id="formPanel">
+
+    <div class="form-header">
+      <div class="logo-line">
+        <div class="logo-mark">CWI</div>
+        <h1>Contract Generator</h1>
+      </div>
+      <p>Fill in the fields — the contract updates live.</p>
+    </div>
+
+    <div class="form-body">
+
+      <!-- CLIENT INFO -->
+      <div class="section-label">Client Information</div>
+
+      <div class="field">
+        <label for="bizName">Business Name</label>
+        <input type="text" id="bizName" placeholder="Acme Plumbing Co." autocomplete="off" />
+      </div>
+
+      <div class="field">
+        <label for="contactName">Contact Name</label>
+        <input type="text" id="contactName" placeholder="Jane Smith" autocomplete="off" />
+      </div>
+
+      <div class="field">
+        <label for="address">Address</label>
+        <input type="text" id="address" placeholder="123 Main St, Detroit, MI 48201" autocomplete="off" />
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="email">Email</label>
+          <input type="email" id="email" placeholder="jane@acme.com" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label for="phone">Phone</label>
+          <input type="tel" id="phone" placeholder="(313) 555-0100" autocomplete="off" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="effectiveDate">Effective Date</label>
+        <input type="date" id="effectiveDate" />
+      </div>
+
+      <!-- SERVICES -->
+      <div class="section-label">Services Included</div>
+
+      <div class="checks">
+        <label class="check-item">
+          <input type="checkbox" id="svc-chatbot" value="AI Chatbot (custom-trained, website/SMS)" />
+          <span>AI Chatbot</span>
+        </label>
+        <label class="check-item">
+          <input type="checkbox" id="svc-scheduling" value="Scheduling Integration (Google Calendar sync)" />
+          <span>Scheduling Integration</span>
+        </label>
+        <label class="check-item">
+          <input type="checkbox" id="svc-invoicing" value="Invoicing / Payment Follow-up Automation" />
+          <span>Invoicing / Payment Follow-up</span>
+        </label>
+        <label class="check-item">
+          <input type="checkbox" id="svc-flows" value="Custom Conversation Flows &amp; FAQ Sequences" />
+          <span>Custom Conversation Flows</span>
+        </label>
+      </div>
+
+      <!-- PRICING -->
+      <div class="section-label">Pricing &amp; Tier</div>
+
+      <div class="field">
+        <label for="tier">Service Tier</label>
+        <select id="tier">
+          <option value="">— Select Tier —</option>
+          <option value="Starter">Starter</option>
+          <option value="Growth">Growth</option>
+          <option value="Pro">Pro</option>
+          <option value="Custom">Custom</option>
+        </select>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="monthly">Monthly Fee</label>
+          <div class="price-wrap">
+            <span class="prefix">$</span>
+            <input type="number" id="monthly" placeholder="497" min="0" step="1" />
+          </div>
+        </div>
+        <div class="field">
+          <label for="setup">Setup Fee</label>
+          <div class="price-wrap">
+            <span class="prefix">$</span>
+            <input type="number" id="setup" placeholder="1500" min="0" step="1" />
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /form-body -->
+
+    <div class="form-footer">
+      <button class="btn btn-primary" onclick="window.print()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Print / Save PDF
+      </button>
+      <button class="btn btn-secondary" onclick="clearForm()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.74"/></svg>
+        Clear Form
+      </button>
+      <div class="save-indicator" id="saveIndicator">Changes saved automatically</div>
+    </div>
+
+  </aside>
+
+  <!-- ======================================================
+       RIGHT: PREVIEW PANEL
+  ====================================================== -->
+  <main class="preview-panel">
+
+    <div class="contract-page" id="contractPage">
+
+      <!-- CONTRACT HEADER -->
+      <div class="ct-header">
+        <div class="ct-brand">
+          <div class="mark">
+            <div class="box">CWI</div>
+            <span class="company">CWI AI LLC</span>
+          </div>
+          <div class="tagline">AI Automation &amp; Intelligent Solutions</div>
+        </div>
+        <div class="ct-header-right">
+          <div class="ct-doc-title">Service Agreement</div>
+          <div class="ct-doc-sub" id="ct-date-ref"></div>
+        </div>
+      </div>
+
+      <!-- PARTIES -->
+      <div class="ct-parties">
+        <div class="parties-title">Parties to this Agreement</div>
+
+        <div class="ct-party-row">
+          <span class="ct-party-label">Service Provider:</span>
+          <span class="ct-party-val">
+            CWI AI LLC &nbsp;|&nbsp; Southgate, Michigan &nbsp;|&nbsp; brian@cwiai.net &nbsp;|&nbsp; (734) 812-9971
+          </span>
+        </div>
+
+        <div class="ct-party-row">
+          <span class="ct-party-label">Client:</span>
+          <span class="ct-party-val" id="ct-client-party">
+            <span class="blank">[Business Name] | [Contact Name] | [Address] | [Email] | [Phone]</span>
+          </span>
+        </div>
+
+        <div class="ct-party-row">
+          <span class="ct-party-label">Effective Date:</span>
+          <span class="ct-party-val" id="ct-eff-date">
+            <span class="blank">[Date]</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- SECTION 1: SERVICES -->
+      <div class="ct-section">
+        <div class="ct-section-title">
+          <span class="ct-section-num">1.</span> Services Provided
+        </div>
+        <p>Service Provider agrees to design, build, deploy, and maintain the following AI automation services for Client:</p>
+        <ul class="ct-services-list" id="ct-services-list">
+          <li class="blank" id="ct-no-services">[No services selected — check at least one above]</li>
+        </ul>
+        <div class="ct-tier-row">
+          <div class="ct-tier-cell">
+            <div class="tc-label">Service Tier</div>
+            <div class="tc-val" id="ct-tier"><span class="blank">—</span></div>
+          </div>
+          <div class="ct-tier-cell">
+            <div class="tc-label">Monthly Fee</div>
+            <div class="tc-val" id="ct-monthly"><span class="blank">$—</span></div>
+          </div>
+          <div class="ct-tier-cell">
+            <div class="tc-label">One-Time Setup Fee</div>
+            <div class="tc-val" id="ct-setup"><span class="blank">$—</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 2: TERM -->
+      <div class="ct-section">
+        <div class="ct-section-title">
+          <span class="ct-section-num">2.</span> Term and Cancellation
+        </div>
+        <p>This Agreement is month-to-month. Either party may cancel with 30 days written notice via email. Service Provider may terminate immediately for: non-payment exceeding 14 days, unlawful use, or abusive behavior toward staff or systems. Upon cancellation, all Client data will be exported and delivered within 5 business days.</p>
+      </div>
+
+      <!-- SECTION 3: PAYMENT -->
+      <div class="ct-section">
+        <div class="ct-section-title">
+          <span class="ct-section-num">3.</span> Payment Terms
+        </div>
+        <p>The setup fee is due before work begins. Monthly billing commences 30 days after the go-live date and is due within 7 days of invoice. Late payment of 14 or more days may result in service suspension. An annual prepay option is available at a 10% discount (non-refundable). Price changes require 30 days written notice.</p>
+      </div>
+
+      <!-- SECTION 4: IP -->
+      <div class="ct-section">
+        <div class="ct-section-title">
+          <span class="ct-section-num">4.</span> Intellectual Property
+        </div>
+        <p>Service Provider retains all workflow logic, Make scenarios, system prompts, and technical configurations. Client may customize: company name and branding, colors, response tone, and FAQ content. Client owns all their own data — including customer information, conversation logs, and appointments — at all times.</p>
+      </div>
+
+      <!-- SECTION 5: DATA -->
+      <div class="ct-section">
+        <div class="ct-section-title">
+          <span class="ct-section-num">5.</span> Data &amp; Privacy
+        </div>
+        <p>Client data belongs exclusively to Client. Service Provider accesses data only to deliver the contracted services and will never sell or share it. Third-party platforms utilized include: Make (GDPR-compliant), Freshchat (SOC 2 Type II), OpenRouter (no training on customer data), and Google Calendar. All Client data will be deleted within 30 days of the cancellation effective date.</p>
+      </div>
+
+      <!-- SECTION 6: SECURITY -->
+      <div class="ct-section">
+        <div class="ct-section-title">
+          <span class="ct-section-num">6.</span> Security
+        </div>
+        <p>API keys are stored securely and never shared. Unique credentials are maintained per client. All administrative access is protected by two-factor authentication (2FA). Data in transit is encrypted via TLS/HTTPS. In the event of a security incident, Client will be notified within 48 hours of discovery.</p>
+      </div>
+
+      <!-- SECTION 7: SLA -->
+      <div class="ct-section">
+        <div class="ct-section-title">
+          <span class="ct-section-num">7.</span> Service Levels
+        </div>
+        <p><strong>P1 — System down:</strong> Response within a few hours during business hours. &nbsp;<strong>P2 — Core feature broken:</strong> Same business day. &nbsp;<strong>P3 — Minor issue:</strong> Within 1 business day. &nbsp;<strong>P4 — Feature requests:</strong> Within 1–2 business days.</p>
+        <p>Business hours: Monday–Friday, 9:00 AM – 6:00 PM ET.</p>
+      </div>
+
+      <!-- SECTION 8: LIABILITY -->
+      <div class="ct-section">
+        <div class="ct-section-title">
+          <span class="ct-section-num">8.</span> Limitations of Liability
+        </div>
+        <p>Total liability is capped at three (3) months of fees paid prior to the claim. Service Provider accepts no liability for lost profits, lost revenue, or consequential damages. Client acknowledges that AI chatbots may occasionally produce inaccurate responses; Client is responsible for reviewing FAQ content before go-live.</p>
+      </div>
+
+      <!-- SECTION 9: CONFIDENTIALITY -->
+      <div class="ct-section">
+        <div class="ct-section-title">
+          <span class="ct-section-num">9.</span> Confidentiality
+        </div>
+        <p>Both parties agree to keep the other's confidential business information private, including pricing, processes, configurations, and customer data. This obligation survives termination of the Agreement.</p>
+      </div>
+
+      <!-- SECTION 10: GENERAL -->
+      <div class="ct-section">
+        <div class="ct-section-title">
+          <span class="ct-section-num">10.</span> General Terms
+        </div>
+        <p>This Agreement is governed by the laws of the State of Michigan. Disputes shall be resolved through good-faith negotiation before any legal action is pursued. This Agreement constitutes the entire agreement between the parties and supersedes all prior discussions or understandings. Amendments must be made in writing and signed by both parties.</p>
+      </div>
+
+      <!-- SIGNATURES -->
+      <div class="ct-signatures">
+        <div class="ct-sig-title">Signatures</div>
+        <div class="ct-sig-grid">
+
+          <div class="ct-sig-block">
+            <div class="sig-party">Service Provider</div>
+            <div class="sig-name">Brian Kalsic</div>
+            <div class="sig-title-co">CWI AI LLC</div>
+            <div class="sig-line-group">
+              <div class="sig-line">
+                <div class="line-bar"></div>
+                <div class="line-label">Signature</div>
+              </div>
+              <div class="sig-line">
+                <div class="line-bar"></div>
+                <div class="line-label">Date</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="ct-sig-block">
+            <div class="sig-party">Client</div>
+            <div class="sig-name" id="ct-sig-name"><span class="blank">[Contact Name]</span></div>
+            <div class="sig-title-co" id="ct-sig-co"><span class="blank">[Business Name]</span></div>
+            <div class="sig-line-group">
+              <div class="sig-line">
+                <div class="line-bar"></div>
+                <div class="line-label">Signature</div>
+              </div>
+              <div class="sig-line">
+                <div class="line-bar"></div>
+                <div class="line-label">Date</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- CONTRACT FOOTER -->
+      <div class="ct-footer">
+        <div class="ct-footer-left">CWI AI LLC &nbsp;·&nbsp; Southgate, Michigan &nbsp;·&nbsp; brian@cwiai.net &nbsp;·&nbsp; (734) 812-9971</div>
+        <div class="ct-footer-right" id="ct-footer-date"></div>
+      </div>
+
+    </div><!-- /contract-page -->
+
+  </main>
+
+</div><!-- /shell -->
+
+<!-- =========================================================
+     JAVASCRIPT
+========================================================= -->
+<script>
+  /* ── Helpers ─────────────────────────────────────────── */
+  const $  = id => document.getElementById(id);
+  const fmt = n  => n !== '' && n !== null && n !== undefined ? '$' + Number(n).toLocaleString('en-US') : null;
+  const fmtDate = raw => {
+    if (!raw) return null;
+    const [y, m, d] = raw.split('-');
+    const months = ['January','February','March','April','May','June',
+                    'July','August','September','October','November','December'];
+    return `${months[+m - 1]} ${+d}, ${y}`;
+  };
+
+  /* ── State ───────────────────────────────────────────── */
+  const FIELDS = ['bizName','contactName','address','email','phone','effectiveDate','tier','monthly','setup'];
+  const CHECKS = ['svc-chatbot','svc-scheduling','svc-invoicing','svc-flows'];
+
+  /* ── LocalStorage ────────────────────────────────────── */
+  function saveState() {
+    const data = {};
+    FIELDS.forEach(id => { data[id] = $(id).value; });
+    CHECKS.forEach(id => { data[id] = $(id).checked; });
+    localStorage.setItem('cwiai_contract', JSON.stringify(data));
+    flashSaved();
+  }
+
+  function loadState() {
+    const raw = localStorage.getItem('cwiai_contract');
+    if (!raw) return;
+    try {
+      const data = JSON.parse(raw);
+      FIELDS.forEach(id => { if (data[id] !== undefined) $(id).value = data[id]; });
+      CHECKS.forEach(id => { if (data[id] !== undefined) $(id).checked = data[id]; });
+    } catch(e) {}
+  }
+
+  let flashTimer;
+  function flashSaved() {
+    const el = $('saveIndicator');
+    el.textContent = 'Saved ✓';
+    el.style.color = '#FF5A1F';
+    clearTimeout(flashTimer);
+    flashTimer = setTimeout(() => {
+      el.textContent = 'Changes saved automatically';
+      el.style.color = '';
+    }, 1800);
+  }
+
+  /* ── Live Update ─────────────────────────────────────── */
+  function update() {
+    const biz     = $('bizName').value.trim();
+    const contact = $('contactName').value.trim();
+    const addr    = $('address').value.trim();
+    const email   = $('email').value.trim();
+    const phone   = $('phone').value.trim();
+    const datRaw  = $('effectiveDate').value;
+    const tier    = $('tier').value;
+    const monthly = $('monthly').value;
+    const setup   = $('setup').value;
+
+    /* — Parties block — */
+    const parts = [];
+    if (biz)     parts.push(biz);
+    if (contact) parts.push(contact);
+    if (addr)    parts.push(addr);
+    if (email)   parts.push(email);
+    if (phone)   parts.push(phone);
+
+    const partyEl = $('ct-client-party');
+    if (parts.length) {
+      partyEl.textContent = parts.join(' | ');
+      partyEl.classList.remove('blank');
+    } else {
+      partyEl.innerHTML = '<span class="blank">[Business Name] | [Contact Name] | [Address] | [Email] | [Phone]</span>';
+    }
+
+    /* — Effective date — */
+    const dateEl = $('ct-eff-date');
+    const dateStr = fmtDate(datRaw);
+    if (dateStr) {
+      dateEl.textContent = dateStr;
+      dateEl.classList.remove('blank');
+    } else {
+      dateEl.innerHTML = '<span class="blank">[Date]</span>';
+    }
+
+    /* — Header date ref — */
+    $('ct-date-ref').textContent = dateStr ? 'Effective ' + dateStr : '';
+
+    /* — Footer date — */
+    $('ct-footer-date').textContent = dateStr ? 'Effective ' + dateStr : '';
+
+    /* — Services list — */
+    const selected = CHECKS.map(id => $(id)).filter(cb => cb.checked).map(cb => cb.value);
+    const listEl = $('ct-services-list');
+    const noSvc  = $('ct-no-services');
+
+    // Clear existing service items (keep the placeholder)
+    Array.from(listEl.querySelectorAll('.ct-svc-item')).forEach(el => el.remove());
+
+    if (selected.length === 0) {
+      noSvc.style.display = '';
+    } else {
+      noSvc.style.display = 'none';
+      selected.forEach(svc => {
+        const li = document.createElement('li');
+        li.className = 'ct-svc-item';
+        li.textContent = svc;
+        listEl.appendChild(li);
+      });
+    }
+
+    /* — Tier cell — */
+    const tierEl = $('ct-tier');
+    if (tier) {
+      tierEl.textContent = tier;
+      tierEl.classList.remove('blank');
+    } else {
+      tierEl.innerHTML = '<span class="blank">—</span>';
+    }
+
+    /* — Monthly fee — */
+    const monEl = $('ct-monthly');
+    const monFmt = fmt(monthly);
+    if (monFmt) {
+      monEl.textContent = monFmt;
+      monEl.classList.remove('blank');
+    } else {
+      monEl.innerHTML = '<span class="blank">$—</span>';
+    }
+
+    /* — Setup fee — */
+    const setEl = $('ct-setup');
+    const setFmt = fmt(setup);
+    if (setFmt) {
+      setEl.textContent = setFmt;
+      setEl.classList.remove('blank');
+    } else {
+      setEl.innerHTML = '<span class="blank">$—</span>';
+    }
+
+    /* — Signature block — */
+    const sigName = $('ct-sig-name');
+    if (contact) {
+      sigName.textContent = contact;
+      sigName.classList.remove('blank');
+    } else {
+      sigName.innerHTML = '<span class="blank">[Contact Name]</span>';
+    }
+
+    const sigCo = $('ct-sig-co');
+    if (biz) {
+      sigCo.textContent = biz;
+      sigCo.classList.remove('blank');
+    } else {
+      sigCo.innerHTML = '<span class="blank">[Business Name]</span>';
+    }
+
+    saveState();
+  }
+
+  /* ── Clear Form ──────────────────────────────────────── */
+  function clearForm() {
+    if (!confirm('Clear all form data?')) return;
+    FIELDS.forEach(id => { $(id).value = ''; });
+    CHECKS.forEach(id => { $(id).checked = false; });
+    localStorage.removeItem('cwiai_contract');
+    update();
+  }
+
+  /* ── Wire Up Events ──────────────────────────────────── */
+  FIELDS.forEach(id => {
+    const el = $(id);
+    el.addEventListener('input', update);
+    el.addEventListener('change', update);
+  });
+
+  CHECKS.forEach(id => {
+    $(id).addEventListener('change', update);
+  });
+
+  /* ── Init ────────────────────────────────────────────── */
+  loadState();
+  update();
+</script>
+
+</body>
+</html>

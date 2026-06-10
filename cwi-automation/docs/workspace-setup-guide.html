@@ -1,0 +1,1686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="CWI internal tool: CWI AI Workspace Setup Guide. Internal use only — CWI Compute With Imagination.">
+<title>CWI AI Workspace Setup Guide</title>
+<style>
+  :root {
+    --primary: #6366f1;
+    --primary-dark: #4f46e5;
+    --accent: #06b6d4;
+    --success: #22c55e;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --surface2: #263248;
+    --border: #334155;
+    --text: #e2e8f0;
+    --text-muted: #94a3b8;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  .site-header {
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0c1a2e 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 28px 32px 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .site-header::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 220px; height: 220px;
+    background: radial-gradient(circle, rgba(99,102,241,0.18) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  .header-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .cwi-badge {
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    color: #fff;
+    font-weight: 800;
+    font-size: 1.1rem;
+    letter-spacing: 0.08em;
+    padding: 8px 18px;
+    border-radius: 8px;
+    white-space: nowrap;
+    box-shadow: 0 4px 18px rgba(99,102,241,0.35);
+    flex-shrink: 0;
+  }
+  .header-titles { flex: 1; min-width: 200px; }
+  .header-titles h1 {
+    font-size: 1.55rem;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.25;
+  }
+  .header-titles p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-top: 4px;
+  }
+  .header-meta {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .time-counter {
+    background: rgba(6,182,212,0.12);
+    border: 1px solid rgba(6,182,212,0.35);
+    color: var(--accent);
+    border-radius: 8px;
+    padding: 10px 18px;
+    text-align: center;
+    min-width: 130px;
+  }
+  .time-counter .time-val {
+    font-size: 1.6rem;
+    font-weight: 800;
+    display: block;
+    line-height: 1;
+  }
+  .time-counter .time-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-top: 3px;
+    display: block;
+  }
+  .header-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+  .btn {
+    padding: 9px 18px;
+    border-radius: 7px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.18s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+  }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
+  .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border); }
+  .btn-outline:hover { background: var(--surface2); border-color: var(--primary); color: var(--primary); }
+
+  /* STICKY PROGRESS */
+  .progress-bar-wrap {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 32px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.35);
+  }
+  .progress-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    white-space: nowrap;
+    min-width: 120px;
+  }
+  .progress-track {
+    flex: 1;
+    height: 10px;
+    background: var(--bg);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    border-radius: 99px;
+    transition: width 0.4s cubic-bezier(.4,0,.2,1);
+    width: 0%;
+  }
+  .progress-pct {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--accent);
+    min-width: 42px;
+    text-align: right;
+  }
+
+  /* MAIN LAYOUT */
+  .main-content {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 36px 32px 80px;
+  }
+
+  /* SECTION */
+  .section {
+    margin-bottom: 48px;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 20px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-num {
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    color: #fff;
+    font-weight: 800;
+    font-size: 1rem;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 3px 12px rgba(99,102,241,0.35);
+  }
+  .section-title { font-size: 1.22rem; font-weight: 700; color: #fff; }
+  .section-subtitle { color: var(--text-muted); font-size: 0.85rem; margin-top: 2px; }
+
+  /* CARDS GRID */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+    gap: 16px;
+  }
+
+  /* STEP CARD */
+  .step-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    position: relative;
+  }
+  .step-card:hover { border-color: var(--primary); box-shadow: 0 4px 20px rgba(99,102,241,0.12); }
+  .step-card.completed { border-color: var(--success); opacity: 0.75; }
+  .step-card.completed .card-title { text-decoration: line-through; color: var(--text-muted); }
+
+  .card-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+  .card-checkbox {
+    width: 20px; height: 20px;
+    accent-color: var(--success);
+    cursor: pointer;
+    flex-shrink: 0;
+    margin-top: 3px;
+  }
+  .card-info { flex: 1; }
+  .card-title { font-weight: 700; font-size: 0.97rem; color: #fff; }
+  .card-meta {
+    display: flex;
+    gap: 8px;
+    margin-top: 5px;
+    flex-wrap: wrap;
+  }
+  .badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 99px;
+    white-space: nowrap;
+  }
+  .badge-time { background: rgba(245,158,11,0.15); color: var(--warning); border: 1px solid rgba(245,158,11,0.3); }
+  .badge-free { background: rgba(34,197,94,0.12); color: var(--success); border: 1px solid rgba(34,197,94,0.25); }
+  .badge-paid { background: rgba(239,68,68,0.12); color: #f87171; border: 1px solid rgba(239,68,68,0.25); }
+  .badge-critical { background: rgba(99,102,241,0.15); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.3); }
+
+  .card-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 0.82rem;
+    font-weight: 600;
+    margin-top: 10px;
+    padding: 5px 12px;
+    background: rgba(6,182,212,0.08);
+    border: 1px solid rgba(6,182,212,0.25);
+    border-radius: 6px;
+    transition: all 0.18s;
+  }
+  .card-link:hover { background: rgba(6,182,212,0.18); color: #67e8f9; }
+
+  .card-details {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    font-size: 0.84rem;
+    color: var(--text-muted);
+  }
+  .card-details ol, .card-details ul { padding-left: 18px; }
+  .card-details li { margin-bottom: 5px; line-height: 1.5; }
+  .card-details li strong { color: var(--text); }
+  .key-location {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 0.8rem;
+  }
+  .key-location .kl-icon { font-size: 1rem; }
+  .key-location .kl-text { color: var(--text-muted); }
+  .key-location .kl-path { color: var(--accent); font-family: 'Consolas', 'Courier New', monospace; }
+
+  /* TABLE */
+  .table-wrap {
+    overflow-x: auto;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.84rem;
+    min-width: 700px;
+  }
+  thead tr { background: var(--surface2); }
+  th {
+    text-align: left;
+    padding: 11px 14px;
+    font-weight: 700;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  td {
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(51,65,85,0.5);
+    vertical-align: top;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.025); }
+  .mono {
+    font-family: 'Consolas', 'Courier New', monospace;
+    background: rgba(99,102,241,0.1);
+    color: #a5b4fc;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    word-break: break-all;
+  }
+  .td-path { color: var(--text-muted); font-size: 0.8rem; }
+
+  /* DNS TABLE */
+  .dns-record {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .dns-record-header {
+    background: var(--surface2);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .dns-type {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .dns-cname { background: rgba(6,182,212,0.2); color: var(--accent); }
+  .dns-txt { background: rgba(99,102,241,0.2); color: #a5b4fc; }
+  .dns-ns { background: rgba(245,158,11,0.2); color: var(--warning); }
+  .dns-record-body {
+    padding: 12px 16px;
+    font-size: 0.83rem;
+    display: grid;
+    grid-template-columns: 100px 1fr;
+    gap: 6px 16px;
+  }
+  .dns-record-body .label { color: var(--text-muted); font-weight: 600; }
+  .dns-record-body .value { font-family: 'Consolas', monospace; color: var(--text); word-break: break-all; }
+
+  /* STEP LIST */
+  .step-list { list-style: none; }
+  .step-list li {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    padding: 14px 0;
+    border-bottom: 1px solid rgba(51,65,85,0.5);
+  }
+  .step-list li:last-child { border-bottom: none; }
+  .step-list input[type="checkbox"] {
+    width: 18px; height: 18px;
+    accent-color: var(--success);
+    cursor: pointer;
+    flex-shrink: 0;
+    margin-top: 3px;
+  }
+  .step-list .step-text { flex: 1; color: var(--text); font-size: 0.9rem; }
+  .step-list .step-text.done { text-decoration: line-through; color: var(--text-muted); }
+  .step-list .step-mins {
+    font-size: 0.75rem;
+    color: var(--warning);
+    font-weight: 600;
+    white-space: nowrap;
+    margin-top: 4px;
+  }
+
+  /* MAKE SECTION */
+  .make-group { margin-bottom: 28px; }
+  .make-group-title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .make-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    margin-bottom: 8px;
+    transition: border-color 0.18s;
+  }
+  .make-item:hover { border-color: var(--primary); }
+  .make-item.completed { border-color: var(--success); opacity: 0.7; }
+  .make-item input[type="checkbox"] {
+    width: 18px; height: 18px;
+    accent-color: var(--success);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .make-item-info { flex: 1; }
+  .make-item-name { font-weight: 600; font-size: 0.9rem; }
+  .make-item-name.done { text-decoration: line-through; color: var(--text-muted); }
+  .make-item-desc { color: var(--text-muted); font-size: 0.78rem; margin-top: 2px; }
+  .make-order {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    background: var(--surface2);
+    padding: 3px 8px;
+    border-radius: 5px;
+    white-space: nowrap;
+  }
+
+  /* CODE BLOCK */
+  .code-block {
+    background: #0d1424;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 0.83rem;
+    color: #a5b4fc;
+    overflow-x: auto;
+    margin: 12px 0;
+    line-height: 1.7;
+  }
+  .code-block .cmd-comment { color: #4b6280; }
+  .code-block .cmd-flag { color: var(--accent); }
+  .code-block .cmd-str { color: #86efac; }
+
+  /* CALLOUT */
+  .callout {
+    display: flex;
+    gap: 12px;
+    padding: 14px 18px;
+    border-radius: 8px;
+    margin: 16px 0;
+    font-size: 0.87rem;
+    line-height: 1.6;
+  }
+  .callout-info { background: rgba(6,182,212,0.08); border: 1px solid rgba(6,182,212,0.25); }
+  .callout-warn { background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.25); }
+  .callout-success { background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.25); }
+  .callout-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
+  .callout-text { color: var(--text-muted); }
+  .callout-text strong { color: var(--text); }
+
+  /* PRINT */
+  @media print {
+    body { background: #fff; color: #111; }
+    .site-header { background: #1e1b4b; -webkit-print-color-adjust: exact; }
+    .progress-bar-wrap { display: none; }
+    .btn { display: none; }
+    .step-card, .make-item, .dns-record { break-inside: avoid; }
+    .section { break-before: auto; }
+  }
+
+  @media (max-width: 700px) {
+    .site-header { padding: 20px 16px; }
+    .main-content { padding: 24px 16px 60px; }
+    .progress-bar-wrap { padding: 10px 16px; }
+    .cards-grid { grid-template-columns: 1fr; }
+    .dns-record-body { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div class="header-inner">
+    <div class="cwi-badge">CWI AI</div>
+    <div class="header-titles">
+      <h1>Workspace Setup Guide</h1>
+      <p>End-to-end environment configuration — accounts, DNS, API keys, Make.com, and go-live verification</p>
+    </div>
+    <div class="header-meta">
+      <div class="time-counter">
+        <span class="time-val" id="totalMins">—</span>
+        <span class="time-label">minutes remaining</span>
+      </div>
+      <div class="header-btns">
+        <button class="btn btn-primary" onclick="window.print()">&#128438; Print / Save PDF</button>
+        <button class="btn btn-outline" onclick="resetAll()">&#8635; Reset All Checkboxes</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- STICKY PROGRESS -->
+<div class="progress-bar-wrap">
+  <span class="progress-label">Setup Progress</span>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  <span class="progress-pct" id="progressPct">0%</span>
+</div>
+
+<!-- MAIN -->
+<main class="main-content">
+
+  <!-- ===================== SECTION 1 ===================== -->
+  <section class="section" id="sec1">
+    <div class="section-header">
+      <div class="section-num">1</div>
+      <div>
+        <div class="section-title">Accounts to Create</div>
+        <div class="section-subtitle">Sign up for all required services before configuring anything else</div>
+      </div>
+    </div>
+    <div class="cards-grid">
+
+      <!-- Resend Free -->
+      <div class="step-card" id="card-resend-free">
+        <div class="card-top">
+          <input type="checkbox" class="card-checkbox" data-mins="5" data-key="resend-free" onchange="handleCheck(this)">
+          <div class="card-info">
+            <div class="card-title">Resend — Free Account</div>
+            <div class="card-meta">
+              <span class="badge badge-time">5 min</span>
+              <span class="badge badge-free">Free</span>
+              <span class="badge badge-critical">Critical</span>
+            </div>
+          </div>
+        </div>
+        <a href="https://resend.com/signup" target="_blank" class="card-link">&#8599; resend.com/signup</a>
+        <div class="card-details">
+          <ol>
+            <li>Go to <strong>resend.com/signup</strong> and create account with your business email.</li>
+            <li>Verify your email address via the confirmation link sent to your inbox.</li>
+            <li>On the dashboard, go to <strong>API Keys</strong> in the left sidebar.</li>
+            <li>Click <strong>Create API Key</strong> — name it <code>cwi-automation</code>, set permission to <strong>Full Access</strong>.</li>
+            <li>Copy the key immediately — it is shown only once.</li>
+          </ol>
+          <div class="key-location">
+            <span class="kl-icon">&#128273;</span>
+            <div>
+              <div class="kl-text">Where to find the key:</div>
+              <div class="kl-path">Dashboard → API Keys → Create API Key</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resend Pro -->
+      <div class="step-card" id="card-resend-pro">
+        <div class="card-top">
+          <input type="checkbox" class="card-checkbox" data-mins="3" data-key="resend-pro" onchange="handleCheck(this)">
+          <div class="card-info">
+            <div class="card-title">Resend — Upgrade to Pro</div>
+            <div class="card-meta">
+              <span class="badge badge-time">3 min</span>
+              <span class="badge badge-paid">Paid (~$20/mo)</span>
+            </div>
+          </div>
+        </div>
+        <a href="https://resend.com/settings/billing" target="_blank" class="card-link">&#8599; Billing Settings</a>
+        <div class="card-details">
+          <ol>
+            <li>Log in and navigate to <strong>Settings → Billing</strong>.</li>
+            <li>Select the <strong>Pro</strong> plan — required for custom domain sending and higher volume.</li>
+            <li>Enter payment details and confirm upgrade.</li>
+            <li>Pro unlocks: custom domains, 50,000 emails/month, webhooks.</li>
+          </ol>
+          <div class="key-location">
+            <span class="kl-icon">&#128274;</span>
+            <div>
+              <div class="kl-text">No additional key — uses same API key from Free signup.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- OpenRouter -->
+      <div class="step-card" id="card-openrouter">
+        <div class="card-top">
+          <input type="checkbox" class="card-checkbox" data-mins="8" data-key="openrouter" onchange="handleCheck(this)">
+          <div class="card-info">
+            <div class="card-title">OpenRouter + $20 Credit</div>
+            <div class="card-meta">
+              <span class="badge badge-time">8 min</span>
+              <span class="badge badge-paid">$20 credit required</span>
+              <span class="badge badge-critical">Critical</span>
+            </div>
+          </div>
+        </div>
+        <a href="https://openrouter.ai/signup" target="_blank" class="card-link">&#8599; openrouter.ai/signup</a>
+        <div class="card-details">
+          <ol>
+            <li>Create account at <strong>openrouter.ai</strong>.</li>
+            <li>Go to <strong>Settings → Credits</strong> and add $20 credit via credit card.</li>
+            <li>Navigate to <strong>Keys</strong> in the left sidebar.</li>
+            <li>Click <strong>Create Key</strong> — name it <code>cwi-automation</code>.</li>
+            <li>Set a credit limit (recommended: $15) to prevent runaway spend.</li>
+            <li>Copy the key — begins with <code>sk-or-v1-</code>.</li>
+          </ol>
+          <div class="key-location">
+            <span class="kl-icon">&#128273;</span>
+            <div>
+              <div class="kl-text">Where to find the key:</div>
+              <div class="kl-path">Dashboard → Keys → Create Key</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HubSpot -->
+      <div class="step-card" id="card-hubspot">
+        <div class="card-top">
+          <input type="checkbox" class="card-checkbox" data-mins="10" data-key="hubspot" onchange="handleCheck(this)">
+          <div class="card-info">
+            <div class="card-title">HubSpot Free CRM</div>
+            <div class="card-meta">
+              <span class="badge badge-time">10 min</span>
+              <span class="badge badge-free">Free</span>
+              <span class="badge badge-critical">Critical</span>
+            </div>
+          </div>
+        </div>
+        <a href="https://app.hubspot.com/signup-hubspot/crm" target="_blank" class="card-link">&#8599; HubSpot CRM Signup</a>
+        <div class="card-details">
+          <ol>
+            <li>Sign up for a <strong>Free CRM</strong> account (no credit card needed).</li>
+            <li>Complete the onboarding — set company name to your agency name.</li>
+            <li>Go to <strong>Settings → Integrations → Private Apps</strong>.</li>
+            <li>Click <strong>Create a private app</strong> — name it <code>cwi-automation</code>.</li>
+            <li>Under <strong>Scopes</strong>, enable: <code>crm.objects.contacts.write</code>, <code>crm.objects.deals.write</code>, <code>crm.objects.companies.write</code>, <code>crm.schemas.contacts.read</code>.</li>
+            <li>Click <strong>Create app</strong> and copy the Access Token.</li>
+          </ol>
+          <div class="key-location">
+            <span class="kl-icon">&#128273;</span>
+            <div>
+              <div class="kl-text">Where to find the key:</div>
+              <div class="kl-path">Settings → Integrations → Private Apps → [your app] → Auth tab</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Make.com -->
+      <div class="step-card" id="card-make">
+        <div class="card-top">
+          <input type="checkbox" class="card-checkbox" data-mins="5" data-key="make" onchange="handleCheck(this)">
+          <div class="card-info">
+            <div class="card-title">Make.com Core Plan</div>
+            <div class="card-meta">
+              <span class="badge badge-time">5 min</span>
+              <span class="badge badge-paid">~$9/mo</span>
+              <span class="badge badge-critical">Critical</span>
+            </div>
+          </div>
+        </div>
+        <a href="https://www.make.com/en/register" target="_blank" class="card-link">&#8599; make.com/register</a>
+        <div class="card-details">
+          <ol>
+            <li>Register at <strong>make.com</strong> — start with Free trial, upgrade to Core.</li>
+            <li>Core plan required for: 10,000 ops/month, multiple active scenarios, webhooks.</li>
+            <li>Go to <strong>Organization → API Tokens</strong>.</li>
+            <li>Generate a new token — name it <code>cwi-automation</code>.</li>
+            <li>Note your <strong>Organization ID</strong> from the URL: <code>make.com/[orgId]/...</code></li>
+          </ol>
+          <div class="key-location">
+            <span class="kl-icon">&#128273;</span>
+            <div>
+              <div class="kl-text">Where to find the key:</div>
+              <div class="kl-path">Organization → API Tokens → Generate Token</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Freshchat -->
+      <div class="step-card" id="card-freshchat">
+        <div class="card-top">
+          <input type="checkbox" class="card-checkbox" data-mins="8" data-key="freshchat" onchange="handleCheck(this)">
+          <div class="card-info">
+            <div class="card-title">Freshchat Free</div>
+            <div class="card-meta">
+              <span class="badge badge-time">8 min</span>
+              <span class="badge badge-free">Free (up to 100 agents)</span>
+            </div>
+          </div>
+        </div>
+        <a href="https://www.freshworks.com/live-chat-software/signup/" target="_blank" class="card-link">&#8599; Freshchat Signup</a>
+        <div class="card-details">
+          <ol>
+            <li>Sign up at <strong>freshworks.com</strong> — select <strong>Freshchat</strong> product.</li>
+            <li>Set up your workspace name — this becomes your subdomain (e.g., <code>cwiai.freshchat.com</code>).</li>
+            <li>Go to <strong>Settings → API Settings</strong>.</li>
+            <li>Copy the <strong>API Token</strong> shown on the page.</li>
+            <li>Note the <strong>App ID</strong> — visible in the browser URL of your dashboard.</li>
+            <li>Create a bot agent named <strong>Riley</strong> under <strong>Bots → Bot Profiles</strong>.</li>
+          </ol>
+          <div class="key-location">
+            <span class="kl-icon">&#128273;</span>
+            <div>
+              <div class="kl-text">Where to find the key:</div>
+              <div class="kl-path">Settings → API Settings → API Token</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Calendly -->
+      <div class="step-card" id="card-calendly">
+        <div class="card-top">
+          <input type="checkbox" class="card-checkbox" data-mins="6" data-key="calendly" onchange="handleCheck(this)">
+          <div class="card-info">
+            <div class="card-title">Calendly Free</div>
+            <div class="card-meta">
+              <span class="badge badge-time">6 min</span>
+              <span class="badge badge-free">Free</span>
+            </div>
+          </div>
+        </div>
+        <a href="https://calendly.com/signup" target="_blank" class="card-link">&#8599; calendly.com/signup</a>
+        <div class="card-details">
+          <ol>
+            <li>Create account at <strong>calendly.com</strong>.</li>
+            <li>Set up at least one Event Type (e.g., "30-Minute Intro Call").</li>
+            <li>Go to <strong>Integrations → API &amp; Webhooks</strong>.</li>
+            <li>Generate a <strong>Personal Access Token</strong>.</li>
+            <li>Note your <strong>User URI</strong> — shown in the API docs / profile URL.</li>
+            <li>Create a webhook subscription pointing to your Make.com webhook URL (configured later in Section 4).</li>
+          </ol>
+          <div class="key-location">
+            <span class="kl-icon">&#128273;</span>
+            <div>
+              <div class="kl-text">Where to find the key:</div>
+              <div class="kl-path">Integrations → API &amp; Webhooks → Personal Access Tokens</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stripe -->
+      <div class="step-card" id="card-stripe">
+        <div class="card-top">
+          <input type="checkbox" class="card-checkbox" data-mins="10" data-key="stripe" onchange="handleCheck(this)">
+          <div class="card-info">
+            <div class="card-title">Stripe — Live Mode</div>
+            <div class="card-meta">
+              <span class="badge badge-time">10 min</span>
+              <span class="badge badge-free">Free (transaction fees apply)</span>
+              <span class="badge badge-critical">Critical</span>
+            </div>
+          </div>
+        </div>
+        <a href="https://dashboard.stripe.com/register" target="_blank" class="card-link">&#8599; Stripe Register</a>
+        <div class="card-details">
+          <ol>
+            <li>Create account at <strong>stripe.com</strong> and complete business verification.</li>
+            <li><strong>Important:</strong> Complete identity verification to enable live mode — required for real payments.</li>
+            <li>In the dashboard, toggle from <strong>Test</strong> to <strong>Live</strong> mode (top-left switch).</li>
+            <li>Go to <strong>Developers → API Keys</strong>.</li>
+            <li>Copy the <strong>Secret Key</strong> (starts with <code>sk_live_</code>) — not the publishable key.</li>
+            <li>Under <strong>Developers → Webhooks</strong>, add an endpoint for your Make.com URL (configured in Section 4). Select events: <code>checkout.session.completed</code>, <code>invoice.paid</code>.</li>
+            <li>Copy the <strong>Webhook Signing Secret</strong> (starts with <code>whsec_</code>).</li>
+          </ol>
+          <div class="key-location">
+            <span class="kl-icon">&#128273;</span>
+            <div>
+              <div class="kl-text">Where to find the keys:</div>
+              <div class="kl-path">Developers → API Keys (secret key) | Developers → Webhooks (signing secret)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Netlify -->
+      <div class="step-card" id="card-netlify">
+        <div class="card-top">
+          <input type="checkbox" class="card-checkbox" data-mins="7" data-key="netlify" onchange="handleCheck(this)">
+          <div class="card-info">
+            <div class="card-title">Netlify Free</div>
+            <div class="card-meta">
+              <span class="badge badge-time">7 min</span>
+              <span class="badge badge-free">Free</span>
+            </div>
+          </div>
+        </div>
+        <a href="https://app.netlify.com/signup" target="_blank" class="card-link">&#8599; Netlify Signup</a>
+        <div class="card-details">
+          <ol>
+            <li>Sign up at <strong>netlify.com</strong> — use GitHub login if preferred.</li>
+            <li>Create a new site (can be a blank deploy initially).</li>
+            <li>Go to <strong>User Settings → Applications</strong>.</li>
+            <li>Under <strong>Personal access tokens</strong>, click <strong>New access token</strong>.</li>
+            <li>Name it <code>cwi-automation</code> and copy the token.</li>
+            <li>Note your <strong>Site ID</strong> from <strong>Site Settings → General → Site details</strong>.</li>
+          </ol>
+          <div class="key-location">
+            <span class="kl-icon">&#128273;</span>
+            <div>
+              <div class="kl-text">Where to find the key:</div>
+              <div class="kl-path">User Settings → Applications → Personal access tokens</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ===================== SECTION 2 ===================== -->
+  <section class="section" id="sec2">
+    <div class="section-header">
+      <div class="section-num">2</div>
+      <div>
+        <div class="section-title">Domain &amp; DNS Configuration</div>
+        <div class="section-subtitle">Transfer nameservers to Netlify, then add Resend authentication records</div>
+      </div>
+    </div>
+
+    <div class="callout callout-warn">
+      <span class="callout-icon">&#9888;</span>
+      <div class="callout-text"><strong>DNS propagation takes 15–48 hours.</strong> Complete this section first and let it propagate in the background while you continue with other sections.</div>
+    </div>
+
+    <ul class="step-list">
+      <li>
+        <input type="checkbox" data-mins="10" data-key="dns-ns-transfer" onchange="handleCheck(this)">
+        <div>
+          <div class="step-text" id="txt-dns-ns-transfer">Transfer domain nameservers to Netlify DNS</div>
+          <div class="step-mins">10 min</div>
+          <div style="margin-top:8px; font-size:0.84rem; color:var(--text-muted);">
+            In Netlify: <strong>Domains → Add or register domain</strong> → add your domain → copy the 4 Netlify nameservers shown.<br>
+            At your domain registrar (GoDaddy/Namecheap/etc.): replace all existing nameservers with the 4 Netlify nameservers.
+          </div>
+        </div>
+      </li>
+      <li>
+        <input type="checkbox" data-mins="3" data-key="dns-ssl" onchange="handleCheck(this)">
+        <div>
+          <div class="step-text" id="txt-dns-ssl">Confirm SSL auto-provisioning in Netlify</div>
+          <div class="step-mins">3 min (after propagation)</div>
+          <div style="margin-top:8px; font-size:0.84rem; color:var(--text-muted);">
+            In Netlify: <strong>Site Settings → Domain management → HTTPS</strong> → click <strong>Verify DNS configuration</strong>. Once DNS has propagated, click <strong>Provision certificate</strong>. Status should change to "Your site has HTTPS enabled."
+          </div>
+        </div>
+      </li>
+      <li>
+        <input type="checkbox" data-mins="12" data-key="dns-resend-records" onchange="handleCheck(this)">
+        <div>
+          <div class="step-text" id="txt-dns-resend-records">Add Resend CNAME, SPF, and DKIM records</div>
+          <div class="step-mins">12 min</div>
+          <div style="margin-top:8px;">
+            <p style="font-size:0.84rem; color:var(--text-muted); margin-bottom:10px;">In Resend: <strong>Domains → Add Domain</strong> → enter your domain → Resend will show you the exact records to add. Add them in Netlify DNS (<strong>Domains → [your domain] → DNS panel</strong>).</p>
+
+            <div class="dns-record">
+              <div class="dns-record-header">
+                <span class="dns-type dns-cname">CNAME</span>
+                <span style="font-size:0.85rem; color:var(--text-muted);">Resend bounce tracking subdomain</span>
+              </div>
+              <div class="dns-record-body">
+                <span class="label">Host:</span><span class="value">resend._domainkey.yourdomain.com</span>
+                <span class="label">Value:</span><span class="value">[shown in Resend dashboard — unique per domain]</span>
+                <span class="label">TTL:</span><span class="value">Auto / 3600</span>
+              </div>
+            </div>
+
+            <div class="dns-record">
+              <div class="dns-record-header">
+                <span class="dns-type dns-txt">TXT</span>
+                <span style="font-size:0.85rem; color:var(--text-muted);">SPF record — authorizes Resend to send from your domain</span>
+              </div>
+              <div class="dns-record-body">
+                <span class="label">Host:</span><span class="value">@ (root domain)</span>
+                <span class="value" style="grid-column:1/-1;"></span>
+                <span class="label">Value:</span><span class="value">v=spf1 include:amazonses.com ~all</span>
+                <span class="label">TTL:</span><span class="value">Auto / 3600</span>
+              </div>
+            </div>
+
+            <div class="dns-record">
+              <div class="dns-record-header">
+                <span class="dns-type dns-txt">TXT</span>
+                <span style="font-size:0.85rem; color:var(--text-muted);">DKIM record — cryptographic signing key</span>
+              </div>
+              <div class="dns-record-body">
+                <span class="label">Host:</span><span class="value">resend._domainkey</span>
+                <span class="label">Value:</span><span class="value">p=[long public key — copy exactly from Resend dashboard]</span>
+                <span class="label">TTL:</span><span class="value">Auto / 3600</span>
+              </div>
+            </div>
+
+            <div class="callout callout-info" style="margin-top:10px;">
+              <span class="callout-icon">&#8505;</span>
+              <div class="callout-text">After adding records, return to Resend → Domains and click <strong>Verify</strong>. All three checks (SPF, DKIM, DMARC) must show green before emails will send.</div>
+            </div>
+          </div>
+        </div>
+      </li>
+    </ul>
+  </section>
+
+  <!-- ===================== SECTION 3 ===================== -->
+  <section class="section" id="sec3">
+    <div class="section-header">
+      <div class="section-num">3</div>
+      <div>
+        <div class="section-title">API Keys Reference</div>
+        <div class="section-subtitle">All 26 environment variables from <code style="font-size:0.85em;">.env.template</code> — where to find each one</div>
+      </div>
+    </div>
+
+    <div class="callout callout-info">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-text"><strong>Before filling in keys:</strong> Run <code>setup-env.ps1</code> to copy <code>.env.template</code> to <code>.env</code>. After populating all keys, run <code>setup-env.ps1 -Validate</code> to confirm all required variables are set.</div>
+    </div>
+
+    <div class="code-block">
+      <span class="cmd-comment"># Copy template and open for editing</span><br>
+      .\scripts\setup-env.ps1<br><br>
+      <span class="cmd-comment"># After filling in all values — validate</span><br>
+      .\scripts\setup-env.ps1 <span class="cmd-flag">-Validate</span>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Variable Name</th>
+            <th>Service</th>
+            <th>Where to Find It</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td><span class="mono">RESEND_API_KEY</span></td><td>Resend</td><td class="td-path">Dashboard → API Keys</td><td>Starts with <code>re_</code></td></tr>
+          <tr><td>2</td><td><span class="mono">RESEND_FROM_EMAIL</span></td><td>Resend</td><td class="td-path">Your verified domain email address</td><td>e.g. <code>hello@yourdomain.com</code></td></tr>
+          <tr><td>3</td><td><span class="mono">RESEND_DOMAIN</span></td><td>Resend</td><td class="td-path">Domains → [your domain]</td><td>e.g. <code>yourdomain.com</code></td></tr>
+          <tr><td>4</td><td><span class="mono">OPENROUTER_API_KEY</span></td><td>OpenRouter</td><td class="td-path">Dashboard → Keys</td><td>Starts with <code>sk-or-v1-</code></td></tr>
+          <tr><td>5</td><td><span class="mono">OPENROUTER_MODEL</span></td><td>OpenRouter</td><td class="td-path">Static value in template</td><td>e.g. <code>anthropic/claude-3-haiku</code></td></tr>
+          <tr><td>6</td><td><span class="mono">HUBSPOT_ACCESS_TOKEN</span></td><td>HubSpot</td><td class="td-path">Settings → Integrations → Private Apps → Auth tab</td><td>Starts with <code>pat-</code></td></tr>
+          <tr><td>7</td><td><span class="mono">HUBSPOT_PORTAL_ID</span></td><td>HubSpot</td><td class="td-path">Settings → Account Setup → Account ID</td><td>Numeric ID</td></tr>
+          <tr><td>8</td><td><span class="mono">HUBSPOT_PIPELINE_ID</span></td><td>HubSpot</td><td class="td-path">CRM → Deals → Manage Pipelines → URL param</td><td>Numeric ID from URL</td></tr>
+          <tr><td>9</td><td><span class="mono">MAKE_API_TOKEN</span></td><td>Make.com</td><td class="td-path">Organization → API Tokens</td><td>Long alphanumeric string</td></tr>
+          <tr><td>10</td><td><span class="mono">MAKE_ORG_ID</span></td><td>Make.com</td><td class="td-path">URL: make.com/[orgId]/...</td><td>Numeric ID from URL</td></tr>
+          <tr><td>11</td><td><span class="mono">MAKE_TEAM_ID</span></td><td>Make.com</td><td class="td-path">Team Settings → Team ID</td><td>Numeric ID</td></tr>
+          <tr><td>12</td><td><span class="mono">FRESHCHAT_API_TOKEN</span></td><td>Freshchat</td><td class="td-path">Settings → API Settings → API Token</td><td>Long alphanumeric string</td></tr>
+          <tr><td>13</td><td><span class="mono">FRESHCHAT_APP_ID</span></td><td>Freshchat</td><td class="td-path">Settings → API Settings → App ID</td><td>Alphanumeric app identifier</td></tr>
+          <tr><td>14</td><td><span class="mono">FRESHCHAT_DOMAIN</span></td><td>Freshchat</td><td class="td-path">Your workspace URL subdomain</td><td>e.g. <code>yourname.freshchat.com</code></td></tr>
+          <tr><td>15</td><td><span class="mono">CALENDLY_PAT</span></td><td>Calendly</td><td class="td-path">Integrations → API &amp; Webhooks → Personal Access Tokens</td><td>Long token string</td></tr>
+          <tr><td>16</td><td><span class="mono">CALENDLY_USER_URI</span></td><td>Calendly</td><td class="td-path">API: GET /users/me → resource URI</td><td>URI format: <code>https://api.calendly.com/users/xxx</code></td></tr>
+          <tr><td>17</td><td><span class="mono">CALENDLY_ORG_URI</span></td><td>Calendly</td><td class="td-path">API: GET /users/me → current_organization</td><td>URI format: <code>https://api.calendly.com/organizations/xxx</code></td></tr>
+          <tr><td>18</td><td><span class="mono">STRIPE_SECRET_KEY</span></td><td>Stripe</td><td class="td-path">Developers → API Keys (live mode)</td><td>Starts with <code>sk_live_</code></td></tr>
+          <tr><td>19</td><td><span class="mono">STRIPE_WEBHOOK_SECRET</span></td><td>Stripe</td><td class="td-path">Developers → Webhooks → [endpoint] → Signing secret</td><td>Starts with <code>whsec_</code></td></tr>
+          <tr><td>20</td><td><span class="mono">STRIPE_PRICE_ID_STARTER</span></td><td>Stripe</td><td class="td-path">Products → [Starter product] → Pricing → Price ID</td><td>Starts with <code>price_</code></td></tr>
+          <tr><td>21</td><td><span class="mono">STRIPE_PRICE_ID_PRO</span></td><td>Stripe</td><td class="td-path">Products → [Pro product] → Pricing → Price ID</td><td>Starts with <code>price_</code></td></tr>
+          <tr><td>22</td><td><span class="mono">NETLIFY_AUTH_TOKEN</span></td><td>Netlify</td><td class="td-path">User Settings → Applications → Personal access tokens</td><td>Long alphanumeric string</td></tr>
+          <tr><td>23</td><td><span class="mono">NETLIFY_SITE_ID</span></td><td>Netlify</td><td class="td-path">Site Settings → General → Site details → Site ID</td><td>UUID format</td></tr>
+          <tr><td>24</td><td><span class="mono">MAKE_WEBHOOK_BASE_URL</span></td><td>Make.com</td><td class="td-path">Set after Section 4 — webhook URL from first scenario</td><td>e.g. <code>https://hook.eu1.make.com/...</code></td></tr>
+          <tr><td>25</td><td><span class="mono">APP_BASE_URL</span></td><td>Netlify</td><td class="td-path">Your deployed Netlify domain</td><td>e.g. <code>https://yoursite.netlify.app</code></td></tr>
+          <tr><td>26</td><td><span class="mono">INTERNAL_WEBHOOK_SECRET</span></td><td>Self-generated</td><td class="td-path">Generate with: <code>openssl rand -hex 32</code> or PowerShell: <code>[System.Web.Security.Membership]::GeneratePassword(48,8)</code></td><td>Any strong random string</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ===================== SECTION 4 ===================== -->
+  <section class="section" id="sec4">
+    <div class="section-header">
+      <div class="section-num">4</div>
+      <div>
+        <div class="section-title">Make.com Setup</div>
+        <div class="section-subtitle">Authorize connections, import scenarios in dependency order, register webhooks, activate all scenarios</div>
+      </div>
+    </div>
+
+    <div class="callout callout-warn">
+      <span class="callout-icon">&#9888;</span>
+      <div class="callout-text"><strong>Order matters.</strong> Authorize all 9 connections first, then import scenarios in the order shown. Foundation webhooks must exist before lifecycle scenarios can reference them.</div>
+    </div>
+
+    <!-- Step 4.1 — Connections -->
+    <div class="make-group">
+      <div class="make-group-title">Step 4.1 — Authorize These 9 Connections (exact names required)</div>
+
+      <div class="callout callout-info" style="margin-bottom:12px;">
+        <span class="callout-icon">&#8505;</span>
+        <div class="callout-text">In Make.com go to <strong>Connections</strong> in the left sidebar → <strong>Create a connection</strong>. The connection names below are <em>exactly</em> what the imported scenario JSON files expect — use them verbatim.</div>
+      </div>
+
+      <div class="make-item" id="conn-resend">
+        <input type="checkbox" data-mins="3" data-key="conn-resend" onchange="handleCheck(this)">
+        <div class="make-item-info">
+          <div class="make-item-name" id="name-conn-resend">Resend — cwi-automation</div>
+          <div class="make-item-desc">Type: Resend HTTP &bull; Paste your RESEND_API_KEY</div>
+        </div>
+        <span class="make-order">Connection 1</span>
+      </div>
+
+      <div class="make-item" id="conn-hubspot">
+        <input type="checkbox" data-mins="3" data-key="conn-hubspot" onchange="handleCheck(this)">
+        <div class="make-item-info">
+          <div class="make-item-name" id="name-conn-hubspot">HubSpot CRM — cwi-automation</div>
+          <div class="make-item-desc">Type: HubSpot CRM OAuth or Private App &bull; Paste HUBSPOT_ACCESS_TOKEN</div>
+        </div>
+        <span class="make-order">Connection 2</span>
+      </div>
+
+      <div class="make-item" id="conn-stripe">
+        <input type="checkbox" data-mins="3" data-key="conn-stripe" onchange="handleCheck(this)">
+        <div class="make-item-info">
+          <div class="make-item-name" id="name-conn-stripe">Stripe — cwi-live</div>
+          <div class="make-item-desc">Type: Stripe &bull; Paste STRIPE_SECRET_KEY (live mode)</div>
+        </div>
+        <span class="make-order">Connection 3</span>
+      </div>
+
+      <div class="make-item" id="conn-calendly">
+        <input type="checkbox" data-mins="3" data-key="conn-calendly" onchange="handleCheck(this)">
+        <div class="make-item-info">
+          <div class="make-item-name" id="name-conn-calendly">Calendly — cwi-automation</div>
+          <div class="make-item-desc">Type: Calendly &bull; Paste CALENDLY_PAT</div>
+        </div>
+        <span class="make-order">Connection 4</span>
+      </div>
+
+      <div class="make-item" id="conn-freshchat">
+        <input type="checkbox" data-mins="3" data-key="conn-freshchat" onchange="handleCheck(this)">
+        <div class="make-item-info">
+          <div class="make-item-name" id="name-conn-freshchat">Freshchat — cwi-riley</div>
+          <div class="make-item-desc">Type: Freshdesk/Freshchat HTTP &bull; Paste FRESHCHAT_API_TOKEN + domain</div>
+        </div>
+        <span class="make-order">Connection 5</span>
+      </div>
+
+      <div class="make-item" id="conn-netlify">
+        <input type="checkbox" data-mins="3" data-key="conn-netlify" onchange="handleCheck(this)">
+        <div class="make-item-info">
+          <div class="make-item-name" id="name-conn-netlify">Netlify — cwi-automation</div>
+          <div class="make-item-desc">Type: Netlify HTTP &bull; Paste NETLIFY_AUTH_TOKEN</div>
+        </div>
+        <span class="make-order">Connection 6</span>
+      </div>
+
+      <div class="make-item" id="conn-openrouter">
+        <input type="checkbox" data-mins="3" data-key="conn-openrouter" onchange="handleCheck(this)">
+        <div class="make-item-info">
+          <div class="make-item-name" id="name-conn-openrouter">OpenRouter — cwi-ai</div>
+          <div class="make-item-desc">Type: HTTP (Generic) &bull; Header: Authorization: Bearer [OPENROUTER_API_KEY]</div>
+        </div>
+        <span class="make-order">Connection 7</span>
+      </div>
+
+      <div class="make-item" id="conn-make-api">
+        <input type="checkbox" data-mins="3" data-key="conn-make-api" onchange="handleCheck(this)">
+        <div class="make-item-info">
+          <div class="make-item-name" id="name-conn-make-api">Make API — cwi-internal</div>
+          <div class="make-item-desc">Type: Make (Integromat) API &bull; Paste MAKE_API_TOKEN</div>
+        </div>
+        <span class="make-order">Connection 8</span>
+      </div>
+
+      <div class="make-item" id="conn-webhooks">
+        <input type="checkbox" data-mins="2" data-key="conn-webhooks" onchange="handleCheck(this)">
+        <div class="make-item-info">
+          <div class="make-item-name" id="name-conn-webhooks">Webhooks — cwi-internal-auth</div>
+          <div class="make-item-desc">Type: Webhooks &bull; No auth needed — used for internal scenario-to-scenario calls with INTERNAL_WEBHOOK_SECRET header</div>
+        </div>
+        <span class="make-order">Connection 9</span>
+      </div>
+    </div>
+
+    <!-- Step 4.2 — Import Scenarios -->
+    <div class="make-group">
+      <div class="make-group-title">Step 4.2 — Import 31 Scenarios (dependency order)</div>
+
+      <div class="callout callout-info" style="margin-bottom:12px;">
+        <span class="callout-icon">&#8505;</span>
+        <div class="callout-text">In Make.com: <strong>Scenarios → Create a new scenario → Import Blueprint</strong>. Upload the JSON file from <code>make-scenarios/</code>. Do NOT activate yet — activate all at once in Step 4.4.</div>
+      </div>
+
+      <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:8px; font-weight:600; text-transform:uppercase; letter-spacing:0.07em;">Foundation Webhooks (import first)</div>
+
+      <div class="make-item" id="sc-01">
+        <input type="checkbox" data-mins="3" data-key="sc-01" onchange="handleCheck(this)">
+        <div class="make-item-info">
+          <div class="make-item-name" id="name-sc-01">01 — Inbound Lead Router</div>
+          <div class="make-item-desc">Receives all inbound form submissions; routes to appropriate workflow branch</div>
+        </div>
+        <span class="make-order">Import #1</span>
+      </div>
+
+      <div class="make-item" id="sc-02">
+        <input type="checkbox" data-mins="3" data-key="sc-02" onchange="handleCheck(this)">
+        <div class="make-item-info">
+          <div class="make-item-name" id="name-sc-02">02 — Calendly Event Receiver</div>
+          <div class="make-item-desc">Webhook listener for Calendly booking created/cancelled events</div>
+        </div>
+        <span class="make-order">Import #2</span>
+      </div>
+
+      <div class="make-item" id="sc-03">
+        <input type="checkbox" data-mins="3" data-key="sc-03" onchange="handleCheck(this)">
+        <div class="make-item-info">
+          <div class="make-item-name" id="name-sc-03">03 — Stripe Payment Receiver</div>
+          <div class="make-item-desc">Webhook listener for Stripe checkout.session.completed and invoice.paid</div>
+        </div>
+        <span class="make-order">Import #3</span>
+      </div>
+
+      <div class="make-item" id="sc-04">
+        <input type="checkbox" data-mins="3" data-key="sc-04" onchange="handleCheck(this)">
+        <div class="make-item-info">
+          <div class="make-item-name" id="name-sc-04">04 — Freshchat Message Receiver</div>
+          <div class="make-item-desc">Webhook listener for incoming Freshchat visitor messages to Riley bot</div>
+        </div>
+        <span class="make-order">Import #4</span>
+      </div>
+
+      <div style="font-size:0.8rem; color:var(--text-muted); margin: 14px 0 8px; font-weight:600; text-transform:uppercase; letter-spacing:0.07em;">Lifecycle Workflows</div>
+
+      <div class="make-item" id="sc-05">
+        <input type="checkbox" data-mins="3" data-key="sc-05" onchange="handleCheck(this)">
+        <div class="make-item-info">
+          <div class="make-item-name" id="name-sc-05">05 — New Lead Welcome Sequence</div>
+          <div class="make-item-desc">Creates HubSpot contact + deal, sends welcome email via Resend, notifies Riley</div>
+        </div>
+        <span class="make-order">Import #5</span>
+      </div>
+
+      <div class="make-item" id="sc-06">
+        <input type="checkbox" data-mins="3" data-key="sc-06" onchange="handleCheck(this)">
+        <div class="make-item-info">
+          <div class="make-item-name" id="name-sc-06">06 — Booking Confirmation Handler</div>
+          <div class="make-item-desc">Sends confirmation + prep email, updates HubSpot deal stage to "Meeting Booked"</div>
+        </div>
+        <span class="make-order">Import #6</span>
+      </div>
+
+      <div class="make-item" id="sc-07">
+        <input type="checkbox" data-mins="3" data-key="sc-07" onchange="handleCheck(this)">
+        <div class="make-item-info">
+          <div class="make-item-name" id="name-sc-07">07 — Pre-Meeting Reminder (24hr)</div>
+          <div class="make-item-desc">Scheduled 24 hours before meeting; sends reminder email with agenda</div>
+        </div>
+        <span class="make-order">Import #7</span>
+      </div>
+
+      <div class="make-item" id="sc-08">
+        <input type="checkbox" data-mins="3" data-key="sc-08" onchange="handleCheck(this)">
+        <div class="make-item-info">
+          <div class="make-item-name" id="name-sc-08">08 — Pre-Meeting Reminder (1hr)</div>
+          <div class="make-item-desc">Scheduled 1 hour before meeting; final reminder with join link</div>
+        </div>
+        <span class="make-order">Import #8</span>
+      </div>
+
+      <div class="make-item" id="sc-09">
+        <input type="checkbox" data-mins="3" data-key="sc-09" onchange="handleCheck(this)">
+        <div class="make-item-info">
+          <div class="make-item-name" id="name-sc-09">09 — Post-Meeting Follow-Up</div>
+          <div class="make-item-desc">Sent 2 hours after meeting end; proposal or next-step email based on deal stage</div>
+        </div>
+        <span class="make-order">Import #9</span>
+      </div>
+
+      <div class="make-item" id="sc-10">
+        <input type="checkbox" data-mins="3" data-key="sc-10" onchange="handleCheck(this)">
+        <div class="make-item-info">
+          <div class="make-item-name" id="name-sc-10">10 — Proposal Sent Tracker</div>
+          <div class="make-item-desc">Updates HubSpot to "Proposal Sent" stage; starts follow-up timer</div>
+        </div>
+        <span class="make-order">Import #10</span>
+      </div>
+
+      <div class="make-item" id="sc-11">
+        <input type="checkbox" data-mins="3" data-key="sc-11" onchange="handleCheck(this)">
+        <div class="make-item-info">
+          <div class="make-item-name" id="name-sc-11">11 — Proposal Follow-Up (3 day)</div>
+          <div class="make-item-desc">If no response in 3 days, sends gentle follow-up nudge email</div>
+        </div>
+        <span class="make-order">Import #11</span>
+      </div>
+
+      <div class="make-item" id="sc-12">
+        <input type="checkbox" data-mins="3" data-key="sc-12" onchange="handleCheck(this)">
+        <div class="make-item-info">
+          <div class="make-item-name" id="name-sc-12">12 — Proposal Follow-Up (7 day)</div>
+          <div class="make-item-desc">If still no response, sends final check-in with calendar re-booking link</div>
+        </div>
+        <span class="make-order">Import #12</span>
+      </div>
+
+      <div class="make-item" id="sc-13">
+        <input type="checkbox" data-mins="3" data-key="sc-13" onchange="handleCheck(this)">
+        <div class="make-item-info">
+          <div class="make-item-name" id="name-sc-13">13 — Payment Received Onboarding</div>
+          <div class="make-item-desc">Stripe payment confirmed → updates HubSpot to "Closed Won", sends onboarding email, provisions Netlify subdomain</div>
+        </div>
+        <span class="make-order">Import #13</span>
+      </div>
+
+      <div class="make-item" id="sc-14">
+        <input type="checkbox" data-mins="3" data-key="sc-14" onchange="handleCheck(this)">
+        <div class="make-item-info">
+          <div class="make-item-name" id="name-sc-14">14 — Client Onboarding Day 1</div>
+          <div class="make-item-desc">Welcome sequence day 1 — workspace access, intro resources</div>
+        </div>
+        <span class="make-order">Import #14</span>
+      </div>
+
+      <div class="make-item" id="sc-15">
+        <input type="checkbox" data-mins="3" data-key="sc-15" onchange="handleCheck(this)">
+        <div class="make-item-info">
+          <div class="make-item-name" id="name-sc-15">15 — Client Onboarding Day 3</div>
+          <div class="make-item-desc">Check-in email with quick-win tutorial and Freshchat intro</div>
+        </div>
+        <span class="make-order">Import #15</span>
+      </div>
+
+      <div class="make-item" id="sc-16">
+        <input type="checkbox" data-mins="3" data-key="sc-16" onchange="handleCheck(this)">
+        <div class="make-item-info">
+          <div class="make-item-name" id="name-sc-16">16 — Client Onboarding Day 7</div>
+          <div class="make-item-desc">Week 1 check-in; triggers NPS request if no support tickets open</div>
+        </div>
+        <span class="make-order">Import #16</span>
+      </div>
+
+      <div class="make-item" id="sc-17">
+        <input type="checkbox" data-mins="3" data-key="sc-17" onchange="handleCheck(this)">
+        <div class="make-item-info">
+          <div class="make-item-name" id="name-sc-17">17 — Riley AI Chat Handler</div>
+          <div class="make-item-desc">Receives Freshchat messages → sends to OpenRouter → posts AI reply back to chat</div>
+        </div>
+        <span class="make-order">Import #17</span>
+      </div>
+
+      <div class="make-item" id="sc-18">
+        <input type="checkbox" data-mins="3" data-key="sc-18" onchange="handleCheck(this)">
+        <div class="make-item-info">
+          <div class="make-item-name" id="name-sc-18">18 — Riley Escalation Handler</div>
+          <div class="make-item-desc">Detects escalation keywords in chat; notifies human agent, updates Freshchat conversation</div>
+        </div>
+        <span class="make-order">Import #18</span>
+      </div>
+
+      <div class="make-item" id="sc-19">
+        <input type="checkbox" data-mins="3" data-key="sc-19" onchange="handleCheck(this)">
+        <div class="make-item-info">
+          <div class="make-item-name" id="name-sc-19">19 — Monthly Invoice Generator</div>
+          <div class="make-item-desc">Scheduled 1st of month; creates Stripe invoices for active subscriptions</div>
+        </div>
+        <span class="make-order">Import #19</span>
+      </div>
+
+      <div class="make-item" id="sc-20">
+        <input type="checkbox" data-mins="3" data-key="sc-20" onchange="handleCheck(this)">
+        <div class="make-item-info">
+          <div class="make-item-name" id="name-sc-20">20 — Failed Payment Recovery</div>
+          <div class="make-item-desc">Stripe invoice.payment_failed → sends recovery email sequence, updates HubSpot</div>
+        </div>
+        <span class="make-order">Import #20</span>
+      </div>
+
+      <div class="make-item" id="sc-21">
+        <input type="checkbox" data-mins="3" data-key="sc-21" onchange="handleCheck(this)">
+        <div class="make-item-info">
+          <div class="make-item-name" id="name-sc-21">21 — Churn Risk Detector</div>
+          <div class="make-item-desc">Weekly scan of HubSpot; flags contacts with no activity in 21+ days</div>
+        </div>
+        <span class="make-order">Import #21</span>
+      </div>
+
+      <div class="make-item" id="sc-22">
+        <input type="checkbox" data-mins="3" data-key="sc-22" onchange="handleCheck(this)">
+        <div class="make-item-info">
+          <div class="make-item-name" id="name-sc-22">22 — Win-Back Campaign Trigger</div>
+          <div class="make-item-desc">Triggered by churn risk flag; sends personalized re-engagement email</div>
+        </div>
+        <span class="make-order">Import #22</span>
+      </div>
+
+      <div style="font-size:0.8rem; color:var(--text-muted); margin: 14px 0 8px; font-weight:600; text-transform:uppercase; letter-spacing:0.07em;">Analytics &amp; Reporting</div>
+
+      <div class="make-item" id="sc-23">
+        <input type="checkbox" data-mins="3" data-key="sc-23" onchange="handleCheck(this)">
+        <div class="make-item-info">
+          <div class="make-item-name" id="name-sc-23">23 — Daily Pipeline Snapshot</div>
+          <div class="make-item-desc">Runs at 8am daily; aggregates deal counts by stage, emails summary report</div>
+        </div>
+        <span class="make-order">Import #23</span>
+      </div>
+
+      <div class="make-item" id="sc-24">
+        <input type="checkbox" data-mins="3" data-key="sc-24" onchange="handleCheck(this)">
+        <div class="make-item-info">
+          <div class="make-item-name" id="name-sc-24">24 — Weekly Revenue Report</div>
+          <div class="make-item-desc">Runs Sunday 9pm; pulls Stripe MRR + new revenue, emails weekly report</div>
+        </div>
+        <span class="make-order">Import #24</span>
+      </div>
+
+      <div class="make-item" id="sc-25">
+        <input type="checkbox" data-mins="3" data-key="sc-25" onchange="handleCheck(this)">
+        <div class="make-item-info">
+          <div class="make-item-name" id="name-sc-25">25 — Lead Source Attribution</div>
+          <div class="make-item-desc">Enriches HubSpot contacts with UTM / referrer data from inbound form submissions</div>
+        </div>
+        <span class="make-order">Import #25</span>
+      </div>
+
+      <div class="make-item" id="sc-26">
+        <input type="checkbox" data-mins="3" data-key="sc-26" onchange="handleCheck(this)">
+        <div class="make-item-info">
+          <div class="make-item-name" id="name-sc-26">26 — NPS Score Collector</div>
+          <div class="make-item-desc">Receives NPS survey submissions; updates HubSpot contact custom property</div>
+        </div>
+        <span class="make-order">Import #26</span>
+      </div>
+
+      <div class="make-item" id="sc-27">
+        <input type="checkbox" data-mins="3" data-key="sc-27" onchange="handleCheck(this)">
+        <div class="make-item-info">
+          <div class="make-item-name" id="name-sc-27">27 — Chat Volume Logger</div>
+          <div class="make-item-desc">Logs Riley conversation stats daily to HubSpot custom object for reporting</div>
+        </div>
+        <span class="make-order">Import #27</span>
+      </div>
+
+      <div class="make-item" id="sc-28">
+        <input type="checkbox" data-mins="3" data-key="sc-28" onchange="handleCheck(this)">
+        <div class="make-item-info">
+          <div class="make-item-name" id="name-sc-28">28 — Email Delivery Tracker</div>
+          <div class="make-item-desc">Receives Resend webhook events (delivered/bounced/complained); logs to HubSpot</div>
+        </div>
+        <span class="make-order">Import #28</span>
+      </div>
+
+      <div class="make-item" id="sc-29">
+        <input type="checkbox" data-mins="3" data-key="sc-29" onchange="handleCheck(this)">
+        <div class="make-item-info">
+          <div class="make-item-name" id="name-sc-29">29 — Booking Conversion Tracker</div>
+          <div class="make-item-desc">Calculates lead-to-booking conversion rate; updates dashboard datastore</div>
+        </div>
+        <span class="make-order">Import #29</span>
+      </div>
+
+      <div class="make-item" id="sc-30">
+        <input type="checkbox" data-mins="3" data-key="sc-30" onchange="handleCheck(this)">
+        <div class="make-item-info">
+          <div class="make-item-name" id="name-sc-30">30 — System Health Monitor</div>
+          <div class="make-item-desc">Hourly check — pings all integration endpoints; alerts via email if any are down</div>
+        </div>
+        <span class="make-order">Import #30</span>
+      </div>
+
+      <div class="make-item" id="sc-31">
+        <input type="checkbox" data-mins="3" data-key="sc-31" onchange="handleCheck(this)">
+        <div class="make-item-info">
+          <div class="make-item-name" id="name-sc-31">31 — Make Ops Error Handler</div>
+          <div class="make-item-desc">Catches and logs errors from all other scenarios; sends daily error digest email</div>
+        </div>
+        <span class="make-order">Import #31</span>
+      </div>
+    </div>
+
+    <!-- Step 4.3 — Register Webhooks -->
+    <div class="make-group">
+      <div class="make-group-title">Step 4.3 — Register 4 External Webhook URLs</div>
+
+      <div class="callout callout-info" style="margin-bottom:12px;">
+        <span class="callout-icon">&#8505;</span>
+        <div class="callout-text">After importing, open each scenario to find its webhook URL (shown in the Webhook module). Register each URL in the external service as shown below.</div>
+      </div>
+
+      <ul class="step-list">
+        <li>
+          <input type="checkbox" data-mins="5" data-key="wh-calendly" onchange="handleCheck(this)">
+          <div>
+            <div class="step-text" id="txt-wh-calendly">Register Calendly webhook → Scenario 02 URL</div>
+            <div class="step-mins">5 min</div>
+            <div style="margin-top:6px; font-size:0.83rem; color:var(--text-muted);">In Calendly: <strong>Integrations → API &amp; Webhooks → Webhook Subscriptions → New Webhook</strong>. Paste the URL from Scenario 02. Subscribe to events: <code>invitee.created</code>, <code>invitee.canceled</code>.</div>
+          </div>
+        </li>
+        <li>
+          <input type="checkbox" data-mins="5" data-key="wh-stripe" onchange="handleCheck(this)">
+          <div>
+            <div class="step-text" id="txt-wh-stripe">Register Stripe webhook → Scenario 03 URL</div>
+            <div class="step-mins">5 min</div>
+            <div style="margin-top:6px; font-size:0.83rem; color:var(--text-muted);">In Stripe: <strong>Developers → Webhooks → Add endpoint</strong>. Paste URL from Scenario 03. Select events: <code>checkout.session.completed</code>, <code>invoice.paid</code>, <code>invoice.payment_failed</code>. Copy the Signing Secret to <code>STRIPE_WEBHOOK_SECRET</code> in <code>.env</code>.</div>
+          </div>
+        </li>
+        <li>
+          <input type="checkbox" data-mins="5" data-key="wh-freshchat" onchange="handleCheck(this)">
+          <div>
+            <div class="step-text" id="txt-wh-freshchat">Register Freshchat webhook → Scenario 04 URL</div>
+            <div class="step-mins">5 min</div>
+            <div style="margin-top:6px; font-size:0.83rem; color:var(--text-muted);">In Freshchat: <strong>Settings → Integrations → Webhooks → New Webhook</strong>. Paste URL from Scenario 04. Subscribe to: <code>message_create</code> events for the Riley bot inbox.</div>
+          </div>
+        </li>
+        <li>
+          <input type="checkbox" data-mins="5" data-key="wh-resend" onchange="handleCheck(this)">
+          <div>
+            <div class="step-text" id="txt-wh-resend">Register Resend webhook → Scenario 28 URL</div>
+            <div class="step-mins">5 min</div>
+            <div style="margin-top:6px; font-size:0.83rem; color:var(--text-muted);">In Resend: <strong>Webhooks → Add Webhook</strong>. Paste URL from Scenario 28. Select events: <code>email.delivered</code>, <code>email.bounced</code>, <code>email.complained</code>.</div>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Step 4.4 — Activate -->
+    <div class="make-group">
+      <div class="make-group-title">Step 4.4 — Activate All 31 Scenarios</div>
+      <ul class="step-list">
+        <li>
+          <input type="checkbox" data-mins="8" data-key="make-activate" onchange="handleCheck(this)">
+          <div>
+            <div class="step-text" id="txt-make-activate">Toggle all 31 scenarios to Active in Make.com</div>
+            <div class="step-mins">8 min</div>
+            <div style="margin-top:6px; font-size:0.83rem; color:var(--text-muted);">In Make.com: go to <strong>Scenarios</strong> list view. For each scenario, click the toggle switch to turn it <strong>ON</strong>. Start with the 4 foundation webhook scenarios (01–04), then activate the rest. Verify each shows a green "Active" status indicator.</div>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ===================== SECTION 5 ===================== -->
+  <section class="section" id="sec5">
+    <div class="section-header">
+      <div class="section-num">5</div>
+      <div>
+        <div class="section-title">First Client Test</div>
+        <div class="section-subtitle">Dry-run a complete client lifecycle before going live</div>
+      </div>
+    </div>
+
+    <div class="callout callout-warn">
+      <span class="callout-icon">&#9888;</span>
+      <div class="callout-text"><strong>Always use <code>-DryRun</code> first.</strong> This mode simulates all API calls without creating real records or sending real emails. Review the output carefully before running without the flag.</div>
+    </div>
+
+    <ul class="step-list">
+      <li>
+        <input type="checkbox" data-mins="5" data-key="test-dryrun" onchange="handleCheck(this)">
+        <div>
+          <div class="step-text" id="txt-test-dryrun">Run new-client.ps1 with -DryRun flag</div>
+          <div class="step-mins">5 min</div>
+          <div class="code-block" style="margin-top:10px;">
+            <span class="cmd-comment"># Simulate full new-client flow — no real API calls</span><br>
+            .\scripts\new-client.ps1 <span class="cmd-flag">-DryRun</span> <span class="cmd-flag">-Name</span> <span class="cmd-str">"Test Client"</span> <span class="cmd-flag">-Email</span> <span class="cmd-str">"test@example.com"</span><br><br>
+            <span class="cmd-comment"># Review output — confirm all steps show [DRY RUN] prefix</span><br>
+            <span class="cmd-comment"># Verify HubSpot, Resend, Freshchat calls are listed correctly</span>
+          </div>
+        </div>
+      </li>
+      <li>
+        <input type="checkbox" data-mins="8" data-key="test-calendly" onchange="handleCheck(this)">
+        <div>
+          <div class="step-text" id="txt-test-calendly">Submit a test Calendly booking</div>
+          <div class="step-mins">8 min</div>
+          <div style="margin-top:6px; font-size:0.83rem; color:var(--text-muted);">
+            Open your Calendly booking link in a private browser window. Book a meeting using a personal test email address (not your business email).<br><br>
+            <strong>Verify:</strong> Make.com Scenario 02 shows a new execution in the history. HubSpot shows a new contact with "Meeting Booked" deal stage. Confirmation email arrives in your test inbox within 2 minutes.
+          </div>
+        </div>
+      </li>
+      <li>
+        <input type="checkbox" data-mins="5" data-key="test-email-delivery" onchange="handleCheck(this)">
+        <div>
+          <div class="step-text" id="txt-test-email-delivery">Verify Resend email delivery</div>
+          <div class="step-mins">5 min</div>
+          <div style="margin-top:6px; font-size:0.83rem; color:var(--text-muted);">
+            In Resend dashboard: <strong>Emails</strong> section should show the test confirmation email with status <strong>Delivered</strong> (green). Check SPF/DKIM pass indicators. Open the email and verify formatting renders correctly.
+          </div>
+        </div>
+      </li>
+      <li>
+        <input type="checkbox" data-mins="5" data-key="test-hubspot-sync" onchange="handleCheck(this)">
+        <div>
+          <div class="step-text" id="txt-test-hubspot-sync">Verify HubSpot deal stage sync</div>
+          <div class="step-mins">5 min</div>
+          <div style="margin-top:6px; font-size:0.83rem; color:var(--text-muted);">
+            In HubSpot CRM: <strong>Deals</strong> board view. Confirm the test contact's deal card appears in the "Meeting Booked" column. Click the deal to verify: contact name, email, meeting date/time are all populated correctly from the Calendly event data.
+          </div>
+        </div>
+      </li>
+    </ul>
+  </section>
+
+  <!-- ===================== SECTION 6 ===================== -->
+  <section class="section" id="sec6">
+    <div class="section-header">
+      <div class="section-num">6</div>
+      <div>
+        <div class="section-title">Go-Live Verification</div>
+        <div class="section-subtitle">Run all verification scripts and perform a live Riley chat test before declaring the workspace production-ready</div>
+      </div>
+    </div>
+
+    <ul class="step-list">
+      <li>
+        <input type="checkbox" data-mins="5" data-key="verify-connections" onchange="handleCheck(this)">
+        <div>
+          <div class="step-text" id="txt-verify-connections">Run verify-connections.ps1 — all 8 green</div>
+          <div class="step-mins">5 min</div>
+          <div class="code-block" style="margin-top:10px;">
+            .\scripts\verify-connections.ps1<br><br>
+            <span class="cmd-comment"># Expected output — all 8 should be green:</span><br>
+            <span class="cmd-str">  [OK] Resend API — reachable, domain verified</span><br>
+            <span class="cmd-str">  [OK] OpenRouter API — authenticated, credits available</span><br>
+            <span class="cmd-str">  [OK] HubSpot CRM — connected, pipeline found</span><br>
+            <span class="cmd-str">  [OK] Make.com — authenticated, 31 scenarios active</span><br>
+            <span class="cmd-str">  [OK] Freshchat — connected, Riley bot online</span><br>
+            <span class="cmd-str">  [OK] Calendly — authenticated, event type found</span><br>
+            <span class="cmd-str">  [OK] Stripe — live mode, webhook registered</span><br>
+            <span class="cmd-str">  [OK] Netlify — authenticated, site deployed</span>
+          </div>
+        </div>
+      </li>
+      <li>
+        <input type="checkbox" data-mins="10" data-key="run-test-suite" onchange="handleCheck(this)">
+        <div>
+          <div class="step-text" id="txt-run-test-suite">Run test-suite.ps1 — all tests pass</div>
+          <div class="step-mins">10 min</div>
+          <div class="code-block" style="margin-top:10px;">
+            .\scripts\test-suite.ps1<br><br>
+            <span class="cmd-comment"># Runs integration tests for all 6 service connections</span><br>
+            <span class="cmd-comment"># Tests: new-lead flow, booking flow, email delivery,</span><br>
+            <span class="cmd-comment">#        HubSpot sync, chat routing, webhook signatures</span><br><br>
+            <span class="cmd-comment"># All tests must show PASSED before proceeding</span><br>
+            <span class="cmd-comment"># Any FAILED test → diagnose with -Verbose flag</span><br>
+            .\scripts\test-suite.ps1 <span class="cmd-flag">-Verbose</span>
+          </div>
+        </div>
+      </li>
+      <li>
+        <input type="checkbox" data-mins="8" data-key="riley-live-test" onchange="handleCheck(this)">
+        <div>
+          <div class="step-text" id="txt-riley-live-test">Live Freshchat bot conversation test with Riley</div>
+          <div class="step-mins">8 min</div>
+          <div style="margin-top:6px; font-size:0.83rem; color:var(--text-muted);">
+            Open your website (Netlify URL) in a private browser window. The Freshchat widget should appear in the bottom-right corner.<br><br>
+            <strong>Test script:</strong>
+            <ol style="margin-top:8px; padding-left:18px; line-height:2;">
+              <li>Say: <em>"Hi, I'm interested in your services"</em> — Riley should respond within 5 seconds.</li>
+              <li>Ask a pricing question — verify Riley gives a relevant AI-generated response using OpenRouter.</li>
+              <li>Say: <em>"I need to speak to a human"</em> — verify escalation triggers (Make.com Scenario 18 should fire).</li>
+              <li>Check Make.com history — Scenario 17 should show executions for each message.</li>
+              <li>Verify no errors in Make.com Scenario 31 (Error Handler) error log.</li>
+            </ol>
+          </div>
+          <div class="callout callout-success" style="margin-top:10px;">
+            <span class="callout-icon">&#10003;</span>
+            <div class="callout-text"><strong>All green?</strong> Your CWI AI workspace is production-ready. All systems are live, tested, and automated. Welcome to fully automated client acquisition.</div>
+          </div>
+        </div>
+      </li>
+    </ul>
+  </section>
+
+</main>
+
+<script>
+  // State
+  const STORAGE_KEY = 'cwiai_setup_progress';
+
+  function getAllCheckboxes() {
+    return document.querySelectorAll('input[type="checkbox"][data-key]');
+  }
+
+  function loadProgress() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+      getAllCheckboxes().forEach(cb => {
+        const key = cb.dataset.key;
+        if (saved[key]) {
+          cb.checked = true;
+          markParentDone(cb, true);
+        }
+      });
+    } catch(e) {}
+  }
+
+  function saveProgress() {
+    const state = {};
+    getAllCheckboxes().forEach(cb => {
+      state[cb.dataset.key] = cb.checked;
+    });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  function handleCheck(cb) {
+    markParentDone(cb, cb.checked);
+    saveProgress();
+    updateCounters();
+  }
+
+  function markParentDone(cb, done) {
+    const card = cb.closest('.step-card');
+    if (card) {
+      card.classList.toggle('completed', done);
+    }
+    const makeItem = cb.closest('.make-item');
+    if (makeItem) {
+      makeItem.classList.toggle('completed', done);
+      const nameEl = makeItem.querySelector('.make-item-name');
+      if (nameEl) nameEl.classList.toggle('done', done);
+    }
+    const li = cb.closest('li');
+    if (li) {
+      const textEl = li.querySelector('.step-text');
+      if (textEl) textEl.classList.toggle('done', done);
+    }
+  }
+
+  function updateCounters() {
+    const all = getAllCheckboxes();
+    let remainingMins = 0;
+    let checked = 0;
+
+    all.forEach(cb => {
+      const mins = parseInt(cb.dataset.mins || '0');
+      if (cb.checked) {
+        checked++;
+      } else {
+        remainingMins += mins;
+      }
+    });
+
+    const total = all.length;
+    const pct = total > 0 ? Math.round((checked / total) * 100) : 0;
+
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressPct').textContent = pct + '%';
+    document.getElementById('totalMins').textContent = remainingMins;
+    document.getElementById('progressPct').style.color = pct === 100 ? 'var(--success)' : 'var(--accent)';
+  }
+
+  function resetAll() {
+    if (!confirm('Reset all checkboxes? This will clear all saved progress.')) return;
+    getAllCheckboxes().forEach(cb => {
+      cb.checked = false;
+      markParentDone(cb, false);
+    });
+    localStorage.removeItem(STORAGE_KEY);
+    updateCounters();
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadProgress();
+    updateCounters();
+  });
+</script>
+</body>
+</html>

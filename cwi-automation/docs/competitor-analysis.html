@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CWI AI — Competitor Research Tracker</title>
+<meta name="description" content="CWI internal tool: CWI AI — Competitor Research Tracker. Internal use only — CWI Compute With Imagination.">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --accent: #FF5A1F;
+    --accent-dark: #e04a12;
+    --accent-light: #fff0eb;
+    --bg: #f8f9fa;
+    --surface: #ffffff;
+    --border: #e2e6ea;
+    --text: #1a1d23;
+    --muted: #6c757d;
+    --success: #28a745;
+    --danger: #dc3545;
+    --radius: 10px;
+    --shadow: 0 2px 12px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding-bottom: 60px;
+  }
+
+  /* Header */
+  .site-header {
+    background: var(--surface);
+    border-bottom: 3px solid var(--accent);
+    padding: 18px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow);
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .logo-mark {
+    width: 40px;
+    height: 40px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 800;
+    font-size: 18px;
+    letter-spacing: -1px;
+  }
+  .logo-text h1 {
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .logo-text span {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 400;
+  }
+  .header-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 18px;
+    border-radius: 7px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+  }
+  .btn-primary:hover { background: var(--accent-dark); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(255,90,31,0.35); }
+  .btn-secondary {
+    background: var(--surface);
+    color: var(--text);
+    border: 1.5px solid var(--border);
+  }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+  .btn-ghost {
+    background: transparent;
+    color: var(--muted);
+    padding: 6px 10px;
+  }
+  .btn-ghost:hover { color: var(--danger); background: #ffeaea; }
+  .btn-danger {
+    background: var(--danger);
+    color: #fff;
+  }
+  .btn-danger:hover { background: #c82333; }
+  .btn-sm { padding: 6px 12px; font-size: 13px; }
+  .btn-icon { padding: 8px; border-radius: 6px; }
+
+  /* Main Layout */
+  .main { max-width: 1400px; margin: 0 auto; padding: 28px 24px 0; }
+
+  /* Win Banner */
+  .win-banner {
+    background: linear-gradient(135deg, var(--accent) 0%, #ff7849 100%);
+    border-radius: var(--radius);
+    padding: 28px 32px;
+    color: #fff;
+    margin-bottom: 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  .win-banner::before {
+    content: '';
+    position: absolute;
+    right: -40px;
+    top: -40px;
+    width: 200px;
+    height: 200px;
+    background: rgba(255,255,255,0.07);
+    border-radius: 50%;
+  }
+  .win-banner::after {
+    content: '';
+    position: absolute;
+    right: 60px;
+    bottom: -60px;
+    width: 140px;
+    height: 140px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 50%;
+  }
+  .win-banner-inner { position: relative; z-index: 1; }
+  .win-banner h2 {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    opacity: 0.85;
+    margin-bottom: 10px;
+  }
+  .win-banner p {
+    font-size: 19px;
+    font-weight: 600;
+    line-height: 1.45;
+    max-width: 780px;
+  }
+  .win-banner p strong { font-weight: 800; }
+  .win-banner-edit {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    z-index: 2;
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: #fff;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .win-banner-edit:hover { background: rgba(255,255,255,0.3); }
+  .win-banner-textarea {
+    width: 100%;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.4);
+    border-radius: 8px;
+    color: #fff;
+    font-size: 17px;
+    font-weight: 600;
+    padding: 12px 14px;
+    resize: vertical;
+    min-height: 80px;
+    font-family: inherit;
+    outline: none;
+    margin-top: 8px;
+  }
+  .win-banner-textarea::placeholder { color: rgba(255,255,255,0.6); }
+
+  /* Toolbar */
+  .toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 22px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .toolbar-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .toolbar-right { display: flex; align-items: center; gap: 10px; }
+  .view-toggle {
+    display: flex;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .view-btn {
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .view-btn.active {
+    background: var(--accent);
+    color: #fff;
+  }
+  .view-btn:not(.active):hover { background: var(--accent-light); color: var(--accent); }
+  .comp-count {
+    background: var(--accent-light);
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+  }
+
+  /* Card View */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+    gap: 20px;
+  }
+
+  .comp-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    border: 1.5px solid var(--border);
+    overflow: hidden;
+    transition: box-shadow 0.2s, transform 0.2s;
+  }
+  .comp-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+
+  .card-header {
+    background: linear-gradient(135deg, #1a1d23 0%, #2d3139 100%);
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .card-title-wrap { display: flex; align-items: center; gap: 12px; }
+  .comp-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 8px;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 800;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  .comp-name-input {
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 18px;
+    font-weight: 700;
+    width: 100%;
+    outline: none;
+    font-family: inherit;
+  }
+  .comp-name-input::placeholder { color: rgba(255,255,255,0.4); }
+  .card-actions { display: flex; gap: 6px; }
+  .card-delete-btn {
+    background: rgba(220,53,69,0.15);
+    border: 1px solid rgba(220,53,69,0.3);
+    color: #ff6b6b;
+    border-radius: 6px;
+    padding: 6px 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.15s;
+  }
+  .card-delete-btn:hover { background: rgba(220,53,69,0.3); color: #fff; }
+
+  .card-body { padding: 20px; }
+
+  .field-group { margin-bottom: 16px; }
+  .field-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .field-label .label-icon { font-size: 13px; }
+
+  .field-input {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: 7px;
+    padding: 9px 12px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--text);
+    background: var(--bg);
+    transition: border-color 0.15s, box-shadow 0.15s;
+    outline: none;
+  }
+  .field-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255,90,31,0.12); background: #fff; }
+
+  textarea.field-input {
+    resize: vertical;
+    min-height: 80px;
+    line-height: 1.5;
+  }
+  textarea.field-input.advantage { min-height: 80px; border-color: rgba(255,90,31,0.3); background: var(--accent-light); }
+  textarea.field-input.advantage:focus { border-color: var(--accent); }
+
+  .card-footer {
+    padding: 14px 20px;
+    background: var(--bg);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .last-updated {
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .last-updated-date {
+    font-weight: 600;
+    color: var(--text);
+  }
+  .auto-save-indicator {
+    font-size: 12px;
+    color: var(--success);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .auto-save-indicator.show { opacity: 1; }
+
+  /* Comparison Table */
+  .table-view { display: none; }
+  .table-view.active { display: block; }
+  .cards-view.hidden { display: none; }
+
+  .comp-table-wrap {
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    border: 1.5px solid var(--border);
+    overflow: hidden;
+  }
+  .comp-table-scroll { overflow-x: auto; }
+
+  .comp-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 900px;
+  }
+
+  .comp-table thead {
+    background: #1a1d23;
+  }
+  .comp-table thead th {
+    padding: 16px 18px;
+    text-align: left;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+    border-right: 1px solid rgba(255,255,255,0.08);
+  }
+  .comp-table thead th:first-child { width: 220px; }
+  .comp-table thead th.cwi-col {
+    background: var(--accent);
+    color: #fff;
+  }
+  .comp-table thead th .th-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .comp-table thead th .th-sub {
+    font-size: 11px;
+    font-weight: 400;
+    opacity: 0.7;
+  }
+
+  .comp-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.12s;
+  }
+  .comp-table tbody tr:hover { background: #f9fafc; }
+  .comp-table tbody tr:last-child { border-bottom: none; }
+
+  .comp-table tbody td {
+    padding: 14px 18px;
+    font-size: 14px;
+    border-right: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .comp-table tbody td:first-child {
+    font-weight: 700;
+    color: var(--text);
+    background: #fafbfc;
+  }
+  .comp-table tbody td.cwi-cell {
+    background: var(--accent-light);
+    font-weight: 700;
+  }
+
+  .feature-row td:first-child {
+    font-weight: 600;
+    color: var(--text);
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .check { color: var(--success); font-size: 18px; font-weight: 700; }
+  .cross { color: #ccc; font-size: 18px; }
+  .partial { color: #ffc107; font-size: 16px; }
+
+  .table-section-header td {
+    background: var(--accent-light);
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 10px 18px;
+    border-right: none !important;
+  }
+
+  /* Modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    width: 100%;
+    max-width: 480px;
+    padding: 32px;
+  }
+  .modal h3 { font-size: 20px; font-weight: 700; margin-bottom: 20px; }
+  .modal-field { margin-bottom: 16px; }
+  .modal-field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--muted); }
+  .modal-field input {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: 7px;
+    padding: 10px 14px;
+    font-size: 15px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .modal-field input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255,90,31,0.1); }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+
+  /* Confirm */
+  .confirm-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 1100;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .confirm-overlay.open { display: flex; }
+  .confirm-box {
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    padding: 28px 32px;
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+  }
+  .confirm-box .confirm-icon { font-size: 40px; margin-bottom: 12px; }
+  .confirm-box h4 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+  .confirm-box p { font-size: 14px; color: var(--muted); margin-bottom: 24px; line-height: 1.5; }
+  .confirm-actions { display: flex; gap: 10px; justify-content: center; }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    background: #1a1d23;
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: var(--shadow-lg);
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { background: #1a2b1f; border-left: 4px solid var(--success); }
+  .toast.error { background: #2b1a1a; border-left: 4px solid var(--danger); }
+  .toast.info { background: #1a1d23; border-left: 4px solid var(--accent); }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+  }
+  .empty-state .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+  .empty-state h3 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+  .empty-state p { font-size: 14px; }
+
+  /* Edit banner modal */
+  .banner-modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .banner-modal-overlay.open { display: flex; }
+  .banner-modal {
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    width: 100%;
+    max-width: 640px;
+    padding: 32px;
+  }
+  .banner-modal h3 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+  .banner-modal p { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+  .banner-modal textarea {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: 7px;
+    padding: 12px 14px;
+    font-size: 15px;
+    font-family: inherit;
+    outline: none;
+    min-height: 100px;
+    resize: vertical;
+    line-height: 1.6;
+    transition: border-color 0.15s;
+  }
+  .banner-modal textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255,90,31,0.1); }
+  .banner-modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .site-header { padding: 14px 16px; }
+    .main { padding: 16px 12px 0; }
+    .cards-grid { grid-template-columns: 1fr; }
+    .win-banner { padding: 20px 18px; }
+    .win-banner p { font-size: 16px; }
+    .header-actions .btn span { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="site-header">
+  <div class="logo">
+    <div class="logo-mark">CWI</div>
+    <div class="logo-text">
+      <h1>CWI AI</h1>
+      <span>Competitor Research Tracker</span>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-secondary btn-sm" onclick="exportCSV()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <span>Export CSV</span>
+    </button>
+    <button class="btn btn-primary btn-sm" onclick="openAddModal()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span>Add Competitor</span>
+    </button>
+  </div>
+</header>
+
+<main class="main">
+
+  <!-- How We Win Banner -->
+  <div class="win-banner" id="winBanner">
+    <button class="win-banner-edit" onclick="openBannerModal()">Edit</button>
+    <div class="win-banner-inner">
+      <h2>How We Win</h2>
+      <p id="winText"></p>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <div class="view-toggle">
+        <button class="view-btn active" id="cardViewBtn" onclick="setView('cards')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Card View
+        </button>
+        <button class="view-btn" id="tableViewBtn" onclick="setView('table')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
+          Comparison Table
+        </button>
+      </div>
+      <span class="comp-count" id="compCount">0 competitors</span>
+    </div>
+    <div class="toolbar-right">
+      <button class="btn btn-secondary btn-sm" onclick="saveAll()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Save All
+      </button>
+    </div>
+  </div>
+
+  <!-- Card View -->
+  <div class="cards-view" id="cardsView">
+    <div class="cards-grid" id="cardsGrid"></div>
+  </div>
+
+  <!-- Table View -->
+  <div class="table-view" id="tableView">
+    <div class="comp-table-wrap">
+      <div class="comp-table-scroll">
+        <table class="comp-table" id="compTable">
+          <thead id="tableHead"></thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- Add Competitor Modal -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <h3>Add Competitor</h3>
+    <div class="modal-field">
+      <label for="newCompName">Competitor Name *</label>
+      <input type="text" id="newCompName" placeholder="e.g. Podium, Birdeye..." autofocus>
+    </div>
+    <div class="modal-field">
+      <label for="newCompPricing">Pricing (optional)</label>
+      <input type="text" id="newCompPricing" placeholder="e.g. $249–$599/mo">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeAddModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="addCompetitor()">Add Competitor</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Banner Modal -->
+<div class="banner-modal-overlay" id="bannerModal">
+  <div class="banner-modal">
+    <h3>Edit "How We Win" Summary</h3>
+    <p>This statement appears at the top of the tracker and defines your core competitive advantage.</p>
+    <textarea id="bannerTextarea" placeholder="Enter your competitive positioning statement..."></textarea>
+    <div class="banner-modal-actions">
+      <button class="btn btn-secondary" onclick="closeBannerModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveBanner()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Delete Modal -->
+<div class="confirm-overlay" id="confirmModal">
+  <div class="confirm-box">
+    <div class="confirm-icon">&#128465;</div>
+    <h4 id="confirmTitle">Delete Competitor?</h4>
+    <p id="confirmMsg">This action cannot be undone.</p>
+    <div class="confirm-actions">
+      <button class="btn btn-secondary" onclick="closeConfirm()">Cancel</button>
+      <button class="btn btn-danger" id="confirmOkBtn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── Constants ───────────────────────────────────────────────────────────────
+
+const STORAGE_KEY = 'cwi_competitors_v2';
+const BANNER_KEY  = 'cwi_win_banner_v2';
+
+const DEFAULT_BANNER = 'CWI AI is the only solution that combines 24/7 AI booking + automated follow-up + white-label delivery at under $400/mo for local service businesses.';
+
+const FEATURES = [
+  { key: 'avail247',     label: '24/7 Availability',      icon: '🕐' },
+  { key: 'aiResponses',  label: 'AI Responses',            icon: '🤖' },
+  { key: 'bookingAuto',  label: 'Booking Automation',      icon: '📅' },
+  { key: 'payFollowUp',  label: 'Payment Follow-Up',       icon: '💳' },
+  { key: 'whiteLabel',   label: 'White-Label',             icon: '🏷️' },
+  { key: 'perClient',    label: 'Per-Client Pricing',      icon: '💲' },
+  { key: 'noContract',   label: 'No Long-Term Contract',   icon: '✂️' },
+  { key: 'localFocus',   label: 'Local Business Focus',    icon: '📍' },
+];
+
+const DEFAULT_COMPETITORS = [
+  {
+    id: uid(),
+    name: 'Podium',
+    pricing: '$289–$649/mo',
+    features: 'Review management, messaging platform, webchat, payment collection, team inbox, automated texts.',
+    weaknesses: 'Expensive for small businesses. Requires long-term contracts. Not AI-native — relies heavily on human staff to respond. No true booking automation.',
+    advantage: 'CWI AI automates responses 24/7 without requiring a human monitor. We deliver at a fraction of the price with no annual contract lock-in.',
+    lastUpdated: today(),
+    featureMatrix: { avail247: false, aiResponses: true, bookingAuto: false, payFollowUp: true, whiteLabel: false, perClient: false, noContract: false, localFocus: true },
+  },
+  {
+    id: uid(),
+    name: 'Birdeye',
+    pricing: '$299–$599/mo',
+    features: 'Reputation management, review requests, webchat, listings, social management, surveys, referrals.',
+    weaknesses: 'Enterprise-focused pricing. Overwhelming feature set for small local businesses. AI features are add-ons, not core. White-label only at agency tier.',
+    advantage: 'CWI AI is purpose-built for local service businesses — no bloated features, just the tools that drive revenue: booking, follow-up, and AI responses.',
+    lastUpdated: today(),
+    featureMatrix: { avail247: false, aiResponses: true, bookingAuto: true, payFollowUp: false, whiteLabel: true, perClient: false, noContract: false, localFocus: false },
+  },
+  {
+    id: uid(),
+    name: 'Numa',
+    pricing: '$199–$399/mo',
+    features: 'AI-powered texting for missed calls, auto-replies, appointment booking via text, review requests.',
+    weaknesses: 'Limited to text/SMS channel only. No payment follow-up. No white-label option for agencies. Narrow use case focused on missed calls.',
+    advantage: 'CWI AI covers the full customer journey — intake, booking, follow-up, and payments — not just missed call recovery. Full white-label available for agencies.',
+    lastUpdated: today(),
+    featureMatrix: { avail247: true, aiResponses: true, bookingAuto: true, payFollowUp: false, whiteLabel: false, perClient: false, noContract: true, localFocus: true },
+  },
+  {
+    id: uid(),
+    name: 'Broadly',
+    pricing: '$199–$349/mo',
+    features: 'Review management, webchat, two-way texting, simple payment collection, email campaigns.',
+    weaknesses: 'Limited AI capabilities — mostly template-based responses. No booking automation. Weak analytics. Product has seen slow development.',
+    advantage: 'CWI AI uses true AI for dynamic, context-aware responses — not canned templates. We include booking automation and payment follow-up that Broadly lacks entirely.',
+    lastUpdated: today(),
+    featureMatrix: { avail247: false, aiResponses: false, bookingAuto: false, payFollowUp: true, whiteLabel: false, perClient: false, noContract: true, localFocus: true },
+  },
+  {
+    id: uid(),
+    name: 'AnswerConnect',
+    pricing: '$325–$795/mo (pay per minute)',
+    features: 'Live human answering service, 24/7 call coverage, appointment scheduling, lead intake, bilingual agents.',
+    weaknesses: 'Human-staffed — costs scale with call volume. Expensive per-minute billing. No AI automation. No text/chat channel. Inconsistent agent quality.',
+    advantage: 'CWI AI delivers 24/7 coverage at a flat predictable rate — no per-minute charges, no human error, instant responses across every channel including text and web chat.',
+    lastUpdated: today(),
+    featureMatrix: { avail247: true, aiResponses: false, bookingAuto: true, payFollowUp: false, whiteLabel: false, perClient: false, noContract: false, localFocus: true },
+  },
+];
+
+// CWI AI feature matrix (always shown in table)
+const CWI_MATRIX = {
+  avail247: true, aiResponses: true, bookingAuto: true,
+  payFollowUp: true, whiteLabel: true, perClient: true,
+  noContract: true, localFocus: true,
+};
+
+// ─── State ────────────────────────────────────────────────────────────────────
+
+let competitors = [];
+let currentView = 'cards';
+let confirmCallback = null;
+let autoSaveTimers = {};
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+
+function uid() {
+  return 'c_' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+}
+
+function today() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function init() {
+  const stored = localStorage.getItem(STORAGE_KEY);
+  if (stored) {
+    try { competitors = JSON.parse(stored); }
+    catch(e) { competitors = [...DEFAULT_COMPETITORS]; }
+  } else {
+    competitors = DEFAULT_COMPETITORS.map(c => ({ ...c, id: uid() }));
+  }
+
+  const storedBanner = localStorage.getItem(BANNER_KEY);
+  document.getElementById('winText').textContent = storedBanner || DEFAULT_BANNER;
+
+  render();
+}
+
+// ─── Persistence ──────────────────────────────────────────────────────────────
+
+function saveAll() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(competitors));
+  showToast('All data saved.', 'success');
+}
+
+function autoSave(id) {
+  clearTimeout(autoSaveTimers[id]);
+  autoSaveTimers[id] = setTimeout(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(competitors));
+    const indicator = document.getElementById('save_' + id);
+    if (indicator) {
+      indicator.classList.add('show');
+      setTimeout(() => indicator.classList.remove('show'), 1800);
+    }
+  }, 600);
+}
+
+// ─── Render ───────────────────────────────────────────────────────────────────
+
+function render() {
+  updateCount();
+  if (currentView === 'cards') renderCards();
+  else renderTable();
+}
+
+function updateCount() {
+  const el = document.getElementById('compCount');
+  const n = competitors.length;
+  el.textContent = n + ' competitor' + (n !== 1 ? 's' : '');
+}
+
+// ─── Card View ────────────────────────────────────────────────────────────────
+
+function renderCards() {
+  const grid = document.getElementById('cardsGrid');
+  if (competitors.length === 0) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+      <div class="empty-icon">&#128269;</div>
+      <h3>No competitors yet</h3>
+      <p>Click "Add Competitor" to get started.</p>
+    </div>`;
+    return;
+  }
+  grid.innerHTML = competitors.map(c => cardHTML(c)).join('');
+}
+
+function cardHTML(c) {
+  const initials = (c.name || '?').charAt(0).toUpperCase();
+  return `
+  <div class="comp-card" id="card_${c.id}">
+    <div class="card-header">
+      <div class="card-title-wrap">
+        <div class="comp-avatar" id="avatar_${c.id}">${initials}</div>
+        <input class="comp-name-input" id="name_${c.id}" value="${esc(c.name)}" placeholder="Competitor name..."
+          oninput="updateField('${c.id}','name',this.value)">
+      </div>
+      <div class="card-actions">
+        <button class="card-delete-btn" title="Delete competitor" onclick="confirmDelete('${c.id}')">&#128465;</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="field-group">
+        <div class="field-label"><span class="label-icon">💲</span> Pricing</div>
+        <input class="field-input" id="pricing_${c.id}" type="text" value="${esc(c.pricing)}" placeholder="e.g. $299–$599/mo"
+          oninput="updateField('${c.id}','pricing',this.value)">
+      </div>
+      <div class="field-group">
+        <div class="field-label"><span class="label-icon">✅</span> Key Features</div>
+        <textarea class="field-input" id="features_${c.id}" placeholder="What do they offer?"
+          oninput="updateField('${c.id}','features',this.value)">${esc(c.features)}</textarea>
+      </div>
+      <div class="field-group">
+        <div class="field-label"><span class="label-icon">⚠️</span> Weaknesses</div>
+        <textarea class="field-input" id="weaknesses_${c.id}" placeholder="Where do they fall short?"
+          oninput="updateField('${c.id}','weaknesses',this.value)">${esc(c.weaknesses)}</textarea>
+      </div>
+      <div class="field-group">
+        <div class="field-label"><span class="label-icon" style="color:var(--accent)">🏆</span> <span style="color:var(--accent)">Our Advantage</span></div>
+        <textarea class="field-input advantage" id="advantage_${c.id}" placeholder="Why do we win against them?"
+          oninput="updateField('${c.id}','advantage',this.value)">${esc(c.advantage)}</textarea>
+      </div>
+    </div>
+    <div class="card-footer">
+      <span class="last-updated">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Updated: <span class="last-updated-date" id="updated_${c.id}">${formatDate(c.lastUpdated)}</span>
+      </span>
+      <span class="auto-save-indicator" id="save_${c.id}">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Saved
+      </span>
+    </div>
+  </div>`;
+}
+
+// ─── Table View ───────────────────────────────────────────────────────────────
+
+function renderTable() {
+  const thead = document.getElementById('tableHead');
+  const tbody = document.getElementById('tableBody');
+
+  // Header row
+  let headHTML = '<tr><th><div class="th-inner"><span>Feature</span></div></th>';
+  headHTML += `<th class="cwi-col"><div class="th-inner"><span>CWI AI</span><span class="th-sub">Our Product</span></div></th>`;
+  competitors.forEach(c => {
+    headHTML += `<th><div class="th-inner"><span>${esc(c.name || 'Unnamed')}</span><span class="th-sub">${esc(c.pricing || '—')}</span></div></th>`;
+  });
+  headHTML += '</tr>';
+  thead.innerHTML = headHTML;
+
+  // Feature rows
+  let bodyHTML = `<tr class="table-section-header"><td colspan="${competitors.length + 2}">Feature Comparison</td></tr>`;
+
+  FEATURES.forEach(feat => {
+    bodyHTML += `<tr class="feature-row"><td>${feat.icon} ${feat.label}</td>`;
+    // CWI AI
+    const cwiVal = CWI_MATRIX[feat.key];
+    bodyHTML += `<td class="cwi-cell" style="text-align:center">${checkmark(cwiVal)}</td>`;
+    // Competitors
+    competitors.forEach(c => {
+      const matrix = c.featureMatrix || {};
+      const val = matrix[feat.key];
+      bodyHTML += `<td style="text-align:center">
+        <label style="display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer">
+          <input type="checkbox" ${val ? 'checked' : ''} onchange="updateMatrix('${c.id}','${feat.key}',this.checked)"
+            style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer">
+        </label>
+      </td>`;
+    });
+    bodyHTML += '</tr>';
+  });
+
+  // Pricing row
+  bodyHTML += `<tr class="table-section-header"><td colspan="${competitors.length + 2}">Pricing & Notes</td></tr>`;
+  bodyHTML += `<tr><td>Monthly Price</td><td class="cwi-cell" style="font-weight:700;color:var(--accent)">Under $400/mo</td>`;
+  competitors.forEach(c => {
+    bodyHTML += `<td>${esc(c.pricing || '—')}</td>`;
+  });
+  bodyHTML += '</tr>';
+
+  // Advantage row
+  bodyHTML += `<tr><td>Our Advantage</td><td class="cwi-cell"></td>`;
+  competitors.forEach(c => {
+    const adv = (c.advantage || '').length > 120 ? c.advantage.slice(0, 120) + '...' : c.advantage;
+    bodyHTML += `<td style="font-size:12px;color:var(--muted);line-height:1.5">${esc(adv)}</td>`;
+  });
+  bodyHTML += '</tr>';
+
+  tbody.innerHTML = bodyHTML;
+}
+
+function checkmark(val) {
+  if (val === true)  return '<span class="check">&#10003;</span>';
+  if (val === false) return '<span class="cross">&#10007;</span>';
+  return '<span class="partial">&#126;</span>';
+}
+
+// ─── Field Updates ────────────────────────────────────────────────────────────
+
+function updateField(id, field, value) {
+  const comp = competitors.find(c => c.id === id);
+  if (!comp) return;
+  comp[field] = value;
+  comp.lastUpdated = today();
+
+  // Update avatar initial
+  if (field === 'name') {
+    const avatar = document.getElementById('avatar_' + id);
+    if (avatar) avatar.textContent = (value || '?').charAt(0).toUpperCase();
+    const updEl = document.getElementById('updated_' + id);
+    if (updEl) updEl.textContent = formatDate(comp.lastUpdated);
+  }
+
+  autoSave(id);
+}
+
+function updateMatrix(id, featKey, checked) {
+  const comp = competitors.find(c => c.id === id);
+  if (!comp) return;
+  if (!comp.featureMatrix) comp.featureMatrix = {};
+  comp.featureMatrix[featKey] = checked;
+  comp.lastUpdated = today();
+  autoSave(id);
+}
+
+// ─── Add / Delete ─────────────────────────────────────────────────────────────
+
+function openAddModal() {
+  document.getElementById('newCompName').value = '';
+  document.getElementById('newCompPricing').value = '';
+  document.getElementById('addModal').classList.add('open');
+  setTimeout(() => document.getElementById('newCompName').focus(), 80);
+}
+
+function closeAddModal() {
+  document.getElementById('addModal').classList.remove('open');
+}
+
+function addCompetitor() {
+  const name = document.getElementById('newCompName').value.trim();
+  if (!name) { showToast('Please enter a competitor name.', 'error'); return; }
+  const pricing = document.getElementById('newCompPricing').value.trim();
+
+  const newComp = {
+    id: uid(),
+    name,
+    pricing,
+    features: '',
+    weaknesses: '',
+    advantage: '',
+    lastUpdated: today(),
+    featureMatrix: { avail247: false, aiResponses: false, bookingAuto: false, payFollowUp: false, whiteLabel: false, perClient: false, noContract: false, localFocus: false },
+  };
+  competitors.push(newComp);
+  closeAddModal();
+  render();
+  saveAll();
+  showToast('Competitor "' + name + '" added.', 'success');
+
+  // Scroll to new card
+  if (currentView === 'cards') {
+    setTimeout(() => {
+      const card = document.getElementById('card_' + newComp.id);
+      if (card) card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 100);
+  }
+}
+
+function confirmDelete(id) {
+  const comp = competitors.find(c => c.id === id);
+  if (!comp) return;
+  document.getElementById('confirmTitle').textContent = 'Delete "' + (comp.name || 'Unnamed') + '"?';
+  document.getElementById('confirmMsg').textContent = 'This will permanently remove this competitor and all associated notes. This action cannot be undone.';
+  const btn = document.getElementById('confirmOkBtn');
+  btn.onclick = () => { deleteCompetitor(id); closeConfirm(); };
+  document.getElementById('confirmModal').classList.add('open');
+}
+
+function closeConfirm() {
+  document.getElementById('confirmModal').classList.remove('open');
+}
+
+function deleteCompetitor(id) {
+  const comp = competitors.find(c => c.id === id);
+  const name = comp ? comp.name : 'Competitor';
+  competitors = competitors.filter(c => c.id !== id);
+  render();
+  saveAll();
+  showToast('"' + name + '" deleted.', 'info');
+}
+
+// ─── View Toggle ──────────────────────────────────────────────────────────────
+
+function setView(view) {
+  currentView = view;
+  const cardsView  = document.getElementById('cardsView');
+  const tableView  = document.getElementById('tableView');
+  const cardBtn    = document.getElementById('cardViewBtn');
+  const tableBtn   = document.getElementById('tableViewBtn');
+
+  if (view === 'cards') {
+    cardsView.classList.remove('hidden');
+    tableView.classList.remove('active');
+    cardBtn.classList.add('active');
+    tableBtn.classList.remove('active');
+    renderCards();
+  } else {
+    cardsView.classList.add('hidden');
+    tableView.classList.add('active');
+    tableBtn.classList.add('active');
+    cardBtn.classList.remove('active');
+    renderTable();
+  }
+}
+
+// ─── Banner ───────────────────────────────────────────────────────────────────
+
+function openBannerModal() {
+  const current = document.getElementById('winText').textContent;
+  document.getElementById('bannerTextarea').value = current;
+  document.getElementById('bannerModal').classList.add('open');
+  setTimeout(() => document.getElementById('bannerTextarea').focus(), 80);
+}
+
+function closeBannerModal() {
+  document.getElementById('bannerModal').classList.remove('open');
+}
+
+function saveBanner() {
+  const val = document.getElementById('bannerTextarea').value.trim();
+  if (!val) { showToast('Please enter a summary.', 'error'); return; }
+  document.getElementById('winText').textContent = val;
+  localStorage.setItem(BANNER_KEY, val);
+  closeBannerModal();
+  showToast('Summary updated.', 'success');
+}
+
+// ─── Export CSV ───────────────────────────────────────────────────────────────
+
+function exportCSV() {
+  if (competitors.length === 0) { showToast('No competitors to export.', 'error'); return; }
+
+  const headers = ['Name', 'Pricing', 'Key Features', 'Weaknesses', 'Our Advantage', 'Last Updated',
+    ...FEATURES.map(f => f.label)];
+
+  const rows = competitors.map(c => {
+    const matrix = c.featureMatrix || {};
+    return [
+      c.name || '',
+      c.pricing || '',
+      c.features || '',
+      c.weaknesses || '',
+      c.advantage || '',
+      c.lastUpdated || '',
+      ...FEATURES.map(f => matrix[f.key] ? 'Yes' : 'No'),
+    ].map(v => '"' + String(v).replace(/"/g, '""') + '"');
+  });
+
+  const csv = [headers.map(h => '"' + h + '"').join(','), ...rows.map(r => r.join(','))].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'cwi-ai-competitor-analysis-' + today() + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('CSV exported successfully.', 'success');
+}
+
+// ─── Toast ────────────────────────────────────────────────────────────────────
+
+let toastTimer = null;
+function showToast(msg, type = 'info') {
+  const el = document.getElementById('toast');
+  el.className = 'toast ' + type;
+  const icons = { success: '&#10003;', error: '&#9888;', info: '&#8505;' };
+  el.innerHTML = `<span>${icons[type] || ''}</span> ${msg}`;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function esc(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function formatDate(d) {
+  if (!d) return 'Never';
+  try {
+    const dt = new Date(d + 'T00:00:00');
+    return dt.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  } catch(e) { return d; }
+}
+
+// ─── Keyboard shortcuts ───────────────────────────────────────────────────────
+
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveAll(); }
+  if (e.key === 'Escape') {
+    closeAddModal();
+    closeBannerModal();
+    closeConfirm();
+  }
+  if ((e.ctrlKey || e.metaKey) && e.key === 'n') { e.preventDefault(); openAddModal(); }
+});
+
+// Close modals on overlay click
+document.getElementById('addModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeAddModal();
+});
+document.getElementById('bannerModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeBannerModal();
+});
+document.getElementById('confirmModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeConfirm();
+});
+
+// Enter to submit add modal
+document.getElementById('newCompName').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addCompetitor();
+});
+
+// ─── Boot ─────────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>

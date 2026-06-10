@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CWI AI — Sales Pipeline</title>
+<meta name="description" content="CWI internal tool: CWI AI — Sales Pipeline. Internal use only — CWI Compute With Imagination.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0A0A0C;
+  --surface: #141418;
+  --surface2: #1C1C22;
+  --surface3: #24242C;
+  --text: #F4F4F6;
+  --text-muted: #8888A0;
+  --accent: #FF5A1F;
+  --accent-hover: #FF7A45;
+  --border: #2A2A34;
+  --green: #22C55E;
+  --green-bg: rgba(34,197,94,0.12);
+  --yellow: #EAB308;
+  --yellow-bg: rgba(234,179,8,0.12);
+  --red: #EF4444;
+  --red-bg: rgba(239,68,68,0.12);
+  --blue: #3B82F6;
+  --blue-bg: rgba(59,130,246,0.12);
+  --purple: #A855F7;
+  --purple-bg: rgba(168,85,247,0.12);
+}
+
+body {
+  font-family: 'Instrument Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4 { font-family: 'Sora', sans-serif; }
+
+/* ── TOP BAR ── */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 28px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.topbar-brand .logo {
+  width: 32px; height: 32px;
+  background: var(--accent);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Sora', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: #fff;
+}
+.topbar-brand h1 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+}
+.topbar-brand span {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-family: 'Instrument Sans', sans-serif;
+  font-weight: 400;
+}
+.topbar-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: 'Instrument Sans', sans-serif;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s ease;
+}
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-ghost {
+  background: var(--surface3);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover { background: #2A2A34; }
+
+/* ── BOARD ── */
+.board-wrapper {
+  padding: 24px 20px;
+  overflow-x: auto;
+}
+.board {
+  display: flex;
+  gap: 14px;
+  min-width: max-content;
+  align-items: flex-start;
+}
+
+/* ── COLUMN ── */
+.column {
+  width: 280px;
+  background: var(--surface);
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 140px);
+}
+.column-header {
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.column-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.column-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+}
+.column-name {
+  font-family: 'Sora', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+.column-meta {
+  text-align: right;
+}
+.column-count {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: block;
+}
+.column-mrr {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  display: block;
+}
+.column-cards {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  flex: 1;
+}
+.column-cards::-webkit-scrollbar { width: 4px; }
+.column-cards::-webkit-scrollbar-track { background: transparent; }
+.column-cards::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+/* ── DEAL CARD ── */
+.deal-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+}
+.deal-card:hover {
+  border-color: rgba(255,90,31,0.4);
+  background: var(--surface3);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+.card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.card-industry-icon {
+  font-size: 20px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.days-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 20px;
+  flex-shrink: 0;
+}
+.days-green { background: var(--green-bg); color: var(--green); }
+.days-yellow { background: var(--yellow-bg); color: var(--yellow); }
+.days-red { background: var(--red-bg); color: var(--red); }
+
+.card-name {
+  font-family: 'Sora', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
+.card-industry-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+.card-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent);
+}
+.card-value-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+/* ── MODAL ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(4px);
+  z-index: 200;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: modalIn 0.2s ease;
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.96) translateY(8px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+.modal::-webkit-scrollbar { width: 4px; }
+.modal::-webkit-scrollbar-track { background: transparent; }
+.modal::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+.modal-header {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.modal-title-block {}
+.modal-icon { font-size: 28px; margin-bottom: 6px; }
+.modal-title {
+  font-family: 'Sora', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+}
+.modal-subtitle {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 3px;
+}
+.modal-close {
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 18px;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+.modal-close:hover { color: var(--text); background: #2A2A34; }
+.modal-body { padding: 20px 24px; }
+
+.field-group {
+  margin-bottom: 16px;
+}
+.field-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+}
+.field-value {
+  font-size: 14px;
+  color: var(--text);
+}
+.field-input {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 13px;
+  color: var(--text);
+  font-family: 'Instrument Sans', sans-serif;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.field-input:focus { border-color: var(--accent); }
+.field-input::placeholder { color: var(--text-muted); }
+textarea.field-input { resize: vertical; min-height: 80px; }
+select.field-input { cursor: pointer; }
+
+.fields-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+.info-row:last-child { border-bottom: none; }
+.info-row-icon { font-size: 14px; flex-shrink: 0; width: 20px; text-align: center; }
+.info-row-label { font-size: 11px; color: var(--text-muted); width: 72px; flex-shrink: 0; }
+.info-row-val { font-size: 13px; color: var(--text); }
+
+.section-title {
+  font-family: 'Sora', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 18px 0 10px;
+}
+
+.stage-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.stage-btn {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text-muted);
+  transition: all 0.15s;
+}
+.stage-btn:hover {
+  border-color: var(--accent);
+  color: var(--text);
+  background: var(--surface3);
+}
+.stage-btn.current {
+  background: rgba(255,90,31,0.15);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.stage-btn.won-btn:hover {
+  border-color: var(--green);
+  color: var(--green);
+  background: var(--green-bg);
+}
+.stage-btn.lost-btn:hover {
+  border-color: var(--red);
+  color: var(--red);
+  background: var(--red-bg);
+}
+
+.modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+.btn-danger {
+  background: var(--red-bg);
+  color: var(--red);
+  border: 1px solid rgba(239,68,68,0.3);
+}
+.btn-danger:hover { background: rgba(239,68,68,0.22); }
+
+/* ── ADD DEAL MODAL ── */
+.add-modal {
+  max-width: 480px;
+}
+
+/* ── CONFETTI ── */
+#confetti-canvas {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 999;
+  display: none;
+}
+
+/* ── TIER BADGE ── */
+.tier-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 20px;
+  margin-left: 6px;
+}
+.tier-starter { background: var(--blue-bg); color: var(--blue); }
+.tier-growth  { background: var(--yellow-bg); color: var(--yellow); }
+.tier-scale   { background: var(--purple-bg); color: var(--purple); }
+.tier-enterprise { background: rgba(255,90,31,0.12); color: var(--accent); }
+
+/* ── EMPTY STATE ── */
+.empty-col {
+  text-align: center;
+  padding: 24px 12px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+.empty-col .empty-icon { font-size: 24px; margin-bottom: 6px; }
+
+/* ── SCROLLBAR ── */
+.board-wrapper::-webkit-scrollbar { height: 6px; }
+.board-wrapper::-webkit-scrollbar-track { background: var(--bg); }
+.board-wrapper::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-brand">
+    <div class="logo">CW</div>
+    <div>
+      <h1>Sales Pipeline</h1>
+      <span>CWI AI LLC — HubSpot Stages</span>
+    </div>
+  </div>
+  <div class="topbar-actions">
+    <button class="btn btn-ghost" onclick="exportCSV()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Export CSV
+    </button>
+    <button class="btn btn-primary" onclick="openAddModal()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add Deal
+    </button>
+  </div>
+</div>
+
+<!-- BOARD -->
+<div class="board-wrapper">
+  <div class="board" id="board"></div>
+</div>
+
+<!-- DEAL DETAIL MODAL -->
+<div class="modal-overlay" id="detailOverlay" onclick="closeDetailIfBg(event)">
+  <div class="modal" id="detailModal">
+    <div class="modal-header">
+      <div class="modal-title-block">
+        <div class="modal-icon" id="dm-icon"></div>
+        <div class="modal-title" id="dm-name"></div>
+        <div class="modal-subtitle" id="dm-stage-label"></div>
+      </div>
+      <button class="modal-close" onclick="closeDetail()">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <div class="info-row">
+        <span class="info-row-icon">✉️</span>
+        <span class="info-row-label">Email</span>
+        <span class="info-row-val" id="dm-email"></span>
+      </div>
+      <div class="info-row">
+        <span class="info-row-icon">📞</span>
+        <span class="info-row-label">Phone</span>
+        <span class="info-row-val" id="dm-phone"></span>
+      </div>
+      <div class="info-row">
+        <span class="info-row-icon">🏷️</span>
+        <span class="info-row-label">Tier</span>
+        <span class="info-row-val" id="dm-tier"></span>
+      </div>
+      <div class="info-row">
+        <span class="info-row-icon">💵</span>
+        <span class="info-row-label">MRR</span>
+        <span class="info-row-val" id="dm-value"></span>
+      </div>
+      <div class="info-row">
+        <span class="info-row-icon">📅</span>
+        <span class="info-row-label">Last Activity</span>
+        <span class="info-row-val" id="dm-last-activity"></span>
+      </div>
+      <div class="info-row">
+        <span class="info-row-icon">🕐</span>
+        <span class="info-row-label">Days in Stage</span>
+        <span class="info-row-val" id="dm-days"></span>
+      </div>
+
+      <div class="section-title">Notes</div>
+      <textarea class="field-input" id="dm-notes" placeholder="Add notes about this deal..." rows="4"></textarea>
+
+      <div class="section-title">Move to Stage</div>
+      <div class="stage-buttons" id="dm-stage-buttons"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger" onclick="deleteDeal()">Delete Deal</button>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-ghost" onclick="closeDetail()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveDetail()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD DEAL MODAL -->
+<div class="modal-overlay" id="addOverlay" onclick="closeAddIfBg(event)">
+  <div class="modal add-modal">
+    <div class="modal-header">
+      <div class="modal-title-block">
+        <div class="modal-icon">➕</div>
+        <div class="modal-title">Add New Deal</div>
+        <div class="modal-subtitle">Create a new opportunity in the pipeline</div>
+      </div>
+      <button class="modal-close" onclick="closeAdd()">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <div class="fields-grid">
+        <div class="field-group">
+          <label class="field-label" for="add-name">Business Name *</label>
+          <input class="field-input" id="add-name" type="text" placeholder="Acme Corp">
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="add-industry">Industry *</label>
+          <select class="field-input" id="add-industry">
+            <option value="">Select industry...</option>
+            <option value="Restaurant">🍽️ Restaurant</option>
+            <option value="Retail">🛍️ Retail</option>
+            <option value="Healthcare">🏥 Healthcare</option>
+            <option value="Real Estate">🏠 Real Estate</option>
+            <option value="Legal">⚖️ Legal</option>
+            <option value="Fitness">💪 Fitness</option>
+            <option value="Auto">🚗 Auto</option>
+            <option value="Beauty">💅 Beauty</option>
+            <option value="Finance">💰 Finance</option>
+            <option value="Tech">💻 Tech</option>
+            <option value="Education">📚 Education</option>
+            <option value="Construction">🏗️ Construction</option>
+            <option value="Other">🏢 Other</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="add-email">Contact Email</label>
+          <input class="field-input" id="add-email" type="email" placeholder="owner@business.com">
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="add-phone">Phone</label>
+          <input class="field-input" id="add-phone" type="tel" placeholder="(555) 000-0000">
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="add-tier">Package Tier</label>
+          <select class="field-input" id="add-tier">
+            <option value="Starter">Starter</option>
+            <option value="Growth">Growth</option>
+            <option value="Scale">Scale</option>
+            <option value="Enterprise">Enterprise</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="add-value">Monthly Value ($) *</label>
+          <input class="field-input" id="add-value" type="number" placeholder="1500" min="0">
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="add-stage">Initial Stage</label>
+        <select class="field-input" id="add-stage">
+          <option value="New Lead">New Lead</option>
+          <option value="Replied">Replied</option>
+          <option value="Call Booked">Call Booked</option>
+          <option value="Proposal Sent">Proposal Sent</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="add-notes">Notes</label>
+        <textarea class="field-input" id="add-notes" placeholder="Any initial notes..." rows="3"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div></div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-ghost" onclick="closeAdd()">Cancel</button>
+        <button class="btn btn-primary" onclick="submitAddDeal()">Add to Pipeline</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────────
+
+const STAGES = [
+  { id: 'New Lead',      label: 'New Lead',      color: '#3B82F6' },
+  { id: 'Replied',       label: 'Replied',       color: '#A855F7' },
+  { id: 'Call Booked',   label: 'Call Booked',   color: '#EAB308' },
+  { id: 'Proposal Sent', label: 'Proposal Sent', color: '#FF5A1F' },
+  { id: 'Closed Won',    label: 'Closed Won',    color: '#22C55E' },
+  { id: 'Closed Lost',   label: 'Closed Lost',   color: '#EF4444' },
+];
+
+const INDUSTRY_ICONS = {
+  Restaurant: '🍽️', Retail: '🛍️', Healthcare: '🏥',
+  'Real Estate': '🏠', Legal: '⚖️', Fitness: '💪',
+  Auto: '🚗', Beauty: '💅', Finance: '💰', Tech: '💻',
+  Education: '📚', Construction: '🏗️', Other: '🏢'
+};
+
+const TIER_CLASSES = {
+  Starter: 'tier-starter', Growth: 'tier-growth',
+  Scale: 'tier-scale', Enterprise: 'tier-enterprise'
+};
+
+const DEFAULT_DEALS = [
+  {
+    id: 'deal-001',
+    name: 'Sunrise Dental Group',
+    industry: 'Healthcare',
+    email: 'dr.kim@sunrisedental.com',
+    phone: '(602) 555-0192',
+    tier: 'Growth',
+    value: 2200,
+    stage: 'Call Booked',
+    notes: 'Dr. Kim is very interested in the AI receptionist and appointment follow-up automation. Has 3 locations.',
+    stageEnteredAt: Date.now() - (4 * 24 * 60 * 60 * 1000),
+    lastActivity: new Date(Date.now() - (1 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0],
+    createdAt: Date.now() - (10 * 24 * 60 * 60 * 1000)
+  },
+  {
+    id: 'deal-002',
+    name: 'Mesa Verde Bistro',
+    industry: 'Restaurant',
+    email: 'owner@mesaverdebistro.com',
+    phone: '(480) 555-0348',
+    tier: 'Starter',
+    value: 997,
+    stage: 'Replied',
+    notes: 'Responded to cold email. Interested in review automation and local SEO. Follow up Thursday.',
+    stageEnteredAt: Date.now() - (2 * 24 * 60 * 60 * 1000),
+    lastActivity: new Date(Date.now() - (2 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0],
+    createdAt: Date.now() - (5 * 24 * 60 * 60 * 1000)
+  },
+  {
+    id: 'deal-003',
+    name: 'Pinnacle Properties AZ',
+    industry: 'Real Estate',
+    email: 'mark@pinnacleaz.com',
+    phone: '(623) 555-0577',
+    tier: 'Scale',
+    value: 3800,
+    stage: 'Proposal Sent',
+    notes: 'Sent full Scale package proposal. Mark loved the lead nurture automation demo. Decision by EOW.',
+    stageEnteredAt: Date.now() - (1 * 24 * 60 * 60 * 1000),
+    lastActivity: new Date().toISOString().split('T')[0],
+    createdAt: Date.now() - (14 * 24 * 60 * 60 * 1000)
+  }
+];
+
+function loadDeals() {
+  try {
+    const raw = localStorage.getItem('cwi_pipeline_deals');
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return JSON.parse(JSON.stringify(DEFAULT_DEALS));
+}
+
+function saveDeals(deals) {
+  localStorage.setItem('cwi_pipeline_deals', JSON.stringify(deals));
+}
+
+let deals = loadDeals();
+let activeDealId = null;
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+
+function daysSince(ts) {
+  return Math.floor((Date.now() - ts) / (1000 * 60 * 60 * 24));
+}
+
+function daysBadgeClass(days) {
+  if (days < 3) return 'days-green';
+  if (days <= 6) return 'days-yellow';
+  return 'days-red';
+}
+
+function formatMRR(v) {
+  if (v >= 1000) return '$' + (v / 1000).toFixed(v % 1000 === 0 ? 0 : 1) + 'k';
+  return '$' + v.toLocaleString();
+}
+
+function renderBoard() {
+  const board = document.getElementById('board');
+  board.innerHTML = '';
+
+  STAGES.forEach(stage => {
+    const stageDeals = deals.filter(d => d.stage === stage.id);
+    const totalMRR = stageDeals.reduce((s, d) => s + (d.value || 0), 0);
+
+    const col = document.createElement('div');
+    col.className = 'column';
+    col.innerHTML = `
+      <div class="column-header">
+        <div class="column-title">
+          <div class="column-dot" style="background:${stage.color}"></div>
+          <span class="column-name">${stage.label}</span>
+        </div>
+        <div class="column-meta">
+          <span class="column-count">${stageDeals.length} deal${stageDeals.length !== 1 ? 's' : ''}</span>
+          <span class="column-mrr">${totalMRR > 0 ? ('$' + totalMRR.toLocaleString() + '/mo') : '—'}</span>
+        </div>
+      </div>
+      <div class="column-cards" id="col-${stage.id.replace(/\s+/g,'-')}"></div>
+    `;
+    board.appendChild(col);
+
+    const cardsEl = col.querySelector('.column-cards');
+
+    if (stageDeals.length === 0) {
+      cardsEl.innerHTML = `<div class="empty-col"><div class="empty-icon">📭</div>No deals here yet</div>`;
+    } else {
+      stageDeals.forEach(deal => {
+        const days = daysSince(deal.stageEnteredAt);
+        const badgeClass = daysBadgeClass(days);
+        const icon = INDUSTRY_ICONS[deal.industry] || '🏢';
+        const card = document.createElement('div');
+        card.className = 'deal-card';
+        card.onclick = () => openDetail(deal.id);
+        card.innerHTML = `
+          <div class="card-top">
+            <span class="card-industry-icon">${icon}</span>
+            <span class="days-badge ${badgeClass}">${days}d</span>
+          </div>
+          <div class="card-name">${escHtml(deal.name)}</div>
+          <div class="card-industry-label">${deal.industry}</div>
+          <div>
+            <span class="card-value">${formatMRR(deal.value || 0)}</span>
+            <span class="card-value-label">/mo</span>
+          </div>
+        `;
+        cardsEl.appendChild(card);
+      });
+    }
+  });
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── DETAIL MODAL ──────────────────────────────────────────────────────────────
+
+function openDetail(id) {
+  const deal = deals.find(d => d.id === id);
+  if (!deal) return;
+  activeDealId = id;
+
+  const icon = INDUSTRY_ICONS[deal.industry] || '🏢';
+  const days = daysSince(deal.stageEnteredAt);
+  const badgeClass = daysBadgeClass(days);
+  const tierClass = TIER_CLASSES[deal.tier] || '';
+
+  document.getElementById('dm-icon').textContent = icon;
+  document.getElementById('dm-name').textContent = deal.name;
+  document.getElementById('dm-stage-label').textContent = `${deal.stage} · ${deal.industry}`;
+  document.getElementById('dm-email').textContent = deal.email || '—';
+  document.getElementById('dm-phone').textContent = deal.phone || '—';
+  document.getElementById('dm-tier').innerHTML = `<span class="tier-badge ${tierClass}">${deal.tier || '—'}</span>`;
+  document.getElementById('dm-value').textContent = '$' + (deal.value || 0).toLocaleString() + ' / month';
+  document.getElementById('dm-last-activity').textContent = deal.lastActivity || '—';
+  document.getElementById('dm-days').innerHTML = `<span class="days-badge ${badgeClass}" style="font-size:12px">${days} day${days !== 1 ? 's' : ''}</span>`;
+  document.getElementById('dm-notes').value = deal.notes || '';
+
+  // Stage buttons
+  const stageContainer = document.getElementById('dm-stage-buttons');
+  stageContainer.innerHTML = '';
+  STAGES.forEach(s => {
+    const btn = document.createElement('button');
+    btn.className = 'stage-btn' +
+      (s.id === deal.stage ? ' current' : '') +
+      (s.id === 'Closed Won' ? ' won-btn' : '') +
+      (s.id === 'Closed Lost' ? ' lost-btn' : '');
+    btn.textContent = s.label;
+    if (s.id !== deal.stage) {
+      btn.onclick = () => moveDeal(id, s.id);
+    }
+    stageContainer.appendChild(btn);
+  });
+
+  document.getElementById('detailOverlay').classList.add('open');
+}
+
+function closeDetail() {
+  document.getElementById('detailOverlay').classList.remove('open');
+  activeDealId = null;
+}
+
+function closeDetailIfBg(e) {
+  if (e.target === document.getElementById('detailOverlay')) closeDetail();
+}
+
+function saveDetail() {
+  if (!activeDealId) return;
+  const idx = deals.findIndex(d => d.id === activeDealId);
+  if (idx === -1) return;
+  deals[idx].notes = document.getElementById('dm-notes').value;
+  deals[idx].lastActivity = new Date().toISOString().split('T')[0];
+  saveDeals(deals);
+  renderBoard();
+  closeDetail();
+}
+
+function deleteDeal() {
+  if (!activeDealId) return;
+  if (!confirm('Delete this deal? This cannot be undone.')) return;
+  deals = deals.filter(d => d.id !== activeDealId);
+  saveDeals(deals);
+  renderBoard();
+  closeDetail();
+}
+
+function moveDeal(id, newStage) {
+  const idx = deals.findIndex(d => d.id === id);
+  if (idx === -1) return;
+  deals[idx].stage = newStage;
+  deals[idx].stageEnteredAt = Date.now();
+  deals[idx].lastActivity = new Date().toISOString().split('T')[0];
+  saveDeals(deals);
+  renderBoard();
+  closeDetail();
+  if (newStage === 'Closed Won') triggerConfetti();
+}
+
+// ── ADD DEAL MODAL ────────────────────────────────────────────────────────────
+
+function openAddModal() {
+  document.getElementById('add-name').value = '';
+  document.getElementById('add-industry').value = '';
+  document.getElementById('add-email').value = '';
+  document.getElementById('add-phone').value = '';
+  document.getElementById('add-tier').value = 'Starter';
+  document.getElementById('add-value').value = '';
+  document.getElementById('add-stage').value = 'New Lead';
+  document.getElementById('add-notes').value = '';
+  document.getElementById('addOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('add-name').focus(), 100);
+}
+
+function closeAdd() {
+  document.getElementById('addOverlay').classList.remove('open');
+}
+
+function closeAddIfBg(e) {
+  if (e.target === document.getElementById('addOverlay')) closeAdd();
+}
+
+function submitAddDeal() {
+  const name = document.getElementById('add-name').value.trim();
+  const industry = document.getElementById('add-industry').value;
+  const value = parseInt(document.getElementById('add-value').value, 10);
+
+  if (!name) { alert('Business name is required.'); return; }
+  if (!industry) { alert('Please select an industry.'); return; }
+  if (!value || isNaN(value)) { alert('Monthly value is required.'); return; }
+
+  const newDeal = {
+    id: 'deal-' + Date.now(),
+    name,
+    industry,
+    email: document.getElementById('add-email').value.trim(),
+    phone: document.getElementById('add-phone').value.trim(),
+    tier: document.getElementById('add-tier').value,
+    value,
+    stage: document.getElementById('add-stage').value,
+    notes: document.getElementById('add-notes').value.trim(),
+    stageEnteredAt: Date.now(),
+    lastActivity: new Date().toISOString().split('T')[0],
+    createdAt: Date.now()
+  };
+
+  deals.push(newDeal);
+  saveDeals(deals);
+  renderBoard();
+  closeAdd();
+  if (newDeal.stage === 'Closed Won') triggerConfetti();
+}
+
+// ── CSV EXPORT ────────────────────────────────────────────────────────────────
+
+function exportCSV() {
+  const headers = ['Business Name','Industry','Email','Phone','Tier','Monthly Value','Stage','Days in Stage','Last Activity','Notes'];
+  const rows = deals.map(d => [
+    d.name, d.industry, d.email || '', d.phone || '', d.tier || '',
+    d.value || 0, d.stage, daysSince(d.stageEnteredAt),
+    d.lastActivity || '', (d.notes || '').replace(/\n/g,' ')
+  ]);
+
+  const csv = [headers, ...rows].map(r =>
+    r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',')
+  ).join('\n');
+
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'cwi-pipeline-' + new Date().toISOString().split('T')[0] + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── CONFETTI ──────────────────────────────────────────────────────────────────
+
+function triggerConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  canvas.style.display = 'block';
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const colors = ['#FF5A1F','#22C55E','#3B82F6','#EAB308','#A855F7','#F472B6','#fff'];
+  const pieces = Array.from({length: 160}, () => ({
+    x: Math.random() * canvas.width,
+    y: Math.random() * -canvas.height * 0.5,
+    w: 8 + Math.random() * 8,
+    h: 4 + Math.random() * 4,
+    color: colors[Math.floor(Math.random() * colors.length)],
+    rot: Math.random() * Math.PI * 2,
+    vx: (Math.random() - 0.5) * 3,
+    vy: 3 + Math.random() * 4,
+    vr: (Math.random() - 0.5) * 0.2,
+    opacity: 1
+  }));
+
+  let frame = 0;
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    frame++;
+    let alive = false;
+    pieces.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.08;
+      p.rot += p.vr;
+      if (frame > 90) p.opacity -= 0.012;
+      if (p.y < canvas.height + 20 && p.opacity > 0) {
+        alive = true;
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, p.opacity);
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+        ctx.restore();
+      }
+    });
+    if (alive) requestAnimationFrame(draw);
+    else canvas.style.display = 'none';
+  }
+  draw();
+}
+
+// ── KEYBOARD ──────────────────────────────────────────────────────────────────
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeDetail();
+    closeAdd();
+  }
+});
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+
+renderBoard();
+</script>
+</body>
+</html>

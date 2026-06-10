@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CWI AI LLC — Service Agreement Generator</title>
+  <meta name="description" content="CWI internal tool: CWI AI LLC — Service Agreement Generator. Internal use only — CWI Compute With Imagination.">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* =========================================================
+       RESET & BASE
+    ========================================================= */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0A0A0C;
+      --surface:   #111114;
+      --border:    #2a2a30;
+      --orange:    #FF5A1F;
+      --orange-dk: #cc4515;
+      --text:      #e8e8ec;
+      --muted:     #888898;
+      --radius:    8px;
+      --font-ui:   'Sora', system-ui, sans-serif;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: var(--font-ui);
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    /* =========================================================
+       LAYOUT — SPLIT PANE
+    ========================================================= */
+    .shell {
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    /* --- LEFT: FORM PANEL --- */
+    .form-panel {
+      width: 370px;
+      min-width: 330px;
+      max-width: 400px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .form-header {
+      padding: 20px 22px 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+
+    .form-header .logo-line {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+
+    .logo-mark {
+      width: 32px;
+      height: 32px;
+      background: var(--orange);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.5px;
+      flex-shrink: 0;
+    }
+
+    .form-header h1 {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.2;
+    }
+
+    .form-header p {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .form-body {
+      overflow-y: auto;
+      flex: 1;
+      padding: 18px 22px 24px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+
+    .form-body::-webkit-scrollbar { width: 5px; }
+    .form-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    /* --- FORM SECTIONS --- */
+    .section-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--orange);
+      margin: 20px 0 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-label:first-child { margin-top: 0; }
+
+    .field { margin-bottom: 12px; }
+
+    .field label {
+      display: block;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--muted);
+      margin-bottom: 4px;
+      letter-spacing: 0.02em;
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+      background: #18181e;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: var(--font-ui);
+      font-size: 13px;
+      padding: 8px 11px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .field input:focus,
+    .field select:focus {
+      border-color: var(--orange);
+    }
+
+    .field input[readonly] {
+      color: var(--orange);
+      background: #1a1208;
+      border-color: #3a2810;
+      cursor: default;
+    }
+
+    .field select option { background: #18181e; }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    /* Tier badge row */
+    .tier-info {
+      display: flex;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .tier-pill {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 20px;
+      background: #1a1208;
+      color: var(--orange);
+      border: 1px solid #3a2810;
+    }
+
+    /* Generate button */
+    .btn-generate {
+      width: 100%;
+      padding: 11px;
+      background: var(--orange);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      font-family: var(--font-ui);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 22px;
+      transition: background 0.15s;
+      letter-spacing: 0.02em;
+    }
+
+    .btn-generate:hover { background: var(--orange-dk); }
+
+    /* --- RIGHT: PREVIEW PANEL --- */
+    .preview-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: #1c1c22;
+    }
+
+    .preview-toolbar {
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+
+    .preview-toolbar .toolbar-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .preview-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .agreement-num {
+      font-size: 12px;
+      color: var(--orange);
+      font-weight: 600;
+      background: #1a1208;
+      border: 1px solid #3a2810;
+      border-radius: 4px;
+      padding: 2px 8px;
+    }
+
+    .btn-print {
+      padding: 8px 18px;
+      background: var(--orange);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      font-family: var(--font-ui);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-print:hover { background: var(--orange-dk); }
+
+    .btn-print svg { width: 14px; height: 14px; fill: #fff; }
+
+    .preview-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 32px 20px 60px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+
+    .preview-scroll::-webkit-scrollbar { width: 6px; }
+    .preview-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    /* Empty state */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--muted);
+      gap: 12px;
+      text-align: center;
+    }
+
+    .empty-state svg {
+      width: 48px;
+      height: 48px;
+      opacity: 0.25;
+    }
+
+    .empty-state p {
+      font-size: 13px;
+      opacity: 0.6;
+    }
+
+    /* =========================================================
+       AGREEMENT DOCUMENT STYLES
+    ========================================================= */
+    .agreement-doc {
+      max-width: 780px;
+      margin: 0 auto;
+      background: #fff;
+      color: #1a1a1a;
+      border-radius: 4px;
+      overflow: hidden;
+      box-shadow: 0 4px 32px rgba(0,0,0,.5);
+      font-family: 'Georgia', 'Times New Roman', serif;
+      font-size: 13.5px;
+      line-height: 1.75;
+    }
+
+    /* Document header */
+    .doc-header {
+      background: #0A0A0C;
+      padding: 32px 48px 28px;
+      color: #fff;
+    }
+
+    .doc-header-inner {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .doc-logo-block .company-name {
+      font-family: 'Sora', system-ui, sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: #FF5A1F;
+      letter-spacing: -0.5px;
+    }
+
+    .doc-logo-block .company-sub {
+      font-size: 11px;
+      color: #888;
+      margin-top: 2px;
+      font-family: 'Sora', system-ui, sans-serif;
+    }
+
+    .doc-meta {
+      text-align: right;
+      font-family: 'Sora', system-ui, sans-serif;
+    }
+
+    .doc-meta .doc-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #fff;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .doc-meta .doc-num {
+      font-size: 11px;
+      color: #FF5A1F;
+      margin-top: 3px;
+    }
+
+    .doc-meta .doc-date {
+      font-size: 11px;
+      color: #888;
+      margin-top: 2px;
+    }
+
+    .doc-header-divider {
+      height: 3px;
+      background: linear-gradient(90deg, #FF5A1F 0%, #ff8c5a 50%, transparent 100%);
+      margin-top: 24px;
+    }
+
+    /* Document body */
+    .doc-body {
+      padding: 36px 48px 48px;
+    }
+
+    /* Intro paragraph */
+    .doc-intro {
+      background: #fdf6f2;
+      border-left: 4px solid #FF5A1F;
+      padding: 14px 18px;
+      border-radius: 0 4px 4px 0;
+      margin-bottom: 28px;
+      font-size: 13px;
+      color: #333;
+      line-height: 1.6;
+    }
+
+    /* Section headings */
+    .doc-section {
+      margin-bottom: 26px;
+    }
+
+    .doc-section-title {
+      font-family: 'Sora', system-ui, sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #FF5A1F;
+      border-bottom: 1.5px solid #ffe5d8;
+      padding-bottom: 6px;
+      margin-bottom: 12px;
+    }
+
+    .doc-section-num {
+      color: #bbb;
+      margin-right: 6px;
+    }
+
+    .doc-section p {
+      color: #2a2a2a;
+      margin-bottom: 10px;
+      font-size: 13.5px;
+    }
+
+    .doc-section p:last-child { margin-bottom: 0; }
+
+    .doc-section ul {
+      list-style: none;
+      padding: 0;
+      margin: 8px 0;
+    }
+
+    .doc-section ul li {
+      padding: 4px 0 4px 18px;
+      position: relative;
+      color: #2a2a2a;
+      font-size: 13.5px;
+    }
+
+    .doc-section ul li::before {
+      content: '';
+      position: absolute;
+      left: 4px;
+      top: 12px;
+      width: 6px;
+      height: 6px;
+      background: #FF5A1F;
+      border-radius: 50%;
+    }
+
+    /* Fee table */
+    .fee-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0;
+      font-size: 13px;
+    }
+
+    .fee-table th {
+      background: #f5f5f5;
+      font-family: 'Sora', system-ui, sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #666;
+      padding: 8px 12px;
+      text-align: left;
+      border-bottom: 2px solid #ffe5d8;
+    }
+
+    .fee-table td {
+      padding: 9px 12px;
+      border-bottom: 1px solid #f0f0f0;
+      color: #2a2a2a;
+      vertical-align: top;
+    }
+
+    .fee-table tr:last-child td { border-bottom: none; }
+
+    .fee-table .amount {
+      font-weight: 600;
+      color: #1a1a1a;
+      font-family: 'Sora', system-ui, sans-serif;
+    }
+
+    /* Parties table */
+    .parties-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 12px 0;
+    }
+
+    .party-card {
+      background: #fafafa;
+      border: 1px solid #eee;
+      border-top: 3px solid #FF5A1F;
+      border-radius: 4px;
+      padding: 14px 16px;
+    }
+
+    .party-card .party-role {
+      font-family: 'Sora', system-ui, sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #FF5A1F;
+      margin-bottom: 8px;
+    }
+
+    .party-card .party-name {
+      font-weight: 700;
+      font-size: 14px;
+      color: #1a1a1a;
+      margin-bottom: 4px;
+      font-family: 'Sora', system-ui, sans-serif;
+    }
+
+    .party-card .party-detail {
+      font-size: 12px;
+      color: #555;
+      line-height: 1.6;
+    }
+
+    /* Signature block */
+    .sig-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      margin-top: 16px;
+    }
+
+    .sig-block { }
+
+    .sig-block .sig-party {
+      font-family: 'Sora', system-ui, sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #FF5A1F;
+      margin-bottom: 6px;
+    }
+
+    .sig-line {
+      border-bottom: 1.5px solid #333;
+      height: 38px;
+      margin-bottom: 6px;
+    }
+
+    .sig-label {
+      font-size: 11px;
+      color: #666;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .sig-label span:first-child { font-weight: 600; color: #333; }
+
+    .sig-date-line {
+      border-bottom: 1px solid #aaa;
+      height: 28px;
+      margin: 16px 0 4px;
+    }
+
+    .sig-date-label {
+      font-size: 11px;
+      color: #666;
+    }
+
+    /* Footer */
+    .doc-footer {
+      background: #0A0A0C;
+      padding: 16px 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .doc-footer-left {
+      font-family: 'Sora', system-ui, sans-serif;
+      font-size: 10px;
+      color: #555;
+    }
+
+    .doc-footer-right {
+      font-family: 'Sora', system-ui, sans-serif;
+      font-size: 10px;
+      color: #FF5A1F;
+    }
+
+    /* =========================================================
+       PRINT STYLES
+    ========================================================= */
+    @media print {
+      html, body {
+        overflow: visible;
+        height: auto;
+        background: #fff;
+      }
+
+      .form-panel,
+      .preview-toolbar {
+        display: none !important;
+      }
+
+      .shell {
+        display: block;
+        height: auto;
+      }
+
+      .preview-panel {
+        display: block;
+        overflow: visible;
+      }
+
+      .preview-scroll {
+        overflow: visible;
+        padding: 0;
+      }
+
+      .agreement-doc {
+        box-shadow: none;
+        max-width: 100%;
+        margin: 0;
+        border-radius: 0;
+      }
+
+      .doc-header {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .doc-footer {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .party-card {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        break-inside: avoid;
+      }
+
+      .doc-section { break-inside: avoid; }
+
+      .sig-grid { break-inside: avoid; }
+
+      .doc-section-title {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .doc-intro {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- =====================================================
+       LEFT: INPUT FORM
+  ===================================================== -->
+  <aside class="form-panel">
+    <div class="form-header">
+      <div class="logo-line">
+        <div class="logo-mark">CWI</div>
+        <div>
+          <h1>Service Agreement Generator</h1>
+          <p>CWI AI LLC — Client Contracts</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-body">
+
+      <!-- CLIENT INFO -->
+      <div class="section-label">Client Information</div>
+
+      <div class="field">
+        <label for="clientBiz">Client Legal Business Name</label>
+        <input type="text" id="clientBiz" placeholder="Acme Corp LLC" />
+      </div>
+
+      <div class="field">
+        <label for="clientOwner">Client Owner / Authorized Signatory</label>
+        <input type="text" id="clientOwner" placeholder="Jane Smith" />
+      </div>
+
+      <div class="field">
+        <label for="clientEmail">Client Email Address</label>
+        <input type="email" id="clientEmail" placeholder="jane@acmecorp.com" />
+      </div>
+
+      <div class="field">
+        <label for="clientAddr">Client Mailing Address</label>
+        <input type="text" id="clientAddr" placeholder="123 Main St, City, State 00000" />
+      </div>
+
+      <!-- SERVICE -->
+      <div class="section-label">Service Details</div>
+
+      <div class="field">
+        <label for="tier">Service Tier</label>
+        <select id="tier" onchange="fillTierData()">
+          <option value="">— Select Tier —</option>
+          <option value="starter">Starter</option>
+          <option value="growth">Growth</option>
+          <option value="pro">Pro</option>
+        </select>
+        <div class="tier-info" id="tierInfo" style="display:none;">
+          <span class="tier-pill" id="tierPill"></span>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="monthlyFee">Monthly Fee</label>
+          <input type="text" id="monthlyFee" readonly placeholder="Auto-filled" />
+        </div>
+        <div class="field">
+          <label for="setupFee">Setup Fee</label>
+          <input type="text" id="setupFee" readonly placeholder="Auto-filled" />
+        </div>
+      </div>
+
+      <!-- TERM -->
+      <div class="section-label">Contract Term</div>
+
+      <div class="field">
+        <label for="startDate">Start Date</label>
+        <input type="date" id="startDate" />
+      </div>
+
+      <div class="field">
+        <label for="contractTerm">Contract Term</label>
+        <select id="contractTerm">
+          <option value="month">Month-to-Month</option>
+          <option value="6month">6 Months</option>
+          <option value="annual">Annual (12 Months)</option>
+        </select>
+      </div>
+
+      <button class="btn-generate" onclick="generateAgreement()">Generate Service Agreement</button>
+
+    </div>
+  </aside>
+
+  <!-- =====================================================
+       RIGHT: PREVIEW PANEL
+  ===================================================== -->
+  <main class="preview-panel">
+    <div class="preview-toolbar">
+      <div class="toolbar-left">
+        <span class="preview-label">Agreement Preview</span>
+        <span class="agreement-num" id="agreementNumBadge">—</span>
+      </div>
+      <button class="btn-print" onclick="window.print()">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/>
+        </svg>
+        Print / Save as PDF
+      </button>
+    </div>
+
+    <div class="preview-scroll" id="previewScroll">
+      <div class="empty-state" id="emptyState">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M14 2H6C4.9 2 4 2.9 4 4v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" fill="currentColor"/>
+        </svg>
+        <p>Fill in the form and click<br><strong>Generate Service Agreement</strong></p>
+      </div>
+      <div id="agreementContainer" style="display:none;"></div>
+    </div>
+  </main>
+
+</div>
+
+<!-- =====================================================
+     JAVASCRIPT
+===================================================== -->
+<script>
+  // ── Tier data ──────────────────────────────────────────
+  const TIERS = {
+    starter: {
+      label: 'Starter',
+      monthly: 497,
+      setup: 997,
+      description: 'AI Automation Starter Package — includes up to 3 Make.com automation scenarios, Freshchat AI chat bot configuration, basic email automation sequences, monthly performance reporting, and standard support (business hours, 48-hr response SLA).',
+      scenarios: 3,
+      included: [
+        'Up to 3 Make.com automation scenarios',
+        'Freshchat AI chat bot setup and configuration',
+        'Basic email automation sequences (up to 3 flows)',
+        'Monthly performance report',
+        'Standard support — business hours, 48-hr SLA'
+      ]
+    },
+    growth: {
+      label: 'Growth',
+      monthly: 997,
+      setup: 1497,
+      description: 'AI Automation Growth Package — includes up to 8 Make.com automation scenarios, advanced Freshchat AI chat bot with custom intents and escalation routing, full email automation suite, CRM integration, bi-weekly performance reporting, and priority support (priority queue, 24-hr SLA).',
+      scenarios: 8,
+      included: [
+        'Up to 8 Make.com automation scenarios',
+        'Advanced Freshchat AI bot with custom intents and escalation routing',
+        'Full email automation suite (unlimited flows)',
+        'CRM integration (HubSpot, Salesforce, or equivalent)',
+        'Bi-weekly performance reporting',
+        'Priority support — priority queue, 24-hr SLA'
+      ]
+    },
+    pro: {
+      label: 'Pro',
+      monthly: 1997,
+      setup: 2497,
+      description: 'AI Automation Pro Package — includes unlimited Make.com automation scenarios, fully custom AI chat bot with multi-channel deployment, complete email and SMS automation platform, advanced CRM and third-party integrations, weekly strategy sessions, dedicated account manager, and enterprise support (dedicated channel, 4-hr SLA).',
+      scenarios: 'Unlimited',
+      included: [
+        'Unlimited Make.com automation scenarios',
+        'Fully custom AI chat bot with multi-channel deployment',
+        'Complete email and SMS automation platform',
+        'Advanced CRM and third-party integrations',
+        'Weekly strategy sessions and quarterly business reviews',
+        'Dedicated account manager',
+        'Enterprise support — dedicated channel, 4-hr SLA'
+      ]
+    }
+  };
+
+  // ── Agreement number (auto from localStorage) ──────────
+  function getNextAgreementNum() {
+    const key = 'cwi_agreement_counter';
+    const current = parseInt(localStorage.getItem(key) || '1000', 10);
+    const next = current + 1;
+    localStorage.setItem(key, next);
+    return 'CWI-SA-' + next;
+  }
+
+  // ── Fill tier auto-data ─────────────────────────────────
+  function fillTierData() {
+    const tier = document.getElementById('tier').value;
+    const info = TIERS[tier];
+    const feeEl = document.getElementById('monthlyFee');
+    const setupEl = document.getElementById('setupFee');
+    const tierInfoEl = document.getElementById('tierInfo');
+    const tierPillEl = document.getElementById('tierPill');
+
+    if (!info) {
+      feeEl.value = '';
+      setupEl.value = '';
+      tierInfoEl.style.display = 'none';
+      return;
+    }
+
+    feeEl.value = '$' + info.monthly.toLocaleString() + '/mo';
+    setupEl.value = '$' + info.setup.toLocaleString();
+    tierPillEl.textContent = info.label + ' Tier';
+    tierInfoEl.style.display = 'flex';
+  }
+
+  // ── Format currency ─────────────────────────────────────
+  function fmt(n) {
+    return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  // ── Format date ─────────────────────────────────────────
+  function fmtDate(dateStr) {
+    if (!dateStr) return '_______________';
+    const d = new Date(dateStr + 'T00:00:00');
+    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  }
+
+  // ── Term label ──────────────────────────────────────────
+  function termLabel(val) {
+    if (val === 'month') return 'Month-to-Month';
+    if (val === '6month') return '6 Months';
+    if (val === 'annual') return 'Annual (12 Months)';
+    return val;
+  }
+
+  // ── Compute end date ────────────────────────────────────
+  function computeEndDate(startStr, termVal) {
+    if (!startStr) return null;
+    const d = new Date(startStr + 'T00:00:00');
+    if (termVal === '6month') { d.setMonth(d.getMonth() + 6); return d; }
+    if (termVal === 'annual') { d.setFullYear(d.getFullYear() + 1); return d; }
+    return null; // month-to-month: no fixed end
+  }
+
+  // ── TODAY label ─────────────────────────────────────────
+  function todayLabel() {
+    return new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  }
+
+  // ── GENERATE ────────────────────────────────────────────
+  function generateAgreement() {
+    const clientBiz   = document.getElementById('clientBiz').value.trim();
+    const clientOwner = document.getElementById('clientOwner').value.trim();
+    const clientEmail = document.getElementById('clientEmail').value.trim();
+    const clientAddr  = document.getElementById('clientAddr').value.trim();
+    const tierKey     = document.getElementById('tier').value;
+    const startDate   = document.getElementById('startDate').value;
+    const termVal     = document.getElementById('contractTerm').value;
+
+    if (!clientBiz || !tierKey || !startDate) {
+      alert('Please fill in Client Business Name, Service Tier, and Start Date at minimum.');
+      return;
+    }
+
+    const tier    = TIERS[tierKey];
+    const agNum   = getNextAgreementNum();
+    const endDate = computeEndDate(startDate, termVal);
+
+    document.getElementById('agreementNumBadge').textContent = agNum;
+    document.getElementById('emptyState').style.display = 'none';
+
+    const container = document.getElementById('agreementContainer');
+    container.style.display = 'block';
+
+    // Build services list HTML
+    const serviceItems = tier.included.map(s => `<li>${s}</li>`).join('');
+
+    // End date text
+    const endDateText = endDate
+      ? `This Agreement shall continue through <strong>${fmtDate(endDate.toISOString().split('T')[0])}</strong>, unless earlier terminated in accordance with Section 4.`
+      : `This Agreement shall continue on a month-to-month basis until terminated by either party in accordance with Section 4.`;
+
+    // Cancellation note
+    const cancelNote = termVal === 'month'
+      ? 'Either party may terminate this Agreement at any time with <strong>thirty (30) days written notice</strong> to the other party. There is no minimum commitment period.'
+      : (termVal === '6month'
+          ? 'This Agreement has a minimum commitment of <strong>six (6) months</strong>. After the initial term, either party may terminate with <strong>thirty (30) days written notice</strong>. Early termination prior to the end of the initial term requires payment of the remaining monthly fees due under the initial term.'
+          : 'This Agreement has a minimum commitment of <strong>twelve (12) months</strong>. After the initial term, either party may terminate with <strong>thirty (30) days written notice</strong>. Early termination prior to the end of the initial term requires payment of the remaining monthly fees due under the initial term.');
+
+    container.innerHTML = `
+<div class="agreement-doc" id="agreementDoc">
+
+  <!-- DOCUMENT HEADER -->
+  <div class="doc-header">
+    <div class="doc-header-inner">
+      <div class="doc-logo-block">
+        <div class="company-name">CWI AI LLC</div>
+        <div class="company-sub">Intelligent Automation Solutions</div>
+      </div>
+      <div class="doc-meta">
+        <div class="doc-title">Service Agreement</div>
+        <div class="doc-num">${agNum}</div>
+        <div class="doc-date">Generated: ${todayLabel()}</div>
+      </div>
+    </div>
+    <div class="doc-header-divider"></div>
+  </div>
+
+  <!-- DOCUMENT BODY -->
+  <div class="doc-body">
+
+    <!-- INTRO -->
+    <div class="doc-intro">
+      This Service Agreement (<strong>"Agreement"</strong>) is entered into as of <strong>${fmtDate(startDate)}</strong> by and between
+      <strong>CWI AI LLC</strong>, a Michigan limited liability company (<strong>"Provider"</strong>), and
+      <strong>${clientBiz || '[CLIENT BUSINESS NAME]'}</strong> (<strong>"Client"</strong>).
+      Together, Provider and Client are referred to as the <strong>"Parties."</strong>
+    </div>
+
+    <!-- SECTION 1: PARTIES -->
+    <div class="doc-section">
+      <div class="doc-section-title"><span class="doc-section-num">1.</span>Parties</div>
+      <div class="parties-grid">
+        <div class="party-card">
+          <div class="party-role">Service Provider</div>
+          <div class="party-name">CWI AI LLC</div>
+          <div class="party-detail">
+            Brian Kalsic, Managing Member<br>
+            Southgate, Michigan<br>
+            brian@cwiai.com<br>
+            cwiai.com
+          </div>
+        </div>
+        <div class="party-card">
+          <div class="party-role">Client</div>
+          <div class="party-name">${clientBiz || '[CLIENT BUSINESS NAME]'}</div>
+          <div class="party-detail">
+            ${clientOwner ? clientOwner + '<br>' : ''}
+            ${clientEmail ? clientEmail + '<br>' : ''}
+            ${clientAddr || '[CLIENT ADDRESS]'}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 2: SERVICES -->
+    <div class="doc-section">
+      <div class="doc-section-title"><span class="doc-section-num">2.</span>Services</div>
+      <p>Provider agrees to deliver the <strong>CWI AI ${tier.label} Package</strong> — an AI-powered business automation platform. ${tier.description}</p>
+      <p>The following services are included under this Agreement:</p>
+      <ul>${serviceItems}</ul>
+      <p>All services shall be delivered remotely unless otherwise agreed in writing. Provider reserves the right to modify service delivery methods, tools, and subprocessors with reasonable notice to Client, provided the scope and quality of deliverables are not materially diminished.</p>
+    </div>
+
+    <!-- SECTION 3: FEES & PAYMENT -->
+    <div class="doc-section">
+      <div class="doc-section-title"><span class="doc-section-num">3.</span>Fees &amp; Payment</div>
+      <table class="fee-table">
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Amount</th>
+            <th>Due Date / Frequency</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Monthly Service Fee</td>
+            <td class="amount">${fmt(tier.monthly)}</td>
+            <td>1st of each month</td>
+          </tr>
+          <tr>
+            <td>One-Time Setup &amp; Onboarding Fee</td>
+            <td class="amount">${fmt(tier.setup)}</td>
+            <td>Due upon Agreement execution</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>Monthly fees are due and payable on the <strong>1st day of each calendar month</strong>. The setup fee is due in full upon execution of this Agreement and is non-refundable.</p>
+      <p>Payments not received within <strong>seven (7) calendar days</strong> of the due date are subject to a late fee of <strong>$25.00</strong> per occurrence. Provider reserves the right to suspend services for accounts more than 14 days past due, without liability to Client.</p>
+      <p>All fees are stated in U.S. Dollars. Client is responsible for any applicable taxes, except for taxes on Provider's net income.</p>
+    </div>
+
+    <!-- SECTION 4: TERM & TERMINATION -->
+    <div class="doc-section">
+      <div class="doc-section-title"><span class="doc-section-num">4.</span>Term &amp; Termination</div>
+      <p>This Agreement commences on <strong>${fmtDate(startDate)}</strong>. ${endDateText}</p>
+      <p>${cancelNote}</p>
+      <p>Written notice of termination must be delivered via email to the applicable party's address listed in Section 1, and is effective upon confirmed receipt. Provider shall deliver a final report and data export to Client within 10 business days of the termination effective date.</p>
+      <p>Provider may terminate this Agreement immediately upon written notice if Client fails to cure a material breach within ten (10) business days of receiving written notice of such breach, or if Client becomes insolvent or ceases operations.</p>
+    </div>
+
+    <!-- SECTION 5: INTELLECTUAL PROPERTY -->
+    <div class="doc-section">
+      <div class="doc-section-title"><span class="doc-section-num">5.</span>Intellectual Property</div>
+      <p><strong>Provider IP.</strong> All software, automation workflows, Make.com scenario templates, AI models, chat bot configurations, methodologies, tools, and platform infrastructure developed or provided by CWI AI LLC remain the exclusive intellectual property of Provider. Nothing in this Agreement transfers any ownership rights in Provider's platform, systems, or proprietary methodologies to Client.</p>
+      <p><strong>Client Data.</strong> Client retains full ownership of all data, content, customer information, and business materials provided to Provider in connection with services under this Agreement. Provider is granted a limited license to access and process Client data solely for the purpose of delivering services hereunder.</p>
+      <p><strong>Work Product.</strong> Customized automation scenarios, reports, and deliverables created specifically for Client under this Agreement are provided for Client's use during the term. Upon termination, Client may retain copies of their specific configurations and data exports, but not the underlying platform or proprietary templates.</p>
+    </div>
+
+    <!-- SECTION 6: CONFIDENTIALITY -->
+    <div class="doc-section">
+      <div class="doc-section-title"><span class="doc-section-num">6.</span>Confidentiality</div>
+      <p>Each party (<strong>"Receiving Party"</strong>) agrees to hold in strict confidence any non-public, proprietary, or confidential information disclosed by the other party (<strong>"Disclosing Party"</strong>) in connection with this Agreement (<strong>"Confidential Information"</strong>), and to use such information solely for the purposes of this Agreement.</p>
+      <p>Confidential Information includes, without limitation, business strategies, pricing, customer lists, technical specifications, financial data, automation workflows, and any information marked as confidential. Confidential Information does not include information that (a) is or becomes publicly known through no breach of this Agreement, (b) was rightfully known before disclosure, (c) is independently developed by the Receiving Party, or (d) is required to be disclosed by law or court order.</p>
+      <p>These confidentiality obligations shall survive termination of this Agreement for a period of <strong>three (3) years</strong>.</p>
+    </div>
+
+    <!-- SECTION 7: LIMITATION OF LIABILITY -->
+    <div class="doc-section">
+      <div class="doc-section-title"><span class="doc-section-num">7.</span>Limitation of Liability</div>
+      <p>TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT SHALL PROVIDER BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, PUNITIVE, OR EXEMPLARY DAMAGES, INCLUDING BUT NOT LIMITED TO LOSS OF PROFITS, REVENUE, DATA, GOODWILL, OR BUSINESS INTERRUPTION, ARISING OUT OF OR IN CONNECTION WITH THIS AGREEMENT, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.</p>
+      <p>PROVIDER'S TOTAL CUMULATIVE LIABILITY ARISING OUT OF OR RELATED TO THIS AGREEMENT, WHETHER IN CONTRACT, TORT (INCLUDING NEGLIGENCE), OR OTHERWISE, SHALL NOT EXCEED THE TOTAL MONTHLY FEES ACTUALLY PAID BY CLIENT TO PROVIDER IN THE <strong>ONE (1) MONTH</strong> IMMEDIATELY PRECEDING THE EVENT GIVING RISE TO THE CLAIM.</p>
+      <p>Some jurisdictions do not allow the exclusion or limitation of certain damages. In such jurisdictions, Provider's liability shall be limited to the maximum extent permitted by law.</p>
+    </div>
+
+    <!-- SECTION 8: DISPUTE RESOLUTION -->
+    <div class="doc-section">
+      <div class="doc-section-title"><span class="doc-section-num">8.</span>Dispute Resolution &amp; Governing Law</div>
+      <p>This Agreement shall be governed by and construed in accordance with the laws of the <strong>State of Michigan</strong>, without regard to its conflict-of-law provisions.</p>
+      <p>In the event of any dispute, claim, or controversy arising out of or relating to this Agreement, the Parties agree to first attempt to resolve the matter through good-faith negotiation. If negotiation fails within thirty (30) days, the dispute shall be submitted to binding arbitration in <strong>Wayne County, Michigan</strong>, under the rules of the American Arbitration Association. The prevailing party shall be entitled to recover reasonable attorneys' fees and costs.</p>
+      <p>Notwithstanding the foregoing, either party may seek injunctive or other equitable relief in a court of competent jurisdiction to prevent irreparable harm pending resolution of a dispute.</p>
+    </div>
+
+    <!-- SECTION 9: GENERAL PROVISIONS -->
+    <div class="doc-section">
+      <div class="doc-section-title"><span class="doc-section-num">9.</span>General Provisions</div>
+      <p><strong>Entire Agreement.</strong> This Agreement constitutes the entire agreement between the Parties with respect to its subject matter and supersedes all prior negotiations, representations, warranties, and understandings of the Parties.</p>
+      <p><strong>Amendments.</strong> This Agreement may only be modified by a written amendment signed by authorized representatives of both Parties.</p>
+      <p><strong>Severability.</strong> If any provision of this Agreement is held to be invalid or unenforceable, the remaining provisions shall continue in full force and effect.</p>
+      <p><strong>Waiver.</strong> No waiver of any breach of this Agreement shall constitute a waiver of any subsequent breach.</p>
+      <p><strong>Independent Contractor.</strong> Provider is an independent contractor. Nothing in this Agreement creates an employment, partnership, joint venture, or agency relationship between the Parties.</p>
+      <p><strong>Force Majeure.</strong> Neither party shall be liable for delays or failures in performance resulting from causes beyond its reasonable control, including acts of God, natural disasters, pandemics, or government actions.</p>
+    </div>
+
+    <!-- SECTION 10: SIGNATURES -->
+    <div class="doc-section">
+      <div class="doc-section-title"><span class="doc-section-num">10.</span>Signatures</div>
+      <p>By signing below, the Parties acknowledge that they have read, understood, and agree to be bound by all terms and conditions of this Service Agreement.</p>
+
+      <div class="sig-grid">
+
+        <div class="sig-block">
+          <div class="sig-party">CWI AI LLC — Service Provider</div>
+          <div class="sig-line"></div>
+          <div class="sig-label">
+            <span>Authorized Signature</span>
+          </div>
+          <div style="margin-top:10px;font-size:12px;color:#333;font-weight:600;">Brian Kalsic</div>
+          <div style="font-size:11px;color:#666;margin-top:1px;">Managing Member, CWI AI LLC</div>
+          <div class="sig-date-line"></div>
+          <div class="sig-date-label">Date</div>
+        </div>
+
+        <div class="sig-block">
+          <div class="sig-party">Client — ${clientBiz || '[CLIENT BUSINESS]'}</div>
+          <div class="sig-line"></div>
+          <div class="sig-label">
+            <span>Authorized Signature</span>
+          </div>
+          <div style="margin-top:10px;font-size:12px;color:#333;font-weight:600;">${clientOwner || '[AUTHORIZED SIGNATORY]'}</div>
+          <div style="font-size:11px;color:#666;margin-top:1px;">${clientBiz || '[CLIENT BUSINESS NAME]'}</div>
+          <div class="sig-date-line"></div>
+          <div class="sig-date-label">Date</div>
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- /doc-body -->
+
+  <!-- DOCUMENT FOOTER -->
+  <div class="doc-footer">
+    <div class="doc-footer-left">CWI AI LLC &nbsp;·&nbsp; Southgate, Michigan &nbsp;·&nbsp; cwiai.com</div>
+    <div class="doc-footer-right">${agNum} &nbsp;·&nbsp; ${tier.label} Tier &nbsp;·&nbsp; ${fmtDate(startDate)}</div>
+  </div>
+
+</div><!-- /agreement-doc -->
+`;
+
+    // Scroll preview to top
+    document.getElementById('previewScroll').scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ── Set default start date to today ────────────────────
+  (function() {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('startDate').value = today;
+
+    // Show current agreement counter in badge without incrementing
+    const key = 'cwi_agreement_counter';
+    const current = parseInt(localStorage.getItem(key) || '1000', 10);
+    document.getElementById('agreementNumBadge').textContent = 'CWI-SA-' + (current + 1);
+  })();
+</script>
+
+</body>
+</html>

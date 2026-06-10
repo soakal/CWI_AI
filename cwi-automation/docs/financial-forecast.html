@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CWI AI LLC — Financial Forecast</title>
+<meta name="description" content="CWI internal tool: CWI AI LLC — Financial Forecast. Internal use only — CWI Compute With Imagination.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:         #0A0A0C;
+    --surface:    #111114;
+    --surface2:   #18181C;
+    --border:     #2A2A30;
+    --orange:     #FF5A1F;
+    --orange-dim: #C44015;
+    --red:        #E53935;
+    --green:      #43A047;
+    --text:       #E8E8EE;
+    --muted:      #7A7A8A;
+    --radius:     8px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Sora', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+    padding: 24px 16px 48px;
+  }
+
+  /* ── Header ── */
+  .header {
+    max-width: 1200px;
+    margin: 0 auto 28px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .header-brand { display: flex; align-items: center; gap: 12px; }
+  .header-logo {
+    width: 38px; height: 38px;
+    background: var(--orange);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 16px; color: #fff; letter-spacing: -1px;
+    flex-shrink: 0;
+  }
+  .header h1 { font-size: 20px; font-weight: 600; letter-spacing: -0.3px; }
+  .header h1 span { color: var(--orange); }
+  .header-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .header-date { font-size: 12px; color: var(--muted); align-self: center; white-space: nowrap; }
+
+  /* ── Layout ── */
+  .wrapper { max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+
+  /* ── Scenario Tabs ── */
+  .tab-row { display: flex; gap: 4px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 4px; width: fit-content; }
+  .tab-btn {
+    padding: 8px 24px;
+    border: none; border-radius: 6px;
+    background: transparent; color: var(--muted);
+    font-family: inherit; font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: all 0.15s ease;
+  }
+  .tab-btn:hover { color: var(--text); background: var(--surface2); }
+  .tab-btn.active { background: var(--orange); color: #fff; }
+
+  /* ── Card ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+  }
+  .card-title {
+    font-size: 11px; font-weight: 600; letter-spacing: 1.2px;
+    text-transform: uppercase; color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  /* ── Input Grid ── */
+  .inputs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 14px;
+  }
+  .input-group { display: flex; flex-direction: column; gap: 5px; }
+  .input-label { font-size: 11px; font-weight: 500; color: var(--muted); letter-spacing: 0.4px; }
+  .input-wrap { position: relative; }
+  .input-prefix {
+    position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+    color: var(--muted); font-size: 13px; pointer-events: none;
+  }
+  .input-suffix {
+    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+    color: var(--muted); font-size: 12px; pointer-events: none;
+  }
+  input[type="number"] {
+    width: 100%; padding: 8px 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px; color: var(--text);
+    font-family: inherit; font-size: 14px; font-weight: 500;
+    transition: border-color 0.15s;
+    -moz-appearance: textfield;
+  }
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+  input[type="number"]:focus { outline: none; border-color: var(--orange); }
+  .has-prefix input[type="number"] { padding-left: 24px; }
+  .has-suffix input[type="number"] { padding-right: 28px; }
+
+  /* ── Key Metrics ── */
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 14px;
+  }
+  .metric-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+  }
+  .metric-label { font-size: 11px; color: var(--muted); font-weight: 500; letter-spacing: 0.4px; margin-bottom: 6px; }
+  .metric-value { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+  .metric-value.orange { color: var(--orange); }
+  .metric-value.red    { color: var(--red); }
+  .metric-value.green  { color: var(--green); }
+  .metric-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  /* ── Table ── */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; min-width: 800px; }
+  thead tr { border-bottom: 1px solid var(--border); }
+  thead th {
+    text-align: right;
+    padding: 8px 10px;
+    font-size: 10px; font-weight: 600; letter-spacing: 0.8px;
+    text-transform: uppercase; color: var(--muted);
+    white-space: nowrap;
+  }
+  thead th:first-child, thead th:nth-child(2), thead th:nth-child(3) { text-align: left; }
+  tbody tr { border-bottom: 1px solid rgba(42,42,48,0.5); transition: background 0.1s; }
+  tbody tr:hover { background: var(--surface2); }
+  tbody tr.current-month { background: rgba(255,90,31,0.06); }
+  td {
+    padding: 9px 10px;
+    font-size: 13px;
+    text-align: right;
+    white-space: nowrap;
+  }
+  td:first-child { text-align: left; font-weight: 500; color: var(--muted); }
+  td:nth-child(2) { text-align: left; }
+  td:nth-child(3) { text-align: left; }
+  .val-positive { color: var(--orange); font-weight: 600; }
+  .val-negative { color: var(--red); font-weight: 600; }
+  .val-neutral  { color: var(--text); }
+  .val-muted    { color: var(--muted); }
+  .val-green    { color: var(--green); font-weight: 600; }
+  tfoot tr { border-top: 1px solid var(--border); }
+  tfoot td { padding: 10px 10px; font-weight: 600; font-size: 13px; }
+
+  /* ── Break-Even Chart ── */
+  .chart-wrap { display: flex; flex-direction: column; gap: 8px; }
+  .chart-months { display: grid; grid-template-columns: repeat(12, 1fr); gap: 6px; }
+  .chart-bar-col { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .chart-bar-area {
+    width: 100%; height: 120px;
+    display: flex; align-items: flex-end; justify-content: center;
+    position: relative;
+  }
+  .chart-zero-line {
+    position: absolute; bottom: 60px; left: 0; right: 0;
+    height: 1px; background: var(--border);
+  }
+  .chart-bar {
+    width: 100%; max-width: 36px;
+    border-radius: 3px 3px 0 0;
+    transition: height 0.3s ease;
+    position: absolute; bottom: 60px;
+  }
+  .chart-bar.positive { background: var(--orange); }
+  .chart-bar.negative { background: var(--red); border-radius: 0 0 3px 3px; top: auto; bottom: auto; }
+  .chart-month-label { font-size: 10px; color: var(--muted); }
+  .chart-value-label { font-size: 9px; color: var(--muted); text-align: center; line-height: 1.2; }
+  .chart-legend { display: flex; gap: 16px; font-size: 11px; color: var(--muted); }
+  .chart-legend span { display: flex; align-items: center; gap: 5px; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 2px; }
+
+  /* ── Tax Reserve ── */
+  .tax-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .tax-cell {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 6px 4px;
+    text-align: center;
+  }
+  .tax-cell-month { font-size: 9px; color: var(--muted); margin-bottom: 3px; }
+  .tax-cell-val { font-size: 11px; font-weight: 600; }
+  .tax-note { font-size: 11px; color: var(--muted); margin-top: 12px; line-height: 1.5; }
+  .tax-note strong { color: var(--orange); }
+
+  /* ── Footer ── */
+  .footer { max-width: 1200px; margin: 32px auto 0; font-size: 11px; color: var(--muted); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+
+  /* ── Print ── */
+  @media print {
+    body { background: #fff; color: #000; padding: 0; }
+    :root { --bg: #fff; --surface: #f8f8f8; --surface2: #f0f0f0; --border: #ddd; --text: #111; --muted: #666; --orange: #c43a00; }
+    .tab-row { display: none; }
+    .header-date { display: none; }
+    a { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-brand">
+    <div class="header-logo">CWI</div>
+    <div>
+      <h1>CWI AI LLC — <span>Financial Forecast</span></h1>
+      <div class="header-sub">12-Month Revenue &amp; Profitability Projection</div>
+    </div>
+  </div>
+  <div class="header-date" id="headerDate"></div>
+</div>
+
+<div class="wrapper">
+
+  <!-- Scenario Tabs -->
+  <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+    <div class="tab-row" role="tablist">
+      <button class="tab-btn" data-scenario="conservative" role="tab">Conservative</button>
+      <button class="tab-btn active" data-scenario="base" role="tab">Base</button>
+      <button class="tab-btn" data-scenario="optimistic" role="tab">Optimistic</button>
+    </div>
+    <span style="font-size:11px; color:var(--muted);">Inputs auto-save to your browser</span>
+  </div>
+
+  <!-- Editable Inputs -->
+  <div class="card">
+    <div class="card-title">Scenario Inputs — Edit to Recalculate</div>
+    <div class="inputs-grid">
+      <div class="input-group">
+        <label class="input-label" for="avgMonthlyFee">Avg Monthly Fee / Client</label>
+        <div class="input-wrap has-prefix">
+          <span class="input-prefix">$</span>
+          <input type="number" id="avgMonthlyFee" min="0" step="50" value="500">
+        </div>
+      </div>
+      <div class="input-group">
+        <label class="input-label" for="avgSetupFee">Avg Setup Fee (one-time)</label>
+        <div class="input-wrap has-prefix">
+          <span class="input-prefix">$</span>
+          <input type="number" id="avgSetupFee" min="0" step="50" value="500">
+        </div>
+      </div>
+      <div class="input-group">
+        <label class="input-label" for="newClientsM1">New Clients / Month (M1–M3)</label>
+        <div class="input-wrap">
+          <input type="number" id="newClientsM1" min="0" step="0.5" value="1">
+        </div>
+      </div>
+      <div class="input-group">
+        <label class="input-label" for="newClientsLate">New Clients / Month (M4–M12)</label>
+        <div class="input-wrap">
+          <input type="number" id="newClientsLate" min="0" step="0.5" value="1">
+        </div>
+      </div>
+      <div class="input-group">
+        <label class="input-label" for="churnRate">Monthly Churn Rate</label>
+        <div class="input-wrap has-suffix">
+          <input type="number" id="churnRate" min="0" max="100" step="0.5" value="5">
+          <span class="input-suffix">%</span>
+        </div>
+      </div>
+      <div class="input-group">
+        <label class="input-label" for="platformCosts">Platform Costs / Month</label>
+        <div class="input-wrap has-prefix">
+          <span class="input-prefix">$</span>
+          <input type="number" id="platformCosts" min="0" step="5" value="115">
+        </div>
+      </div>
+      <div class="input-group">
+        <label class="input-label" for="startMonth">Projection Start Month</label>
+        <div class="input-wrap">
+          <input type="number" id="startMonth" min="1" max="12" step="1" value="1">
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:14px; display:flex; gap:12px; flex-wrap:wrap;">
+      <button onclick="loadScenario('conservative')" style="padding:6px 14px; background:var(--surface2); border:1px solid var(--border); border-radius:5px; color:var(--muted); font-family:inherit; font-size:12px; cursor:pointer;">Load Conservative</button>
+      <button onclick="loadScenario('base')" style="padding:6px 14px; background:var(--surface2); border:1px solid var(--border); border-radius:5px; color:var(--muted); font-family:inherit; font-size:12px; cursor:pointer;">Load Base</button>
+      <button onclick="loadScenario('optimistic')" style="padding:6px 14px; background:var(--surface2); border:1px solid var(--border); border-radius:5px; color:var(--muted); font-family:inherit; font-size:12px; cursor:pointer;">Load Optimistic</button>
+      <button onclick="resetToScenario()" style="padding:6px 14px; background:transparent; border:1px solid var(--border); border-radius:5px; color:var(--muted); font-family:inherit; font-size:12px; cursor:pointer;">Reset</button>
+    </div>
+  </div>
+
+  <!-- Key Metrics -->
+  <div class="card">
+    <div class="card-title">Key Metrics — Month 12</div>
+    <div class="metrics-grid" id="metricsGrid"></div>
+  </div>
+
+  <!-- 12-Month Table -->
+  <div class="card">
+    <div class="card-title">12-Month Projection Table</div>
+    <div class="table-wrap">
+      <table id="forecastTable">
+        <thead>
+          <tr>
+            <th>Month</th>
+            <th>New Clients</th>
+            <th>Active Clients</th>
+            <th>Setup Fees</th>
+            <th>MRR</th>
+            <th>Platform Costs</th>
+            <th>Gross Profit</th>
+            <th>GP %</th>
+            <th>Cumulative</th>
+            <th>Tax Reserve (30%)</th>
+          </tr>
+        </thead>
+        <tbody id="forecastBody"></tbody>
+        <tfoot id="forecastFoot"></tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- Break-Even Chart -->
+  <div class="card">
+    <div class="card-title">Cumulative Profit — Break-Even Visualization</div>
+    <div class="chart-wrap">
+      <div class="chart-legend">
+        <span><span class="legend-dot" style="background:var(--orange)"></span> Positive (profitable)</span>
+        <span><span class="legend-dot" style="background:var(--red)"></span> Negative (pre-break-even)</span>
+      </div>
+      <div class="chart-months" id="breakEvenChart"></div>
+    </div>
+  </div>
+
+  <!-- Tax Reserve -->
+  <div class="card">
+    <div class="card-title">Tax Reserve Tracker — Set Aside 30% of Each Month's Gross Profit</div>
+    <div class="tax-grid" id="taxGrid"></div>
+    <div class="tax-note" id="taxNote"></div>
+  </div>
+
+</div>
+
+<div class="footer">
+  <span>CWI AI LLC &mdash; Internal Planning Document &mdash; Not for distribution</span>
+  <span id="footerUpdate"></span>
+</div>
+
+<script>
+// ─── Scenario Presets ───────────────────────────────────────────────────────
+const SCENARIOS = {
+  conservative: {
+    avgMonthlyFee:  500,
+    avgSetupFee:    500,
+    newClientsM1:   0.67,   // ~1 client / 6 weeks ≈ 0.67/month
+    newClientsLate: 0.67,
+    churnRate:      10,
+    platformCosts:  100,
+    startMonth:     1,
+    label: 'Conservative'
+  },
+  base: {
+    avgMonthlyFee:  500,
+    avgSetupFee:    500,
+    newClientsM1:   1,
+    newClientsLate: 1,
+    churnRate:      5,
+    platformCosts:  115,
+    startMonth:     1,
+    label: 'Base'
+  },
+  optimistic: {
+    avgMonthlyFee:  500,
+    avgSetupFee:    500,
+    newClientsM1:   1,      // M1-M2: 1/mo, M3+: 2/mo
+    newClientsLate: 2,
+    churnRate:      2,
+    platformCosts:  130,
+    startMonth:     1,
+    label: 'Optimistic'
+  }
+};
+
+let activeScenario = 'base';
+
+// ─── LocalStorage helpers ────────────────────────────────────────────────────
+const STORAGE_KEY = 'cwi_forecast_v2';
+
+function saveState() {
+  const state = {
+    scenario: activeScenario,
+    inputs: getInputs()
+  };
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const state = JSON.parse(raw);
+    if (state.scenario) activeScenario = state.scenario;
+    if (state.inputs) applyInputs(state.inputs);
+    return true;
+  } catch(e) { return false; }
+}
+
+// ─── Input helpers ───────────────────────────────────────────────────────────
+function getInputs() {
+  return {
+    avgMonthlyFee:  parseFloat(document.getElementById('avgMonthlyFee').value)  || 0,
+    avgSetupFee:    parseFloat(document.getElementById('avgSetupFee').value)    || 0,
+    newClientsM1:   parseFloat(document.getElementById('newClientsM1').value)   || 0,
+    newClientsLate: parseFloat(document.getElementById('newClientsLate').value) || 0,
+    churnRate:      parseFloat(document.getElementById('churnRate').value)      || 0,
+    platformCosts:  parseFloat(document.getElementById('platformCosts').value)  || 0,
+    startMonth:     parseInt(document.getElementById('startMonth').value)       || 1,
+  };
+}
+
+function applyInputs(inp) {
+  document.getElementById('avgMonthlyFee').value  = inp.avgMonthlyFee;
+  document.getElementById('avgSetupFee').value    = inp.avgSetupFee;
+  document.getElementById('newClientsM1').value   = inp.newClientsM1;
+  document.getElementById('newClientsLate').value = inp.newClientsLate;
+  document.getElementById('churnRate').value      = inp.churnRate;
+  document.getElementById('platformCosts').value  = inp.platformCosts;
+  if (inp.startMonth !== undefined) document.getElementById('startMonth').value = inp.startMonth;
+}
+
+function loadScenario(name) {
+  activeScenario = name;
+  applyInputs(SCENARIOS[name]);
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.scenario === name);
+  });
+  recalculate();
+}
+
+function resetToScenario() {
+  loadScenario(activeScenario);
+}
+
+// ─── Core Calculation ────────────────────────────────────────────────────────
+// Model: Month 1 = setup/platform only, no client acquisition yet.
+// New clients signed in month M pay a setup fee in month M,
+// and their MRR begins in month M+1 (matching the spec table exactly).
+function calcProjection(inp) {
+  const rows = [];
+  let mrr = 0;          // recurring revenue from prior-signed clients
+  let cumulative = 0;
+  let totalActiveClients = 0; // fractional accumulator
+
+  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const startIdx = Math.max(0, Math.min(11, (inp.startMonth || 1) - 1));
+
+  // pre-calculate new clients per month (month 1 = 0, month 2+ = rate)
+  // This matches spec: Month 1 is a ramp month with no clients signed yet.
+  for (let m = 1; m <= 12; m++) {
+    const monthLabel = monthNames[(startIdx + m - 1) % 12];
+
+    // No clients signed in month 1 (ramp/setup month)
+    const rawNew = m === 1 ? 0 : (m <= 3 ? inp.newClientsM1 : inp.newClientsLate);
+    const newClients = rawNew;
+
+    // Setup fees collected this month (one-time, when client signs)
+    const setupFees = Math.round(newClients) * inp.avgSetupFee;
+
+    // MRR this month = clients signed in PRIOR months still active
+    // Apply churn to the running client total, then add new clients for NEXT month's MRR
+    const churnedClients = totalActiveClients * (inp.churnRate / 100);
+    totalActiveClients = Math.max(0, totalActiveClients - churnedClients);
+    // New clients' MRR starts NEXT month; add them to pool after calculating this month's MRR
+    const currentMRR = totalActiveClients * inp.avgMonthlyFee;
+    // Now add new clients to pool (their MRR starts next month)
+    totalActiveClients = totalActiveClients + newClients;
+
+    // Costs
+    const costs = inp.platformCosts;
+
+    // Gross Profit = setup fees + current MRR - costs
+    const totalRevenue = setupFees + currentMRR;
+    const grossProfit = totalRevenue - costs;
+    const gpPct = totalRevenue > 0 ? (grossProfit / totalRevenue) * 100 : (costs > 0 ? -Infinity : 0);
+
+    // Cumulative
+    cumulative += grossProfit;
+
+    // Tax Reserve (30% of positive gross profit only)
+    const taxReserve = grossProfit > 0 ? grossProfit * 0.3 : 0;
+
+    rows.push({
+      month: m,
+      monthLabel,
+      newClients,
+      activeClients: totalActiveClients,
+      setupFees,
+      mrr: currentMRR,
+      totalRevenue,
+      costs,
+      grossProfit,
+      gpPct,
+      cumulative,
+      taxReserve
+    });
+  }
+  return rows;
+}
+
+// ─── Formatting helpers ──────────────────────────────────────────────────────
+function fmt$(n) {
+  if (!isFinite(n)) return '—';
+  const abs = Math.abs(n);
+  const str = abs.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  return (n < 0 ? '-$' : '$') + str;
+}
+
+function fmtClients(n) {
+  if (n === Math.round(n)) return n.toString();
+  return n.toFixed(2).replace(/\.?0+$/, '');
+}
+
+function fmtPct(n) {
+  if (!isFinite(n)) return '—';
+  return n.toFixed(1) + '%';
+}
+
+function valClass(n) {
+  if (n > 0) return 'val-positive';
+  if (n < 0) return 'val-negative';
+  return 'val-muted';
+}
+
+// ─── Render functions ────────────────────────────────────────────────────────
+function renderTable(rows) {
+  const body = document.getElementById('forecastBody');
+  const foot = document.getElementById('forecastFoot');
+
+  let html = '';
+  let breakEvenMonth = null;
+
+  rows.forEach((r, i) => {
+    if (r.cumulative >= 0 && (i === 0 || rows[i-1].cumulative < 0)) {
+      breakEvenMonth = r.month;
+    }
+
+    const isBreakEven = r.cumulative >= 0 && (i === 0 || rows[i-1].cumulative < 0);
+    const rowClass = isBreakEven ? 'current-month' : '';
+
+    html += `<tr class="${rowClass}">
+      <td>${r.monthLabel} M${r.month}</td>
+      <td class="val-neutral">${fmtClients(r.newClients)}</td>
+      <td class="val-neutral">${fmtClients(parseFloat(r.activeClients.toFixed(2)))}</td>
+      <td class="${r.setupFees > 0 ? 'val-positive' : 'val-muted'}">${fmt$(r.setupFees)}</td>
+      <td class="${r.mrr > 0 ? 'val-positive' : 'val-muted'}">${fmt$(r.mrr)}</td>
+      <td class="val-negative">${fmt$(r.costs)}</td>
+      <td class="${valClass(r.grossProfit)}">${fmt$(r.grossProfit)}</td>
+      <td class="${r.gpPct >= 75 ? 'val-green' : r.gpPct > 0 ? 'val-neutral' : 'val-negative'}">${isFinite(r.gpPct) ? fmtPct(r.gpPct) : '—'}</td>
+      <td class="${valClass(r.cumulative)}">${fmt$(r.cumulative)}</td>
+      <td class="${r.taxReserve > 0 ? 'val-neutral' : 'val-muted'}">${r.taxReserve > 0 ? fmt$(r.taxReserve) : '—'}</td>
+    </tr>`;
+  });
+
+  body.innerHTML = html;
+
+  // Footer totals
+  const totSetup   = rows.reduce((s,r) => s + r.setupFees, 0);
+  const totMrr     = rows[rows.length - 1].mrr;
+  const totGP      = rows.reduce((s,r) => s + r.grossProfit, 0);
+  const totTax     = rows.reduce((s,r) => s + r.taxReserve, 0);
+  const totCosts   = rows.reduce((s,r) => s + r.costs, 0);
+  const avgGPPct   = totGP / (totSetup + rows.reduce((s,r) => s + r.mrr, 0) || 1) * 100;
+
+  foot.innerHTML = `<tr>
+    <td colspan="3" style="color:var(--muted); font-size:11px;">12-Month Totals</td>
+    <td class="${totSetup > 0 ? 'val-positive' : 'val-muted'}">${fmt$(totSetup)}</td>
+    <td class="${totMrr > 0 ? 'val-positive' : 'val-muted'}">${fmt$(totMrr)} MRR</td>
+    <td class="val-negative">${fmt$(totCosts)}</td>
+    <td class="${valClass(totGP)}">${fmt$(totGP)}</td>
+    <td class="${avgGPPct >= 75 ? 'val-green' : avgGPPct > 0 ? 'val-neutral' : 'val-negative'}">${fmtPct(avgGPPct)}</td>
+    <td class="${valClass(rows[rows.length-1].cumulative)}">${fmt$(rows[rows.length-1].cumulative)}</td>
+    <td class="val-neutral">${fmt$(totTax)}</td>
+  </tr>`;
+
+  return breakEvenMonth;
+}
+
+function renderMetrics(rows) {
+  const last = rows[rows.length - 1];
+  const totSetup = rows.reduce((s,r) => s + r.setupFees, 0);
+  const totRevenue = rows.reduce((s,r) => s + r.totalRevenue, 0);
+  const totGP = rows.reduce((s,r) => s + r.grossProfit, 0);
+  const avgGPPct = totRevenue > 0 ? (totGP / totRevenue) * 100 : 0;
+  const totTax = rows.reduce((s,r) => s + r.taxReserve, 0);
+
+  // Break-even month
+  let beMonth = null;
+  for (let i = 0; i < rows.length; i++) {
+    if (rows[i].cumulative >= 0) { beMonth = rows[i].month; break; }
+  }
+
+  const grid = document.getElementById('metricsGrid');
+  grid.innerHTML = `
+    <div class="metric-card">
+      <div class="metric-label">MRR at Month 12</div>
+      <div class="metric-value ${last.mrr > 0 ? 'orange' : 'red'}">${fmt$(last.mrr)}</div>
+      <div class="metric-sub">${fmtClients(parseFloat(last.activeClients.toFixed(1)))} active clients</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Total Setup Fees (12 mo)</div>
+      <div class="metric-value ${totSetup > 0 ? 'orange' : 'red'}">${fmt$(totSetup)}</div>
+      <div class="metric-sub">One-time onboarding revenue</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Avg Gross Margin</div>
+      <div class="metric-value ${avgGPPct >= 75 ? 'green' : avgGPPct > 0 ? 'orange' : 'red'}">${fmtPct(avgGPPct)}</div>
+      <div class="metric-sub">Target: 75%+${avgGPPct >= 75 ? ' ✓' : ''}</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Break-Even Month</div>
+      <div class="metric-value ${beMonth !== null ? 'orange' : 'red'}">${beMonth !== null ? 'M' + beMonth : 'Not reached'}</div>
+      <div class="metric-sub">${beMonth !== null ? 'Cumulative profit turns positive' : 'Extend projection or increase clients'}</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Cumulative Profit (M12)</div>
+      <div class="metric-value ${last.cumulative >= 0 ? 'orange' : 'red'}">${fmt$(last.cumulative)}</div>
+      <div class="metric-sub">Net over 12 months</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Total Tax Reserve (30%)</div>
+      <div class="metric-value orange">${fmt$(totTax)}</div>
+      <div class="metric-sub">Set aside from profits</div>
+    </div>
+  `;
+}
+
+function renderChart(rows) {
+  const vals = rows.map(r => r.cumulative);
+  const maxAbs = Math.max(...vals.map(Math.abs), 1);
+  const BAR_MAX = 54; // px above or below zero line
+
+  const chart = document.getElementById('breakEvenChart');
+  chart.innerHTML = rows.map(r => {
+    const pct = r.cumulative / maxAbs; // -1 to 1
+    const isPos = r.cumulative >= 0;
+    const barH = Math.round(Math.abs(pct) * BAR_MAX);
+
+    // Bar positioning: zero line is at bottom:60px of the 120px area
+    let barStyle = '';
+    if (isPos) {
+      // grows upward from zero line
+      barStyle = `height:${barH}px; bottom:60px; top:auto;`;
+    } else {
+      // grows downward from zero line
+      barStyle = `height:${barH}px; top:60px; bottom:auto;`;
+    }
+
+    const shortVal = Math.abs(r.cumulative) >= 1000
+      ? (r.cumulative >= 0 ? '+' : '-') + '$' + Math.round(Math.abs(r.cumulative)/1000) + 'k'
+      : (r.cumulative >= 0 ? '+' : '') + '$' + Math.round(r.cumulative);
+
+    return `<div class="chart-bar-col">
+      <div class="chart-bar-area">
+        <div class="chart-zero-line"></div>
+        <div class="chart-bar ${isPos ? 'positive' : 'negative'}" style="${barStyle}"></div>
+      </div>
+      <div class="chart-month-label">${r.monthLabel}</div>
+      <div class="chart-value-label">${shortVal}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderTax(rows) {
+  const grid = document.getElementById('taxGrid');
+  const note = document.getElementById('taxNote');
+
+  grid.innerHTML = rows.map(r => {
+    const cls = r.taxReserve > 0 ? 'val-positive' : 'val-muted';
+    return `<div class="tax-cell">
+      <div class="tax-cell-month">${r.monthLabel} M${r.month}</div>
+      <div class="tax-cell-val ${cls}">${r.taxReserve > 0 ? fmt$(r.taxReserve) : '—'}</div>
+    </div>`;
+  }).join('');
+
+  const total = rows.reduce((s,r) => s + r.taxReserve, 0);
+  note.innerHTML = `<strong>Tax Reminder:</strong> Set aside 30% of each profitable month's gross profit for self-employment tax (SE tax ~15.3%) and federal/state income tax. Estimated 12-month reserve: <strong>${fmt$(total)}</strong>. Consider a separate business savings account. Consult your CPA for exact amounts.`;
+}
+
+// ─── Main recalculate ────────────────────────────────────────────────────────
+function recalculate() {
+  const inp = getInputs();
+  const rows = calcProjection(inp);
+  renderTable(rows);
+  renderMetrics(rows);
+  renderChart(rows);
+  renderTax(rows);
+  saveState();
+}
+
+// ─── Init ────────────────────────────────────────────────────────────────────
+function init() {
+  // Date header
+  const now = new Date();
+  document.getElementById('headerDate').textContent =
+    now.toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
+  document.getElementById('footerUpdate').textContent =
+    'Last updated: ' + now.toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' });
+
+  // Tab buttons
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => loadScenario(btn.dataset.scenario));
+  });
+
+  // Load from storage or use base defaults
+  const restored = loadState();
+  if (!restored) {
+    applyInputs(SCENARIOS.base);
+    activeScenario = 'base';
+  }
+
+  // Highlight correct tab
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.scenario === activeScenario);
+  });
+
+  // Wire all inputs to recalculate
+  ['avgMonthlyFee','avgSetupFee','newClientsM1','newClientsLate','churnRate','platformCosts','startMonth']
+    .forEach(id => {
+      document.getElementById(id).addEventListener('input', recalculate);
+    });
+
+  recalculate();
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

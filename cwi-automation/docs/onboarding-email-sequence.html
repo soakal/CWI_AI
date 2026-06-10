@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CWI AI — Client Onboarding Email Sequence</title>
+  <meta name="description" content="CWI internal tool: CWI AI — Client Onboarding Email Sequence. Internal use only — CWI Compute With Imagination.">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #0A0A0C;
+      --bg-card: #121215;
+      --bg-card-inner: #0E0E11;
+      --border: #1E1E24;
+      --accent: #FF5A1F;
+      --accent-hover: #FF7A45;
+      --accent-dim: rgba(255, 90, 31, 0.12);
+      --text-primary: #F4F4F6;
+      --text-secondary: #9A9AAF;
+      --text-muted: #5A5A72;
+      --badge-bg: rgba(255, 90, 31, 0.15);
+      --badge-border: rgba(255, 90, 31, 0.35);
+      --success-bg: rgba(34, 197, 94, 0.15);
+      --success-color: #4ADE80;
+      --success-border: rgba(74, 222, 128, 0.3);
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-primary);
+      font-family: 'Sora', sans-serif;
+      font-size: 15px;
+      line-height: 1.7;
+      min-height: 100vh;
+      padding: 0 0 80px;
+    }
+
+    /* ── Header ── */
+    .page-header {
+      background: linear-gradient(180deg, #0F0F14 0%, var(--bg) 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 56px 24px 48px;
+      text-align: center;
+    }
+
+    .logo-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--accent-dim);
+      border: 1px solid var(--badge-border);
+      border-radius: 999px;
+      padding: 6px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+
+    .logo-chip::before {
+      content: '';
+      display: block;
+      width: 7px;
+      height: 7px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.85); }
+    }
+
+    h1 {
+      font-size: clamp(22px, 4vw, 36px);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+      margin-bottom: 16px;
+    }
+
+    h1 span {
+      color: var(--accent);
+    }
+
+    .header-meta {
+      max-width: 680px;
+      margin: 0 auto 28px;
+      color: var(--text-secondary);
+      font-size: 14px;
+      line-height: 1.75;
+    }
+
+    .header-meta strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .trigger-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 18px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      font-weight: 400;
+    }
+
+    .trigger-badge code {
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      color: var(--accent);
+      background: var(--accent-dim);
+      border: 1px solid var(--badge-border);
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    /* ── Timeline track ── */
+    .timeline-container {
+      max-width: 860px;
+      margin: 48px auto 0;
+      padding: 0 24px;
+      position: relative;
+    }
+
+    .timeline-container::before {
+      content: '';
+      position: absolute;
+      left: 52px;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: linear-gradient(180deg, transparent 0%, var(--border) 5%, var(--border) 95%, transparent 100%);
+    }
+
+    /* ── Email card ── */
+    .email-card {
+      display: flex;
+      gap: 0;
+      margin-bottom: 32px;
+      position: relative;
+    }
+
+    .timeline-node {
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 56px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .node-circle {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      transition: border-color 0.2s, color 0.2s;
+      flex-shrink: 0;
+    }
+
+    .email-card:hover .node-circle {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .card-body {
+      flex: 1;
+      margin-left: 20px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      transition: border-color 0.25s;
+    }
+
+    .email-card:hover .card-body {
+      border-color: rgba(255, 90, 31, 0.3);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 18px 22px 16px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,0.015);
+    }
+
+    .card-header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .email-number {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .timing-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--badge-bg);
+      border: 1px solid var(--badge-border);
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .timing-badge svg {
+      flex-shrink: 0;
+    }
+
+    .subject-line {
+      padding: 16px 22px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .subject-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 5px;
+    }
+
+    .subject-text {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+      line-height: 1.45;
+    }
+
+    .email-body-section {
+      padding: 18px 22px 20px;
+    }
+
+    .body-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    .email-body-text {
+      background: var(--bg-card-inner);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 18px;
+      font-size: 13.5px;
+      line-height: 1.75;
+      color: var(--text-secondary);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .email-body-text .placeholder {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 10px 22px 16px;
+      gap: 10px;
+    }
+
+    .copy-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-secondary);
+      font-family: 'Sora', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 7px 14px;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      white-space: nowrap;
+    }
+
+    .copy-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-dim);
+    }
+
+    .copy-btn.copied {
+      border-color: var(--success-border);
+      color: var(--success-color);
+      background: var(--success-bg);
+    }
+
+    .copy-btn svg {
+      flex-shrink: 0;
+      transition: opacity 0.15s;
+    }
+
+    /* ── Summary bar ── */
+    .summary-bar {
+      max-width: 860px;
+      margin: 48px auto 0;
+      padding: 0 24px;
+    }
+
+    .summary-inner {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px 28px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .summary-stat {
+      text-align: center;
+      min-width: 100px;
+    }
+
+    .summary-stat .stat-num {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--accent);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .summary-stat .stat-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .summary-divider {
+      width: 1px;
+      height: 40px;
+      background: var(--border);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+      .timeline-container::before { display: none; }
+      .timeline-node { display: none; }
+      .card-body { margin-left: 0; }
+      .card-header { flex-direction: column; align-items: flex-start; }
+      .summary-divider { display: none; }
+      .summary-inner { justify-content: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Page Header ── -->
+  <header class="page-header">
+    <div class="logo-chip">CWI AI Automation</div>
+    <h1>Client Onboarding <span>Email Sequence</span></h1>
+    <p class="header-meta">
+      This sequence is sent automatically via <strong>Resend</strong> triggered by
+      <strong>scenario-h (Client Onboarding)</strong>. Emails are sent from the client's own
+      verified domain — <strong>white-labeled</strong>.
+    </p>
+    <div class="trigger-badge">
+      Trigger scenario: <code>scenario-h</code> &nbsp;·&nbsp; Sender: <code>RESEND_FROM_ADDRESS</code> &nbsp;·&nbsp; 7 emails over 30 days
+    </div>
+  </header>
+
+  <!-- ── Timeline ── -->
+  <main class="timeline-container" role="main">
+
+    <!-- EMAIL 1 -->
+    <article class="email-card" aria-label="Email 1">
+      <div class="timeline-node">
+        <div class="node-circle">1</div>
+      </div>
+      <div class="card-body">
+        <div class="card-header">
+          <div class="card-header-left">
+            <span class="email-number">Email 01</span>
+            <span class="timing-badge">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Immediate — Day 0
+            </span>
+          </div>
+        </div>
+        <div class="subject-line">
+          <div class="subject-label">Subject</div>
+          <div class="subject-text">Welcome! Here is what happens in the next 48 hours</div>
+        </div>
+        <div class="email-body-section">
+          <div class="body-label">Email Body</div>
+          <div class="email-body-text" id="body-1">Welcome <span class="placeholder">[Name]</span>, your AI assistant is being set up now. In the next 48 hours: your chat widget will go live, your booking link will be active, and your first automated follow-up will be configured. You do not need to do anything — we handle everything. Questions? Reply to this email anytime.</div>
+        </div>
+        <div class="card-footer">
+          <button class="copy-btn" onclick="copyEmail(this, 'body-1', 'subject-1')" aria-label="Copy email 1 body">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy Body
+          </button>
+        </div>
+      </div>
+    </article>
+    <span id="subject-1" style="display:none">Welcome! Here is what happens in the next 48 hours</span>
+
+    <!-- EMAIL 2 -->
+    <article class="email-card" aria-label="Email 2">
+      <div class="timeline-node">
+        <div class="node-circle">2</div>
+      </div>
+      <div class="card-body">
+        <div class="card-header">
+          <div class="card-header-left">
+            <span class="email-number">Email 02</span>
+            <span class="timing-badge">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Day 1
+            </span>
+          </div>
+        </div>
+        <div class="subject-line">
+          <div class="subject-label">Subject</div>
+          <div class="subject-text">Your AI assistant is live — here is how to test it</div>
+        </div>
+        <div class="email-body-section">
+          <div class="body-label">Email Body</div>
+          <div class="email-body-text" id="body-2">Great news — Riley is live on your website! Here is how to test it: Visit your website and click the chat bubble. Type "I would like to book an appointment." Follow the steps. You should receive a booking confirmation within seconds. If anything looks off, reply here.</div>
+        </div>
+        <div class="card-footer">
+          <button class="copy-btn" onclick="copyEmail(this, 'body-2', 'subject-2')" aria-label="Copy email 2 body">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy Body
+          </button>
+        </div>
+      </div>
+    </article>
+    <span id="subject-2" style="display:none">Your AI assistant is live — here is how to test it</span>
+
+    <!-- EMAIL 3 -->
+    <article class="email-card" aria-label="Email 3">
+      <div class="timeline-node">
+        <div class="node-circle">3</div>
+      </div>
+      <div class="card-body">
+        <div class="card-header">
+          <div class="card-header-left">
+            <span class="email-number">Email 03</span>
+            <span class="timing-badge">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Day 3
+            </span>
+          </div>
+        </div>
+        <div class="subject-line">
+          <div class="subject-label">Subject</div>
+          <div class="subject-text">Your first leads are coming in — here is what to expect</div>
+        </div>
+        <div class="email-body-section">
+          <div class="body-label">Email Body</div>
+          <div class="email-body-text" id="body-3">Your system has been live for 3 days. Here is what is happening automatically: Every inquiry gets an instant response. Booking requests go straight to your calendar. Any lead that does not book gets a follow-up. You will get a monthly report showing all activity.</div>
+        </div>
+        <div class="card-footer">
+          <button class="copy-btn" onclick="copyEmail(this, 'body-3', 'subject-3')" aria-label="Copy email 3 body">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy Body
+          </button>
+        </div>
+      </div>
+    </article>
+    <span id="subject-3" style="display:none">Your first leads are coming in — here is what to expect</span>
+
+    <!-- EMAIL 4 -->
+    <article class="email-card" aria-label="Email 4">
+      <div class="timeline-node">
+        <div class="node-circle">4</div>
+      </div>
+      <div class="card-body">
+        <div class="card-header">
+          <div class="card-header-left">
+            <span class="email-number">Email 04</span>
+            <span class="timing-badge">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Day 7
+            </span>
+          </div>
+        </div>
+        <div class="subject-line">
+          <div class="subject-label">Subject</div>
+          <div class="subject-text">Week 1 check-in — how is everything going?</div>
+        </div>
+        <div class="email-body-section">
+          <div class="body-label">Email Body</div>
+          <div class="email-body-text" id="body-4">One week in! How are things looking? I wanted to personally check in and make sure everything is running smoothly. If you have seen your first automated booking or follow-up, that is the system working exactly as designed. Any questions or anything you would like to adjust? Just reply.</div>
+        </div>
+        <div class="card-footer">
+          <button class="copy-btn" onclick="copyEmail(this, 'body-4', 'subject-4')" aria-label="Copy email 4 body">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy Body
+          </button>
+        </div>
+      </div>
+    </article>
+    <span id="subject-4" style="display:none">Week 1 check-in — how is everything going?</span>
+
+    <!-- EMAIL 5 -->
+    <article class="email-card" aria-label="Email 5">
+      <div class="timeline-node">
+        <div class="node-circle">5</div>
+      </div>
+      <div class="card-body">
+        <div class="card-header">
+          <div class="card-header-left">
+            <span class="email-number">Email 05</span>
+            <span class="timing-badge">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Day 14
+            </span>
+          </div>
+        </div>
+        <div class="subject-line">
+          <div class="subject-label">Subject</div>
+          <div class="subject-text">2 weeks in — time for a quick check-in call?</div>
+        </div>
+        <div class="email-body-section">
+          <div class="body-label">Email Body</div>
+          <div class="email-body-text" id="body-5">Two weeks with your AI assistant! I would love to jump on a quick 15-minute call to review your results so far and answer any questions. Pick a time that works: <span class="placeholder">[CALENDLY_LINK]</span>. No agenda other than making sure you are getting value.</div>
+        </div>
+        <div class="card-footer">
+          <button class="copy-btn" onclick="copyEmail(this, 'body-5', 'subject-5')" aria-label="Copy email 5 body">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy Body
+          </button>
+        </div>
+      </div>
+    </article>
+    <span id="subject-5" style="display:none">2 weeks in — time for a quick check-in call?</span>
+
+    <!-- EMAIL 6 -->
+    <article class="email-card" aria-label="Email 6">
+      <div class="timeline-node">
+        <div class="node-circle">6</div>
+      </div>
+      <div class="card-body">
+        <div class="card-header">
+          <div class="card-header-left">
+            <span class="email-number">Email 06</span>
+            <span class="timing-badge">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Day 21
+            </span>
+          </div>
+        </div>
+        <div class="subject-line">
+          <div class="subject-label">Subject</div>
+          <div class="subject-text">One more week until your first monthly report</div>
+        </div>
+        <div class="email-body-section">
+          <div class="body-label">Email Body</div>
+          <div class="email-body-text" id="body-6">Your first monthly performance report arrives in about a week. It will show: total conversations handled, appointments booked, leads captured, and response time averages. Keep an eye on your inbox — it is a good read.</div>
+        </div>
+        <div class="card-footer">
+          <button class="copy-btn" onclick="copyEmail(this, 'body-6', 'subject-6')" aria-label="Copy email 6 body">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy Body
+          </button>
+        </div>
+      </div>
+    </article>
+    <span id="subject-6" style="display:none">One more week until your first monthly report</span>
+
+    <!-- EMAIL 7 -->
+    <article class="email-card" aria-label="Email 7">
+      <div class="timeline-node">
+        <div class="node-circle">7</div>
+      </div>
+      <div class="card-body">
+        <div class="card-header">
+          <div class="card-header-left">
+            <span class="email-number">Email 07</span>
+            <span class="timing-badge">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Day 30
+            </span>
+          </div>
+        </div>
+        <div class="subject-line">
+          <div class="subject-label">Subject</div>
+          <div class="subject-text">Your first monthly report is ready</div>
+        </div>
+        <div class="email-body-section">
+          <div class="body-label">Email Body</div>
+          <div class="email-body-text" id="body-7">Your AI system has been live for 30 days! Your full performance report is attached. <span class="placeholder">[REPORT SUMMARY PLACEHOLDER]</span>. Remember: if the system has not recovered at least one job worth of value this month, your next month is free. We are confident it has. Let us know what you think!</div>
+        </div>
+        <div class="card-footer">
+          <button class="copy-btn" onclick="copyEmail(this, 'body-7', 'subject-7')" aria-label="Copy email 7 body">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy Body
+          </button>
+        </div>
+      </div>
+    </article>
+    <span id="subject-7" style="display:none">Your first monthly report is ready</span>
+
+  </main>
+
+  <!-- ── Summary bar ── -->
+  <div class="summary-bar">
+    <div class="summary-inner">
+      <div class="summary-stat">
+        <div class="stat-num">7</div>
+        <div class="stat-label">Total Emails</div>
+      </div>
+      <div class="summary-divider"></div>
+      <div class="summary-stat">
+        <div class="stat-num">30</div>
+        <div class="stat-label">Day Span</div>
+      </div>
+      <div class="summary-divider"></div>
+      <div class="summary-stat">
+        <div class="stat-num">Auto</div>
+        <div class="stat-label">Triggered via Resend</div>
+      </div>
+      <div class="summary-divider"></div>
+      <div class="summary-stat">
+        <div class="stat-num">100%</div>
+        <div class="stat-label">White-labeled</div>
+      </div>
+      <div class="summary-divider"></div>
+      <div class="summary-stat">
+        <div class="stat-num">0</div>
+        <div class="stat-label">Manual Actions</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function copyEmail(btn, bodyId, subjectId) {
+      const bodyEl = document.getElementById(bodyId);
+      // Extract text without HTML (strip placeholder spans to plain text)
+      const rawText = bodyEl.innerText || bodyEl.textContent;
+
+      navigator.clipboard.writeText(rawText).then(function () {
+        const originalHTML = btn.innerHTML;
+        btn.classList.add('copied');
+        btn.innerHTML = `
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Copied!
+        `;
+        setTimeout(function () {
+          btn.classList.remove('copied');
+          btn.innerHTML = originalHTML;
+        }, 2000);
+      }).catch(function () {
+        // Fallback for older browsers
+        const range = document.createRange();
+        range.selectNodeContents(bodyEl);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+        try {
+          document.execCommand('copy');
+          btn.classList.add('copied');
+          const originalHTML = btn.innerHTML;
+          btn.innerHTML = `
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Copied!
+          `;
+          setTimeout(function () {
+            btn.classList.remove('copied');
+            btn.innerHTML = originalHTML;
+          }, 2000);
+        } catch (e) {
+          console.warn('Copy failed', e);
+        }
+        sel.removeAllRanges();
+      });
+    }
+  </script>
+
+</body>
+</html>

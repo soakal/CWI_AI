@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CWI AI LLC — Risk Register</title>
+  <meta name="description" content="CWI internal tool: CWI AI LLC — Risk Register. Internal use only — CWI Compute With Imagination.">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Reset & Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #0A0A0C;
+      --surface:      #0E0E11;
+      --surface2:     #141418;
+      --surface3:     #1C1C22;
+      --text:         #F2F2F4;
+      --muted:        #85858E;
+      --accent:       #FF5A1F;
+      --accent-hover: #FF8A3D;
+      --border:       rgba(255,255,255,0.09);
+      --radius-sm:    8px;
+      --radius:       16px;
+      --radius-lg:    24px;
+      --high:         #EF4444;
+      --high-bg:      rgba(239,68,68,0.12);
+      --high-border:  rgba(239,68,68,0.3);
+      --med:          #EAB308;
+      --med-bg:       rgba(234,179,8,0.12);
+      --med-border:   rgba(234,179,8,0.3);
+      --low:          #22C55E;
+      --low-bg:       rgba(34,197,94,0.12);
+      --low-border:   rgba(34,197,94,0.3);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Instrument Sans', sans-serif;
+      font-size: 15px;
+      line-height: 1.65;
+      min-height: 100vh;
+    }
+
+    h1, h2, h3, h4 {
+      font-family: 'Sora', sans-serif;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { color: var(--accent-hover); text-decoration: underline; }
+
+    /* ── Layout ── */
+    .page-wrapper {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px 100px;
+    }
+
+    /* ── Header ── */
+    .site-header {
+      border-bottom: 1px solid var(--border);
+      padding: 36px 0 28px;
+      margin-bottom: 48px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .logo-mark {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+
+    .logo-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .logo-text {
+      font-family: 'Sora', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .header-title {
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-top: 4px;
+    }
+
+    .header-meta {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .header-meta span { display: flex; align-items: center; gap: 6px; }
+
+    .header-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+    }
+
+    .doc-badge {
+      display: inline-block;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: rgba(255,90,31,0.15);
+      color: var(--accent);
+      border: 1px solid rgba(255,90,31,0.3);
+    }
+
+    .contact-block {
+      font-size: 12px;
+      color: var(--muted);
+      text-align: right;
+      line-height: 1.7;
+    }
+
+    .contact-block a { color: var(--muted); }
+    .contact-block a:hover { color: var(--accent); text-decoration: none; }
+
+    /* ── Section Wrappers ── */
+    .section { margin-bottom: 56px; }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+
+    .section-title {
+      font-size: clamp(1.1rem, 2.5vw, 1.45rem);
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin-bottom: 16px;
+    }
+
+    /* ── Rating Legend ── */
+    .legend-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .legend-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 22px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+
+    .legend-card.high { border-left: 3px solid var(--high); }
+    .legend-card.med  { border-left: 3px solid var(--med); }
+    .legend-card.low  { border-left: 3px solid var(--low); }
+
+    .legend-indicator {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 3px;
+    }
+    .legend-card.high .legend-indicator { background: var(--high); }
+    .legend-card.med  .legend-indicator { background: var(--med); }
+    .legend-card.low  .legend-indicator { background: var(--low); }
+
+    .legend-body {}
+    .legend-body strong {
+      font-family: 'Sora', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      display: block;
+      margin-bottom: 4px;
+    }
+    .legend-body span { font-size: 13px; color: var(--muted); }
+
+    /* ── Filter Controls ── */
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 24px;
+      align-items: center;
+    }
+
+    .filter-label {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-right: 4px;
+    }
+
+    .filter-group {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-family: 'Instrument Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      transition: all 0.18s ease;
+      letter-spacing: 0.04em;
+    }
+
+    .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    .filter-btn.active.all  { background: rgba(255,90,31,0.15); border-color: rgba(255,90,31,0.4); color: var(--accent); }
+    .filter-btn.active.high { background: var(--high-bg); border-color: var(--high-border); color: var(--high); }
+    .filter-btn.active.med  { background: var(--med-bg);  border-color: var(--med-border);  color: var(--med); }
+    .filter-btn.active.low  { background: var(--low-bg);  border-color: var(--low-border);  color: var(--low); }
+
+    .filter-divider {
+      width: 1px;
+      height: 28px;
+      background: var(--border);
+      align-self: center;
+    }
+
+    .result-count {
+      font-size: 12px;
+      color: var(--muted);
+      margin-left: auto;
+    }
+
+    /* ── Risk Table ── */
+    .table-wrapper {
+      overflow-x: auto;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+    }
+
+    thead {
+      background: var(--surface2);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    th {
+      padding: 13px 16px;
+      text-align: left;
+      font-family: 'Sora', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      white-space: nowrap;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      user-select: none;
+      transition: color 0.15s;
+    }
+
+    th:hover { color: var(--text); }
+
+    th .sort-icon {
+      display: inline-block;
+      margin-left: 5px;
+      opacity: 0.4;
+      font-size: 10px;
+      transition: opacity 0.15s;
+    }
+
+    th.sort-asc .sort-icon,
+    th.sort-desc .sort-icon { opacity: 1; color: var(--accent); }
+
+    td {
+      padding: 16px 16px;
+      vertical-align: top;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--surface2); }
+    tr.hidden { display: none; }
+
+    .col-num {
+      width: 48px;
+      font-family: 'Sora', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--accent);
+      text-align: center;
+    }
+
+    .col-name {
+      min-width: 170px;
+      max-width: 200px;
+    }
+
+    .risk-name {
+      font-family: 'Sora', sans-serif;
+      font-weight: 600;
+      font-size: 14px;
+      line-height: 1.35;
+    }
+
+    .col-likelihood,
+    .col-impact { width: 110px; text-align: center; }
+
+    .col-cause { min-width: 200px; max-width: 240px; color: var(--muted); font-size: 13px; }
+
+    .col-prevention,
+    .col-recovery { min-width: 200px; }
+
+    /* ── Severity Badge ── */
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .badge-high { background: var(--high-bg); color: var(--high); border: 1px solid var(--high-border); }
+    .badge-med  { background: var(--med-bg);  color: var(--med);  border: 1px solid var(--med-border); }
+    .badge-low  { background: var(--low-bg);  color: var(--low);  border: 1px solid var(--low-border); }
+
+    /* ── Bullet Lists in Cells ── */
+    .cell-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .cell-list li {
+      display: flex;
+      gap: 8px;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .cell-list li::before {
+      content: '';
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+      margin-top: 7px;
+    }
+
+    /* ── Monthly Checklist ── */
+    .checklist-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 28px 32px;
+    }
+
+    .checklist-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .checklist-header h3 {
+      font-size: 1.05rem;
+    }
+
+    .checklist-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-sm {
+      padding: 6px 14px;
+      border-radius: var(--radius-sm);
+      font-family: 'Instrument Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      transition: all 0.18s ease;
+    }
+
+    .btn-sm:hover { border-color: var(--accent); color: var(--accent); }
+
+    .btn-sm.primary {
+      background: rgba(255,90,31,0.15);
+      border-color: rgba(255,90,31,0.3);
+      color: var(--accent);
+    }
+
+    .btn-sm.primary:hover { background: rgba(255,90,31,0.25); }
+
+    .checklist-items {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .checklist-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid transparent;
+      transition: background 0.15s, border-color 0.15s;
+      cursor: pointer;
+    }
+
+    .checklist-item:hover {
+      background: var(--surface2);
+    }
+
+    .checklist-item.checked {
+      background: rgba(34,197,94,0.06);
+      border-color: rgba(34,197,94,0.15);
+    }
+
+    .checklist-item.checked .item-text {
+      color: var(--muted);
+      text-decoration: line-through;
+      text-decoration-color: rgba(134,133,142,0.5);
+    }
+
+    .check-box {
+      width: 18px;
+      height: 18px;
+      border-radius: 5px;
+      border: 1.5px solid var(--border);
+      background: var(--surface3);
+      flex-shrink: 0;
+      margin-top: 1px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+
+    .checklist-item.checked .check-box {
+      background: var(--low);
+      border-color: var(--low);
+    }
+
+    .check-icon {
+      display: none;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .checklist-item.checked .check-icon { display: block; }
+
+    .item-text {
+      font-size: 14px;
+      line-height: 1.5;
+      transition: color 0.15s;
+    }
+
+    .checklist-progress {
+      margin-top: 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .progress-bar-wrap {
+      flex: 1;
+      height: 6px;
+      background: var(--surface3);
+      border-radius: 100px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--low);
+      border-radius: 100px;
+      transition: width 0.3s ease;
+    }
+
+    .progress-label {
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    /* ── Footer ── */
+    .site-footer {
+      border-top: 1px solid var(--border);
+      padding: 28px 0 0;
+      margin-top: 64px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .footer-brand {
+      font-family: 'Sora', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    .footer-brand span { color: var(--accent); }
+
+    .footer-meta { font-size: 12px; color: var(--muted); }
+
+    /* ── Print ── */
+    @media print {
+      body { background: #fff; color: #111; font-size: 11px; }
+      .filter-bar, .checklist-actions, .site-footer { display: none; }
+      .table-wrapper { border: 1px solid #ddd; border-radius: 0; }
+      th { background: #f5f5f5; color: #333; }
+      td { background: #fff; border-color: #e0e0e0; }
+      .badge-high { background: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
+      .badge-med  { background: #fef9c3; color: #92400e; border-color: #fde68a; }
+      .badge-low  { background: #dcfce7; color: #15803d; border-color: #86efac; }
+      .checklist-card { border: 1px solid #ddd; }
+      .site-header { border-color: #ddd; }
+      tr.hidden { display: table-row; }
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .site-header { padding: 24px 0 20px; margin-bottom: 32px; }
+      .header-right { display: none; }
+      .checklist-card { padding: 20px; }
+      .legend-grid { grid-template-columns: 1fr; }
+      table { font-size: 12.5px; }
+      th, td { padding: 12px; }
+      .col-cause, .col-prevention { display: none; }
+    }
+
+    @media (max-width: 520px) {
+      .col-recovery { display: none; }
+    }
+
+    /* ── No results ── */
+    .no-results {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="page-wrapper">
+
+  <!-- ── Header ── -->
+  <header class="site-header">
+    <div>
+      <div class="logo-mark">
+        <div class="logo-dot"></div>
+        <span class="logo-text">CWI AI LLC</span>
+      </div>
+      <h1 class="header-title">Risk Register</h1>
+      <div class="header-meta">
+        <span>10 identified risks</span>
+        <span>Updated June 2026</span>
+        <span>Internal — Confidential</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <span class="doc-badge">Internal</span>
+      <div class="contact-block">
+        Brian Kalsic — CWI AI LLC<br />
+        Southgate, MI<br />
+        <a href="mailto:brian@cwiai.net">brian@cwiai.net</a> &nbsp;|&nbsp; <a href="tel:7348129971">(734) 812-9971</a><br />
+        <a href="https://cwiai.net" target="_blank">cwiai.net</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Rating Legend ── -->
+  <section class="section">
+    <div class="section-label">Rating System</div>
+    <h2 class="section-title">Risk Rating Legend</h2>
+    <div class="legend-grid">
+      <div class="legend-card high">
+        <div class="legend-indicator"></div>
+        <div class="legend-body">
+          <strong>High</strong>
+          <span>Likelihood: Likely to happen &nbsp;|&nbsp; Impact: Could kill the business or a client relationship</span>
+        </div>
+      </div>
+      <div class="legend-card med">
+        <div class="legend-indicator"></div>
+        <div class="legend-body">
+          <strong>Medium</strong>
+          <span>Likelihood: Could happen &nbsp;|&nbsp; Impact: Significant setback but recoverable</span>
+        </div>
+      </div>
+      <div class="legend-card low">
+        <div class="legend-indicator"></div>
+        <div class="legend-body">
+          <strong>Low</strong>
+          <span>Likelihood: Unlikely &nbsp;|&nbsp; Impact: Minor disruption with minimal lasting damage</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Risk Table ── -->
+  <section class="section">
+    <div class="section-label">Risk Register</div>
+    <h2 class="section-title">All Identified Risks</h2>
+
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+      <span class="filter-label">Filter by Likelihood:</span>
+      <div class="filter-group" id="likelihood-filters">
+        <button class="filter-btn active all"   data-filter="likelihood" data-value="all">All</button>
+        <button class="filter-btn high"         data-filter="likelihood" data-value="High">High</button>
+        <button class="filter-btn med"          data-filter="likelihood" data-value="Medium">Medium</button>
+        <button class="filter-btn low"          data-filter="likelihood" data-value="Low">Low</button>
+      </div>
+      <div class="filter-divider"></div>
+      <span class="filter-label">Impact:</span>
+      <div class="filter-group" id="impact-filters">
+        <button class="filter-btn active all"   data-filter="impact" data-value="all">All</button>
+        <button class="filter-btn high"         data-filter="impact" data-value="High">High</button>
+        <button class="filter-btn med"          data-filter="impact" data-value="Medium">Medium</button>
+        <button class="filter-btn low"          data-filter="impact" data-value="Low">Low</button>
+      </div>
+      <span class="result-count" id="result-count">Showing 10 of 10 risks</span>
+    </div>
+
+    <div class="table-wrapper">
+      <table id="risk-table">
+        <thead>
+          <tr>
+            <th class="col-num"    data-col="num"        onclick="sortTable(this)">#<span class="sort-icon">&#8597;</span></th>
+            <th class="col-name"   data-col="name"       onclick="sortTable(this)">Risk<span class="sort-icon">&#8597;</span></th>
+            <th class="col-likelihood" data-col="likelihood" onclick="sortTable(this)">Likelihood<span class="sort-icon">&#8597;</span></th>
+            <th class="col-impact"     data-col="impact"     onclick="sortTable(this)">Impact<span class="sort-icon">&#8597;</span></th>
+            <th class="col-cause">Cause</th>
+            <th class="col-prevention">Prevention</th>
+            <th class="col-recovery">Recovery</th>
+          </tr>
+        </thead>
+        <tbody id="risk-tbody">
+
+          <!-- Risk 1 -->
+          <tr data-likelihood="Medium" data-impact="High">
+            <td class="col-num">1</td>
+            <td class="col-name"><span class="risk-name">Client Churn</span></td>
+            <td class="col-likelihood"><span class="badge badge-med">Medium</span></td>
+            <td class="col-impact"><span class="badge badge-high">High</span></td>
+            <td class="col-cause">Poor support response, chatbot giving wrong answers, client doesn't see ROI, better competitor offer.</td>
+            <td class="col-prevention">
+              <ul class="cell-list">
+                <li>Monthly check-ins with every client (automated email + manual review)</li>
+                <li>Proactive retraining when containment rate drops below 40%</li>
+                <li>Clear SLA set from day one — no surprise service degradation</li>
+                <li>NPS survey monthly — catch unhappy clients before they cancel</li>
+              </ul>
+            </td>
+            <td class="col-recovery">
+              <ul class="cell-list">
+                <li>If client signals unhappiness: schedule a call within 24 hours</li>
+                <li>Offer one month free if a major failure is your fault</li>
+                <li>Exit interview + fix root cause before next client</li>
+              </ul>
+            </td>
+          </tr>
+
+          <!-- Risk 2 -->
+          <tr data-likelihood="Medium" data-impact="High">
+            <td class="col-num">2</td>
+            <td class="col-name"><span class="risk-name">API / Platform Failure</span></td>
+            <td class="col-likelihood"><span class="badge badge-med">Medium</span></td>
+            <td class="col-impact"><span class="badge badge-high">High</span></td>
+            <td class="col-cause">Freshchat outage, Make scenario errors, OpenRouter rate limit or downtime, Google Calendar API failure.</td>
+            <td class="col-prevention">
+              <ul class="cell-list">
+                <li>Error handling on every Make module — silent failures are the enemy</li>
+                <li>Email alert triggers when a scenario fails (Make → email)</li>
+                <li>Per-client fallback model documented in OpenRouter</li>
+                <li>Test all integrations monthly even when "working"</li>
+              </ul>
+            </td>
+            <td class="col-recovery">
+              <ul class="cell-list">
+                <li>P1 response (same day): diagnose from Make execution logs</li>
+                <li>Communicate to client within 2 hours of confirmed outage</li>
+                <li>If third-party platform is down: flag it, give ETA</li>
+                <li>If scenario broken: fix via Claude-generated code, redeploy</li>
+              </ul>
+            </td>
+          </tr>
+
+          <!-- Risk 3 -->
+          <tr data-likelihood="Medium" data-impact="Medium">
+            <td class="col-num">3</td>
+            <td class="col-name"><span class="risk-name">Lead Gen Dries Up</span></td>
+            <td class="col-likelihood"><span class="badge badge-med">Medium</span></td>
+            <td class="col-impact"><span class="badge badge-med">Medium</span></td>
+            <td class="col-cause">Apollo list exhausted locally, reply rates drop, email domain gets flagged or banned.</td>
+            <td class="col-prevention">
+              <ul class="cell-list">
+                <li>Never send more than 50 cold emails/day per domain</li>
+                <li>Warm up domain before scaling (Lemwarm/Mailwarm, 2–4 weeks)</li>
+                <li>Maintain bounce rate &lt;2% — clean list before sending</li>
+                <li>Backup channels: LinkedIn DMs, local Facebook groups, Southgate chamber, BNI</li>
+                <li>Build referral system early</li>
+              </ul>
+            </td>
+            <td class="col-recovery">
+              <ul class="cell-list">
+                <li>Domain banned: set up new sending domain, restart warm-up</li>
+                <li>List exhausted: expand to Lincoln Park, Wyandotte, Trenton, Allen Park</li>
+                <li>Reply rate drops: A/B test subject lines; switch target industry</li>
+              </ul>
+            </td>
+          </tr>
+
+          <!-- Risk 4 -->
+          <tr data-likelihood="High" data-impact="Medium">
+            <td class="col-num">4</td>
+            <td class="col-name"><span class="risk-name">Scope Creep</span></td>
+            <td class="col-likelihood"><span class="badge badge-high">High</span></td>
+            <td class="col-impact"><span class="badge badge-med">Medium</span></td>
+            <td class="col-cause">Clients naturally ask for "just one more thing" — new integrations, custom features, extra automation.</td>
+            <td class="col-prevention">
+              <ul class="cell-list">
+                <li>Clear service scope defined in contract (what's included, what's not)</li>
+                <li>Pricing calculator used during sales call</li>
+                <li>Quote extras as add-ons at $75–100/hr</li>
+                <li>Habit phrase: "That's a great idea — let me scope that and send a quick add-on quote."</li>
+              </ul>
+            </td>
+            <td class="col-recovery">
+              <ul class="cell-list">
+                <li>If already doing free extra work: document it, transition to add-on billing at renewal</li>
+                <li>If client pushes back: explain scope boundaries, reference contract</li>
+                <li>Better to lose a scope-creeper than keep delivering free work</li>
+              </ul>
+            </td>
+          </tr>
+
+          <!-- Risk 5 -->
+          <tr data-likelihood="Medium" data-impact="Medium">
+            <td class="col-num">5</td>
+            <td class="col-name"><span class="risk-name">Chatbot Hallucination</span></td>
+            <td class="col-likelihood"><span class="badge badge-med">Medium</span></td>
+            <td class="col-impact"><span class="badge badge-med">Medium</span></td>
+            <td class="col-cause">AI model makes up an answer; outdated FAQ content; untested edge cases.</td>
+            <td class="col-prevention">
+              <ul class="cell-list">
+                <li>Pre-launch: test 30+ real customer questions per client</li>
+                <li>Keep a "golden Q&amp;A set" per client and test monthly</li>
+                <li>Hard stops: bot says "Let me connect you with our team" — never guesses</li>
+                <li>Client reviews and approves all FAQ content before launch</li>
+              </ul>
+            </td>
+            <td class="col-recovery">
+              <ul class="cell-list">
+                <li>Screenshot the wrong answer immediately</li>
+                <li>Update the FAQ/knowledge base within 24 hours</li>
+                <li>Notify client of the fix</li>
+                <li>Add the question to the permanent test set to prevent regression</li>
+              </ul>
+            </td>
+          </tr>
+
+          <!-- Risk 6 -->
+          <tr data-likelihood="Medium" data-impact="Medium">
+            <td class="col-num">6</td>
+            <td class="col-name"><span class="risk-name">Pricing / Margin Squeeze</span></td>
+            <td class="col-likelihood"><span class="badge badge-med">Medium</span></td>
+            <td class="col-impact"><span class="badge badge-med">Medium</span></td>
+            <td class="col-cause">Platform costs rise, API usage spikes with active chatbots, underestimated build time.</td>
+            <td class="col-prevention">
+              <ul class="cell-list">
+                <li>Track gross margin monthly — flag anything below 70%</li>
+                <li>Cap API usage per client in OpenRouter settings</li>
+                <li>Don't discount below floor prices (Starter: $300/mo minimum)</li>
+                <li>Review pricing every 6 months</li>
+              </ul>
+            </td>
+            <td class="col-recovery">
+              <ul class="cell-list">
+                <li>Identify which client is costing more than they're paying</li>
+                <li>Offer upsell to higher tier, or raise rate at renewal</li>
+                <li>If refused: offboard gracefully — one bad-margin client hurts the whole business</li>
+              </ul>
+            </td>
+          </tr>
+
+          <!-- Risk 7 -->
+          <tr data-likelihood="Low" data-impact="High">
+            <td class="col-num">7</td>
+            <td class="col-name"><span class="risk-name">Data Breach / Security Incident</span></td>
+            <td class="col-likelihood"><span class="badge badge-low">Low</span></td>
+            <td class="col-impact"><span class="badge badge-high">High</span></td>
+            <td class="col-cause">API key exposed, phishing attack on accounts, third-party platform breach.</td>
+            <td class="col-prevention">
+              <ul class="cell-list">
+                <li>Unique strong passwords + password manager (Bitwarden)</li>
+                <li>2FA on every account: Google, Make, Freshchat, Apollo, OpenRouter</li>
+                <li>Never store API keys in plain text — use environment variables</li>
+                <li>Rotate API keys every 90 days</li>
+                <li>Never share API keys with clients</li>
+              </ul>
+            </td>
+            <td class="col-recovery">
+              <ul class="cell-list">
+                <li>Breach detected: revoke all API keys immediately</li>
+                <li>Notify affected clients within 48 hours</li>
+                <li>Follow incident response in contract (Section 6.4)</li>
+                <li>Document what happened and how it was fixed</li>
+                <li>Consider cyber liability insurance if handling sensitive data</li>
+              </ul>
+            </td>
+          </tr>
+
+          <!-- Risk 8 -->
+          <tr data-likelihood="Medium" data-impact="Medium">
+            <td class="col-num">8</td>
+            <td class="col-name"><span class="risk-name">Operator Unavailability</span></td>
+            <td class="col-likelihood"><span class="badge badge-med">Medium</span></td>
+            <td class="col-impact"><span class="badge badge-med">Medium</span></td>
+            <td class="col-cause">Illness, family emergency, burnout.</td>
+            <td class="col-prevention">
+              <ul class="cell-list">
+                <li>Automate support, reporting, invoicing — reduce single-person dependency</li>
+                <li>Document everything so a VA or contractor can step in</li>
+                <li>Don't promise SLAs you can't keep alone</li>
+                <li>Build 1-month operating expense cash reserve before scaling</li>
+              </ul>
+            </td>
+            <td class="col-recovery">
+              <ul class="cell-list">
+                <li>VA handles tier-1 support and client communication</li>
+                <li>Notify clients proactively if response times will be slower</li>
+                <li>For extended absence: trusted contractor monitors systems</li>
+              </ul>
+            </td>
+          </tr>
+
+          <!-- Risk 9 -->
+          <tr data-likelihood="Low" data-impact="High">
+            <td class="col-num">9</td>
+            <td class="col-name"><span class="risk-name">Legal Dispute With Client</span></td>
+            <td class="col-likelihood"><span class="badge badge-low">Low</span></td>
+            <td class="col-impact"><span class="badge badge-high">High</span></td>
+            <td class="col-cause">Client claims chatbot damaged their business, data dispute, non-payment.</td>
+            <td class="col-prevention">
+              <ul class="cell-list">
+                <li>Strong contract in place (liability cap = 3 months fees, no consequential damages)</li>
+                <li>Attorney-reviewed contract before first client signs</li>
+                <li>Clear data ownership terms</li>
+                <li>Always collect setup fee before starting work</li>
+              </ul>
+            </td>
+            <td class="col-recovery">
+              <ul class="cell-list">
+                <li>Non-payment: suspend service after 14 days per contract terms</li>
+                <li>Dispute: reference contract, attempt good-faith resolution first</li>
+                <li>Escalation: Michigan business attorney (~$200–300 consultation)</li>
+              </ul>
+            </td>
+          </tr>
+
+          <!-- Risk 10 -->
+          <tr data-likelihood="Medium" data-impact="Medium">
+            <td class="col-num">10</td>
+            <td class="col-name"><span class="risk-name">Competition / Undercut Locally</span></td>
+            <td class="col-likelihood"><span class="badge badge-med">Medium</span></td>
+            <td class="col-impact"><span class="badge badge-med">Medium</span></td>
+            <td class="col-cause">Another local freelancer or agency offers the same services cheaper.</td>
+            <td class="col-prevention">
+              <ul class="cell-list">
+                <li>Build relationships — clients buy from people they trust, not just price</li>
+                <li>Collect testimonials and case studies early</li>
+                <li>Own a niche identity: "Downriver Michigan's AI automation specialist"</li>
+                <li>Deliver ROI, not just technology</li>
+              </ul>
+            </td>
+            <td class="col-recovery">
+              <ul class="cell-list">
+                <li>If losing deals on price: reframe value via ROI math</li>
+                <li>If losing existing clients: exit interview, address actual reason</li>
+                <li>If competitor targeting your clients: double down on relationship quality</li>
+              </ul>
+            </td>
+          </tr>
+
+        </tbody>
+        <tfoot>
+          <tr id="no-results-row" style="display:none;">
+            <td colspan="7" class="no-results">No risks match the selected filters. Try adjusting the filters above.</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── Monthly Checklist ── -->
+  <section class="section">
+    <div class="section-label">Monthly Review</div>
+    <h2 class="section-title">Monthly Risk Review Checklist</h2>
+
+    <div class="checklist-card">
+      <div class="checklist-header">
+        <h3>Run alongside your monthly metrics review</h3>
+        <div class="checklist-actions">
+          <button class="btn-sm" onclick="clearAll()">Clear All</button>
+          <button class="btn-sm primary" onclick="checkAll()">Check All</button>
+        </div>
+      </div>
+
+      <div class="checklist-items" id="checklist-items">
+
+        <div class="checklist-item" data-id="c1" onclick="toggleCheck(this)">
+          <div class="check-box"><span class="check-icon">&#10003;</span></div>
+          <span class="item-text">Any clients showing signs of unhappiness? (support tickets up, engagement down)</span>
+        </div>
+
+        <div class="checklist-item" data-id="c2" onclick="toggleCheck(this)">
+          <div class="check-box"><span class="check-icon">&#10003;</span></div>
+          <span class="item-text">Any platform errors or Make scenario failures this month?</span>
+        </div>
+
+        <div class="checklist-item" data-id="c3" onclick="toggleCheck(this)">
+          <div class="check-box"><span class="check-icon">&#10003;</span></div>
+          <span class="item-text">Reply rate on outreach still above 5%? Sending domain still healthy?</span>
+        </div>
+
+        <div class="checklist-item" data-id="c4" onclick="toggleCheck(this)">
+          <div class="check-box"><span class="check-icon">&#10003;</span></div>
+          <span class="item-text">Any scope creep requests this month? Were they all billed as add-ons?</span>
+        </div>
+
+        <div class="checklist-item" data-id="c5" onclick="toggleCheck(this)">
+          <div class="check-box"><span class="check-icon">&#10003;</span></div>
+          <span class="item-text">Gross margin still above 70% across all clients?</span>
+        </div>
+
+        <div class="checklist-item" data-id="c6" onclick="toggleCheck(this)">
+          <div class="check-box"><span class="check-icon">&#10003;</span></div>
+          <span class="item-text">Any API keys due for rotation this month? (90-day cycle)</span>
+        </div>
+
+        <div class="checklist-item" data-id="c7" onclick="toggleCheck(this)">
+          <div class="check-box"><span class="check-icon">&#10003;</span></div>
+          <span class="item-text">Cash reserve still covering at least 1 month of operating costs?</span>
+        </div>
+
+      </div>
+
+      <div class="checklist-progress">
+        <div class="progress-bar-wrap">
+          <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+        </div>
+        <span class="progress-label" id="progress-label">0 / 7 reviewed</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Footer ── -->
+  <footer class="site-footer">
+    <div class="footer-brand">CWI <span>AI</span> LLC &mdash; Risk Register</div>
+    <div class="footer-meta">Brian Kalsic &nbsp;|&nbsp; <a href="mailto:brian@cwiai.net">brian@cwiai.net</a> &nbsp;|&nbsp; (734) 812-9971 &nbsp;|&nbsp; Southgate, MI &nbsp;|&nbsp; <a href="https://cwiai.net" target="_blank">cwiai.net</a></div>
+  </footer>
+
+</div><!-- /page-wrapper -->
+
+<script>
+  /* ── Filter State ── */
+  var filterState = { likelihood: 'all', impact: 'all' };
+
+  /* ── Filter Buttons ── */
+  document.querySelectorAll('.filter-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var filter = this.dataset.filter;
+      var value  = this.dataset.value;
+
+      // Update active class in this group
+      var group = document.querySelectorAll('[data-filter="' + filter + '"]');
+      group.forEach(function(b) { b.classList.remove('active'); });
+      this.classList.add('active');
+
+      filterState[filter] = value;
+      applyFilters();
+    });
+  });
+
+  function applyFilters() {
+    var rows = document.querySelectorAll('#risk-tbody tr');
+    var visibleCount = 0;
+
+    rows.forEach(function(row) {
+      var likelihood = row.dataset.likelihood;
+      var impact     = row.dataset.impact;
+
+      var matchL = filterState.likelihood === 'all' || filterState.likelihood === likelihood;
+      var matchI = filterState.impact     === 'all' || filterState.impact     === impact;
+
+      if (matchL && matchI) {
+        row.classList.remove('hidden');
+        visibleCount++;
+      } else {
+        row.classList.add('hidden');
+      }
+    });
+
+    document.getElementById('result-count').textContent =
+      'Showing ' + visibleCount + ' of 10 risks';
+
+    var noResults = document.getElementById('no-results-row');
+    noResults.style.display = visibleCount === 0 ? 'table-row' : 'none';
+  }
+
+  /* ── Sort ── */
+  var sortState = { col: null, dir: 1 };
+  var levelOrder = { 'High': 0, 'Medium': 1, 'Low': 2 };
+
+  function sortTable(th) {
+    var col = th.dataset.col;
+    if (sortState.col === col) {
+      sortState.dir *= -1;
+    } else {
+      sortState.col = col;
+      sortState.dir = 1;
+    }
+
+    // Update header classes
+    document.querySelectorAll('th').forEach(function(h) {
+      h.classList.remove('sort-asc', 'sort-desc');
+    });
+    th.classList.add(sortState.dir === 1 ? 'sort-asc' : 'sort-desc');
+
+    var tbody = document.getElementById('risk-tbody');
+    var rows  = Array.from(tbody.querySelectorAll('tr'));
+
+    rows.sort(function(a, b) {
+      var aVal, bVal;
+      if (col === 'num') {
+        aVal = parseInt(a.querySelector('.col-num').textContent);
+        bVal = parseInt(b.querySelector('.col-num').textContent);
+        return (aVal - bVal) * sortState.dir;
+      }
+      if (col === 'name') {
+        aVal = a.querySelector('.risk-name').textContent.toLowerCase();
+        bVal = b.querySelector('.risk-name').textContent.toLowerCase();
+        return aVal.localeCompare(bVal) * sortState.dir;
+      }
+      if (col === 'likelihood') {
+        aVal = levelOrder[a.dataset.likelihood];
+        bVal = levelOrder[b.dataset.likelihood];
+        return (aVal - bVal) * sortState.dir;
+      }
+      if (col === 'impact') {
+        aVal = levelOrder[a.dataset.impact];
+        bVal = levelOrder[b.dataset.impact];
+        return (aVal - bVal) * sortState.dir;
+      }
+      return 0;
+    });
+
+    rows.forEach(function(row) { tbody.appendChild(row); });
+  }
+
+  /* ── Checklist with localStorage ── */
+  var STORAGE_KEY = 'cwi_risk_checklist';
+
+  function loadChecklist() {
+    var saved = {};
+    try { saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch(e) {}
+    document.querySelectorAll('.checklist-item').forEach(function(item) {
+      if (saved[item.dataset.id]) { item.classList.add('checked'); }
+    });
+    updateProgress();
+  }
+
+  function saveChecklist() {
+    var state = {};
+    document.querySelectorAll('.checklist-item').forEach(function(item) {
+      state[item.dataset.id] = item.classList.contains('checked');
+    });
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+  }
+
+  function toggleCheck(el) {
+    el.classList.toggle('checked');
+    saveChecklist();
+    updateProgress();
+  }
+
+  function checkAll() {
+    document.querySelectorAll('.checklist-item').forEach(function(item) {
+      item.classList.add('checked');
+    });
+    saveChecklist();
+    updateProgress();
+  }
+
+  function clearAll() {
+    document.querySelectorAll('.checklist-item').forEach(function(item) {
+      item.classList.remove('checked');
+    });
+    saveChecklist();
+    updateProgress();
+  }
+
+  function updateProgress() {
+    var total   = document.querySelectorAll('.checklist-item').length;
+    var checked = document.querySelectorAll('.checklist-item.checked').length;
+    var pct     = total > 0 ? Math.round((checked / total) * 100) : 0;
+    document.getElementById('progress-fill').style.width  = pct + '%';
+    document.getElementById('progress-label').textContent = checked + ' / ' + total + ' reviewed';
+  }
+
+  // Init
+  loadChecklist();
+</script>
+
+</body>
+</html>

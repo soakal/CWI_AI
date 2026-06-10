@@ -1,0 +1,1621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CWI AI — Brand Kit</title>
+  <meta name="description" content="CWI internal tool: CWI AI — Brand Kit. Internal use only — CWI Compute With Imagination.">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --orange:    #FF5A1F;
+      --black:     #0A0A0A;
+      --offwhite:  #F8F7F4;
+      --warmgray:  #6B6B6B;
+      --green:     #22C55E;
+      --red:       #EF4444;
+      --surface:   #FFFFFF;
+      --border:    #E5E4E0;
+      --font-head: 'Sora', system-ui, sans-serif;
+      --font-body: 'Instrument Sans', system-ui, sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--offwhite);
+      color: var(--black);
+      font-family: var(--font-body);
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--black);
+      border-bottom: 3px solid var(--orange);
+      display: flex;
+      align-items: center;
+      gap: 0;
+      padding: 0 2rem;
+      height: 60px;
+    }
+    .nav-brand {
+      font-family: var(--font-head);
+      font-weight: 800;
+      font-size: 1.25rem;
+      color: #fff;
+      letter-spacing: -0.02em;
+      margin-right: auto;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      text-decoration: none;
+    }
+    .nav-circle {
+      width: 32px; height: 32px;
+      background: var(--orange);
+      border-radius: 50%;
+      display: grid; place-items: center;
+      font-family: var(--font-head);
+      font-weight: 800;
+      font-size: 0.7rem;
+      color: #fff;
+      letter-spacing: -0.02em;
+      flex-shrink: 0;
+    }
+    .nav-links {
+      display: flex;
+      gap: 0;
+      list-style: none;
+    }
+    .nav-links a {
+      display: block;
+      padding: 0 1rem;
+      height: 60px;
+      line-height: 60px;
+      color: rgba(255,255,255,0.65);
+      text-decoration: none;
+      font-size: 0.82rem;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      transition: color 0.15s, border-bottom 0.15s;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -3px;
+    }
+    .nav-links a:hover {
+      color: #fff;
+      border-bottom-color: var(--orange);
+    }
+
+    /* ── LAYOUT ── */
+    .page-hero {
+      background: var(--black);
+      color: #fff;
+      padding: 5rem 2rem 4rem;
+      text-align: center;
+    }
+    .page-hero h1 {
+      font-family: var(--font-head);
+      font-weight: 800;
+      font-size: clamp(2.5rem, 6vw, 4rem);
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+    }
+    .page-hero h1 span { color: var(--orange); }
+    .page-hero p {
+      margin-top: 1rem;
+      color: rgba(255,255,255,0.55);
+      font-size: 1.05rem;
+      max-width: 480px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .version-badge {
+      display: inline-block;
+      margin-bottom: 1.5rem;
+      background: rgba(255,90,31,0.15);
+      border: 1px solid rgba(255,90,31,0.35);
+      color: var(--orange);
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.3rem 0.85rem;
+      border-radius: 100px;
+    }
+
+    .container {
+      max-width: 1020px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    section {
+      padding: 4.5rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    section:last-of-type { border-bottom: none; }
+
+    .section-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--orange);
+      margin-bottom: 0.5rem;
+    }
+    .section-title {
+      font-family: var(--font-head);
+      font-weight: 800;
+      font-size: clamp(1.6rem, 3vw, 2.2rem);
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      color: var(--black);
+      margin-bottom: 0.6rem;
+    }
+    .section-desc {
+      color: var(--warmgray);
+      font-size: 0.97rem;
+      max-width: 560px;
+      margin-bottom: 2.5rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+    }
+
+    /* ── 1. LOGO ── */
+    .logo-showcase {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    @media (max-width: 640px) { .logo-showcase { grid-template-columns: 1fr; } }
+
+    .logo-demo {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 3rem 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.25rem;
+    }
+    .logo-demo.dark-bg {
+      background: var(--black);
+      border-color: #1a1a1a;
+    }
+    .logo-demo.orange-bg {
+      background: var(--orange);
+      border-color: var(--orange);
+    }
+    .logo-demo-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--warmgray);
+      margin-top: 0.5rem;
+    }
+    .logo-demo.dark-bg .logo-demo-label,
+    .logo-demo.orange-bg .logo-demo-label { color: rgba(255,255,255,0.55); }
+
+    .wordmark {
+      font-family: var(--font-head);
+      font-weight: 800;
+      font-size: 2rem;
+      letter-spacing: -0.04em;
+      color: var(--black);
+      line-height: 1;
+    }
+    .wordmark.light { color: #fff; }
+    .wordmark.orange-text { color: var(--orange); }
+    .wordmark span { color: var(--orange); }
+    .wordmark.light span { color: var(--orange); }
+    .wordmark.on-orange { color: #fff; }
+    .wordmark.on-orange span { color: rgba(255,255,255,0.75); }
+
+    /* CW circle mark */
+    .brand-circle {
+      width: 72px; height: 72px;
+      background: var(--orange);
+      border-radius: 50%;
+      display: grid; place-items: center;
+      font-family: var(--font-head);
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: #fff;
+      letter-spacing: -0.04em;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+    .brand-circle.circle-outline {
+      background: transparent;
+      border: 2.5px solid var(--orange);
+      color: var(--orange);
+    }
+    .brand-circle.circle-white {
+      background: #fff;
+      color: var(--orange);
+    }
+    .brand-circle.circle-black {
+      background: var(--black);
+      color: #fff;
+      border: 2.5px solid rgba(255,255,255,0.15);
+    }
+
+    .logo-lockup {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .logo-lockup .brand-circle { width: 48px; height: 48px; font-size: 0.85rem; }
+    .logo-lockup .wordmark { font-size: 1.5rem; }
+
+    .rules-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    @media (max-width: 700px) { .rules-grid { grid-template-columns: 1fr; } }
+    .rule-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem 1.5rem;
+    }
+    .rule-card h4 {
+      font-family: var(--font-head);
+      font-weight: 700;
+      font-size: 0.9rem;
+      margin-bottom: 0.4rem;
+    }
+    .rule-card p {
+      font-size: 0.84rem;
+      color: var(--warmgray);
+      line-height: 1.5;
+    }
+
+    .do-dont {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+    @media (max-width: 640px) { .do-dont { grid-template-columns: 1fr; } }
+
+    .do-box, .dont-box {
+      border-radius: 10px;
+      padding: 1.5rem;
+    }
+    .do-box {
+      background: rgba(34,197,94,0.06);
+      border: 1px solid rgba(34,197,94,0.25);
+    }
+    .dont-box {
+      background: rgba(239,68,68,0.06);
+      border: 1px solid rgba(239,68,68,0.25);
+    }
+    .do-box h4 { color: var(--green); font-weight: 700; margin-bottom: 0.75rem; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; }
+    .dont-box h4 { color: var(--red); font-weight: 700; margin-bottom: 0.75rem; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; }
+    .do-box ul, .dont-box ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+    .do-box li, .dont-box li {
+      font-size: 0.88rem;
+      color: var(--black);
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      line-height: 1.45;
+    }
+    .do-box li::before { content: "✓"; color: var(--green); font-weight: 700; flex-shrink: 0; }
+    .dont-box li::before { content: "✕"; color: var(--red); font-weight: 700; flex-shrink: 0; }
+
+    .do-example, .dont-example {
+      margin-top: 1rem;
+      padding: 1rem;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .do-example { background: rgba(34,197,94,0.08); }
+    .dont-example { background: rgba(239,68,68,0.08); }
+
+    /* stretched logo demo */
+    .stretched {
+      display: inline-block;
+      font-family: var(--font-head);
+      font-weight: 800;
+      font-size: 1.5rem;
+      letter-spacing: -0.04em;
+      transform: scaleX(1.5);
+      color: var(--red);
+      position: relative;
+    }
+    .stretched::after {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      border: 2px dashed var(--red);
+      border-radius: 4px;
+    }
+    .too-small {
+      font-family: var(--font-head);
+      font-weight: 800;
+      font-size: 10px;
+      color: var(--red);
+      letter-spacing: -0.04em;
+      position: relative;
+    }
+
+    /* ── 2. COLORS ── */
+    .palette-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+    @media (max-width: 700px) { .palette-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 420px) { .palette-grid { grid-template-columns: 1fr; } }
+
+    .swatch-card {
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      user-select: none;
+      position: relative;
+    }
+    .swatch-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    }
+    .swatch-color {
+      height: 100px;
+      display: flex;
+      align-items: flex-end;
+      padding: 0.75rem;
+    }
+    .copy-hint {
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      opacity: 0;
+      transition: opacity 0.15s;
+      background: rgba(0,0,0,0.4);
+      color: #fff;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+    }
+    .swatch-card:hover .copy-hint { opacity: 1; }
+
+    .swatch-info {
+      background: #fff;
+      padding: 0.85rem 1rem;
+    }
+    .swatch-name {
+      font-weight: 600;
+      font-size: 0.88rem;
+      color: var(--black);
+      margin-bottom: 0.2rem;
+    }
+    .swatch-hex {
+      font-family: 'Courier New', monospace;
+      font-size: 0.78rem;
+      color: var(--warmgray);
+    }
+    .swatch-role {
+      font-size: 0.73rem;
+      color: var(--warmgray);
+      margin-top: 0.2rem;
+    }
+
+    .copied-toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(1rem);
+      background: var(--black);
+      color: #fff;
+      padding: 0.6rem 1.25rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s;
+      z-index: 9999;
+      border-left: 3px solid var(--orange);
+    }
+    .copied-toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ── 3. TYPOGRAPHY ── */
+    .type-pair {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    @media (max-width: 640px) { .type-pair { grid-template-columns: 1fr; } }
+
+    .type-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+    }
+    .type-card-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--orange);
+      margin-bottom: 1rem;
+    }
+    .type-specimen-head {
+      font-family: var(--font-head);
+      font-weight: 800;
+      font-size: 2.5rem;
+      letter-spacing: -0.04em;
+      line-height: 1.1;
+      color: var(--black);
+    }
+    .type-specimen-body {
+      font-family: var(--font-body);
+      font-weight: 400;
+      font-size: 1rem;
+      line-height: 1.5;
+      color: var(--black);
+    }
+    .type-meta {
+      margin-top: 1.25rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+    .type-meta-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+    }
+    .type-meta-key { color: var(--warmgray); }
+    .type-meta-val { font-weight: 600; color: var(--black); font-family: 'Courier New', monospace; }
+
+    .scale-table {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .scale-row {
+      display: grid;
+      grid-template-columns: 80px 60px 1fr;
+      align-items: center;
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      gap: 1.5rem;
+    }
+    .scale-row:last-child { border-bottom: none; }
+    .scale-row:nth-child(even) { background: rgba(0,0,0,0.015); }
+    .scale-label { font-size: 0.75rem; color: var(--warmgray); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+    .scale-px { font-family: 'Courier New', monospace; font-size: 0.78rem; color: var(--orange); font-weight: 600; }
+    .scale-sample { font-family: var(--font-head); font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; color: var(--black); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* ── 4. VOICE & TONE ── */
+    .voice-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    @media (max-width: 640px) { .voice-grid { grid-template-columns: 1fr; } }
+
+    .word-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.3rem 0.8rem;
+      border-radius: 100px;
+      font-size: 0.82rem;
+      font-weight: 500;
+    }
+    .chip.avoid {
+      background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.2);
+      color: var(--red);
+    }
+    .chip.use {
+      background: rgba(34,197,94,0.08);
+      border: 1px solid rgba(34,197,94,0.2);
+      color: #16a34a;
+    }
+
+    .voice-example {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .voice-ex-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border-bottom: 1px solid var(--border);
+    }
+    .voice-ex-row:last-child { border-bottom: none; }
+    .voice-ex-bad, .voice-ex-good {
+      padding: 1rem 1.25rem;
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+    .voice-ex-bad {
+      background: rgba(239,68,68,0.04);
+      border-right: 1px solid var(--border);
+      color: var(--red);
+    }
+    .voice-ex-good {
+      color: #16a34a;
+      background: rgba(34,197,94,0.04);
+    }
+    .voice-ex-header {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: var(--black);
+      color: rgba(255,255,255,0.5);
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .voice-ex-header span {
+      padding: 0.6rem 1.25rem;
+    }
+    .voice-ex-header span:first-child { border-right: 1px solid rgba(255,255,255,0.1); }
+
+    .principle-cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    @media (max-width: 700px) { .principle-cards { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 400px) { .principle-cards { grid-template-columns: 1fr; } }
+
+    .principle-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem;
+      text-align: center;
+    }
+    .principle-icon {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .principle-card h4 {
+      font-family: var(--font-head);
+      font-weight: 800;
+      font-size: 0.95rem;
+      margin-bottom: 0.3rem;
+      color: var(--black);
+    }
+    .principle-card p {
+      font-size: 0.78rem;
+      color: var(--warmgray);
+      line-height: 1.45;
+    }
+
+    /* ── 5. EMAIL SIGNATURES ── */
+    .sig-tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 2px solid var(--border);
+      margin-bottom: 1.5rem;
+    }
+    .sig-tab {
+      padding: 0.7rem 1.25rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--warmgray);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: color 0.15s, border-color 0.15s;
+      background: none;
+      border-top: none;
+      border-left: none;
+      border-right: none;
+      font-family: var(--font-body);
+    }
+    .sig-tab:hover { color: var(--black); }
+    .sig-tab.active {
+      color: var(--orange);
+      border-bottom-color: var(--orange);
+    }
+
+    .sig-panel { display: none; }
+    .sig-panel.active { display: block; }
+
+    .sig-split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+    @media (max-width: 700px) { .sig-split { grid-template-columns: 1fr; } }
+
+    .sig-preview {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+    .sig-preview-label, .sig-code-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--warmgray);
+      margin-bottom: 0.75rem;
+    }
+
+    .sig-code-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .sig-code-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.6rem 1rem;
+      background: #F0EFE9;
+      border-bottom: 1px solid var(--border);
+    }
+    .sig-code-toggle {
+      display: flex;
+      gap: 0.4rem;
+    }
+    .code-toggle-btn {
+      padding: 0.25rem 0.65rem;
+      font-size: 0.72rem;
+      font-weight: 600;
+      border-radius: 5px;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--warmgray);
+      font-family: var(--font-body);
+      transition: background 0.15s, color 0.15s;
+    }
+    .code-toggle-btn.active {
+      background: var(--black);
+      color: #fff;
+      border-color: var(--black);
+    }
+    .copy-btn {
+      padding: 0.3rem 0.85rem;
+      background: var(--orange);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: var(--font-body);
+      transition: opacity 0.15s;
+    }
+    .copy-btn:hover { opacity: 0.85; }
+
+    .sig-code-body {
+      padding: 1rem;
+      font-family: 'Courier New', monospace;
+      font-size: 0.75rem;
+      line-height: 1.6;
+      color: var(--black);
+      max-height: 260px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    /* Actual signature renders */
+    .sig-render-formal {
+      font-family: Arial, sans-serif;
+      font-size: 13px;
+      line-height: 1.5;
+      color: #0A0A0A;
+      border-left: 3px solid #FF5A1F;
+      padding-left: 14px;
+    }
+    .sig-render-formal .sig-name {
+      font-weight: 700;
+      font-size: 15px;
+      color: #0A0A0A;
+    }
+    .sig-render-formal .sig-title {
+      color: #6B6B6B;
+      font-size: 12px;
+    }
+    .sig-render-formal .sig-company {
+      font-weight: 700;
+      color: #FF5A1F;
+      margin-top: 4px;
+      font-size: 13px;
+    }
+    .sig-render-formal .sig-contact {
+      color: #6B6B6B;
+      font-size: 12px;
+      margin-top: 6px;
+    }
+    .sig-render-formal .sig-contact a { color: #FF5A1F; text-decoration: none; }
+    .sig-render-formal .sig-divider {
+      border: none;
+      border-top: 1px solid #E5E4E0;
+      margin: 8px 0;
+    }
+    .sig-render-formal .sig-tagline {
+      font-size: 11px;
+      color: #9B9B9B;
+      font-style: italic;
+    }
+
+    .sig-render-casual {
+      font-family: Arial, sans-serif;
+      font-size: 13px;
+      line-height: 1.5;
+      color: #0A0A0A;
+    }
+    .sig-render-casual .sig-name { font-weight: 700; font-size: 14px; }
+    .sig-render-casual .sig-company { color: #FF5A1F; font-weight: 600; }
+    .sig-render-casual .sig-contact { color: #6B6B6B; font-size: 12px; }
+    .sig-render-casual .sig-contact a { color: #FF5A1F; text-decoration: none; }
+
+    .sig-render-minimal {
+      font-family: Arial, sans-serif;
+      font-size: 12px;
+      color: #6B6B6B;
+      line-height: 1.4;
+    }
+    .sig-render-minimal strong { color: #0A0A0A; }
+    .sig-render-minimal a { color: #FF5A1F; text-decoration: none; }
+
+    /* ── 6. SOCIAL PROFILES ── */
+    .social-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+    @media (max-width: 700px) { .social-grid { grid-template-columns: 1fr; } }
+
+    .social-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .social-card-header {
+      padding: 1rem 1.25rem;
+      background: var(--black);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .social-platform {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .social-icon {
+      width: 28px; height: 28px;
+      border-radius: 6px;
+      display: grid;
+      place-items: center;
+      font-size: 0.7rem;
+      font-weight: 800;
+      font-family: var(--font-head);
+      flex-shrink: 0;
+    }
+    .social-icon.li { background: #0A66C2; color: #fff; }
+    .social-icon.fb { background: #1877F2; color: #fff; }
+    .social-icon.ig { background: linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); color: #fff; }
+
+    .social-platform-name {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.7);
+      letter-spacing: 0.04em;
+    }
+    .social-char-count {
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.35);
+    }
+    .social-bio-text {
+      padding: 1.25rem;
+      font-size: 0.88rem;
+      line-height: 1.55;
+      color: var(--black);
+      min-height: 100px;
+    }
+    .social-card-footer {
+      padding: 0.75rem 1.25rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+    }
+    .copy-bio-btn {
+      padding: 0.35rem 0.9rem;
+      background: var(--orange);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: var(--font-body);
+      transition: opacity 0.15s;
+    }
+    .copy-bio-btn:hover { opacity: 0.85; }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--black);
+      color: rgba(255,255,255,0.4);
+      text-align: center;
+      padding: 2rem;
+      font-size: 0.8rem;
+    }
+    footer strong { color: rgba(255,255,255,0.7); }
+    footer span { color: var(--orange); }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-brand" href="#">
+    <div class="nav-circle">CW</div>
+    CWI AI
+  </a>
+  <ul class="nav-links">
+    <li><a href="#logo">Logo</a></li>
+    <li><a href="#colors">Colors</a></li>
+    <li><a href="#typography">Type</a></li>
+    <li><a href="#voice">Voice</a></li>
+    <li><a href="#signatures">Signatures</a></li>
+    <li><a href="#social">Social</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<div class="page-hero">
+  <div class="version-badge">Brand Kit v1.0</div>
+  <h1>CWI AI<br><span>Brand Guidelines</span></h1>
+  <p>The single source of truth for how CWI AI looks, sounds, and shows up.</p>
+</div>
+
+<!-- TOAST -->
+<div class="copied-toast" id="toast">Copied to clipboard</div>
+
+<!-- 1. LOGO -->
+<section id="logo">
+  <div class="container">
+    <div class="section-label">01 — Logo</div>
+    <h2 class="section-title">Brand Mark & Wordmark</h2>
+    <p class="section-desc">The CWI AI identity uses the full wordmark and the CW circle mark. Use the version that fits the context — always with the correct background.</p>
+
+    <div class="logo-showcase">
+      <!-- Light bg -->
+      <div class="logo-demo">
+        <div class="logo-lockup">
+          <div class="brand-circle">CW</div>
+          <div class="wordmark">CWI<span> AI</span></div>
+        </div>
+        <div class="wordmark" style="font-size:1.75rem;">CWI<span> AI</span></div>
+        <div class="brand-circle">CW</div>
+        <div class="logo-demo-label">On Off-White / Light backgrounds</div>
+      </div>
+
+      <!-- Dark bg -->
+      <div class="logo-demo dark-bg">
+        <div class="logo-lockup">
+          <div class="brand-circle circle-black">CW</div>
+          <div class="wordmark light">CWI<span> AI</span></div>
+        </div>
+        <div class="wordmark light" style="font-size:1.75rem;">CWI<span> AI</span></div>
+        <div class="brand-circle circle-black">CW</div>
+        <div class="logo-demo-label">On Black / Dark backgrounds</div>
+      </div>
+
+      <!-- Orange bg -->
+      <div class="logo-demo orange-bg">
+        <div class="logo-lockup">
+          <div class="brand-circle circle-white">CW</div>
+          <div class="wordmark on-orange">CWI<span> AI</span></div>
+        </div>
+        <div class="wordmark on-orange" style="font-size:1.75rem;">CWI<span> AI</span></div>
+        <div class="brand-circle circle-white">CW</div>
+        <div class="logo-demo-label">On Signal Orange</div>
+      </div>
+
+      <!-- Outline variant -->
+      <div class="logo-demo">
+        <div class="logo-lockup">
+          <div class="brand-circle circle-outline">CW</div>
+          <div class="wordmark orange-text">CWI AI</div>
+        </div>
+        <div class="brand-circle circle-outline">CW</div>
+        <div class="logo-demo-label">Outline / Monoline variant</div>
+      </div>
+    </div>
+
+    <div class="rules-grid">
+      <div class="rule-card">
+        <h4>Minimum size</h4>
+        <p>Never render the wordmark below <strong>24px</strong> cap height. The circle mark minimum is <strong>20px</strong> diameter. Below these sizes legibility breaks.</p>
+      </div>
+      <div class="rule-card">
+        <h4>Clear space</h4>
+        <p>Maintain clear space equal to the height of the "C" in CWI on all sides of the logo. Nothing — text, images, edges — enters this zone.</p>
+      </div>
+      <div class="rule-card">
+        <h4>Font weight</h4>
+        <p>The wordmark is always <strong>Sora 800 (ExtraBold)</strong>. Never use a lighter weight for the logo. Never substitute another typeface.</p>
+      </div>
+    </div>
+
+    <div class="do-dont">
+      <div class="do-box">
+        <h4>Do</h4>
+        <ul>
+          <li>Use the approved logo files on correct backgrounds</li>
+          <li>Maintain proportional scaling at all times</li>
+          <li>Apply Signal Orange only to the "AI" or accent elements</li>
+          <li>Use the circle mark standalone when space is tight</li>
+          <li>Keep Sora 800 as the exclusive wordmark font</li>
+        </ul>
+        <div class="do-example">
+          <div class="logo-lockup">
+            <div class="brand-circle">CW</div>
+            <div class="wordmark">CWI<span> AI</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="dont-box">
+        <h4>Don't</h4>
+        <ul>
+          <li>Stretch, compress, or distort the logo proportions</li>
+          <li>Recolor the wordmark outside the approved palette</li>
+          <li>Use the logo below the minimum size</li>
+          <li>Place the logo on busy or low-contrast backgrounds</li>
+          <li>Add drop shadows, outlines, or effects</li>
+        </ul>
+        <div class="dont-example" style="gap:1.5rem; display:flex; align-items:center; justify-content:center; flex-wrap:wrap;">
+          <div class="stretched">CWI AI</div>
+          <div class="too-small">CWI AI (too small)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 2. COLORS -->
+<section id="colors">
+  <div class="container">
+    <div class="section-label">02 — Colors</div>
+    <h2 class="section-title">Primary Palette</h2>
+    <p class="section-desc">Six colors — click any swatch to copy the hex code. Use Signal Orange sparingly as the primary accent. Never use two accent colors side by side.</p>
+
+    <div class="palette-grid">
+      <div class="swatch-card" onclick="copyColor('#FF5A1F', this)" title="Copy #FF5A1F">
+        <div class="swatch-color" style="background:#FF5A1F;">
+          <span class="copy-hint">Click to copy</span>
+        </div>
+        <div class="swatch-info">
+          <div class="swatch-name">Signal Orange</div>
+          <div class="swatch-hex">#FF5A1F</div>
+          <div class="swatch-role">Primary accent · CTAs · highlights</div>
+        </div>
+      </div>
+
+      <div class="swatch-card" onclick="copyColor('#0A0A0A', this)" title="Copy #0A0A0A">
+        <div class="swatch-color" style="background:#0A0A0A;">
+          <span class="copy-hint">Click to copy</span>
+        </div>
+        <div class="swatch-info">
+          <div class="swatch-name">Pure Black</div>
+          <div class="swatch-hex">#0A0A0A</div>
+          <div class="swatch-role">Body text · headings · nav</div>
+        </div>
+      </div>
+
+      <div class="swatch-card" onclick="copyColor('#F8F7F4', this)" title="Copy #F8F7F4">
+        <div class="swatch-color" style="background:#F8F7F4; border-bottom:1px solid #E5E4E0;">
+          <span class="copy-hint" style="background:rgba(0,0,0,0.15); color:#333;">Click to copy</span>
+        </div>
+        <div class="swatch-info">
+          <div class="swatch-name">Off-White</div>
+          <div class="swatch-hex">#F8F7F4</div>
+          <div class="swatch-role">Page background · card fills</div>
+        </div>
+      </div>
+
+      <div class="swatch-card" onclick="copyColor('#6B6B6B', this)" title="Copy #6B6B6B">
+        <div class="swatch-color" style="background:#6B6B6B;">
+          <span class="copy-hint">Click to copy</span>
+        </div>
+        <div class="swatch-info">
+          <div class="swatch-name">Warm Gray</div>
+          <div class="swatch-hex">#6B6B6B</div>
+          <div class="swatch-role">Secondary text · captions · metadata</div>
+        </div>
+      </div>
+
+      <div class="swatch-card" onclick="copyColor('#22C55E', this)" title="Copy #22C55E">
+        <div class="swatch-color" style="background:#22C55E;">
+          <span class="copy-hint">Click to copy</span>
+        </div>
+        <div class="swatch-info">
+          <div class="swatch-name">Success Green</div>
+          <div class="swatch-hex">#22C55E</div>
+          <div class="swatch-role">Confirmations · do examples · positive</div>
+        </div>
+      </div>
+
+      <div class="swatch-card" onclick="copyColor('#EF4444', this)" title="Copy #EF4444">
+        <div class="swatch-color" style="background:#EF4444;">
+          <span class="copy-hint">Click to copy</span>
+        </div>
+        <div class="swatch-info">
+          <div class="swatch-name">Error Red</div>
+          <div class="swatch-hex">#EF4444</div>
+          <div class="swatch-role">Errors · don't examples · alerts</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 3. TYPOGRAPHY -->
+<section id="typography">
+  <div class="container">
+    <div class="section-label">03 — Typography</div>
+    <h2 class="section-title">Type System</h2>
+    <p class="section-desc">Two typefaces. Sora 800 commands attention in headlines. Instrument Sans carries the weight of every body copy moment — readable, neutral, professional.</p>
+
+    <div class="type-pair">
+      <div class="type-card">
+        <div class="type-card-label">Display / Headlines</div>
+        <div class="type-specimen-head" style="font-size:3rem;">Aa</div>
+        <div class="type-specimen-head" style="font-size:1.1rem; margin-top:0.5rem;">ABCDEFGHIJKLMNOPQRSTUVWXYZ<br>abcdefghijklmnopqrstuvwxyz<br>0123456789 !@#$%&</div>
+        <div class="type-meta">
+          <div class="type-meta-row"><span class="type-meta-key">Family</span><span class="type-meta-val">Sora</span></div>
+          <div class="type-meta-row"><span class="type-meta-key">Weight</span><span class="type-meta-val">800 (ExtraBold)</span></div>
+          <div class="type-meta-row"><span class="type-meta-key">Tracking</span><span class="type-meta-val">-0.03em to -0.04em</span></div>
+          <div class="type-meta-row"><span class="type-meta-key">Line height</span><span class="type-meta-val">1.1 – 1.2</span></div>
+          <div class="type-meta-row"><span class="type-meta-key">Source</span><span class="type-meta-val">Google Fonts</span></div>
+        </div>
+      </div>
+      <div class="type-card">
+        <div class="type-card-label">Body / UI</div>
+        <div class="type-specimen-body" style="font-size:2.5rem; font-weight:400; line-height:1.2;">Aa</div>
+        <div class="type-specimen-body" style="margin-top:0.5rem;">ABCDEFGHIJKLMNOPQRSTUVWXYZ<br>abcdefghijklmnopqrstuvwxyz<br>0123456789 !@#$%&<br><br>CWI AI helps small businesses automate the work that slows them down — so they can focus on the work that moves them forward.</div>
+        <div class="type-meta">
+          <div class="type-meta-row"><span class="type-meta-key">Family</span><span class="type-meta-val">Instrument Sans</span></div>
+          <div class="type-meta-row"><span class="type-meta-key">Weight</span><span class="type-meta-val">400 / 500 / 600</span></div>
+          <div class="type-meta-row"><span class="type-meta-key">Tracking</span><span class="type-meta-val">0 (default)</span></div>
+          <div class="type-meta-row"><span class="type-meta-key">Line height</span><span class="type-meta-val">1.5 body / 1.4 UI</span></div>
+          <div class="type-meta-row"><span class="type-meta-key">Source</span><span class="type-meta-val">Google Fonts</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-desc" style="margin-bottom:1rem;">Type scale — use these sizes. No arbitrary sizes between steps.</div>
+    <div class="scale-table">
+      <div class="scale-row">
+        <div class="scale-label">Display 2</div>
+        <div class="scale-px">64px</div>
+        <div class="scale-sample" style="font-size:min(64px, 8vw);">CWI AI</div>
+      </div>
+      <div class="scale-row">
+        <div class="scale-label">Display 1</div>
+        <div class="scale-px">48px</div>
+        <div class="scale-sample" style="font-size:min(48px, 6vw);">Automate everything.</div>
+      </div>
+      <div class="scale-row">
+        <div class="scale-label">Heading 1</div>
+        <div class="scale-px">32px</div>
+        <div class="scale-sample" style="font-size:min(32px, 4vw);">It just works.</div>
+      </div>
+      <div class="scale-row">
+        <div class="scale-label">Heading 2</div>
+        <div class="scale-px">24px</div>
+        <div class="scale-sample" style="font-size:min(24px, 3vw);">Fast, clear, simple.</div>
+      </div>
+      <div class="scale-row">
+        <div class="scale-label">Heading 3</div>
+        <div class="scale-px">20px</div>
+        <div class="scale-sample" style="font-size:20px;">Setup takes minutes, not weeks.</div>
+      </div>
+      <div class="scale-row">
+        <div class="scale-label">Large body</div>
+        <div class="scale-px">18px</div>
+        <div class="scale-sample" style="font-size:18px; font-family:var(--font-body); font-weight:400; letter-spacing:0;">CWI AI connects your tools and gets out of the way.</div>
+      </div>
+      <div class="scale-row">
+        <div class="scale-label">Body</div>
+        <div class="scale-px">16px</div>
+        <div class="scale-sample" style="font-size:16px; font-family:var(--font-body); font-weight:400; letter-spacing:0;">Standard paragraph text. Readable at all screen sizes.</div>
+      </div>
+      <div class="scale-row">
+        <div class="scale-label">Small / UI</div>
+        <div class="scale-px">14px</div>
+        <div class="scale-sample" style="font-size:14px; font-family:var(--font-body); font-weight:400; letter-spacing:0;">Metadata, captions, secondary information, labels.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 4. VOICE & TONE -->
+<section id="voice">
+  <div class="container">
+    <div class="section-label">04 — Voice &amp; Tone</div>
+    <h2 class="section-title">How We Sound</h2>
+    <p class="section-desc">Confident and direct. We write the way a sharp person talks — no fluff, no corporate speak, no jargon. Every sentence earns its place.</p>
+
+    <div class="principle-cards">
+      <div class="principle-card">
+        <div class="principle-icon">&#9889;</div>
+        <h4>Direct</h4>
+        <p>Lead with the point. Cut anything that doesn't add meaning. Short sentences win.</p>
+      </div>
+      <div class="principle-card">
+        <div class="principle-icon">&#128161;</div>
+        <h4>Clear</h4>
+        <p>If a 10th grader can't follow it, rewrite it. Plain English always beats jargon.</p>
+      </div>
+      <div class="principle-card">
+        <div class="principle-icon">&#128170;</div>
+        <h4>Confident</h4>
+        <p>We don't hedge. "It works" not "it may potentially help you to possibly..."</p>
+      </div>
+      <div class="principle-card">
+        <div class="principle-icon">&#128101;</div>
+        <h4>Human</h4>
+        <p>We're talking to a real person with real problems. Sound like you mean it.</p>
+      </div>
+    </div>
+
+    <div class="voice-grid">
+      <div>
+        <div class="section-desc" style="margin-bottom:0.5rem; font-weight:600; color:var(--black); font-size:0.9rem;">Words to avoid</div>
+        <div class="word-chips">
+          <span class="chip avoid">leverage</span>
+          <span class="chip avoid">synergy</span>
+          <span class="chip avoid">robust</span>
+          <span class="chip avoid">world-class</span>
+          <span class="chip avoid">holistic</span>
+          <span class="chip avoid">cutting-edge</span>
+          <span class="chip avoid">empower</span>
+          <span class="chip avoid">ecosystem</span>
+          <span class="chip avoid">seamless</span>
+          <span class="chip avoid">innovative</span>
+          <span class="chip avoid">game-changing</span>
+          <span class="chip avoid">best-in-class</span>
+          <span class="chip avoid">scalable solutions</span>
+          <span class="chip avoid">value-add</span>
+        </div>
+      </div>
+      <div>
+        <div class="section-desc" style="margin-bottom:0.5rem; font-weight:600; color:var(--black); font-size:0.9rem;">Words we use</div>
+        <div class="word-chips">
+          <span class="chip use">clear</span>
+          <span class="chip use">fast</span>
+          <span class="chip use">simple</span>
+          <span class="chip use">it works</span>
+          <span class="chip use">saves time</span>
+          <span class="chip use">built for you</span>
+          <span class="chip use">straightforward</span>
+          <span class="chip use">no setup fees</span>
+          <span class="chip use">done in minutes</span>
+          <span class="chip use">plain English</span>
+          <span class="chip use">we handle it</span>
+          <span class="chip use">real results</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:2rem;">
+      <div class="section-desc" style="margin-bottom:1rem; font-weight:600; color:var(--black); font-size:0.9rem;">Before &amp; after examples</div>
+      <div class="voice-example">
+        <div class="voice-ex-header">
+          <span>&#10005; Don't write this</span>
+          <span>&#10003; Write this instead</span>
+        </div>
+        <div class="voice-ex-row">
+          <div class="voice-ex-bad">Our robust, world-class AI solution leverages cutting-edge technology to empower your business ecosystem.</div>
+          <div class="voice-ex-good">CWI AI connects your tools and gets out of the way. You save time. It just works.</div>
+        </div>
+        <div class="voice-ex-row">
+          <div class="voice-ex-bad">We provide holistic, scalable solutions that synergize with your existing workflows to deliver value-add outcomes.</div>
+          <div class="voice-ex-good">We automate the repetitive work so your team can focus on the jobs that actually grow your business.</div>
+        </div>
+        <div class="voice-ex-row">
+          <div class="voice-ex-bad">Our seamless, best-in-class onboarding experience ensures a frictionless journey for all stakeholders.</div>
+          <div class="voice-ex-good">Setup takes about 20 minutes. We walk you through it, step by step.</div>
+        </div>
+        <div class="voice-ex-row">
+          <div class="voice-ex-bad">Leveraging game-changing innovations, we drive digital transformation across your enterprise landscape.</div>
+          <div class="voice-ex-good">We build AI automations that do the work you keep putting off. Fast setup. Real results.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 5. EMAIL SIGNATURES -->
+<section id="signatures">
+  <div class="container">
+    <div class="section-label">05 — Email Signatures</div>
+    <h2 class="section-title">Email Signature Templates</h2>
+    <p class="section-desc">Three variants for different contexts. Replace the placeholder name, title, phone, and links. Always use plain Arial in your email client for maximum compatibility.</p>
+
+    <div class="sig-tabs">
+      <button class="sig-tab active" onclick="showSig('formal', this)">Formal</button>
+      <button class="sig-tab" onclick="showSig('casual', this)">Casual</button>
+      <button class="sig-tab" onclick="showSig('minimal', this)">Minimal</button>
+    </div>
+
+    <!-- FORMAL -->
+    <div class="sig-panel active" id="sig-formal">
+      <div class="sig-split">
+        <div>
+          <div class="sig-preview-label">Preview</div>
+          <div class="sig-preview">
+            <div class="sig-render-formal">
+              <div class="sig-name">Your Name</div>
+              <div class="sig-title">Director of AI Automation</div>
+              <div class="sig-company">CWI AI</div>
+              <hr class="sig-divider">
+              <div class="sig-contact">
+                P: <a href="tel:+15550000000">(555) 000-0000</a>&nbsp;&nbsp;|&nbsp;&nbsp;
+                E: <a href="mailto:you@cwiai.com">you@cwiai.com</a><br>
+                W: <a href="#">cwiai.com</a>&nbsp;&nbsp;|&nbsp;&nbsp;
+                LI: <a href="#">linkedin.com/company/cwiai</a>
+              </div>
+              <div class="sig-tagline" style="margin-top:10px;">Helping small businesses automate the work that slows them down.</div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="sig-code-label">Copy code</div>
+          <div class="sig-code-wrap">
+            <div class="sig-code-header">
+              <div class="sig-code-toggle">
+                <button class="code-toggle-btn active" onclick="toggleCode('formal','html',this)">HTML</button>
+                <button class="code-toggle-btn" onclick="toggleCode('formal','plain',this)">Plain text</button>
+              </div>
+              <button class="copy-btn" onclick="copySigCode('formal')">Copy</button>
+            </div>
+            <div class="sig-code-body" id="sig-formal-code-html"><span style="color:#888">/* Replace placeholders with your info */</span>
+
+&lt;table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,sans-serif;font-size:13px;line-height:1.5;color:#0A0A0A;"&gt;
+  &lt;tr&gt;
+    &lt;td style="border-left:3px solid #FF5A1F;padding-left:14px;"&gt;
+      &lt;div style="font-weight:700;font-size:15px;color:#0A0A0A;"&gt;Your Name&lt;/div&gt;
+      &lt;div style="color:#6B6B6B;font-size:12px;"&gt;Director of AI Automation&lt;/div&gt;
+      &lt;div style="font-weight:700;color:#FF5A1F;margin-top:4px;font-size:13px;"&gt;CWI AI&lt;/div&gt;
+      &lt;div style="border-top:1px solid #E5E4E0;margin:8px 0;"&gt;&lt;/div&gt;
+      &lt;div style="color:#6B6B6B;font-size:12px;"&gt;
+        P: &lt;a href="tel:+15550000000" style="color:#FF5A1F;text-decoration:none;"&gt;(555) 000-0000&lt;/a&gt; &amp;nbsp;|&amp;nbsp;
+        E: &lt;a href="mailto:you@cwiai.com" style="color:#FF5A1F;text-decoration:none;"&gt;you@cwiai.com&lt;/a&gt;&lt;br&gt;
+        W: &lt;a href="https://cwiai.com" style="color:#FF5A1F;text-decoration:none;"&gt;cwiai.com&lt;/a&gt; &amp;nbsp;|&amp;nbsp;
+        LI: &lt;a href="https://linkedin.com/company/cwiai" style="color:#FF5A1F;text-decoration:none;"&gt;linkedin.com/company/cwiai&lt;/a&gt;
+      &lt;/div&gt;
+      &lt;div style="font-size:11px;color:#9B9B9B;font-style:italic;margin-top:10px;"&gt;Helping small businesses automate the work that slows them down.&lt;/div&gt;
+    &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/table&gt;</div>
+            <div class="sig-code-body" id="sig-formal-code-plain" style="display:none;">Your Name
+Director of AI Automation
+CWI AI
+---
+P: (555) 000-0000  |  E: you@cwiai.com
+W: cwiai.com  |  LI: linkedin.com/company/cwiai
+
+Helping small businesses automate the work that slows them down.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CASUAL -->
+    <div class="sig-panel" id="sig-casual">
+      <div class="sig-split">
+        <div>
+          <div class="sig-preview-label">Preview</div>
+          <div class="sig-preview">
+            <div class="sig-render-casual">
+              <div class="sig-name">Your Name</div>
+              <div class="sig-company">CWI AI — AI Automation for Small Business</div>
+              <div class="sig-contact" style="margin-top:4px;">
+                <a href="mailto:you@cwiai.com">you@cwiai.com</a> &nbsp;·&nbsp; <a href="tel:+15550000000">(555) 000-0000</a><br>
+                <a href="#">cwiai.com</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="sig-code-label">Copy code</div>
+          <div class="sig-code-wrap">
+            <div class="sig-code-header">
+              <div class="sig-code-toggle">
+                <button class="code-toggle-btn active" onclick="toggleCode('casual','html',this)">HTML</button>
+                <button class="code-toggle-btn" onclick="toggleCode('casual','plain',this)">Plain text</button>
+              </div>
+              <button class="copy-btn" onclick="copySigCode('casual')">Copy</button>
+            </div>
+            <div class="sig-code-body" id="sig-casual-code-html">&lt;table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,sans-serif;font-size:13px;line-height:1.5;color:#0A0A0A;"&gt;
+  &lt;tr&gt;
+    &lt;td&gt;
+      &lt;div style="font-weight:700;font-size:14px;"&gt;Your Name&lt;/div&gt;
+      &lt;div style="color:#FF5A1F;font-weight:600;"&gt;CWI AI — AI Automation for Small Business&lt;/div&gt;
+      &lt;div style="color:#6B6B6B;font-size:12px;margin-top:4px;"&gt;
+        &lt;a href="mailto:you@cwiai.com" style="color:#FF5A1F;text-decoration:none;"&gt;you@cwiai.com&lt;/a&gt; &amp;nbsp;&amp;middot;&amp;nbsp;
+        &lt;a href="tel:+15550000000" style="color:#FF5A1F;text-decoration:none;"&gt;(555) 000-0000&lt;/a&gt;&lt;br&gt;
+        &lt;a href="https://cwiai.com" style="color:#FF5A1F;text-decoration:none;"&gt;cwiai.com&lt;/a&gt;
+      &lt;/div&gt;
+    &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/table&gt;</div>
+            <div class="sig-code-body" id="sig-casual-code-plain" style="display:none;">Your Name
+CWI AI — AI Automation for Small Business
+you@cwiai.com · (555) 000-0000
+cwiai.com</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MINIMAL -->
+    <div class="sig-panel" id="sig-minimal">
+      <div class="sig-split">
+        <div>
+          <div class="sig-preview-label">Preview</div>
+          <div class="sig-preview">
+            <div class="sig-render-minimal">
+              <strong>Your Name</strong> · <a href="#">CWI AI</a><br>
+              <a href="mailto:you@cwiai.com">you@cwiai.com</a> · <a href="tel:+15550000000">(555) 000-0000</a>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="sig-code-label">Copy code</div>
+          <div class="sig-code-wrap">
+            <div class="sig-code-header">
+              <div class="sig-code-toggle">
+                <button class="code-toggle-btn active" onclick="toggleCode('minimal','html',this)">HTML</button>
+                <button class="code-toggle-btn" onclick="toggleCode('minimal','plain',this)">Plain text</button>
+              </div>
+              <button class="copy-btn" onclick="copySigCode('minimal')">Copy</button>
+            </div>
+            <div class="sig-code-body" id="sig-minimal-code-html">&lt;table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,sans-serif;font-size:12px;color:#6B6B6B;line-height:1.4;"&gt;
+  &lt;tr&gt;
+    &lt;td&gt;
+      &lt;strong style="color:#0A0A0A;"&gt;Your Name&lt;/strong&gt; &amp;middot;
+      &lt;a href="https://cwiai.com" style="color:#FF5A1F;text-decoration:none;"&gt;CWI AI&lt;/a&gt;&lt;br&gt;
+      &lt;a href="mailto:you@cwiai.com" style="color:#FF5A1F;text-decoration:none;"&gt;you@cwiai.com&lt;/a&gt; &amp;middot;
+      &lt;a href="tel:+15550000000" style="color:#FF5A1F;text-decoration:none;"&gt;(555) 000-0000&lt;/a&gt;
+    &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/table&gt;</div>
+            <div class="sig-code-body" id="sig-minimal-code-plain" style="display:none;">Your Name · CWI AI
+you@cwiai.com · (555) 000-0000</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 6. SOCIAL PROFILES -->
+<section id="social">
+  <div class="container">
+    <div class="section-label">06 — Social Profiles</div>
+    <h2 class="section-title">Bio Copy Templates</h2>
+    <p class="section-desc">Ready-to-paste bio copy for each platform. Optimized for each character limit and audience. Edit the specifics to match the person or page posting.</p>
+
+    <div class="social-grid">
+      <!-- LinkedIn -->
+      <div class="social-card">
+        <div class="social-card-header">
+          <div class="social-platform">
+            <div class="social-icon li">in</div>
+            <div class="social-platform-name">LinkedIn</div>
+          </div>
+          <div class="social-char-count">~220 chars</div>
+        </div>
+        <div class="social-bio-text" id="bio-linkedin">CWI AI helps small and mid-size businesses automate the work that slows them down — so they can focus on growth.
+
+AI-powered automations. Real results. No fluff.
+
+Setup in days, not months. Let's talk.</div>
+        <div class="social-card-footer">
+          <button class="copy-bio-btn" onclick="copyBio('linkedin')">Copy bio</button>
+        </div>
+      </div>
+
+      <!-- Facebook -->
+      <div class="social-card">
+        <div class="social-card-header">
+          <div class="social-platform">
+            <div class="social-icon fb">f</div>
+            <div class="social-platform-name">Facebook</div>
+          </div>
+          <div class="social-char-count">~155 chars</div>
+        </div>
+        <div class="social-bio-text" id="bio-facebook">CWI AI automates the repetitive work eating up your day. More time for your business. Less time on busywork. Fast setup. It just works.</div>
+        <div class="social-card-footer">
+          <button class="copy-bio-btn" onclick="copyBio('facebook')">Copy bio</button>
+        </div>
+      </div>
+
+      <!-- Instagram -->
+      <div class="social-card">
+        <div class="social-card-header">
+          <div class="social-platform">
+            <div class="social-icon ig">&#9679;</div>
+            <div class="social-platform-name">Instagram</div>
+          </div>
+          <div class="social-char-count">~150 chars</div>
+        </div>
+        <div class="social-bio-text" id="bio-instagram">AI automation for small business
+Work smarter. Move faster.
+Clear results — no corporate jargon.
+&#128279; cwiai.com</div>
+        <div class="social-card-footer">
+          <button class="copy-bio-btn" onclick="copyBio('instagram')">Copy bio</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alternate variants -->
+    <div style="margin-top:1.5rem;">
+      <div class="section-desc" style="margin-bottom:1rem; font-weight:600; color:var(--black); font-size:0.9rem;">Additional LinkedIn variants</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem;">
+        <div class="social-card">
+          <div class="social-card-header">
+            <div class="social-platform">
+              <div class="social-icon li">in</div>
+              <div class="social-platform-name">LinkedIn — Company</div>
+            </div>
+            <div class="social-char-count">Long form</div>
+          </div>
+          <div class="social-bio-text" id="bio-linkedin-long">CWI AI builds AI automations that do the work small businesses keep putting off.
+
+We connect your tools, streamline your workflows, and set everything running — without a long IT project or a big price tag.
+
+Fast setup. Plain English. Real results.
+
+Serving businesses across the US. Talk to us about what you need.</div>
+          <div class="social-card-footer">
+            <button class="copy-bio-btn" onclick="copyBio('linkedin-long')">Copy bio</button>
+          </div>
+        </div>
+
+        <div class="social-card">
+          <div class="social-card-header">
+            <div class="social-platform">
+              <div class="social-icon li">in</div>
+              <div class="social-platform-name">LinkedIn — Personal</div>
+            </div>
+            <div class="social-char-count">~200 chars</div>
+          </div>
+          <div class="social-bio-text" id="bio-linkedin-personal">I help small businesses use AI to automate the tasks eating up their time.
+
+At CWI AI, we skip the buzzwords and build things that actually work.
+
+If you're tired of doing the same repetitive work — let's talk.</div>
+          <div class="social-card-footer">
+            <button class="copy-bio-btn" onclick="copyBio('linkedin-personal')">Copy bio</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <strong>CWI AI</strong> Brand Kit &nbsp;<span>v1.0</span>&nbsp; &mdash; &nbsp; Internal use only. Questions? Contact the team.
+</footer>
+
+<script>
+  // ── Color copy ──
+  function copyColor(hex, card) {
+    navigator.clipboard.writeText(hex).then(() => {
+      showToast('Copied ' + hex);
+      card.style.transform = 'scale(0.97)';
+      setTimeout(() => { card.style.transform = ''; }, 150);
+    });
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._to);
+    t._to = setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  // ── Sig tabs ──
+  function showSig(name, btn) {
+    document.querySelectorAll('.sig-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.sig-tab').forEach(b => b.classList.remove('active'));
+    document.getElementById('sig-' + name).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  // ── Sig code toggle ──
+  function toggleCode(sig, mode, btn) {
+    const htmlEl = document.getElementById('sig-' + sig + '-code-html');
+    const plainEl = document.getElementById('sig-' + sig + '-code-plain');
+    btn.closest('.sig-code-toggle').querySelectorAll('.code-toggle-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    if (mode === 'html') {
+      htmlEl.style.display = '';
+      plainEl.style.display = 'none';
+    } else {
+      htmlEl.style.display = 'none';
+      plainEl.style.display = '';
+    }
+  }
+
+  // ── Sig copy ──
+  function copySigCode(sig) {
+    const htmlEl = document.getElementById('sig-' + sig + '-code-html');
+    const plainEl = document.getElementById('sig-' + sig + '-code-plain');
+    const activeEl = htmlEl.style.display === 'none' ? plainEl : htmlEl;
+    navigator.clipboard.writeText(activeEl.textContent).then(() => {
+      showToast('Signature copied to clipboard');
+    });
+  }
+
+  // ── Bio copy ──
+  function copyBio(platform) {
+    const el = document.getElementById('bio-' + platform);
+    navigator.clipboard.writeText(el.textContent.trim()).then(() => {
+      showToast('Bio copied to clipboard');
+    });
+  }
+</script>
+</body>
+</html>
