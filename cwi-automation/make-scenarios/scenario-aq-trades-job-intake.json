@@ -1,0 +1,354 @@
+{
+  "name": "Scenario AQ: Trades Job Intake",
+  "comments": "Triggered by a Freshchat conversation.created webhook. Keyword filter detects trades-related terms (quote, estimate, repair, install, fix, job). Claude extracts job type, address, and urgency from the message. Creates a HubSpot deal with job details. Sends admin a job summary email. Generates an AI Freshchat response confirming receipt and estimated response time. Error route sends an internal alert via Resend. All secrets stored as env.VARIABLE_NAME. Timezone: America/New_York.",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": 3070,
+        "maxResults": 1
+      },
+      "filter": {
+        "name": "Trades keyword filter",
+        "conditions": [
+          [
+            {
+              "a": "{{lower(1.body.messages[0].text)}}",
+              "b": "quote|estimate|repair|install|fix|job",
+              "o": "text:match"
+            }
+          ]
+        ]
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 0, "y": 0 },
+        "restore": {
+          "parameters": {
+            "hook": {
+              "label": "Freshchat Trades Webhook (hook 3070)",
+              "data": { "editable": true }
+            }
+          }
+        },
+        "parameters": [
+          { "name": "hook", "type": "hook:gateway-webhook", "label": "Webhook", "required": true },
+          { "name": "maxResults", "type": "number", "label": "Maximum number of results" }
+        ],
+        "notes": "Fires on conversation.created. Case-insensitive regex filter passes conversations containing trades job keywords. Register Make webhook URL in Freshchat Admin > Settings > Webhooks > Conversation Created."
+      }
+    },
+    {
+      "id": 2,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+      "mapper": {
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "method": "POST",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.OPENROUTER_API_KEY}}" },
+          { "name": "Content-Type", "value": "application/json" },
+          { "name": "HTTP-Referer", "value": "https://cwiai.net" },
+          { "name": "X-Title", "value": "CWI AI Trades Job Intake" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"model\": \"anthropic/claude-sonnet-4-6\",\n  \"models\": [\"anthropic/claude-sonnet-4-6\", \"{{env.OPENROUTER_FALLBACK_MODEL}}\"],\n  \"route\": \"fallback\",\n  \"provider\": { \"allow_fallbacks\": true },\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a trades job intake assistant. Extract information from the customer message and return ONLY a valid JSON object with these fields: job_type (string describing the type of work, e.g. 'plumbing repair', 'HVAC install', or null), address (full address string or null), urgency (one of: emergency, urgent, standard, flexible — based on language cues like 'ASAP', 'no heat', 'flooding', vs 'when you have time'), estimated_response_time (string: '15 minutes' for emergency, '2-4 hours' for urgent, 'same day' for standard, '1-2 business days' for flexible). Do not include any explanation or markdown.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Customer message: {{1.body.messages[0].text}}\"\n    }\n  ],\n  \"temperature\": 0.1,\n  \"max_tokens\": 256\n}"
+      },
+      "metadata": {
+        "designer": { "x": 300, "y": 0 },
+        "notes": "Claude extracts job_type, address, urgency level, and estimated_response_time from the raw Freshchat message. Temperature 0.1 for deterministic extraction."
+      },
+      "onerror": [
+        {
+          "id": 91,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Trades Job Intake Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Scenario AQ Error</h2><p><strong>Failed Module:</strong> {{errorHandler.moduleId}}</p><p><strong>Error:</strong> {{errorHandler.message}}</p><p><strong>Type:</strong> {{errorHandler.type}}</p><p><strong>Customer:</strong> {{1.body.actors[0].first_name}} {{1.body.actors[0].last_name}} ({{1.body.actors[0].email}})</p><p><strong>Message:</strong> {{1.body.messages[0].text}}</p><p><strong>Timestamp:</strong> {{now}}</p></body></html>\"\n}"
+          },
+          "metadata": { "designer": { "x": 300, "y": 400 } }
+        },
+        {
+          "id": 92,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+          "mapper": {
+            "url": "https://api.freshchat.com/v2/conversations/{{1.body.id}}/messages",
+            "method": "POST",
+            "headers": [
+              { "name": "Authorization", "value": "Bearer {{env.FRESHCHAT_API_KEY}}" },
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"actor_type\": \"agent\",\n  \"actor_id\": \"{{env.FRESHCHAT_BOT_ID}}\",\n  \"message_type\": \"normal\",\n  \"message_parts\": [\n    {\n      \"text\": {\n        \"content\": \"Hi {{1.body.actors[0].first_name}}, thanks for reaching out! We received your job request and a team member will be in touch shortly.\"\n      }\n    }\n  ]\n}"
+          },
+          "metadata": { "designer": { "x": 600, "y": 400 }, "notes": "Fallback Freshchat message if Claude extraction fails." }
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "module": "json:ParseJSON",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "string": "{{2.data.choices[0].message.content}}"
+      },
+      "metadata": {
+        "designer": { "x": 600, "y": 0 },
+        "expect": [
+          { "name": "string", "type": "text", "label": "JSON string", "required": true }
+        ],
+        "notes": "Parses Claude's extraction JSON. Downstream modules reference {{3.job_type}}, {{3.address}}, {{3.urgency}}, {{3.estimated_response_time}}."
+      }
+    },
+    {
+      "id": 4,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/deals",
+        "method": "POST",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.HUBSPOT_API_KEY}}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"properties\": {\n    \"dealname\": \"{{3.job_type}} — {{1.body.actors[0].first_name}} {{1.body.actors[0].last_name}} ({{formatDate(now; 'YYYY-MM-DD'; 'America/New_York')}})\",\n    \"pipeline\": \"default\",\n    \"dealstage\": \"{{env.HUBSPOT_STAGE_NEW_LEAD}}\",\n    \"priority\": \"{{if(3.urgency == 'emergency'; 'HIGH'; if(3.urgency == 'urgent'; 'HIGH'; 'MEDIUM'))}}\",\n    \"description\": \"Job Type: {{3.job_type}}\\nAddress: {{3.address}}\\nUrgency: {{3.urgency}}\\nEstimated Response Time: {{3.estimated_response_time}}\\nCustomer: {{1.body.actors[0].first_name}} {{1.body.actors[0].last_name}}\\nEmail: {{1.body.actors[0].email}}\\nPhone: {{1.body.actors[0].phone}}\\nFreshchat Conversation ID: {{1.body.id}}\\nOriginal Message: {{1.body.messages[0].text}}\\nReceived: {{formatDate(now; 'YYYY-MM-DD HH:mm:ss'; 'America/New_York')}} ET\\nSource: Trades Job Intake (Scenario AQ)\"\n  }\n}"
+      },
+      "metadata": {
+        "designer": { "x": 900, "y": 0 },
+        "notes": "Creates a HubSpot deal with the extracted job details. Priority is HIGH for emergency/urgent, MEDIUM for standard/flexible."
+      },
+      "onerror": [
+        {
+          "id": 91,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Trades Job Intake Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Scenario AQ Error</h2><p><strong>Failed Module:</strong> {{errorHandler.moduleId}}</p><p><strong>Error:</strong> {{errorHandler.message}}</p><p><strong>Timestamp:</strong> {{now}}</p></body></html>\"\n}"
+          },
+          "metadata": { "designer": { "x": 900, "y": 400 } }
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "method": "POST",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI] New Job — {{3.job_type}} ({{3.urgency}}) — {{1.body.actors[0].first_name}} {{1.body.actors[0].last_name}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto;\\\"><div style=\\\"background: {{if(3.urgency == 'emergency'; '#d32f2f'; if(3.urgency == 'urgent'; '#f57c00'; '#1a73e8'))}}; padding: 20px; text-align: center;\\\"><h1 style=\\\"color: white; margin: 0;\\\">New Job Intake — {{upper(3.urgency)}}</h1></div><div style=\\\"padding: 30px;\\\"><table style=\\\"width: 100%; border-collapse: collapse; margin: 20px 0;\\\"><tr style=\\\"background: #f5f5f5;\\\"><td style=\\\"padding: 12px; border: 1px solid #ddd; font-weight: bold;\\\">Job Type</td><td style=\\\"padding: 12px; border: 1px solid #ddd;\\\">{{3.job_type}}</td></tr><tr><td style=\\\"padding: 12px; border: 1px solid #ddd; font-weight: bold;\\\">Address</td><td style=\\\"padding: 12px; border: 1px solid #ddd;\\\">{{3.address}}</td></tr><tr style=\\\"background: #f5f5f5;\\\"><td style=\\\"padding: 12px; border: 1px solid #ddd; font-weight: bold;\\\">Urgency</td><td style=\\\"padding: 12px; border: 1px solid #ddd;\\\">{{3.urgency}}</td></tr><tr><td style=\\\"padding: 12px; border: 1px solid #ddd; font-weight: bold;\\\">Estimated Response</td><td style=\\\"padding: 12px; border: 1px solid #ddd;\\\">{{3.estimated_response_time}}</td></tr><tr style=\\\"background: #f5f5f5;\\\"><td style=\\\"padding: 12px; border: 1px solid #ddd; font-weight: bold;\\\">Customer Name</td><td style=\\\"padding: 12px; border: 1px solid #ddd;\\\">{{1.body.actors[0].first_name}} {{1.body.actors[0].last_name}}</td></tr><tr><td style=\\\"padding: 12px; border: 1px solid #ddd; font-weight: bold;\\\">Customer Email</td><td style=\\\"padding: 12px; border: 1px solid #ddd;\\\">{{1.body.actors[0].email}}</td></tr><tr style=\\\"background: #f5f5f5;\\\"><td style=\\\"padding: 12px; border: 1px solid #ddd; font-weight: bold;\\\">Customer Phone</td><td style=\\\"padding: 12px; border: 1px solid #ddd;\\\">{{1.body.actors[0].phone}}</td></tr><tr><td style=\\\"padding: 12px; border: 1px solid #ddd; font-weight: bold;\\\">Original Message</td><td style=\\\"padding: 12px; border: 1px solid #ddd;\\\">{{1.body.messages[0].text}}</td></tr><tr style=\\\"background: #f5f5f5;\\\"><td style=\\\"padding: 12px; border: 1px solid #ddd; font-weight: bold;\\\">Freshchat Convo ID</td><td style=\\\"padding: 12px; border: 1px solid #ddd;\\\">{{1.body.id}}</td></tr><tr><td style=\\\"padding: 12px; border: 1px solid #ddd; font-weight: bold;\\\">HubSpot Deal ID</td><td style=\\\"padding: 12px; border: 1px solid #ddd;\\\">{{4.data.id}}</td></tr><tr style=\\\"background: #f5f5f5;\\\"><td style=\\\"padding: 12px; border: 1px solid #ddd; font-weight: bold;\\\">Received At</td><td style=\\\"padding: 12px; border: 1px solid #ddd;\\\">{{formatDate(now; 'MMMM D, YYYY [at] h:mm A'; 'America/New_York')}} ET</td></tr></table></div><div style=\\\"background: #f5f5f5; padding: 15px; text-align: center; font-size: 12px; color: #888;\\\"><p>CWI AI | <a href=\\\"https://cwiai.net\\\">cwiai.net</a></p></div></body></html>\"\n}"
+      },
+      "metadata": {
+        "designer": { "x": 1200, "y": 0 },
+        "notes": "Sends a colour-coded job summary email to brian@cwiai.net. Header colour is red for emergency, orange for urgent, blue for standard/flexible."
+      },
+      "onerror": [
+        {
+          "id": 91,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Trades Job Intake Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Scenario AQ Error</h2><p><strong>Failed Module:</strong> {{errorHandler.moduleId}}</p><p><strong>Error:</strong> {{errorHandler.message}}</p><p><strong>Timestamp:</strong> {{now}}</p></body></html>\"\n}"
+          },
+          "metadata": { "designer": { "x": 1200, "y": 400 } }
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+      "mapper": {
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "method": "POST",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.OPENROUTER_API_KEY}}" },
+          { "name": "Content-Type", "value": "application/json" },
+          { "name": "HTTP-Referer", "value": "https://cwiai.net" },
+          { "name": "X-Title", "value": "CWI AI Trades Job Intake - Confirmation" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"model\": \"anthropic/claude-sonnet-4-6\",\n  \"models\": [\"anthropic/claude-sonnet-4-6\", \"{{env.OPENROUTER_FALLBACK_MODEL}}\"],\n  \"route\": \"fallback\",\n  \"provider\": { \"allow_fallbacks\": true },\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a professional trades service assistant. Write a short, friendly confirmation message (2–3 sentences, no markdown) for a Freshchat chat window confirming a job request was received. Include the job type, address (if provided), and estimated response time. Keep the tone warm and reassuring.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Customer first name: {{1.body.actors[0].first_name}}. Job type: {{3.job_type}}. Address: {{3.address}}. Urgency: {{3.urgency}}. Estimated response time: {{3.estimated_response_time}}.\"\n    }\n  ],\n  \"temperature\": 0.4,\n  \"max_tokens\": 200\n}"
+      },
+      "metadata": {
+        "designer": { "x": 1500, "y": 0 },
+        "notes": "Claude generates a personalised Freshchat confirmation message with the job details and estimated response time."
+      },
+      "onerror": [
+        {
+          "id": 91,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Trades Job Intake Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Scenario AQ Error</h2><p><strong>Failed Module:</strong> {{errorHandler.moduleId}}</p><p><strong>Error:</strong> {{errorHandler.message}}</p><p><strong>Timestamp:</strong> {{now}}</p></body></html>\"\n}"
+          },
+          "metadata": { "designer": { "x": 1500, "y": 400 } }
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+      "mapper": {
+        "url": "https://api.freshchat.com/v2/conversations/{{1.body.id}}/messages",
+        "method": "POST",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.FRESHCHAT_API_KEY}}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"actor_type\": \"agent\",\n  \"actor_id\": \"{{env.FRESHCHAT_BOT_ID}}\",\n  \"message_type\": \"normal\",\n  \"message_parts\": [\n    {\n      \"text\": {\n        \"content\": \"{{6.data.choices[0].message.content}}\"\n      }\n    }\n  ]\n}"
+      },
+      "metadata": {
+        "designer": { "x": 1800, "y": 0 },
+        "notes": "Posts the AI-generated job confirmation into the customer's Freshchat conversation."
+      },
+      "onerror": [
+        {
+          "id": 91,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Trades Job Intake Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Scenario AQ Error</h2><p><strong>Failed Module:</strong> {{errorHandler.moduleId}}</p><p><strong>Error:</strong> {{errorHandler.message}}</p><p><strong>Timestamp:</strong> {{now}}</p></body></html>\"\n}"
+          },
+          "metadata": { "designer": { "x": 1800, "y": 400 } }
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": true,
+      "slots": null,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": { "orphans": [] },
+    "zone": "us2.make.com"
+  },
+  "scheduling": {
+    "type": "indefinitely",
+    "interval": 0
+  },
+  "webhooks": [
+    {
+      "id": 3070,
+      "name": "Freshchat Trades Webhook (hook 3070)",
+      "notes": "Register in Freshchat Admin > Settings > Webhooks > Conversation Created. Make generates the real URL on import and activation."
+    }
+  ],
+  "connections": {
+    "OPENROUTER_API_KEY": { "label": "OpenRouter API Key", "type": "http-api-key", "notes": "Primary model: anthropic/claude-sonnet-4-6." },
+    "FRESHCHAT_API_KEY": { "label": "Freshchat API Key", "type": "http-bearer", "notes": "Freshchat account API token." },
+    "FRESHCHAT_BOT_ID": { "label": "Freshchat Bot/Agent ID", "type": "string", "notes": "actor_id for outbound Freshchat messages." },
+    "HUBSPOT_API_KEY": { "label": "HubSpot Private App Token", "type": "http-bearer", "notes": "Requires crm.objects.deals.write scope." },
+    "HUBSPOT_STAGE_NEW_LEAD": { "label": "HubSpot Deal Stage — New Lead", "type": "string", "notes": "Pipeline stage ID for new trades job deals." },
+    "RESEND_API_KEY": { "label": "Resend API Key", "type": "http-bearer", "notes": "For all outbound emails." },
+    "CWI_ALERT_FROM_ADDRESS": { "label": "Internal Alert From Address", "type": "string", "notes": "Verified sender for admin/error emails." },
+    "RESEND_REPLY_TO": { "label": "Resend Reply-To", "type": "string", "notes": "Reply-to on all Resend emails." },
+    "OPENROUTER_FALLBACK_MODEL": { "label": "OpenRouter Fallback Model", "type": "string", "notes": "Secondary model for route:fallback." }
+  },
+  "notes": [
+    {
+      "label": "Module 1 — Freshchat Webhook + Trades Filter",
+      "note": "Fires on conversation.created. Case-insensitive regex: quote|estimate|repair|install|fix|job. Only matching conversations proceed.",
+      "metadata": { "designer": { "x": 0, "y": -180 } }
+    },
+    {
+      "label": "Modules 2–3 — Claude: Extract Job Details",
+      "note": "Claude extracts job_type, address, urgency (emergency/urgent/standard/flexible), and estimated_response_time. ParseJSON (module 3) makes them accessible as structured fields.",
+      "metadata": { "designer": { "x": 300, "y": -180 } }
+    },
+    {
+      "label": "Module 4 — HubSpot Deal Creation",
+      "note": "Creates a deal with the extracted job details. Priority is HIGH for emergency/urgent. Deal name format: <job_type> — <customer name> (<date>).",
+      "metadata": { "designer": { "x": 900, "y": -180 } }
+    },
+    {
+      "label": "Module 5 — Resend: Admin Job Summary",
+      "note": "Colour-coded HTML email to brian@cwiai.net. Red header for emergency, orange for urgent, blue for standard. Includes full job details, customer info, HubSpot deal ID, and Freshchat conversation ID.",
+      "metadata": { "designer": { "x": 1200, "y": -180 } }
+    },
+    {
+      "label": "Modules 6–7 — Freshchat AI Confirmation",
+      "note": "Claude generates a personalised 2-3 sentence confirmation (module 6) that is immediately posted to the Freshchat conversation (module 7). onerror on module 2 also sends a hardcoded fallback message if Claude fails entirely.",
+      "metadata": { "designer": { "x": 1500, "y": -180 } }
+    }
+  ]
+}

@@ -1,0 +1,377 @@
+{
+  "name": "Scenario AS: Patient Intake",
+  "comments": "Triggered by a Freshchat conversation.created webhook. Keyword filter detects healthcare intake terms (appointment, new patient, insurance, referral, prescription). Claude drives a Freshchat conversation to collect patient name, DOB, and insurance carrier. Creates a HubSpot contact with intake data. Sends intake summary to clinic admin via Resend. Sends confirmation email with next steps to the patient via Resend. Error route sends an internal alert. All secrets stored as env.VARIABLE_NAME. HIPAA note: no PHI is stored in Make.com — all data passes through to HubSpot and Resend only. Timezone: America/New_York.",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": 3090,
+        "maxResults": 1
+      },
+      "filter": {
+        "name": "Healthcare intake keyword filter",
+        "conditions": [
+          [
+            {
+              "a": "{{lower(1.body.messages[0].text)}}",
+              "b": "appointment|new patient|insurance|referral|prescription",
+              "o": "text:match"
+            }
+          ]
+        ]
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 0, "y": 0 },
+        "restore": {
+          "parameters": {
+            "hook": {
+              "label": "Freshchat Patient Intake Webhook (hook 3090)",
+              "data": { "editable": true }
+            }
+          }
+        },
+        "parameters": [
+          { "name": "hook", "type": "hook:gateway-webhook", "label": "Webhook", "required": true },
+          { "name": "maxResults", "type": "number", "label": "Maximum number of results" }
+        ],
+        "notes": "Fires on conversation.created. Case-insensitive regex filter passes healthcare intake keywords. Register Make webhook URL in Freshchat Admin > Settings > Webhooks > Conversation Created."
+      }
+    },
+    {
+      "id": 2,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+      "mapper": {
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "method": "POST",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.OPENROUTER_API_KEY}}" },
+          { "name": "Content-Type", "value": "application/json" },
+          { "name": "HTTP-Referer", "value": "https://cwiai.net" },
+          { "name": "X-Title", "value": "CWI AI Patient Intake" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"model\": \"anthropic/claude-sonnet-4-6\",\n  \"models\": [\"anthropic/claude-sonnet-4-6\", \"{{env.OPENROUTER_FALLBACK_MODEL}}\"],\n  \"route\": \"fallback\",\n  \"provider\": { \"allow_fallbacks\": true },\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a friendly medical office intake assistant. Your job is to extract patient intake information from the customer message and return ONLY a valid JSON object with these fields: patient_name (string or null), dob (date string MM/DD/YYYY or null), insurance_carrier (string or null), reason_for_visit (string or null), is_new_patient (boolean or null). If information is missing, set the field to null. Do not include any explanation or markdown.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Patient message: {{1.body.messages[0].text}}\"\n    }\n  ],\n  \"temperature\": 0.1,\n  \"max_tokens\": 256\n}"
+      },
+      "metadata": {
+        "designer": { "x": 300, "y": 0 },
+        "notes": "Claude extracts available intake fields from the initial message. Missing fields will be followed up in the Freshchat conversation message (module 4)."
+      },
+      "onerror": [
+        {
+          "id": 91,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Patient Intake Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Scenario AS Error</h2><p><strong>Failed Module:</strong> {{errorHandler.moduleId}}</p><p><strong>Error:</strong> {{errorHandler.message}}</p><p><strong>Type:</strong> {{errorHandler.type}}</p><p><strong>Conversation ID:</strong> {{1.body.id}}</p><p><strong>Timestamp:</strong> {{now}}</p></body></html>\"\n}"
+          },
+          "metadata": { "designer": { "x": 300, "y": 400 } }
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "module": "json:ParseJSON",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "string": "{{2.data.choices[0].message.content}}"
+      },
+      "metadata": {
+        "designer": { "x": 600, "y": 0 },
+        "expect": [
+          { "name": "string", "type": "text", "label": "JSON string", "required": true }
+        ],
+        "notes": "Parses Claude's intake extraction. Fields: {{3.patient_name}}, {{3.dob}}, {{3.insurance_carrier}}, {{3.reason_for_visit}}, {{3.is_new_patient}}."
+      }
+    },
+    {
+      "id": 4,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+      "mapper": {
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "method": "POST",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.OPENROUTER_API_KEY}}" },
+          { "name": "Content-Type", "value": "application/json" },
+          { "name": "HTTP-Referer", "value": "https://cwiai.net" },
+          { "name": "X-Title", "value": "CWI AI Patient Intake - Chat Response" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"model\": \"anthropic/claude-sonnet-4-6\",\n  \"models\": [\"anthropic/claude-sonnet-4-6\", \"{{env.OPENROUTER_FALLBACK_MODEL}}\"],\n  \"route\": \"fallback\",\n  \"provider\": { \"allow_fallbacks\": true },\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a warm, professional medical office receptionist. Based on the patient intake data extracted so far, write a friendly Freshchat response (3–5 sentences, no markdown) that: (1) greets the patient by first name if known, (2) confirms what information you already have, (3) politely asks for any missing fields (name if null, date of birth if null, insurance carrier if null). Keep the tone calm, private, and reassuring. If all three fields are present, thank them and confirm their intake has been received and that the office will be in touch shortly.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Extracted data: name={{3.patient_name}}, dob={{3.dob}}, insurance={{3.insurance_carrier}}, reason={{3.reason_for_visit}}, is_new_patient={{3.is_new_patient}}. Customer first name from chat: {{1.body.actors[0].first_name}}.\"\n    }\n  ],\n  \"temperature\": 0.4,\n  \"max_tokens\": 250\n}"
+      },
+      "metadata": {
+        "designer": { "x": 900, "y": 0 },
+        "notes": "Claude generates an intelligent Freshchat response: confirms what was collected and asks only for missing fields. If all fields are present, it wraps up gracefully."
+      },
+      "onerror": [
+        {
+          "id": 91,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Patient Intake Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Scenario AS Error</h2><p><strong>Failed Module:</strong> {{errorHandler.moduleId}}</p><p><strong>Error:</strong> {{errorHandler.message}}</p><p><strong>Timestamp:</strong> {{now}}</p></body></html>\"\n}"
+          },
+          "metadata": { "designer": { "x": 900, "y": 400 } }
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+      "mapper": {
+        "url": "https://api.freshchat.com/v2/conversations/{{1.body.id}}/messages",
+        "method": "POST",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.FRESHCHAT_API_KEY}}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"actor_type\": \"agent\",\n  \"actor_id\": \"{{env.FRESHCHAT_BOT_ID}}\",\n  \"message_type\": \"normal\",\n  \"message_parts\": [\n    {\n      \"text\": {\n        \"content\": \"{{4.data.choices[0].message.content}}\"\n      }\n    }\n  ]\n}"
+      },
+      "metadata": {
+        "designer": { "x": 1200, "y": 0 },
+        "notes": "Posts the AI-generated intake conversation response to the patient's Freshchat conversation."
+      },
+      "onerror": [
+        {
+          "id": 91,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Patient Intake Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Scenario AS Error</h2><p><strong>Failed Module:</strong> {{errorHandler.moduleId}}</p><p><strong>Error:</strong> {{errorHandler.message}}</p><p><strong>Timestamp:</strong> {{now}}</p></body></html>\"\n}"
+          },
+          "metadata": { "designer": { "x": 1200, "y": 400 } }
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/contacts",
+        "method": "POST",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.HUBSPOT_API_KEY}}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"properties\": {\n    \"firstname\": \"{{if(3.patient_name; split(3.patient_name; ' ')[0]; 1.body.actors[0].first_name)}}\",\n    \"lastname\": \"{{if(3.patient_name; split(3.patient_name; ' ')[1]; 1.body.actors[0].last_name)}}\",\n    \"email\": \"{{1.body.actors[0].email}}\",\n    \"phone\": \"{{1.body.actors[0].phone}}\",\n    \"date_of_birth\": \"{{3.dob}}\",\n    \"insurance_carrier\": \"{{3.insurance_carrier}}\",\n    \"hs_lead_status\": \"NEW\",\n    \"lifecyclestage\": \"lead\",\n    \"description\": \"Patient intake via Freshchat (Scenario AS).\\nReason for visit: {{3.reason_for_visit}}\\nNew patient: {{3.is_new_patient}}\\nConversation ID: {{1.body.id}}\\nReceived: {{formatDate(now; 'YYYY-MM-DD HH:mm:ss'; 'America/New_York')}} ET\"\n  }\n}"
+      },
+      "metadata": {
+        "designer": { "x": 1500, "y": 0 },
+        "notes": "Creates a HubSpot contact with all collected intake fields. Splits patient_name into firstname/lastname. Falls back to Freshchat actor name if patient_name is null."
+      },
+      "onerror": [
+        {
+          "id": 91,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Patient Intake Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Scenario AS Error</h2><p><strong>Failed Module:</strong> {{errorHandler.moduleId}}</p><p><strong>Error:</strong> {{errorHandler.message}}</p><p><strong>Timestamp:</strong> {{now}}</p></body></html>\"\n}"
+          },
+          "metadata": { "designer": { "x": 1500, "y": 400 } }
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "method": "POST",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI] New Patient Intake — {{3.patient_name}} ({{formatDate(now; 'MMMM D, YYYY'; 'America/New_York')}})\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto;\\\"><div style=\\\"background: #1a73e8; padding: 20px; text-align: center;\\\"><h1 style=\\\"color: white; margin: 0;\\\">New Patient Intake</h1></div><div style=\\\"padding: 30px;\\\"><table style=\\\"width: 100%; border-collapse: collapse; margin: 20px 0;\\\"><tr style=\\\"background: #f5f5f5;\\\"><td style=\\\"padding: 12px; border: 1px solid #ddd; font-weight: bold;\\\">Patient Name</td><td style=\\\"padding: 12px; border: 1px solid #ddd;\\\">{{3.patient_name}}</td></tr><tr><td style=\\\"padding: 12px; border: 1px solid #ddd; font-weight: bold;\\\">Date of Birth</td><td style=\\\"padding: 12px; border: 1px solid #ddd;\\\">{{3.dob}}</td></tr><tr style=\\\"background: #f5f5f5;\\\"><td style=\\\"padding: 12px; border: 1px solid #ddd; font-weight: bold;\\\">Insurance Carrier</td><td style=\\\"padding: 12px; border: 1px solid #ddd;\\\">{{3.insurance_carrier}}</td></tr><tr><td style=\\\"padding: 12px; border: 1px solid #ddd; font-weight: bold;\\\">Reason for Visit</td><td style=\\\"padding: 12px; border: 1px solid #ddd;\\\">{{3.reason_for_visit}}</td></tr><tr style=\\\"background: #f5f5f5;\\\"><td style=\\\"padding: 12px; border: 1px solid #ddd; font-weight: bold;\\\">New Patient?</td><td style=\\\"padding: 12px; border: 1px solid #ddd;\\\">{{if(3.is_new_patient; 'Yes'; 'No')}}</td></tr><tr><td style=\\\"padding: 12px; border: 1px solid #ddd; font-weight: bold;\\\">Contact Email</td><td style=\\\"padding: 12px; border: 1px solid #ddd;\\\">{{1.body.actors[0].email}}</td></tr><tr style=\\\"background: #f5f5f5;\\\"><td style=\\\"padding: 12px; border: 1px solid #ddd; font-weight: bold;\\\">Contact Phone</td><td style=\\\"padding: 12px; border: 1px solid #ddd;\\\">{{1.body.actors[0].phone}}</td></tr><tr><td style=\\\"padding: 12px; border: 1px solid #ddd; font-weight: bold;\\\">Freshchat Convo ID</td><td style=\\\"padding: 12px; border: 1px solid #ddd;\\\">{{1.body.id}}</td></tr><tr style=\\\"background: #f5f5f5;\\\"><td style=\\\"padding: 12px; border: 1px solid #ddd; font-weight: bold;\\\">HubSpot Contact ID</td><td style=\\\"padding: 12px; border: 1px solid #ddd;\\\">{{6.data.id}}</td></tr><tr><td style=\\\"padding: 12px; border: 1px solid #ddd; font-weight: bold;\\\">Received At</td><td style=\\\"padding: 12px; border: 1px solid #ddd;\\\">{{formatDate(now; 'MMMM D, YYYY [at] h:mm A'; 'America/New_York')}} ET</td></tr></table></div><div style=\\\"background: #f5f5f5; padding: 15px; text-align: center; font-size: 12px; color: #888;\\\"><p>CWI AI | <a href=\\\"https://cwiai.net\\\">cwiai.net</a></p></div></body></html>\"\n}"
+      },
+      "metadata": {
+        "designer": { "x": 1800, "y": 0 },
+        "notes": "Sends the full intake summary to the clinic admin (brian@cwiai.net) via Resend with all collected fields and the HubSpot contact ID."
+      },
+      "onerror": [
+        {
+          "id": 91,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Patient Intake Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Scenario AS Error</h2><p><strong>Failed Module:</strong> {{errorHandler.moduleId}}</p><p><strong>Error:</strong> {{errorHandler.message}}</p><p><strong>Timestamp:</strong> {{now}}</p></body></html>\"\n}"
+          },
+          "metadata": { "designer": { "x": 1800, "y": 400 } }
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "method": "POST",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"from\": \"{{env.RESEND_FROM_ADDRESS_CLIENT}}\",\n  \"to\": [\"{{1.body.actors[0].email}}\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"Your Patient Intake Has Been Received\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto;\\\"><div style=\\\"background: #1a73e8; padding: 20px; text-align: center;\\\"><h1 style=\\\"color: white; margin: 0;\\\">Intake Received</h1></div><div style=\\\"padding: 30px;\\\"><p>Dear {{if(3.patient_name; 3.patient_name; 1.body.actors[0].first_name)}},</p><p>Thank you for contacting us. We have received your intake information and a member of our team will be in touch within 1 business day to confirm your appointment and answer any questions.</p><h3>What Happens Next</h3><ul><li>A team member will review your intake details and reach out to confirm scheduling.</li><li>Please have your insurance card available at the time of your appointment.</li><li>If your situation is urgent, please call us directly or reply to this email.</li></ul><p>We look forward to seeing you.</p><p style=\\\"font-size: 13px; color: #888;\\\">If you did not submit a patient intake form, please disregard this email.</p></div><div style=\\\"background: #f5f5f5; padding: 15px; text-align: center; font-size: 12px; color: #888;\\\"><p>CWI AI | <a href=\\\"https://cwiai.net\\\">cwiai.net</a></p></div></body></html>\"\n}"
+      },
+      "metadata": {
+        "designer": { "x": 2100, "y": 0 },
+        "notes": "Sends a patient confirmation email with next steps. FROM is env.RESEND_FROM_ADDRESS_CLIENT (clinic domain, never brian@cwiai.net). Note: no clinical/PHI data is included in this email beyond what the patient already sent."
+      },
+      "onerror": [
+        {
+          "id": 91,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Patient Intake Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Scenario AS Error</h2><p><strong>Failed Module:</strong> {{errorHandler.moduleId}}</p><p><strong>Error:</strong> {{errorHandler.message}}</p><p><strong>Patient email:</strong> {{1.body.actors[0].email}}</p><p><strong>Timestamp:</strong> {{now}}</p></body></html>\"\n}"
+          },
+          "metadata": { "designer": { "x": 2100, "y": 400 } }
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": true,
+      "slots": null,
+      "confidential": true,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": { "orphans": [] },
+    "zone": "us2.make.com"
+  },
+  "scheduling": {
+    "type": "indefinitely",
+    "interval": 0
+  },
+  "webhooks": [
+    {
+      "id": 3090,
+      "name": "Freshchat Patient Intake Webhook (hook 3090)",
+      "notes": "Register in Freshchat Admin > Settings > Webhooks > Conversation Created. Make generates the real URL on import and activation."
+    }
+  ],
+  "connections": {
+    "OPENROUTER_API_KEY": { "label": "OpenRouter API Key", "type": "http-api-key", "notes": "Primary model: anthropic/claude-sonnet-4-6." },
+    "FRESHCHAT_API_KEY": { "label": "Freshchat API Key", "type": "http-bearer", "notes": "Freshchat account API token." },
+    "FRESHCHAT_BOT_ID": { "label": "Freshchat Bot/Agent ID", "type": "string", "notes": "actor_id for outbound Freshchat messages." },
+    "HUBSPOT_API_KEY": { "label": "HubSpot Private App Token", "type": "http-bearer", "notes": "Requires crm.objects.contacts.write scope." },
+    "RESEND_API_KEY": { "label": "Resend API Key", "type": "http-bearer", "notes": "For all outbound emails." },
+    "RESEND_FROM_ADDRESS_CLIENT": { "label": "Resend Client From Address", "type": "string", "notes": "Verified clinic domain sender. Never brian@cwiai.net." },
+    "CWI_ALERT_FROM_ADDRESS": { "label": "Internal Alert From Address", "type": "string", "notes": "Verified sender for internal/admin emails." },
+    "RESEND_REPLY_TO": { "label": "Resend Reply-To", "type": "string", "notes": "Reply-to on all Resend emails." },
+    "OPENROUTER_FALLBACK_MODEL": { "label": "OpenRouter Fallback Model", "type": "string", "notes": "Secondary model for route:fallback." }
+  },
+  "notes": [
+    {
+      "label": "Module 1 — Freshchat Webhook + Healthcare Filter",
+      "note": "Fires on conversation.created. Case-insensitive regex: appointment|new patient|insurance|referral|prescription.",
+      "metadata": { "designer": { "x": 0, "y": -180 } }
+    },
+    {
+      "label": "Modules 2–3 — Claude: Extract Intake Fields",
+      "note": "Claude extracts patient_name, dob, insurance_carrier, reason_for_visit, is_new_patient from the first message. Missing fields are null. ParseJSON (module 3) structures the result.",
+      "metadata": { "designer": { "x": 300, "y": -180 } }
+    },
+    {
+      "label": "Modules 4–5 — AI Freshchat Conversation",
+      "note": "Claude (module 4) generates an intelligent response: confirms collected fields and asks for missing ones, or wraps up if complete. Posted to Freshchat in module 5.",
+      "metadata": { "designer": { "x": 900, "y": -180 } }
+    },
+    {
+      "label": "Module 6 — HubSpot Contact Creation",
+      "note": "Creates or updates a HubSpot contact with all intake fields. confidential:true set in scenario metadata as this handles patient data.",
+      "metadata": { "designer": { "x": 1500, "y": -180 } }
+    },
+    {
+      "label": "Modules 7–8 — Admin Summary + Patient Confirmation",
+      "note": "Module 7 emails full intake summary to clinic admin. Module 8 sends a patient confirmation with next steps from the clinic domain (RESEND_FROM_ADDRESS_CLIENT). No PHI echoed back in the patient email beyond what they sent.",
+      "metadata": { "designer": { "x": 1800, "y": -180 } }
+    }
+  ]
+}

@@ -1,0 +1,374 @@
+{
+  "name": "Scenario AP: Daily Waitlist Manager",
+  "comments": "Scheduled daily at 8AM ET. Checks Google Calendar for any same-day openings (events cancelled or slots free today), searches HubSpot for contacts with waitlist=true, generates personalised AI outreach emails for the top 5, sends via Resend, and logs HubSpot notes. Error route sends an internal alert via Resend. All secrets stored as env.VARIABLE_NAME. Timezone: America/New_York.",
+  "flow": [
+    {
+      "id": 1,
+      "module": "builtin:BasicTrigger",
+      "version": 1,
+      "parameters": {
+        "interval": 86400
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 0, "y": 0 },
+        "restore": {},
+        "notes": "Runs once every 24 hours. Configure Make.com schedule to run at 8:00 AM America/New_York. Interval 86400 = 24 hours in seconds."
+      },
+      "scheduling": {
+        "type": "daily",
+        "time": "08:00",
+        "timezone": "America/New_York"
+      },
+      "trigger": {
+        "type": "schedule"
+      },
+      "label": "Daily at 8AM ET"
+    },
+    {
+      "id": 2,
+      "module": "google-calendar:listEvents",
+      "version": 4,
+      "parameters": {
+        "calendarId": "{{env.GOOGLE_CALENDAR_ID}}"
+      },
+      "mapper": {
+        "timeMin": "{{formatDate(now; 'YYYY-MM-DD')}}T00:00:00",
+        "timeMax": "{{formatDate(now; 'YYYY-MM-DD')}}T23:59:59",
+        "timeZone": "America/New_York",
+        "singleEvents": true,
+        "orderBy": "startTime",
+        "maxResults": 20
+      },
+      "metadata": {
+        "designer": { "x": 300, "y": 0 },
+        "restore": {
+          "parameters": {
+            "calendarId": { "label": "CWI AI Primary Calendar" }
+          }
+        },
+        "parameters": [
+          { "name": "calendarId", "type": "select", "label": "Calendar ID", "required": true }
+        ],
+        "expect": [
+          { "name": "timeMin", "type": "date", "label": "Start date/time" },
+          { "name": "timeMax", "type": "date", "label": "End date/time" },
+          { "name": "timeZone", "type": "text", "label": "Time zone" },
+          { "name": "singleEvents", "type": "boolean", "label": "Single events" },
+          { "name": "orderBy", "type": "select", "label": "Order by" },
+          { "name": "maxResults", "type": "number", "label": "Maximum number of results" }
+        ],
+        "notes": "Retrieves all events for today in Eastern Time. The list is passed to Claude so it can identify truly open windows vs. blocked slots. The scenario proceeds regardless of how many events are found."
+      },
+      "onerror": [
+        {
+          "id": 91,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Waitlist Manager Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Scenario AP Error</h2><p><strong>Failed Module:</strong> {{errorHandler.moduleId}}</p><p><strong>Error:</strong> {{errorHandler.message}}</p><p><strong>Type:</strong> {{errorHandler.type}}</p><p><strong>Timestamp:</strong> {{now}}</p></body></html>\"\n}"
+          },
+          "metadata": { "designer": { "x": 300, "y": 400 } }
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+      "mapper": {
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "method": "POST",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.OPENROUTER_API_KEY}}" },
+          { "name": "Content-Type", "value": "application/json" },
+          { "name": "HTTP-Referer", "value": "https://cwiai.net" },
+          { "name": "X-Title", "value": "CWI AI Waitlist Manager - Slot Summary" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"model\": \"anthropic/claude-sonnet-4-6\",\n  \"models\": [\"anthropic/claude-sonnet-4-6\", \"{{env.OPENROUTER_FALLBACK_MODEL}}\"],\n  \"route\": \"fallback\",\n  \"provider\": { \"allow_fallbacks\": true },\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a scheduling assistant. Given today's calendar events, identify open time windows (gaps of 60+ minutes) between 8AM and 6PM Eastern Time. Return ONLY a valid JSON object with one field: open_slots (array of objects with start_time and end_time in HH:MM 24h format). If no slots are available return an empty array. Do not include any explanation.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Today is {{formatDate(now; 'dddd, MMMM D, YYYY'; 'America/New_York')}}. Calendar events today: {{2.items}}\"\n    }\n  ],\n  \"temperature\": 0.1,\n  \"max_tokens\": 400\n}"
+      },
+      "metadata": {
+        "designer": { "x": 600, "y": 0 },
+        "notes": "Claude analyses today's calendar and returns a JSON array of open slots. Low temperature for deterministic slot extraction."
+      },
+      "onerror": [
+        {
+          "id": 91,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Waitlist Manager Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Scenario AP Error</h2><p><strong>Failed Module:</strong> {{errorHandler.moduleId}}</p><p><strong>Error:</strong> {{errorHandler.message}}</p><p><strong>Timestamp:</strong> {{now}}</p></body></html>\"\n}"
+          },
+          "metadata": { "designer": { "x": 600, "y": 400 } }
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "module": "json:ParseJSON",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "string": "{{3.data.choices[0].message.content}}"
+      },
+      "metadata": {
+        "designer": { "x": 900, "y": 0 },
+        "expect": [
+          { "name": "string", "type": "text", "label": "JSON string", "required": true }
+        ],
+        "notes": "Parses Claude's open_slots JSON so downstream modules can reference {{4.open_slots}}."
+      }
+    },
+    {
+      "id": 5,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/contacts/search",
+        "method": "POST",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.HUBSPOT_API_KEY}}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"filterGroups\": [\n    {\n      \"filters\": [\n        {\n          \"propertyName\": \"waitlist\",\n          \"operator\": \"EQ\",\n          \"value\": \"true\"\n        }\n      ]\n    }\n  ],\n  \"properties\": [\"firstname\", \"lastname\", \"email\", \"phone\", \"waitlist\", \"hs_lead_status\", \"jobtitle\"],\n  \"sorts\": [\n    {\n      \"propertyName\": \"createdate\",\n      \"direction\": \"ASCENDING\"\n    }\n  ],\n  \"limit\": 5\n}"
+      },
+      "metadata": {
+        "designer": { "x": 1200, "y": 0 },
+        "notes": "Fetches the 5 oldest waitlisted contacts from HubSpot (oldest first = longest wait = highest priority)."
+      },
+      "onerror": [
+        {
+          "id": 91,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Waitlist Manager Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Scenario AP Error</h2><p><strong>Failed Module:</strong> {{errorHandler.moduleId}}</p><p><strong>Error:</strong> {{errorHandler.message}}</p><p><strong>Timestamp:</strong> {{now}}</p></body></html>\"\n}"
+          },
+          "metadata": { "designer": { "x": 1200, "y": 400 } }
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "module": "builtin:BasicFeeder",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "array": "{{5.data.results}}"
+      },
+      "metadata": {
+        "designer": { "x": 1500, "y": 0 },
+        "notes": "Iterates over each of the up to 5 waitlisted contacts so Claude can personalise the outreach email for each one."
+      }
+    },
+    {
+      "id": 7,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+      "mapper": {
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "method": "POST",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.OPENROUTER_API_KEY}}" },
+          { "name": "Content-Type", "value": "application/json" },
+          { "name": "HTTP-Referer", "value": "https://cwiai.net" },
+          { "name": "X-Title", "value": "CWI AI Waitlist Manager - Outreach" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"model\": \"anthropic/claude-sonnet-4-6\",\n  \"models\": [\"anthropic/claude-sonnet-4-6\", \"{{env.OPENROUTER_FALLBACK_MODEL}}\"],\n  \"route\": \"fallback\",\n  \"provider\": { \"allow_fallbacks\": true },\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a friendly scheduling assistant. Write a short, warm, personalised outreach email (3–4 sentences, no markdown) to a waitlisted contact. Let them know you have availability today and invite them to book. Include the open time slots. End with the Calendly booking link. Be professional and conversational. Do not mention other customers.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Contact first name: {{6.properties.firstname}}. Today's open slots: {{4.open_slots}}. Today's date: {{formatDate(now; 'MMMM D, YYYY'; 'America/New_York')}}. Booking link: {{env.CALENDLY_BOOKING_LINK}}\"\n    }\n  ],\n  \"temperature\": 0.7,\n  \"max_tokens\": 300\n}"
+      },
+      "metadata": {
+        "designer": { "x": 1800, "y": 0 },
+        "notes": "Claude writes a personalised 3-4 sentence outreach for each waitlisted contact referencing today's actual open slots."
+      },
+      "onerror": [
+        {
+          "id": 91,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Waitlist Manager Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Scenario AP Error</h2><p><strong>Failed Module:</strong> {{errorHandler.moduleId}}</p><p><strong>Error:</strong> {{errorHandler.message}}</p><p><strong>Contact:</strong> {{6.properties.firstname}} {{6.properties.lastname}} ({{6.properties.email}})</p><p><strong>Timestamp:</strong> {{now}}</p></body></html>\"\n}"
+          },
+          "metadata": { "designer": { "x": 1800, "y": 400 } }
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "method": "POST",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"from\": \"{{env.RESEND_FROM_ADDRESS}}\",\n  \"to\": [\"{{6.properties.email}}\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"We have availability today — {{formatDate(now; 'MMMM D'; 'America/New_York')}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto;\\\"><div style=\\\"background: #1a73e8; padding: 20px; text-align: center;\\\"><h1 style=\\\"color: white; margin: 0;\\\">Availability Update</h1></div><div style=\\\"padding: 30px;\\\"><p>Hi {{6.properties.firstname}},</p><p>{{7.data.choices[0].message.content}}</p><hr><p style=\\\"font-size: 13px; color: #888;\\\">You received this because you are on our waitlist. To be removed, reply to this email.</p></div><div style=\\\"background: #f5f5f5; padding: 15px; text-align: center; font-size: 12px; color: #888;\\\"><p>CWI AI | <a href=\\\"https://cwiai.net\\\">cwiai.net</a></p></div></body></html>\"\n}"
+      },
+      "metadata": {
+        "designer": { "x": 2100, "y": 0 },
+        "notes": "Sends the AI-generated waitlist outreach email to each contact via Resend. FROM is env.RESEND_FROM_ADDRESS (never brian@cwiai.net directly)."
+      },
+      "onerror": [
+        {
+          "id": 91,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Waitlist Manager Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Scenario AP Error</h2><p><strong>Failed Module:</strong> {{errorHandler.moduleId}}</p><p><strong>Error:</strong> {{errorHandler.message}}</p><p><strong>Contact:</strong> {{6.properties.firstname}} {{6.properties.lastname}} ({{6.properties.email}})</p><p><strong>Timestamp:</strong> {{now}}</p></body></html>\"\n}"
+          },
+          "metadata": { "designer": { "x": 2100, "y": 400 } }
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/notes",
+        "method": "POST",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.HUBSPOT_API_KEY}}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"properties\": {\n    \"hs_timestamp\": \"{{now}}\",\n    \"hs_note_body\": \"Daily waitlist outreach sent (Scenario AP).\\nDate: {{formatDate(now; 'MMMM D, YYYY'; 'America/New_York')}}\\nOpen slots offered: {{4.open_slots}}\\nEmail sent to: {{6.properties.email}}\\nAI message generated by claude-sonnet-4-6 via OpenRouter.\"\n  },\n  \"associations\": [\n    {\n      \"to\": { \"id\": \"{{6.id}}\" },\n      \"types\": [\n        {\n          \"associationCategory\": \"HUBSPOT_DEFINED\",\n          \"associationTypeId\": 202\n        }\n      ]\n    }\n  ]\n}"
+      },
+      "metadata": {
+        "designer": { "x": 2400, "y": 0 },
+        "notes": "Logs a HubSpot note on each contacted waitlisted contact confirming the outreach, date, and slots offered."
+      },
+      "onerror": [
+        {
+          "id": 91,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Waitlist Manager Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Scenario AP Error</h2><p><strong>Failed Module:</strong> {{errorHandler.moduleId}}</p><p><strong>Error:</strong> {{errorHandler.message}}</p><p><strong>Contact ID:</strong> {{6.id}}</p><p><strong>Timestamp:</strong> {{now}}</p></body></html>\"\n}"
+          },
+          "metadata": { "designer": { "x": 2400, "y": 400 } }
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "instant": false,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "slots": null,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": { "orphans": [] },
+    "zone": "us2.make.com"
+  },
+  "scheduling": {
+    "type": "daily",
+    "time": "08:00",
+    "timezone": "America/New_York"
+  },
+  "connections": {
+    "OPENROUTER_API_KEY": { "label": "OpenRouter API Key", "type": "http-api-key", "notes": "Primary model: anthropic/claude-sonnet-4-6." },
+    "HUBSPOT_API_KEY": { "label": "HubSpot Private App Token", "type": "http-bearer", "notes": "Requires crm.objects.contacts.read and crm.objects.notes.write scopes." },
+    "RESEND_API_KEY": { "label": "Resend API Key", "type": "http-bearer", "notes": "For all outbound emails." },
+    "GOOGLE_CALENDAR_ID": { "label": "Google Calendar ID", "type": "string", "notes": "Primary calendar ID." },
+    "RESEND_FROM_ADDRESS": { "label": "Resend From Address", "type": "string", "notes": "Verified sender for customer-facing emails." },
+    "CWI_ALERT_FROM_ADDRESS": { "label": "Internal Alert From Address", "type": "string", "notes": "Verified sender for internal alerts." },
+    "RESEND_REPLY_TO": { "label": "Resend Reply-To", "type": "string", "notes": "Reply-to on all Resend emails." },
+    "OPENROUTER_FALLBACK_MODEL": { "label": "OpenRouter Fallback Model", "type": "string", "notes": "Secondary model for route:fallback." },
+    "CALENDLY_BOOKING_LINK": { "label": "Calendly Booking Link", "type": "string", "notes": "Self-service booking link in outreach." }
+  },
+  "notes": [
+    {
+      "label": "Module 1 — Daily Schedule Trigger",
+      "note": "Runs every morning at 8:00 AM Eastern Time. Set the Make.com scenario schedule to 8AM America/New_York in the scenario scheduling panel.",
+      "metadata": { "designer": { "x": 0, "y": -180 } }
+    },
+    {
+      "label": "Modules 2–4 — Calendar Scan + Slot Extraction",
+      "note": "Lists all Google Calendar events for today, passes them to Claude (module 3) to identify open 60+ minute windows between 8AM and 6PM ET, parses the JSON result (module 4). If no slots exist the open_slots array is empty but outreach is still sent with the Calendly link.",
+      "metadata": { "designer": { "x": 600, "y": -180 } }
+    },
+    {
+      "label": "Modules 5–9 — Waitlist Fetch + Personalised Outreach Loop",
+      "note": "Fetches top 5 oldest waitlisted HubSpot contacts (module 5), iterates via BasicFeeder (module 6), Claude writes a personalised email for each (module 7), Resend delivers it (module 8), HubSpot note logged per contact (module 9).",
+      "metadata": { "designer": { "x": 1800, "y": -180 } }
+    }
+  ]
+}

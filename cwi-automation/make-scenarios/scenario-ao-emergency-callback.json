@@ -1,0 +1,372 @@
+{
+  "name": "Scenario AO: Emergency Callback",
+  "comments": "Triggered by a Freshchat conversation.created webhook. Keyword filter detects urgency terms (emergency, urgent, burst pipe, no heat, no power, flooding). Immediately emails admin an urgent alert with caller info, generates an AI Freshchat acknowledgement promising a 15-minute callback, creates a HubSpot deal tagged Emergency, and logs a note. Error route sends an internal alert via Resend. All secrets stored as env.VARIABLE_NAME. Timezone: America/New_York.",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": 3060,
+        "maxResults": 1
+      },
+      "filter": {
+        "name": "Emergency keyword filter",
+        "conditions": [
+          [
+            {
+              "a": "{{lower(1.body.messages[0].text)}}",
+              "b": "emergency|urgent|burst pipe|no heat|no power|flooding",
+              "o": "text:match"
+            }
+          ]
+        ]
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 0, "y": 0 },
+        "restore": {
+          "parameters": {
+            "hook": {
+              "label": "Freshchat Emergency Webhook (hook 3060)",
+              "data": { "editable": true }
+            }
+          }
+        },
+        "parameters": [
+          { "name": "hook", "type": "hook:gateway-webhook", "label": "Webhook", "required": true },
+          { "name": "maxResults", "type": "number", "label": "Maximum number of results" }
+        ],
+        "notes": "Fires on conversation.created. Keyword filter (case-insensitive) passes only conversations containing urgency terms. Register Make webhook URL in Freshchat Admin > Settings > Webhooks > Conversation Created."
+      }
+    },
+    {
+      "id": 2,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "method": "POST",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"🚨 [EMERGENCY] Urgent Chat Incoming — {{1.body.actors[0].first_name}} {{1.body.actors[0].last_name}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto;\\\"><div style=\\\"background: #d32f2f; padding: 20px; text-align: center;\\\"><h1 style=\\\"color: white; margin: 0;\\\">URGENT: Immediate Callback Required</h1></div><div style=\\\"padding: 30px;\\\"><p style=\\\"font-size: 16px; font-weight: bold; color: #d32f2f;\\\">An emergency message was received. Callback promised within 15 minutes.</p><table style=\\\"width: 100%; border-collapse: collapse; margin: 20px 0;\\\"><tr style=\\\"background: #fbe9e7;\\\"><td style=\\\"padding: 12px; border: 1px solid #ddd; font-weight: bold;\\\">Name</td><td style=\\\"padding: 12px; border: 1px solid #ddd;\\\">{{1.body.actors[0].first_name}} {{1.body.actors[0].last_name}}</td></tr><tr><td style=\\\"padding: 12px; border: 1px solid #ddd; font-weight: bold;\\\">Email</td><td style=\\\"padding: 12px; border: 1px solid #ddd;\\\">{{1.body.actors[0].email}}</td></tr><tr style=\\\"background: #fbe9e7;\\\"><td style=\\\"padding: 12px; border: 1px solid #ddd; font-weight: bold;\\\">Phone</td><td style=\\\"padding: 12px; border: 1px solid #ddd;\\\">{{1.body.actors[0].phone}}</td></tr><tr><td style=\\\"padding: 12px; border: 1px solid #ddd; font-weight: bold;\\\">Message</td><td style=\\\"padding: 12px; border: 1px solid #ddd;\\\">{{1.body.messages[0].text}}</td></tr><tr style=\\\"background: #fbe9e7;\\\"><td style=\\\"padding: 12px; border: 1px solid #ddd; font-weight: bold;\\\">Conversation ID</td><td style=\\\"padding: 12px; border: 1px solid #ddd;\\\">{{1.body.id}}</td></tr><tr><td style=\\\"padding: 12px; border: 1px solid #ddd; font-weight: bold;\\\">Received At</td><td style=\\\"padding: 12px; border: 1px solid #ddd;\\\">{{formatDate(now; \\\"MMMM D, YYYY [at] h:mm A\\\"; \\\"America/New_York\\\")}} ET</td></tr></table><p><strong>Action required: call back within 15 minutes.</strong></p></div><div style=\\\"background: #f5f5f5; padding: 15px; text-align: center; font-size: 12px; color: #888;\\\"><p>CWI AI | <a href=\\\"https://cwiai.net\\\">cwiai.net</a></p></div></body></html>\"\n}"
+      },
+      "metadata": {
+        "designer": { "x": 300, "y": 0 },
+        "notes": "Sends an urgent red-header email to brian@cwiai.net immediately with full caller details and the raw message."
+      },
+      "onerror": [
+        {
+          "id": 91,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Emergency Callback Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Scenario AO Error</h2><p><strong>Failed Module:</strong> {{errorHandler.moduleId}}</p><p><strong>Error:</strong> {{errorHandler.message}}</p><p><strong>Type:</strong> {{errorHandler.type}}</p><p><strong>Conversation ID:</strong> {{1.body.id}}</p><p><strong>Customer:</strong> {{1.body.actors[0].first_name}} {{1.body.actors[0].last_name}} ({{1.body.actors[0].email}})</p><p><strong>Timestamp:</strong> {{now}}</p></body></html>\"\n}"
+          },
+          "metadata": { "designer": { "x": 300, "y": 400 } }
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+      "mapper": {
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "method": "POST",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.OPENROUTER_API_KEY}}" },
+          { "name": "Content-Type", "value": "application/json" },
+          { "name": "HTTP-Referer", "value": "https://cwiai.net" },
+          { "name": "X-Title", "value": "CWI AI Emergency Callback" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"model\": \"anthropic/claude-sonnet-4-6\",\n  \"models\": [\"anthropic/claude-sonnet-4-6\", \"{{env.OPENROUTER_FALLBACK_MODEL}}\"],\n  \"route\": \"fallback\",\n  \"provider\": { \"allow_fallbacks\": true },\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a calm, professional AI assistant handling an emergency service inquiry. Write a short acknowledgement message (2–3 sentences, no markdown) for a Freshchat chat window. You must: (1) address the customer by first name, (2) acknowledge the urgency without repeating their exact words, (3) assure them a team member will call them back within 15 minutes, (4) ask them to keep their phone nearby. Keep it warm but brief.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Customer first name: {{1.body.actors[0].first_name}}. Their message: {{1.body.messages[0].text}}\"\n    }\n  ],\n  \"temperature\": 0.3,\n  \"max_tokens\": 200\n}"
+      },
+      "metadata": {
+        "designer": { "x": 600, "y": 0 },
+        "notes": "Claude generates a calm, empathetic acknowledgement assuring a 15-minute callback. Low temperature for consistent, professional tone."
+      },
+      "onerror": [
+        {
+          "id": 91,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Emergency Callback Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Scenario AO Error</h2><p><strong>Failed Module:</strong> {{errorHandler.moduleId}}</p><p><strong>Error:</strong> {{errorHandler.message}}</p><p><strong>Timestamp:</strong> {{now}}</p></body></html>\"\n}"
+          },
+          "metadata": { "designer": { "x": 600, "y": 400 } }
+        },
+        {
+          "id": 92,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+          "mapper": {
+            "url": "https://api.freshchat.com/v2/conversations/{{1.body.id}}/messages",
+            "method": "POST",
+            "headers": [
+              { "name": "Authorization", "value": "Bearer {{env.FRESHCHAT_API_KEY}}" },
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"actor_type\": \"agent\",\n  \"actor_id\": \"{{env.FRESHCHAT_BOT_ID}}\",\n  \"message_type\": \"normal\",\n  \"message_parts\": [\n    {\n      \"text\": {\n        \"content\": \"Hi {{1.body.actors[0].first_name}}, we've received your urgent message and a team member will call you back within 15 minutes. Please keep your phone nearby.\"\n      }\n    }\n  ]\n}"
+          },
+          "metadata": { "designer": { "x": 900, "y": 400 }, "notes": "Fallback Freshchat message if Claude fails." }
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+      "mapper": {
+        "url": "https://api.freshchat.com/v2/conversations/{{1.body.id}}/messages",
+        "method": "POST",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.FRESHCHAT_API_KEY}}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"actor_type\": \"agent\",\n  \"actor_id\": \"{{env.FRESHCHAT_BOT_ID}}\",\n  \"message_type\": \"normal\",\n  \"message_parts\": [\n    {\n      \"text\": {\n        \"content\": \"{{3.data.choices[0].message.content}}\"\n      }\n    }\n  ]\n}"
+      },
+      "metadata": {
+        "designer": { "x": 900, "y": 0 },
+        "notes": "Posts the AI-generated acknowledgement into the customer's Freshchat conversation immediately."
+      },
+      "onerror": [
+        {
+          "id": 91,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Emergency Callback Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Scenario AO Error</h2><p><strong>Failed Module:</strong> {{errorHandler.moduleId}}</p><p><strong>Error:</strong> {{errorHandler.message}}</p><p><strong>Timestamp:</strong> {{now}}</p></body></html>\"\n}"
+          },
+          "metadata": { "designer": { "x": 900, "y": 400 } }
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/deals",
+        "method": "POST",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.HUBSPOT_API_KEY}}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"properties\": {\n    \"dealname\": \"EMERGENCY — {{1.body.actors[0].first_name}} {{1.body.actors[0].last_name}} {{formatDate(now; \\\"YYYY-MM-DD HH:mm\\\"; \\\"America/New_York\\\")}}\",\n    \"pipeline\": \"default\",\n    \"dealstage\": \"{{env.HUBSPOT_STAGE_NEW_LEAD}}\",\n    \"priority\": \"HIGH\",\n    \"hs_lead_status\": \"NEW\",\n    \"description\": \"Emergency inbound via Freshchat.\\nMessage: {{1.body.messages[0].text}}\\nContact: {{1.body.actors[0].first_name}} {{1.body.actors[0].last_name}}\\nEmail: {{1.body.actors[0].email}}\\nPhone: {{1.body.actors[0].phone}}\\nConversation ID: {{1.body.id}}\\nReceived: {{formatDate(now; \\\"YYYY-MM-DD HH:mm:ss\\\"; \\\"America/New_York\\\")}} ET\\nTag: Emergency\",\n    \"hs_deal_stage_probability\": \"0\"\n  }\n}"
+      },
+      "metadata": {
+        "designer": { "x": 1200, "y": 0 },
+        "notes": "Creates a HubSpot deal tagged Emergency with full caller details and the original message. Priority set to HIGH."
+      },
+      "onerror": [
+        {
+          "id": 91,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Emergency Callback Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Scenario AO Error</h2><p><strong>Failed Module:</strong> {{errorHandler.moduleId}}</p><p><strong>Error:</strong> {{errorHandler.message}}</p><p><strong>Customer:</strong> {{1.body.actors[0].first_name}} {{1.body.actors[0].last_name}}</p><p><strong>Timestamp:</strong> {{now}}</p></body></html>\"\n}"
+          },
+          "metadata": { "designer": { "x": 1200, "y": 400 } }
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/notes",
+        "method": "POST",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.HUBSPOT_API_KEY}}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"properties\": {\n    \"hs_timestamp\": \"{{now}}\",\n    \"hs_note_body\": \"Emergency callback triggered (Scenario AO).\\nFreshchat Conversation ID: {{1.body.id}}\\nMessage: {{1.body.messages[0].text}}\\nCallback promised within 15 minutes at {{formatDate(now; \\\"h:mm A\\\"; \\\"America/New_York\\\")}} ET.\\nAI acknowledgement sent via Freshchat. HubSpot deal created (ID: {{5.data.id}}).\\nInternal alert emailed to brian@cwiai.net.\"\n  },\n  \"associations\": [\n    {\n      \"to\": { \"id\": \"{{5.data.id}}\" },\n      \"types\": [\n        {\n          \"associationCategory\": \"HUBSPOT_DEFINED\",\n          \"associationTypeId\": 214\n        }\n      ]\n    }\n  ]\n}"
+      },
+      "metadata": {
+        "designer": { "x": 1500, "y": 0 },
+        "notes": "Logs a HubSpot note on the newly created Emergency deal summarising all actions taken: alert sent, Freshchat acknowledgement posted, callback promised time."
+      },
+      "onerror": [
+        {
+          "id": 91,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Emergency Callback Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Scenario AO Error</h2><p><strong>Failed Module:</strong> {{errorHandler.moduleId}}</p><p><strong>Error:</strong> {{errorHandler.message}}</p><p><strong>Deal ID:</strong> {{5.data.id}}</p><p><strong>Timestamp:</strong> {{now}}</p></body></html>\"\n}"
+          },
+          "metadata": { "designer": { "x": 1500, "y": 400 } }
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+      "mapper": {
+        "url": "https://api.freshchat.com/v2/conversations/{{1.body.id}}",
+        "method": "PATCH",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.FRESHCHAT_API_KEY}}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"assigned_agent_type\": \"agent\",\n  \"priority\": \"urgent\"\n}"
+      },
+      "metadata": {
+        "designer": { "x": 1800, "y": 0 },
+        "notes": "Assigns the Freshchat conversation to a human agent and marks it as urgent priority so it appears at the top of the agent queue."
+      },
+      "onerror": [
+        {
+          "id": 91,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Emergency Callback Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Scenario AO Error</h2><p><strong>Failed Module:</strong> {{errorHandler.moduleId}}</p><p><strong>Error:</strong> {{errorHandler.message}}</p><p><strong>Timestamp:</strong> {{now}}</p></body></html>\"\n}"
+          },
+          "metadata": { "designer": { "x": 1800, "y": 400 } }
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": true,
+      "slots": null,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": { "orphans": [] },
+    "zone": "us2.make.com"
+  },
+  "scheduling": {
+    "type": "indefinitely",
+    "interval": 0
+  },
+  "webhooks": [
+    {
+      "id": 3060,
+      "name": "Freshchat Emergency Webhook (hook 3060)",
+      "notes": "Register in Freshchat Admin > Settings > Webhooks > Conversation Created. Make generates the real URL on import and activation."
+    }
+  ],
+  "connections": {
+    "OPENROUTER_API_KEY": { "label": "OpenRouter API Key", "type": "http-api-key", "notes": "Primary model: anthropic/claude-sonnet-4-6." },
+    "FRESHCHAT_API_KEY": { "label": "Freshchat API Key", "type": "http-bearer", "notes": "Freshchat account API token." },
+    "FRESHCHAT_BOT_ID": { "label": "Freshchat Bot/Agent ID", "type": "string", "notes": "actor_id for outbound Freshchat messages." },
+    "HUBSPOT_API_KEY": { "label": "HubSpot Private App Token", "type": "http-bearer", "notes": "Requires crm.objects.deals.write and crm.objects.notes.write scopes." },
+    "HUBSPOT_STAGE_NEW_LEAD": { "label": "HubSpot Deal Stage — New Lead", "type": "string", "notes": "Pipeline stage ID for newly created emergency deals." },
+    "RESEND_API_KEY": { "label": "Resend API Key", "type": "http-bearer", "notes": "For all outbound emails." },
+    "CWI_ALERT_FROM_ADDRESS": { "label": "Internal Alert From Address", "type": "string", "notes": "Verified sender for internal alerts." },
+    "RESEND_REPLY_TO": { "label": "Resend Reply-To", "type": "string", "notes": "Reply-to on all emails." },
+    "OPENROUTER_FALLBACK_MODEL": { "label": "OpenRouter Fallback Model", "type": "string", "notes": "Secondary model for route:fallback." }
+  },
+  "notes": [
+    {
+      "label": "Module 1 — Freshchat Webhook + Emergency Filter",
+      "note": "Fires on conversation.created. Case-insensitive regex filter: emergency|urgent|burst pipe|no heat|no power|flooding. Only matching conversations proceed.",
+      "metadata": { "designer": { "x": 0, "y": -180 } }
+    },
+    {
+      "label": "Module 2 — Resend: Urgent Admin Alert",
+      "note": "Sends a red-header priority email to brian@cwiai.net immediately with caller name, email, phone, message text, and conversation ID.",
+      "metadata": { "designer": { "x": 300, "y": -180 } }
+    },
+    {
+      "label": "Module 3 — Claude: Generate Acknowledgement",
+      "note": "Writes a calm 2-3 sentence Freshchat reply acknowledging urgency and promising a 15-minute callback. Fallback in onerror sends a hardcoded message if Claude fails.",
+      "metadata": { "designer": { "x": 600, "y": -180 } }
+    },
+    {
+      "label": "Modules 5–6 — HubSpot Emergency Deal + Note",
+      "note": "Creates a HubSpot deal named EMERGENCY-<name>-<timestamp> with priority HIGH, then logs a note summarising all actions. Module 7 assigns and escalates the Freshchat conversation to a human agent.",
+      "metadata": { "designer": { "x": 1200, "y": -180 } }
+    }
+  ]
+}

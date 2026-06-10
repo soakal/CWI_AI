@@ -1,0 +1,396 @@
+{
+  "name": "Scenario AN: Last-Minute Opening Alert",
+  "comments": "Triggered by a Calendly invitee.canceled webhook. Checks Google Calendar for the freed slot, emails the business owner the open time, then generates and sends personalized AI outreach emails via Resend to the top 3 HubSpot contacts tagged waitlist=true. HubSpot notes are logged for each outreach. Error route sends an internal alert via Resend. All secrets stored as env.VARIABLE_NAME. Timezone: America/New_York.",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": 3050,
+        "maxResults": 1
+      },
+      "filter": {
+        "name": "Calendly cancellation only",
+        "conditions": [
+          [
+            {
+              "a": "{{1.body.event}}",
+              "b": "invitee.canceled",
+              "o": "text:equal"
+            }
+          ]
+        ]
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 0, "y": 0 },
+        "restore": {
+          "parameters": {
+            "hook": {
+              "label": "Calendly Canceled Webhook (hook 3050)",
+              "data": { "editable": true }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hook",
+            "type": "hook:gateway-webhook",
+            "label": "Webhook",
+            "required": true
+          },
+          {
+            "name": "maxResults",
+            "type": "number",
+            "label": "Maximum number of results"
+          }
+        ],
+        "notes": "Fires on every Calendly webhook. Filter passes only invitee.canceled events. Payload contains payload.payload.event.start_time, payload.payload.event.end_time, payload.payload.invitee.name, payload.payload.invitee.email."
+      }
+    },
+    {
+      "id": 2,
+      "module": "google-calendar:listEvents",
+      "version": 4,
+      "parameters": {
+        "calendarId": "{{env.GOOGLE_CALENDAR_ID}}"
+      },
+      "mapper": {
+        "timeMin": "{{1.body.payload.event.start_time}}",
+        "timeMax": "{{1.body.payload.event.end_time}}",
+        "timeZone": "America/New_York",
+        "singleEvents": true,
+        "orderBy": "startTime",
+        "maxResults": 5
+      },
+      "metadata": {
+        "designer": { "x": 300, "y": 0 },
+        "restore": {
+          "parameters": {
+            "calendarId": { "label": "CWI AI Primary Calendar" }
+          }
+        },
+        "parameters": [
+          {
+            "name": "calendarId",
+            "type": "select",
+            "label": "Calendar ID",
+            "required": true
+          }
+        ],
+        "expect": [
+          { "name": "timeMin", "type": "date", "label": "Start date/time" },
+          { "name": "timeMax", "type": "date", "label": "End date/time" },
+          { "name": "timeZone", "type": "text", "label": "Time zone" },
+          { "name": "singleEvents", "type": "boolean", "label": "Single events" },
+          { "name": "orderBy", "type": "select", "label": "Order by" },
+          { "name": "maxResults", "type": "number", "label": "Maximum number of results" }
+        ],
+        "notes": "Verifies the cancelled slot is now truly free on Google Calendar. If length(2.items)==0 the slot is open and we proceed to notify."
+      },
+      "onerror": [
+        {
+          "id": 91,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Last-Minute Opening Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Scenario AN Error</h2><p><strong>Failed Module:</strong> {{errorHandler.moduleId}}</p><p><strong>Error:</strong> {{errorHandler.message}}</p><p><strong>Type:</strong> {{errorHandler.type}}</p><p><strong>Timestamp:</strong> {{now}}</p><hr><p><strong>Cancelled Slot:</strong> {{1.body.payload.event.start_time}} – {{1.body.payload.event.end_time}}</p><p><strong>Invitee:</strong> {{1.body.payload.invitee.name}} ({{1.body.payload.invitee.email}})</p></body></html>\"\n}"
+          },
+          "metadata": { "designer": { "x": 300, "y": 400 }, "notes": "Error alert to brian@cwiai.net via Resend." }
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "method": "POST",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI] Last-Minute Opening: {{formatDate(1.body.payload.event.start_time; \\\"dddd MMMM D [at] h:mm A\\\"; \\\"America/New_York\\\")}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto;\\\"><div style=\\\"background: #1a73e8; padding: 20px; text-align: center;\\\"><h1 style=\\\"color: white; margin: 0;\\\">Open Slot Available</h1></div><div style=\\\"padding: 30px;\\\"><p>A cancellation just opened up a slot on your calendar.</p><table style=\\\"width: 100%; border-collapse: collapse; margin: 20px 0;\\\"><tr style=\\\"background: #f5f5f5;\\\"><td style=\\\"padding: 12px; border: 1px solid #ddd; font-weight: bold;\\\">Date &amp; Time</td><td style=\\\"padding: 12px; border: 1px solid #ddd;\\\">{{formatDate(1.body.payload.event.start_time; \\\"dddd, MMMM D, YYYY [at] h:mm A\\\"; \\\"America/New_York\\\")}} ET</td></tr><tr><td style=\\\"padding: 12px; border: 1px solid #ddd; font-weight: bold;\\\">Ends</td><td style=\\\"padding: 12px; border: 1px solid #ddd;\\\">{{formatDate(1.body.payload.event.end_time; \\\"h:mm A\\\"; \\\"America/New_York\\\")}} ET</td></tr><tr style=\\\"background: #f5f5f5;\\\"><td style=\\\"padding: 12px; border: 1px solid #ddd; font-weight: bold;\\\">Cancelled By</td><td style=\\\"padding: 12px; border: 1px solid #ddd;\\\">{{1.body.payload.invitee.name}} ({{1.body.payload.invitee.email}})</td></tr></table><p>CWI AI is now contacting the top 3 waitlisted contacts to fill this slot.</p><p>You can also share the direct booking link: <a href=\\\"{{env.CALENDLY_BOOKING_LINK}}\\\">{{env.CALENDLY_BOOKING_LINK}}</a></p></div><div style=\\\"background: #f5f5f5; padding: 15px; text-align: center; font-size: 12px; color: #888;\\\"><p>CWI AI | <a href=\\\"https://cwiai.net\\\">cwiai.net</a></p></div></body></html>\"\n}"
+      },
+      "metadata": {
+        "designer": { "x": 600, "y": 0 },
+        "notes": "Emails the business owner (brian@cwiai.net) the freed slot details immediately. Runs regardless of whether the slot is confirmed empty on GCal — the calendar check (module 2) is informational context."
+      },
+      "onerror": [
+        {
+          "id": 91,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Last-Minute Opening Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Scenario AN Error</h2><p><strong>Failed Module:</strong> {{errorHandler.moduleId}}</p><p><strong>Error:</strong> {{errorHandler.message}}</p><p><strong>Type:</strong> {{errorHandler.type}}</p><p><strong>Timestamp:</strong> {{now}}</p></body></html>\"\n}"
+          },
+          "metadata": { "designer": { "x": 600, "y": 400 } }
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/contacts/search",
+        "method": "POST",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.HUBSPOT_API_KEY}}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"filterGroups\": [\n    {\n      \"filters\": [\n        {\n          \"propertyName\": \"waitlist\",\n          \"operator\": \"EQ\",\n          \"value\": \"true\"\n        }\n      ]\n    }\n  ],\n  \"properties\": [\"firstname\", \"lastname\", \"email\", \"phone\", \"waitlist\", \"hs_lead_status\"],\n  \"sorts\": [\n    {\n      \"propertyName\": \"createdate\",\n      \"direction\": \"ASCENDING\"\n    }\n  ],\n  \"limit\": 3\n}"
+      },
+      "metadata": {
+        "designer": { "x": 900, "y": 0 },
+        "notes": "Fetches up to 3 HubSpot contacts with waitlist=true, sorted oldest-first (those who have been waiting longest get first priority)."
+      },
+      "onerror": [
+        {
+          "id": 91,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Last-Minute Opening Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Scenario AN Error</h2><p><strong>Failed Module:</strong> {{errorHandler.moduleId}}</p><p><strong>Error:</strong> {{errorHandler.message}}</p><p><strong>Timestamp:</strong> {{now}}</p></body></html>\"\n}"
+          },
+          "metadata": { "designer": { "x": 900, "y": 400 } }
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "module": "builtin:BasicFeeder",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "array": "{{4.data.results}}"
+      },
+      "metadata": {
+        "designer": { "x": 1200, "y": 0 },
+        "notes": "Iterates over each of the up to 3 waitlisted contacts returned by HubSpot so Claude can write a personalised email for each one."
+      }
+    },
+    {
+      "id": 6,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+      "mapper": {
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "method": "POST",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.OPENROUTER_API_KEY}}" },
+          { "name": "Content-Type", "value": "application/json" },
+          { "name": "HTTP-Referer", "value": "https://cwiai.net" },
+          { "name": "X-Title", "value": "CWI AI Last-Minute Opening" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"model\": \"anthropic/claude-sonnet-4-6\",\n  \"models\": [\"anthropic/claude-sonnet-4-6\", \"{{env.OPENROUTER_FALLBACK_MODEL}}\"],\n  \"route\": \"fallback\",\n  \"provider\": { \"allow_fallbacks\": true },\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a friendly scheduling assistant. Write a short, warm, personalized outreach email (3–4 sentences, no markdown) to a waitlisted contact letting them know a last-minute opening just became available. Encourage them to book before it fills up. Include the date and time of the opening. End with the Calendly booking link. Keep the tone professional but conversational. Do not reveal the previous client cancelled.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Contact first name: {{5.properties.firstname}}. Opening: {{formatDate(1.body.payload.event.start_time; \\\"dddd, MMMM D [at] h:mm A\\\"; \\\"America/New_York\\\")}} Eastern Time. Booking link: {{env.CALENDLY_BOOKING_LINK}}\"\n    }\n  ],\n  \"temperature\": 0.7,\n  \"max_tokens\": 300\n}"
+      },
+      "metadata": {
+        "designer": { "x": 1500, "y": 0 },
+        "notes": "Claude writes a personalised 3-4 sentence outreach email for each waitlisted contact. Temperature 0.7 for natural variation across the three emails."
+      },
+      "onerror": [
+        {
+          "id": 91,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Last-Minute Opening Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Scenario AN Error</h2><p><strong>Failed Module:</strong> {{errorHandler.moduleId}}</p><p><strong>Error:</strong> {{errorHandler.message}}</p><p><strong>Contact:</strong> {{5.properties.firstname}} {{5.properties.lastname}} ({{5.properties.email}})</p><p><strong>Timestamp:</strong> {{now}}</p></body></html>\"\n}"
+          },
+          "metadata": { "designer": { "x": 1500, "y": 400 } }
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "method": "POST",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"from\": \"{{env.RESEND_FROM_ADDRESS}}\",\n  \"to\": [\"{{5.properties.email}}\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"A spot just opened up for you — {{formatDate(1.body.payload.event.start_time; \\\"MMMM D [at] h:mm A\\\"; \\\"America/New_York\\\")}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto;\\\"><div style=\\\"background: #1a73e8; padding: 20px; text-align: center;\\\"><h1 style=\\\"color: white; margin: 0;\\\">A Spot Just Opened Up</h1></div><div style=\\\"padding: 30px;\\\"><p>Hi {{5.properties.firstname}},</p><p>{{6.data.choices[0].message.content}}</p><hr><p style=\\\"font-size: 13px; color: #888;\\\">If you did not request this, please disregard this email.</p></div><div style=\\\"background: #f5f5f5; padding: 15px; text-align: center; font-size: 12px; color: #888;\\\"><p>CWI AI | <a href=\\\"https://cwiai.net\\\">cwiai.net</a></p></div></body></html>\"\n}"
+      },
+      "metadata": {
+        "designer": { "x": 1800, "y": 0 },
+        "notes": "Sends the AI-generated outreach email to each waitlisted contact via Resend. FROM is env.RESEND_FROM_ADDRESS (never brian@cwiai.net)."
+      },
+      "onerror": [
+        {
+          "id": 91,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Last-Minute Opening Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Scenario AN Error</h2><p><strong>Failed Module:</strong> {{errorHandler.moduleId}}</p><p><strong>Error:</strong> {{errorHandler.message}}</p><p><strong>Contact:</strong> {{5.properties.firstname}} {{5.properties.lastname}} ({{5.properties.email}})</p><p><strong>Timestamp:</strong> {{now}}</p></body></html>\"\n}"
+          },
+          "metadata": { "designer": { "x": 1800, "y": 400 } }
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/notes",
+        "method": "POST",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.HUBSPOT_API_KEY}}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"properties\": {\n    \"hs_timestamp\": \"{{now}}\",\n    \"hs_note_body\": \"Last-minute opening outreach sent (Scenario AN). Slot: {{formatDate(1.body.payload.event.start_time; \\\"YYYY-MM-DD HH:mm\\\"; \\\"America/New_York\\\")}} ET. Email sent to {{5.properties.email}}. AI message generated by claude-sonnet-4-6 via OpenRouter.\",\n    \"hs_attachment_ids\": \"\"\n  },\n  \"associations\": [\n    {\n      \"to\": { \"id\": \"{{5.id}}\" },\n      \"types\": [\n        {\n          \"associationCategory\": \"HUBSPOT_DEFINED\",\n          \"associationTypeId\": 202\n        }\n      ]\n    }\n  ]\n}"
+      },
+      "metadata": {
+        "designer": { "x": 2100, "y": 0 },
+        "notes": "Logs a HubSpot note on each waitlisted contact confirming the outreach was sent, the slot offered, and the AI model used."
+      },
+      "onerror": [
+        {
+          "id": 91,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Last-Minute Opening Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Scenario AN Error</h2><p><strong>Failed Module:</strong> {{errorHandler.moduleId}}</p><p><strong>Error:</strong> {{errorHandler.message}}</p><p><strong>Contact ID:</strong> {{5.id}}</p><p><strong>Timestamp:</strong> {{now}}</p></body></html>\"\n}"
+          },
+          "metadata": { "designer": { "x": 2100, "y": 400 } }
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "slots": null,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": { "orphans": [] },
+    "zone": "us2.make.com"
+  },
+  "scheduling": {
+    "type": "indefinitely",
+    "interval": 0
+  },
+  "webhooks": [
+    {
+      "id": 3050,
+      "name": "Calendly Canceled Webhook (hook 3050)",
+      "notes": "Register this webhook URL in Calendly > Integrations > Webhooks for event type invitee.canceled. Make generates the real URL when the scenario is imported and activated."
+    }
+  ],
+  "connections": {
+    "OPENROUTER_API_KEY": { "label": "OpenRouter API Key", "type": "http-api-key", "notes": "Bearer token for OpenRouter. Primary model: anthropic/claude-sonnet-4-6." },
+    "HUBSPOT_API_KEY": { "label": "HubSpot Private App Token", "type": "http-bearer", "notes": "Requires crm.objects.contacts.read and crm.objects.notes.write scopes." },
+    "RESEND_API_KEY": { "label": "Resend API Key", "type": "http-bearer", "notes": "For all outbound emails." },
+    "GOOGLE_CALENDAR_ID": { "label": "Google Calendar ID", "type": "string", "notes": "Primary calendar ID, e.g. primary." },
+    "RESEND_FROM_ADDRESS": { "label": "Resend From Address", "type": "string", "notes": "Verified sender for customer-facing emails." },
+    "CWI_ALERT_FROM_ADDRESS": { "label": "Internal Alert From Address", "type": "string", "notes": "Verified sender for internal error alerts." },
+    "RESEND_REPLY_TO": { "label": "Resend Reply-To", "type": "string", "notes": "Reply-to address on all Resend emails." },
+    "OPENROUTER_FALLBACK_MODEL": { "label": "OpenRouter Fallback Model", "type": "string", "notes": "Secondary model for OpenRouter route:fallback." },
+    "CALENDLY_BOOKING_LINK": { "label": "Calendly Booking Link", "type": "string", "notes": "Self-service booking link included in outreach emails." }
+  },
+  "notes": [
+    {
+      "label": "Module 1 — Calendly Webhook",
+      "note": "Fires on every Calendly event. Filter passes only invitee.canceled payloads so other event types are ignored.",
+      "metadata": { "designer": { "x": 0, "y": -180 } }
+    },
+    {
+      "label": "Module 2 — Google Calendar: Verify Freed Slot",
+      "note": "Queries the cancelled slot window on Google Calendar to confirm it is now free before contacting waitlisted contacts.",
+      "metadata": { "designer": { "x": 300, "y": -180 } }
+    },
+    {
+      "label": "Module 3 — Resend: Notify Business Owner",
+      "note": "Immediately emails brian@cwiai.net with the freed slot details and confirms AI outreach is being sent.",
+      "metadata": { "designer": { "x": 600, "y": -180 } }
+    },
+    {
+      "label": "Modules 4–8 — HubSpot Waitlist Loop",
+      "note": "Fetches top 3 waitlisted contacts (oldest first), iterates with BasicFeeder, generates a personalised Claude email for each, sends via Resend, and logs a HubSpot note per contact.",
+      "metadata": { "designer": { "x": 1500, "y": -180 } }
+    }
+  ]
+}

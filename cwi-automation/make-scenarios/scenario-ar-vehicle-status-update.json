@@ -1,0 +1,377 @@
+{
+  "name": "Scenario AR: Vehicle Status Update",
+  "comments": "Triggered by a HubSpot webhook when a deal's vehicle_status property changes to: ready, in_progress, or waiting_parts. Fetches the full deal and associated contact from HubSpot. Claude generates a status-appropriate email (ready=pickup notification, in_progress=work update, waiting_parts=delay notice). Sends via Resend from client domain. Logs a HubSpot note. Error route sends an internal alert via Resend. All secrets stored as env.VARIABLE_NAME. Timezone: America/New_York.",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": 3080,
+        "maxResults": 1
+      },
+      "filter": {
+        "name": "vehicle_status change filter",
+        "conditions": [
+          [
+            {
+              "a": "{{1.body.propertyName}}",
+              "b": "vehicle_status",
+              "o": "text:equal"
+            },
+            {
+              "a": "{{1.body.propertyValue}}",
+              "b": "ready|in_progress|waiting_parts",
+              "o": "text:match"
+            }
+          ]
+        ]
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 0, "y": 0 },
+        "restore": {
+          "parameters": {
+            "hook": {
+              "label": "HubSpot Deal Property Webhook (hook 3080)",
+              "data": { "editable": true }
+            }
+          }
+        },
+        "parameters": [
+          { "name": "hook", "type": "hook:gateway-webhook", "label": "Webhook", "required": true },
+          { "name": "maxResults", "type": "number", "label": "Maximum number of results" }
+        ],
+        "notes": "Receives HubSpot deal.propertyChange webhooks. Filter passes only changes to vehicle_status with values ready, in_progress, or waiting_parts. Register this webhook URL in HubSpot > Settings > Integrations > Webhooks for deal.propertyChange events."
+      }
+    },
+    {
+      "id": 2,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/deals/{{1.body.objectId}}?properties=dealname,vehicle_status,vehicle_make,vehicle_model,vehicle_year,vehicle_vin,description,hs_deal_stage_probability",
+        "method": "GET",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.HUBSPOT_API_KEY}}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "bodyType": "",
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": { "x": 300, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "GET" },
+            "bodyType": { "label": "Empty" }
+          }
+        },
+        "notes": "Fetches the full deal record including vehicle properties. objectId comes from the HubSpot webhook payload."
+      },
+      "onerror": [
+        {
+          "id": 91,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Vehicle Status Update Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Scenario AR Error</h2><p><strong>Failed Module:</strong> {{errorHandler.moduleId}}</p><p><strong>Error:</strong> {{errorHandler.message}}</p><p><strong>Type:</strong> {{errorHandler.type}}</p><p><strong>Deal ID:</strong> {{1.body.objectId}}</p><p><strong>New Status:</strong> {{1.body.propertyValue}}</p><p><strong>Timestamp:</strong> {{now}}</p></body></html>\"\n}"
+          },
+          "metadata": { "designer": { "x": 300, "y": 400 } }
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/deals/{{1.body.objectId}}/associations/contacts",
+        "method": "GET",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.HUBSPOT_API_KEY}}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "bodyType": "",
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": { "x": 600, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "GET" },
+            "bodyType": { "label": "Empty" }
+          }
+        },
+        "notes": "Fetches the first associated contact ID for the deal. The contact ID is used in the next step to get name and email."
+      },
+      "onerror": [
+        {
+          "id": 91,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Vehicle Status Update Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Scenario AR Error</h2><p><strong>Failed Module:</strong> {{errorHandler.moduleId}}</p><p><strong>Error:</strong> {{errorHandler.message}}</p><p><strong>Deal ID:</strong> {{1.body.objectId}}</p><p><strong>Timestamp:</strong> {{now}}</p></body></html>\"\n}"
+          },
+          "metadata": { "designer": { "x": 600, "y": 400 } }
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/contacts/{{3.data.results[0].id}}?properties=firstname,lastname,email,phone",
+        "method": "GET",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.HUBSPOT_API_KEY}}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "bodyType": "",
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": { "x": 900, "y": 0 },
+        "restore": {
+          "expect": {
+            "method": { "label": "GET" },
+            "bodyType": { "label": "Empty" }
+          }
+        },
+        "notes": "Fetches the associated contact record (name, email, phone) using the contact ID from module 3."
+      },
+      "onerror": [
+        {
+          "id": 91,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Vehicle Status Update Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Scenario AR Error</h2><p><strong>Failed Module:</strong> {{errorHandler.moduleId}}</p><p><strong>Error:</strong> {{errorHandler.message}}</p><p><strong>Contact ID:</strong> {{3.data.results[0].id}}</p><p><strong>Timestamp:</strong> {{now}}</p></body></html>\"\n}"
+          },
+          "metadata": { "designer": { "x": 900, "y": 400 } }
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+      "mapper": {
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "method": "POST",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.OPENROUTER_API_KEY}}" },
+          { "name": "Content-Type", "value": "application/json" },
+          { "name": "HTTP-Referer", "value": "https://cwiai.net" },
+          { "name": "X-Title", "value": "CWI AI Vehicle Status Update" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"model\": \"anthropic/claude-sonnet-4-6\",\n  \"models\": [\"anthropic/claude-sonnet-4-6\", \"{{env.OPENROUTER_FALLBACK_MODEL}}\"],\n  \"route\": \"fallback\",\n  \"provider\": { \"allow_fallbacks\": true },\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a friendly automotive service advisor. Write a professional vehicle status update email body (3–5 sentences, no markdown, no subject line) tailored to the status type. For 'ready': warmly inform the customer their vehicle is ready for pickup, include the vehicle name, mention business hours if included, invite them to call with questions. For 'in_progress': reassure the customer their vehicle is actively being worked on, mention the vehicle, provide a positive and confident tone. For 'waiting_parts': apologise for the delay, explain parts are on order, give an honest and empathetic message, assure them they will be updated. Always address the customer by first name. End every message with a professional sign-off (no placeholder signatures).\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Status: {{1.body.propertyValue}}. Customer first name: {{4.data.properties.firstname}}. Vehicle: {{2.data.properties.vehicle_year}} {{2.data.properties.vehicle_make}} {{2.data.properties.vehicle_model}}. Deal name: {{2.data.properties.dealname}}. Today's date: {{formatDate(now; 'MMMM D, YYYY'; 'America/New_York')}}.\"\n    }\n  ],\n  \"temperature\": 0.5,\n  \"max_tokens\": 350\n}"
+      },
+      "metadata": {
+        "designer": { "x": 1200, "y": 0 },
+        "notes": "Claude generates a status-appropriate email body. One model call handles all three status types based on the system prompt instructions."
+      },
+      "onerror": [
+        {
+          "id": 91,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Vehicle Status Update Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Scenario AR Error</h2><p><strong>Failed Module:</strong> {{errorHandler.moduleId}}</p><p><strong>Error:</strong> {{errorHandler.message}}</p><p><strong>Timestamp:</strong> {{now}}</p></body></html>\"\n}"
+          },
+          "metadata": { "designer": { "x": 1200, "y": 400 } }
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "method": "POST",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"from\": \"{{env.RESEND_FROM_ADDRESS_CLIENT}}\",\n  \"to\": [\"{{4.data.properties.email}}\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"{{if(1.body.propertyValue == 'ready'; 'Your Vehicle Is Ready for Pickup'; if(1.body.propertyValue == 'in_progress'; 'Update on Your Vehicle'; 'Parts Update — Your Vehicle'))}} — {{2.data.properties.vehicle_year}} {{2.data.properties.vehicle_make}} {{2.data.properties.vehicle_model}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto;\\\"><div style=\\\"background: {{if(1.body.propertyValue == 'ready'; '#2e7d32'; if(1.body.propertyValue == 'in_progress'; '#1565c0'; '#e65100'))}}; padding: 20px; text-align: center;\\\"><h1 style=\\\"color: white; margin: 0;\\\">{{if(1.body.propertyValue == 'ready'; 'Your Vehicle Is Ready'; if(1.body.propertyValue == 'in_progress'; 'Work in Progress'; 'Parts Update'))}}</h1></div><div style=\\\"padding: 30px;\\\"><p>{{5.data.choices[0].message.content}}</p><hr><p style=\\\"font-size: 12px; color: #888;\\\">Reference: {{2.data.properties.dealname}}</p></div><div style=\\\"background: #f5f5f5; padding: 15px; text-align: center; font-size: 12px; color: #888;\\\"><p>If you have questions, reply to this email or call us.</p></div></body></html>\"\n}"
+      },
+      "metadata": {
+        "designer": { "x": 1500, "y": 0 },
+        "notes": "Sends the AI-generated status email to the customer. FROM is env.RESEND_FROM_ADDRESS_CLIENT (client shop domain, never brian@cwiai.net). Email subject and header colour are dynamically set by status."
+      },
+      "onerror": [
+        {
+          "id": 91,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Vehicle Status Update Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Scenario AR Error</h2><p><strong>Failed Module:</strong> {{errorHandler.moduleId}}</p><p><strong>Error:</strong> {{errorHandler.message}}</p><p><strong>Customer:</strong> {{4.data.properties.firstname}} {{4.data.properties.lastname}} ({{4.data.properties.email}})</p><p><strong>Timestamp:</strong> {{now}}</p></body></html>\"\n}"
+          },
+          "metadata": { "designer": { "x": 1500, "y": 400 } }
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/notes",
+        "method": "POST",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.HUBSPOT_API_KEY}}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"properties\": {\n    \"hs_timestamp\": \"{{now}}\",\n    \"hs_note_body\": \"Vehicle status update email sent (Scenario AR).\\nNew Status: {{1.body.propertyValue}}\\nVehicle: {{2.data.properties.vehicle_year}} {{2.data.properties.vehicle_make}} {{2.data.properties.vehicle_model}}\\nEmail sent to: {{4.data.properties.email}}\\nSent at: {{formatDate(now; 'MMMM D, YYYY [at] h:mm A'; 'America/New_York')}} ET\\nAI message generated by claude-sonnet-4-6 via OpenRouter.\"\n  },\n  \"associations\": [\n    {\n      \"to\": { \"id\": \"{{1.body.objectId}}\" },\n      \"types\": [\n        {\n          \"associationCategory\": \"HUBSPOT_DEFINED\",\n          \"associationTypeId\": 214\n        }\n      ]\n    }\n  ]\n}"
+      },
+      "metadata": {
+        "designer": { "x": 1800, "y": 0 },
+        "notes": "Logs a HubSpot note on the deal confirming the status update email was sent, the new status, vehicle details, and recipient."
+      },
+      "onerror": [
+        {
+          "id": 91,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Vehicle Status Update Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Scenario AR Error</h2><p><strong>Failed Module:</strong> {{errorHandler.moduleId}}</p><p><strong>Error:</strong> {{errorHandler.message}}</p><p><strong>Deal ID:</strong> {{1.body.objectId}}</p><p><strong>Timestamp:</strong> {{now}}</p></body></html>\"\n}"
+          },
+          "metadata": { "designer": { "x": 1800, "y": 400 } }
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": true,
+      "slots": null,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": { "orphans": [] },
+    "zone": "us2.make.com"
+  },
+  "scheduling": {
+    "type": "indefinitely",
+    "interval": 0
+  },
+  "webhooks": [
+    {
+      "id": 3080,
+      "name": "HubSpot Deal Property Webhook (hook 3080)",
+      "notes": "Configure in HubSpot > Settings > Integrations > Webhooks. Subscribe to deal.propertyChange for the vehicle_status property. Make generates the real URL on import and activation."
+    }
+  ],
+  "connections": {
+    "OPENROUTER_API_KEY": { "label": "OpenRouter API Key", "type": "http-api-key", "notes": "Primary model: anthropic/claude-sonnet-4-6." },
+    "HUBSPOT_API_KEY": { "label": "HubSpot Private App Token", "type": "http-bearer", "notes": "Requires crm.objects.deals.read, crm.objects.contacts.read, crm.objects.notes.write scopes." },
+    "RESEND_API_KEY": { "label": "Resend API Key", "type": "http-bearer", "notes": "For all outbound emails." },
+    "RESEND_FROM_ADDRESS_CLIENT": { "label": "Resend Client From Address", "type": "string", "notes": "Verified client shop domain sender. Never brian@cwiai.net." },
+    "CWI_ALERT_FROM_ADDRESS": { "label": "Internal Alert From Address", "type": "string", "notes": "Verified sender for error alerts." },
+    "RESEND_REPLY_TO": { "label": "Resend Reply-To", "type": "string", "notes": "Reply-to on all Resend emails." },
+    "OPENROUTER_FALLBACK_MODEL": { "label": "OpenRouter Fallback Model", "type": "string", "notes": "Secondary model for route:fallback." }
+  },
+  "notes": [
+    {
+      "label": "Module 1 — HubSpot Webhook + vehicle_status Filter",
+      "note": "Receives deal.propertyChange webhooks from HubSpot. Filter requires propertyName=vehicle_status AND propertyValue in (ready, in_progress, waiting_parts).",
+      "metadata": { "designer": { "x": 0, "y": -180 } }
+    },
+    {
+      "label": "Modules 2–4 — Fetch Deal + Contact",
+      "note": "Module 2 fetches the full deal (vehicle details). Module 3 gets associated contact IDs. Module 4 fetches the contact record (name, email, phone).",
+      "metadata": { "designer": { "x": 600, "y": -180 } }
+    },
+    {
+      "label": "Module 5 — Claude: Generate Status Email",
+      "note": "Single Claude call handles all three status types. System prompt branches behaviour: ready=pickup, in_progress=work update, waiting_parts=parts delay. Temperature 0.5 for natural but consistent tone.",
+      "metadata": { "designer": { "x": 1200, "y": -180 } }
+    },
+    {
+      "label": "Module 6 — Resend: Customer Status Email",
+      "note": "Sends from env.RESEND_FROM_ADDRESS_CLIENT (client shop domain). Subject and header colour dynamically set: green for ready, blue for in_progress, orange for waiting_parts.",
+      "metadata": { "designer": { "x": 1500, "y": -180 } }
+    },
+    {
+      "label": "Module 7 — HubSpot Note",
+      "note": "Logs the outbound email action on the deal for a complete audit trail.",
+      "metadata": { "designer": { "x": 1800, "y": -180 } }
+    }
+  ]
+}

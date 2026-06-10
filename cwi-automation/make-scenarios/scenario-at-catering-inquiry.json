@@ -1,0 +1,383 @@
+{
+  "name": "Scenario AT: Catering Inquiry",
+  "comments": "Triggered by a Freshchat conversation.created webhook. Keyword filter detects catering and events terms (catering, party, event, private dining, group booking, reservation). Claude extracts event date, party size, occasion, and dietary needs from the message. Creates a HubSpot deal tagged Catering-Inquiry. Sends a detailed inquiry summary to the restaurant admin via Resend. Generates an AI follow-up email requesting catering menu/pricing details and sends via Resend. Error route sends an internal alert. All secrets stored as env.VARIABLE_NAME. Timezone: America/New_York.",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": 3100,
+        "maxResults": 1
+      },
+      "filter": {
+        "name": "Catering keyword filter",
+        "conditions": [
+          [
+            {
+              "a": "{{lower(1.body.messages[0].text)}}",
+              "b": "catering|party|event|private dining|group booking|reservation",
+              "o": "text:match"
+            }
+          ]
+        ]
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 0, "y": 0 },
+        "restore": {
+          "parameters": {
+            "hook": {
+              "label": "Freshchat Catering Webhook (hook 3100)",
+              "data": { "editable": true }
+            }
+          }
+        },
+        "parameters": [
+          { "name": "hook", "type": "hook:gateway-webhook", "label": "Webhook", "required": true },
+          { "name": "maxResults", "type": "number", "label": "Maximum number of results" }
+        ],
+        "notes": "Fires on conversation.created. Case-insensitive regex filter passes catering and events keywords. Register Make webhook URL in Freshchat Admin > Settings > Webhooks > Conversation Created."
+      }
+    },
+    {
+      "id": 2,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+      "mapper": {
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "method": "POST",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.OPENROUTER_API_KEY}}" },
+          { "name": "Content-Type", "value": "application/json" },
+          { "name": "HTTP-Referer", "value": "https://cwiai.net" },
+          { "name": "X-Title", "value": "CWI AI Catering Inquiry" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"model\": \"anthropic/claude-sonnet-4-6\",\n  \"models\": [\"anthropic/claude-sonnet-4-6\", \"{{env.OPENROUTER_FALLBACK_MODEL}}\"],\n  \"route\": \"fallback\",\n  \"provider\": { \"allow_fallbacks\": true },\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a catering event coordinator assistant. Extract event details from the customer message and return ONLY a valid JSON object with these fields: event_date (string YYYY-MM-DD or descriptive like 'Saturday March 15' or null), party_size (integer or null), occasion (string describing the event type, e.g. 'birthday party', 'corporate lunch', 'wedding reception', or null), dietary_needs (string or null), budget_per_head (number or null), preferred_time (string HH:MM 24h or null), venue (string or null). Do not include any explanation or markdown.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Customer message: {{1.body.messages[0].text}}\"\n    }\n  ],\n  \"temperature\": 0.1,\n  \"max_tokens\": 300\n}"
+      },
+      "metadata": {
+        "designer": { "x": 300, "y": 0 },
+        "notes": "Claude extracts structured catering inquiry details from the first Freshchat message. Temperature 0.1 for deterministic extraction."
+      },
+      "onerror": [
+        {
+          "id": 91,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Catering Inquiry Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Scenario AT Error</h2><p><strong>Failed Module:</strong> {{errorHandler.moduleId}}</p><p><strong>Error:</strong> {{errorHandler.message}}</p><p><strong>Type:</strong> {{errorHandler.type}}</p><p><strong>Conversation ID:</strong> {{1.body.id}}</p><p><strong>Customer:</strong> {{1.body.actors[0].first_name}} {{1.body.actors[0].last_name}} ({{1.body.actors[0].email}})</p><p><strong>Message:</strong> {{1.body.messages[0].text}}</p><p><strong>Timestamp:</strong> {{now}}</p></body></html>\"\n}"
+          },
+          "metadata": { "designer": { "x": 300, "y": 400 } }
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "module": "json:ParseJSON",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "string": "{{2.data.choices[0].message.content}}"
+      },
+      "metadata": {
+        "designer": { "x": 600, "y": 0 },
+        "expect": [
+          { "name": "string", "type": "text", "label": "JSON string", "required": true }
+        ],
+        "notes": "Parses Claude's extraction JSON. Fields: {{3.event_date}}, {{3.party_size}}, {{3.occasion}}, {{3.dietary_needs}}, {{3.budget_per_head}}, {{3.preferred_time}}, {{3.venue}}."
+      }
+    },
+    {
+      "id": 4,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+      "mapper": {
+        "url": "https://api.hubapi.com/crm/v3/objects/deals",
+        "method": "POST",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.HUBSPOT_API_KEY}}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"properties\": {\n    \"dealname\": \"Catering-Inquiry — {{3.occasion}} — {{1.body.actors[0].first_name}} {{1.body.actors[0].last_name}} ({{formatDate(now; 'YYYY-MM-DD'; 'America/New_York')}})\",\n    \"pipeline\": \"default\",\n    \"dealstage\": \"{{env.HUBSPOT_STAGE_NEW_LEAD}}\",\n    \"deal_type\": \"Catering-Inquiry\",\n    \"description\": \"Catering inquiry via Freshchat (Scenario AT).\\nOccasion: {{3.occasion}}\\nEvent Date: {{3.event_date}}\\nParty Size: {{3.party_size}}\\nDietary Needs: {{3.dietary_needs}}\\nVenue: {{3.venue}}\\nPreferred Time: {{3.preferred_time}}\\nBudget per Head: {{3.budget_per_head}}\\nCustomer: {{1.body.actors[0].first_name}} {{1.body.actors[0].last_name}}\\nEmail: {{1.body.actors[0].email}}\\nPhone: {{1.body.actors[0].phone}}\\nFreshchat Conversation ID: {{1.body.id}}\\nOriginal Message: {{1.body.messages[0].text}}\\nReceived: {{formatDate(now; 'YYYY-MM-DD HH:mm:ss'; 'America/New_York')}} ET\",\n    \"priority\": \"MEDIUM\"\n  }\n}"
+      },
+      "metadata": {
+        "designer": { "x": 900, "y": 0 },
+        "notes": "Creates a HubSpot deal tagged Catering-Inquiry with all extracted event details. Deal name format: Catering-Inquiry — <occasion> — <customer name> (<date>)."
+      },
+      "onerror": [
+        {
+          "id": 91,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Catering Inquiry Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Scenario AT Error</h2><p><strong>Failed Module:</strong> {{errorHandler.moduleId}}</p><p><strong>Error:</strong> {{errorHandler.message}}</p><p><strong>Timestamp:</strong> {{now}}</p></body></html>\"\n}"
+          },
+          "metadata": { "designer": { "x": 900, "y": 400 } }
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "method": "POST",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI] New Catering Inquiry — {{3.occasion}} for {{3.party_size}} — {{1.body.actors[0].first_name}} {{1.body.actors[0].last_name}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto;\\\"><div style=\\\"background: #6a1b9a; padding: 20px; text-align: center;\\\"><h1 style=\\\"color: white; margin: 0;\\\">New Catering Inquiry</h1></div><div style=\\\"padding: 30px;\\\"><table style=\\\"width: 100%; border-collapse: collapse; margin: 20px 0;\\\"><tr style=\\\"background: #f3e5f5;\\\"><td style=\\\"padding: 12px; border: 1px solid #ddd; font-weight: bold;\\\">Occasion</td><td style=\\\"padding: 12px; border: 1px solid #ddd;\\\">{{3.occasion}}</td></tr><tr><td style=\\\"padding: 12px; border: 1px solid #ddd; font-weight: bold;\\\">Event Date</td><td style=\\\"padding: 12px; border: 1px solid #ddd;\\\">{{3.event_date}}</td></tr><tr style=\\\"background: #f3e5f5;\\\"><td style=\\\"padding: 12px; border: 1px solid #ddd; font-weight: bold;\\\">Party Size</td><td style=\\\"padding: 12px; border: 1px solid #ddd;\\\">{{3.party_size}}</td></tr><tr><td style=\\\"padding: 12px; border: 1px solid #ddd; font-weight: bold;\\\">Dietary Needs</td><td style=\\\"padding: 12px; border: 1px solid #ddd;\\\">{{3.dietary_needs}}</td></tr><tr style=\\\"background: #f3e5f5;\\\"><td style=\\\"padding: 12px; border: 1px solid #ddd; font-weight: bold;\\\">Venue</td><td style=\\\"padding: 12px; border: 1px solid #ddd;\\\">{{3.venue}}</td></tr><tr><td style=\\\"padding: 12px; border: 1px solid #ddd; font-weight: bold;\\\">Preferred Time</td><td style=\\\"padding: 12px; border: 1px solid #ddd;\\\">{{3.preferred_time}}</td></tr><tr style=\\\"background: #f3e5f5;\\\"><td style=\\\"padding: 12px; border: 1px solid #ddd; font-weight: bold;\\\">Budget per Head</td><td style=\\\"padding: 12px; border: 1px solid #ddd;\\\">{{if(3.budget_per_head; concat('$'; string(3.budget_per_head)); 'Not specified')}}</td></tr><tr><td style=\\\"padding: 12px; border: 1px solid #ddd; font-weight: bold;\\\">Customer Name</td><td style=\\\"padding: 12px; border: 1px solid #ddd;\\\">{{1.body.actors[0].first_name}} {{1.body.actors[0].last_name}}</td></tr><tr style=\\\"background: #f3e5f5;\\\"><td style=\\\"padding: 12px; border: 1px solid #ddd; font-weight: bold;\\\">Customer Email</td><td style=\\\"padding: 12px; border: 1px solid #ddd;\\\">{{1.body.actors[0].email}}</td></tr><tr><td style=\\\"padding: 12px; border: 1px solid #ddd; font-weight: bold;\\\">Customer Phone</td><td style=\\\"padding: 12px; border: 1px solid #ddd;\\\">{{1.body.actors[0].phone}}</td></tr><tr style=\\\"background: #f3e5f5;\\\"><td style=\\\"padding: 12px; border: 1px solid #ddd; font-weight: bold;\\\">Original Message</td><td style=\\\"padding: 12px; border: 1px solid #ddd;\\\">{{1.body.messages[0].text}}</td></tr><tr><td style=\\\"padding: 12px; border: 1px solid #ddd; font-weight: bold;\\\">Freshchat Convo ID</td><td style=\\\"padding: 12px; border: 1px solid #ddd;\\\">{{1.body.id}}</td></tr><tr style=\\\"background: #f3e5f5;\\\"><td style=\\\"padding: 12px; border: 1px solid #ddd; font-weight: bold;\\\">HubSpot Deal ID</td><td style=\\\"padding: 12px; border: 1px solid #ddd;\\\">{{4.data.id}}</td></tr><tr><td style=\\\"padding: 12px; border: 1px solid #ddd; font-weight: bold;\\\">Received At</td><td style=\\\"padding: 12px; border: 1px solid #ddd;\\\">{{formatDate(now; 'MMMM D, YYYY [at] h:mm A'; 'America/New_York')}} ET</td></tr></table></div><div style=\\\"background: #f5f5f5; padding: 15px; text-align: center; font-size: 12px; color: #888;\\\"><p>CWI AI | <a href=\\\"https://cwiai.net\\\">cwiai.net</a></p></div></body></html>\"\n}"
+      },
+      "metadata": {
+        "designer": { "x": 1200, "y": 0 },
+        "notes": "Sends a purple-header catering inquiry summary to brian@cwiai.net with all extracted event details, customer info, HubSpot deal ID, and Freshchat conversation ID."
+      },
+      "onerror": [
+        {
+          "id": 91,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Catering Inquiry Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Scenario AT Error</h2><p><strong>Failed Module:</strong> {{errorHandler.moduleId}}</p><p><strong>Error:</strong> {{errorHandler.message}}</p><p><strong>Timestamp:</strong> {{now}}</p></body></html>\"\n}"
+          },
+          "metadata": { "designer": { "x": 1200, "y": 400 } }
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+      "mapper": {
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "method": "POST",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.OPENROUTER_API_KEY}}" },
+          { "name": "Content-Type", "value": "application/json" },
+          { "name": "HTTP-Referer", "value": "https://cwiai.net" },
+          { "name": "X-Title", "value": "CWI AI Catering Inquiry - Follow-up Email" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"model\": \"anthropic/claude-sonnet-4-6\",\n  \"models\": [\"anthropic/claude-sonnet-4-6\", \"{{env.OPENROUTER_FALLBACK_MODEL}}\"],\n  \"route\": \"fallback\",\n  \"provider\": { \"allow_fallbacks\": true },\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are an upscale restaurant event coordinator. Write a warm, professional follow-up email body (4–6 sentences, no markdown, no subject line) to a customer who has submitted a catering inquiry. The email should: (1) thank them for their interest by name, (2) confirm the key event details you received, (3) let them know that a personalised catering menu and pricing proposal will be sent within 24 hours, (4) invite any questions they may have, (5) express excitement about their event. Keep the tone warm, professional, and celebratory.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Customer first name: {{1.body.actors[0].first_name}}. Occasion: {{3.occasion}}. Event date: {{3.event_date}}. Party size: {{3.party_size}}. Dietary needs: {{3.dietary_needs}}. Venue: {{3.venue}}.\"\n    }\n  ],\n  \"temperature\": 0.6,\n  \"max_tokens\": 350\n}"
+      },
+      "metadata": {
+        "designer": { "x": 1500, "y": 0 },
+        "notes": "Claude generates a warm, personalized follow-up email body confirming the catering inquiry details and promising a menu/pricing proposal within 24 hours."
+      },
+      "onerror": [
+        {
+          "id": 91,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Catering Inquiry Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Scenario AT Error</h2><p><strong>Failed Module:</strong> {{errorHandler.moduleId}}</p><p><strong>Error:</strong> {{errorHandler.message}}</p><p><strong>Timestamp:</strong> {{now}}</p></body></html>\"\n}"
+          },
+          "metadata": { "designer": { "x": 1500, "y": 400 } }
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "method": "POST",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"from\": \"{{env.RESEND_FROM_ADDRESS_CLIENT}}\",\n  \"to\": [\"{{1.body.actors[0].email}}\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"Thank You for Your Catering Inquiry — {{3.occasion}} on {{3.event_date}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto;\\\"><div style=\\\"background: #6a1b9a; padding: 20px; text-align: center;\\\"><h1 style=\\\"color: white; margin: 0;\\\">Thank You for Your Catering Inquiry</h1></div><div style=\\\"padding: 30px;\\\"><p>Dear {{1.body.actors[0].first_name}} {{1.body.actors[0].last_name}},</p><p>{{6.data.choices[0].message.content}}</p><hr><h3>Your Inquiry Details</h3><table style=\\\"width: 100%; border-collapse: collapse; margin: 15px 0;\\\"><tr style=\\\"background: #f3e5f5;\\\"><td style=\\\"padding: 10px; border: 1px solid #ddd; font-weight: bold;\\\">Occasion</td><td style=\\\"padding: 10px; border: 1px solid #ddd;\\\">{{3.occasion}}</td></tr><tr><td style=\\\"padding: 10px; border: 1px solid #ddd; font-weight: bold;\\\">Event Date</td><td style=\\\"padding: 10px; border: 1px solid #ddd;\\\">{{3.event_date}}</td></tr><tr style=\\\"background: #f3e5f5;\\\"><td style=\\\"padding: 10px; border: 1px solid #ddd; font-weight: bold;\\\">Party Size</td><td style=\\\"padding: 10px; border: 1px solid #ddd;\\\">{{3.party_size}}</td></tr><tr><td style=\\\"padding: 10px; border: 1px solid #ddd; font-weight: bold;\\\">Dietary Needs</td><td style=\\\"padding: 10px; border: 1px solid #ddd;\\\">{{3.dietary_needs}}</td></tr></table><p style=\\\"font-size: 13px; color: #888;\\\">We will send your personalised catering menu and pricing proposal within 24 hours. If you need to make changes or have questions, simply reply to this email.</p></div><div style=\\\"background: #f5f5f5; padding: 15px; text-align: center; font-size: 12px; color: #888;\\\"><p>CWI AI | <a href=\\\"https://cwiai.net\\\">cwiai.net</a></p></div></body></html>\"\n}"
+      },
+      "metadata": {
+        "designer": { "x": 1800, "y": 0 },
+        "notes": "Sends the AI-generated catering follow-up email to the customer via Resend. FROM is env.RESEND_FROM_ADDRESS_CLIENT (restaurant domain, never brian@cwiai.net). Includes a table of their submitted event details."
+      },
+      "onerror": [
+        {
+          "id": 91,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Catering Inquiry Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Scenario AT Error</h2><p><strong>Failed Module:</strong> {{errorHandler.moduleId}}</p><p><strong>Error:</strong> {{errorHandler.message}}</p><p><strong>Customer:</strong> {{1.body.actors[0].first_name}} {{1.body.actors[0].last_name}} ({{1.body.actors[0].email}})</p><p><strong>Timestamp:</strong> {{now}}</p></body></html>\"\n}"
+          },
+          "metadata": { "designer": { "x": 1800, "y": 400 } }
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+      "mapper": {
+        "url": "https://api.freshchat.com/v2/conversations/{{1.body.id}}/messages",
+        "method": "POST",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer {{env.FRESHCHAT_API_KEY}}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "body": "{\n  \"actor_type\": \"agent\",\n  \"actor_id\": \"{{env.FRESHCHAT_BOT_ID}}\",\n  \"message_type\": \"normal\",\n  \"message_parts\": [\n    {\n      \"text\": {\n        \"content\": \"Thank you for your catering inquiry, {{1.body.actors[0].first_name}}! We've received your request for {{3.occasion}} on {{3.event_date}} for {{3.party_size}} guests. A confirmation email has been sent to {{1.body.actors[0].email}} and our events team will send you a personalised catering menu and pricing within 24 hours. Feel free to reply here with any additional details!\"\n      }\n    }\n  ]\n}"
+      },
+      "metadata": {
+        "designer": { "x": 2100, "y": 0 },
+        "notes": "Posts a Freshchat acknowledgement confirming the inquiry was received and the email was sent. Provides a brief summary of what the customer can expect next."
+      },
+      "onerror": [
+        {
+          "id": 91,
+          "module": "http:ActionSendData",
+          "version": 3,
+          "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+          "mapper": {
+            "url": "https://api.resend.com/emails",
+            "method": "POST",
+            "headers": [
+              { "name": "Authorization", "value": "Bearer {{env.RESEND_API_KEY}}" },
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "bodyType": "raw",
+            "contentType": "application/json",
+            "body": "{\n  \"from\": \"{{env.CWI_ALERT_FROM_ADDRESS}}\",\n  \"to\": [\"brian@cwiai.net\"],\n  \"reply_to\": \"{{env.RESEND_REPLY_TO}}\",\n  \"subject\": \"[CWI AI ALERT] Catering Inquiry Error — Module {{errorHandler.moduleId}}\",\n  \"html\": \"<html><body style=\\\"font-family: Arial, sans-serif;\\\"><h2 style=\\\"color: #d32f2f;\\\">Scenario AT Error</h2><p><strong>Failed Module:</strong> {{errorHandler.moduleId}}</p><p><strong>Error:</strong> {{errorHandler.message}}</p><p><strong>Timestamp:</strong> {{now}}</p></body></html>\"\n}"
+          },
+          "metadata": { "designer": { "x": 2100, "y": 400 } }
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": true,
+      "slots": null,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": { "orphans": [] },
+    "zone": "us2.make.com"
+  },
+  "scheduling": {
+    "type": "indefinitely",
+    "interval": 0
+  },
+  "webhooks": [
+    {
+      "id": 3100,
+      "name": "Freshchat Catering Webhook (hook 3100)",
+      "notes": "Register in Freshchat Admin > Settings > Webhooks > Conversation Created. Make generates the real URL on import and activation."
+    }
+  ],
+  "connections": {
+    "OPENROUTER_API_KEY": { "label": "OpenRouter API Key", "type": "http-api-key", "notes": "Primary model: anthropic/claude-sonnet-4-6." },
+    "FRESHCHAT_API_KEY": { "label": "Freshchat API Key", "type": "http-bearer", "notes": "Freshchat account API token." },
+    "FRESHCHAT_BOT_ID": { "label": "Freshchat Bot/Agent ID", "type": "string", "notes": "actor_id for outbound Freshchat messages." },
+    "HUBSPOT_API_KEY": { "label": "HubSpot Private App Token", "type": "http-bearer", "notes": "Requires crm.objects.deals.write scope." },
+    "HUBSPOT_STAGE_NEW_LEAD": { "label": "HubSpot Deal Stage — New Lead", "type": "string", "notes": "Pipeline stage ID for new catering inquiry deals." },
+    "RESEND_API_KEY": { "label": "Resend API Key", "type": "http-bearer", "notes": "For all outbound emails." },
+    "RESEND_FROM_ADDRESS_CLIENT": { "label": "Resend Client From Address", "type": "string", "notes": "Verified restaurant domain sender. Never brian@cwiai.net." },
+    "CWI_ALERT_FROM_ADDRESS": { "label": "Internal Alert From Address", "type": "string", "notes": "Verified sender for admin/error emails." },
+    "RESEND_REPLY_TO": { "label": "Resend Reply-To", "type": "string", "notes": "Reply-to on all Resend emails." },
+    "OPENROUTER_FALLBACK_MODEL": { "label": "OpenRouter Fallback Model", "type": "string", "notes": "Secondary model for route:fallback." }
+  },
+  "notes": [
+    {
+      "label": "Module 1 — Freshchat Webhook + Catering Filter",
+      "note": "Fires on conversation.created. Case-insensitive regex: catering|party|event|private dining|group booking|reservation.",
+      "metadata": { "designer": { "x": 0, "y": -180 } }
+    },
+    {
+      "label": "Modules 2–3 — Claude: Extract Event Details",
+      "note": "Claude extracts event_date, party_size, occasion, dietary_needs, budget_per_head, preferred_time, venue. ParseJSON (module 3) structures the result.",
+      "metadata": { "designer": { "x": 300, "y": -180 } }
+    },
+    {
+      "label": "Module 4 — HubSpot Deal: Catering-Inquiry",
+      "note": "Deal name format: Catering-Inquiry — <occasion> — <customer> (<date>). deal_type=Catering-Inquiry. All extracted fields stored in description.",
+      "metadata": { "designer": { "x": 900, "y": -180 } }
+    },
+    {
+      "label": "Module 5 — Resend: Admin Inquiry Summary",
+      "note": "Purple-header HTML summary email to brian@cwiai.net. Full event details table with HubSpot deal ID and Freshchat conversation ID.",
+      "metadata": { "designer": { "x": 1200, "y": -180 } }
+    },
+    {
+      "label": "Modules 6–7 — AI Follow-up Email to Customer",
+      "note": "Claude (module 6) writes a warm 4-6 sentence follow-up promising a menu/pricing proposal within 24 hours. Sent via Resend (module 7) from RESEND_FROM_ADDRESS_CLIENT with an event details summary table.",
+      "metadata": { "designer": { "x": 1500, "y": -180 } }
+    },
+    {
+      "label": "Module 8 — Freshchat Acknowledgement",
+      "note": "Posts a hardcoded Freshchat acknowledgement confirming the inquiry was received and the email was sent. Gives the customer expectations for next steps.",
+      "metadata": { "designer": { "x": 2100, "y": -180 } }
+    }
+  ]
+}
