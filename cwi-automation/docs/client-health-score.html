@@ -637,48 +637,49 @@ function lowestDim(scores) {
 }
 
 function actionText(dim, val, clientName) {
+  const n = esc(clientName);
   const map = {
     engagement: [
       'Immediately call or text the client — they are non-responsive and at risk.',
-      `Schedule an urgent check-in with ${clientName} — response rate is critically low.`,
-      `Re-engage ${clientName} with a monthly summary email and ask if check-ins are still valuable.`,
-      `${clientName} is fairly active — send a quick win highlight to reinforce engagement.`,
-      `${clientName} is highly engaged. Consider co-creating a case study or referral ask.`
+      `Schedule an urgent check-in with ${n} — response rate is critically low.`,
+      `Re-engage ${n} with a monthly summary email and ask if check-ins are still valuable.`,
+      `${n} is fairly active — send a quick win highlight to reinforce engagement.`,
+      `${n} is highly engaged. Consider co-creating a case study or referral ask.`
     ],
     results: [
-      `Audit campaigns immediately — ${clientName} has seen zero results this month.`,
-      `Review funnel and targeting for ${clientName} — results are below goal.`,
-      `Results are on track for ${clientName}. Identify one optimization to push over goal.`,
-      `Strong results for ${clientName}! Document wins and share in report.`,
-      `Exceptional results — present ${clientName} with a growth/upsell opportunity.`
+      `Audit campaigns immediately — ${n} has seen zero results this month.`,
+      `Review funnel and targeting for ${n} — results are below goal.`,
+      `Results are on track for ${n}. Identify one optimization to push over goal.`,
+      `Strong results for ${n}! Document wins and share in report.`,
+      `Exceptional results — present ${n} with a growth/upsell opportunity.`
     ],
     payment: [
-      `Contact ${clientName} immediately about overdue payment or dispute resolution.`,
-      `Send a friendly payment reminder to ${clientName} and check for billing friction.`,
-      `Payment is slightly delayed for ${clientName} — confirm ACH or card is current.`,
-      `${clientName} pays on time. Good standing — no action needed.`,
-      `${clientName} is on auto-pay and never misses. Ideal billing status.`
+      `Contact ${n} immediately about overdue payment or dispute resolution.`,
+      `Send a friendly payment reminder to ${n} and check for billing friction.`,
+      `Payment is slightly delayed for ${n} — confirm ACH or card is current.`,
+      `${n} pays on time. Good standing — no action needed.`,
+      `${n} is on auto-pay and never misses. Ideal billing status.`
     ],
     satisfaction: [
-      `${clientName} is a detractor — schedule an emergency satisfaction call now.`,
-      `${clientName} is unhappy. Deliver a quick win this week and request direct feedback.`,
-      `${clientName} is neutral. Send an NPS survey and identify one improvement to make.`,
-      `${clientName} is happy. Ask for a Google review or testimonial.`,
-      `${clientName} is a promoter! Request a referral or case study participation.`
+      `${n} is a detractor — schedule an emergency satisfaction call now.`,
+      `${n} is unhappy. Deliver a quick win this week and request direct feedback.`,
+      `${n} is neutral. Send an NPS survey and identify one improvement to make.`,
+      `${n} is happy. Ask for a Google review or testimonial.`,
+      `${n} is a promoter! Request a referral or case study participation.`
     ],
     growth: [
-      `No upsell opportunity with ${clientName} right now — focus on retention.`,
-      `Upsell is unlikely for ${clientName}. Ensure core value is being delivered first.`,
-      `There's a possible upsell for ${clientName} — plant the seed on the next call.`,
-      `${clientName} is likely to expand. Prepare a tailored upgrade proposal.`,
-      `${clientName} is ready to grow — present the upsell package this week.`
+      `No upsell opportunity with ${n} right now — focus on retention.`,
+      `Upsell is unlikely for ${n}. Ensure core value is being delivered first.`,
+      `There's a possible upsell for ${n} — plant the seed on the next call.`,
+      `${n} is likely to expand. Prepare a tailored upgrade proposal.`,
+      `${n} is ready to grow — present the upsell package this week.`
     ],
     churn: [
-      `${clientName} is actively churning — escalate to leadership immediately.`,
-      `Very high churn risk for ${clientName}. Assign a dedicated success call today.`,
-      `Moderate churn risk for ${clientName}. Proactively address any friction points.`,
-      `Low churn risk for ${clientName}. Maintain regular touchpoints.`,
-      `${clientName} is very stable — great retention candidate for case study.`
+      `${n} is actively churning — escalate to leadership immediately.`,
+      `Very high churn risk for ${n}. Assign a dedicated success call today.`,
+      `Moderate churn risk for ${n}. Proactively address any friction points.`,
+      `Low churn risk for ${n}. Maintain regular touchpoints.`,
+      `${n} is very stable — great retention candidate for case study.`
     ]
   };
   const arr = map[dim.key] || [];

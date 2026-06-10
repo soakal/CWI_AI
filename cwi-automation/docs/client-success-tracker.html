@@ -724,7 +724,7 @@
     statDays.textContent      = days !== null ? days : '—';
     statOnboard.textContent   = 'Since ' + formatDate(client.onboardingDate);
     statComplete.textContent  = `${done} / ${total}`;
-    statTierLabel.innerHTML   = `<span class="tier-pill ${tierClass(client.tier)}">${tierLabel(client.tier)}</span>`;
+    statTierLabel.innerHTML   = `<span class="tier-pill ${tierClass(client.tier)}">${escapeHtml(tierLabel(client.tier))}</span>`;
     statStatusWrap.innerHTML  = statusBadgeHTML(status);
 
     // Progress

@@ -1192,7 +1192,7 @@ function showToast(msg, type = 'info') {
   const el = document.getElementById('toast');
   el.className = 'toast ' + type;
   const icons = { success: '&#10003;', error: '&#9888;', info: '&#8505;' };
-  el.innerHTML = `<span>${icons[type] || ''}</span> ${msg}`;
+  el.innerHTML = `<span>${icons[type] || ''}</span> ${esc(msg)}`;
   el.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => el.classList.remove('show'), 2800);

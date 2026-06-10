@@ -809,7 +809,7 @@ function renderContent(clientName) {
         <div class="milestone-top">
           <input type="checkbox" class="milestone-checkbox" id="chk_${m.id}"
             ${data.done ? 'checked' : ''}
-            onchange="onCheckChange('${clientName}','${m.id}',this)" />
+            onchange="onCheckChange('${m.id}',this)" />
           <div class="milestone-info">
             <div class="milestone-title-row">
               <span class="milestone-title">${m.title}</span>
@@ -821,14 +821,14 @@ function renderContent(clientName) {
                 <label for="date_${m.id}">Completion Date</label>
                 <input type="date" id="date_${m.id}"
                   value="${data.completedDate || ''}"
-                  onchange="onDateChange('${clientName}','${m.id}',this)" />
+                  onchange="onDateChange('${m.id}',this)" />
               </div>
               <div class="field-group">
                 <label for="notes_${m.id}">Notes</label>
                 <textarea id="notes_${m.id}"
                   placeholder="Add notes..."
-                  onchange="onNotesChange('${clientName}','${m.id}',this)"
-                  oninput="onNotesChange('${clientName}','${m.id}',this)">${escHtml(data.notes || '')}</textarea>
+                  onchange="onNotesChange('${m.id}',this)"
+                  oninput="onNotesChange('${m.id}',this)">${escHtml(data.notes || '')}</textarea>
               </div>
             </div>
           </div>
@@ -860,7 +860,8 @@ function computeStatuses(client, startDate, today) {
 }
 
 // ── CHANGE HANDLERS ───────────────────────────────────────────────────────
-function onCheckChange(clientName, milestoneId, checkbox) {
+function onCheckChange(milestoneId, checkbox) {
+  const clientName = store.selectedClient;
   const client = store.clients[clientName];
   if (!client) return;
   const data = client.milestones[milestoneId];
@@ -880,7 +881,8 @@ function onCheckChange(clientName, milestoneId, checkbox) {
   refreshStats(clientName);
 }
 
-function onDateChange(clientName, milestoneId, input) {
+function onDateChange(milestoneId, input) {
+  const clientName = store.selectedClient;
   const client = store.clients[clientName];
   if (!client) return;
   client.milestones[milestoneId].completedDate = input.value;
@@ -889,7 +891,8 @@ function onDateChange(clientName, milestoneId, input) {
   refreshStats(clientName);
 }
 
-function onNotesChange(clientName, milestoneId, textarea) {
+function onNotesChange(milestoneId, textarea) {
+  const clientName = store.selectedClient;
   const client = store.clients[clientName];
   if (!client) return;
   client.milestones[milestoneId].notes = textarea.value;

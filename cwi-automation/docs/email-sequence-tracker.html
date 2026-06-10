@@ -1004,7 +1004,7 @@ function renderCharts() {
   document.getElementById("chartOpen").innerHTML = all.map(seq => `
     <div class="bar-row">
       <div class="bar-label">
-        <span>${seq.name}</span>
+        <span>${esc(seq.name)}</span>
         <span>${seq.openPct}%</span>
       </div>
       <div class="bar-track">
@@ -1017,7 +1017,7 @@ function renderCharts() {
   document.getElementById("chartReply").innerHTML = all.map(seq => `
     <div class="bar-row" style="margin-bottom:4px">
       <div class="bar-label">
-        <span>${seq.name}</span>
+        <span>${esc(seq.name)}</span>
         <span>${seq.replyPct}% / ${seq.posReplyPct}%</span>
       </div>
       <div class="bar-track" style="margin-bottom:3px">
@@ -1037,7 +1037,7 @@ function refreshIndustryFilter() {
   const current = sel.value;
   const industries = [...new Set(sequences.map(x => x.industry))].sort();
   sel.innerHTML = `<option value="">All Industries</option>` +
-    industries.map(i => `<option value="${i}" ${i === current ? "selected" : ""}>${i}</option>`).join("");
+    industries.map(i => `<option value="${esc(i)}" ${i === current ? "selected" : ""}>${esc(i)}</option>`).join("");
 }
 
 // ── Table ─────────────────────────────────────────────────────────────────────
@@ -1143,7 +1143,7 @@ function renderTable() {
       <td class="hide-mobile" style="text-align:center;font-weight:600">${seq.demos}</td>
       <td class="hide-mobile" style="text-align:center;font-weight:600">${seq.clients}</td>
       <td>${revStr}</td>
-      <td><span class="badge ${statusCls}"><span class="badge-dot"></span>${seq.status}</span></td>
+      <td><span class="badge ${statusCls}"><span class="badge-dot"></span>${esc(seq.status)}</span></td>
       <td class="actions-cell">
         <button class="btn btn-ghost" onclick="openEditModal(${seq.id})" title="Edit">&#x270E; Edit</button>
         <button class="btn btn-danger-ghost" onclick="openDeleteModal(${seq.id})" title="Delete">&#x1F5D1;</button>

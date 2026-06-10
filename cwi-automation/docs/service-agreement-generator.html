@@ -786,6 +786,15 @@
      JAVASCRIPT
 ===================================================== -->
 <script>
+  function escHtml(s) {
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   // ── Tier data ──────────────────────────────────────────
   const TIERS = {
     starter: {
@@ -907,6 +916,11 @@
     const clientEmail = document.getElementById('clientEmail').value.trim();
     const clientAddr  = document.getElementById('clientAddr').value.trim();
     const tierKey     = document.getElementById('tier').value;
+
+    const safeBiz   = escHtml(clientBiz);
+    const safeOwner = escHtml(clientOwner);
+    const safeEmail = escHtml(clientEmail);
+    const safeAddr  = escHtml(clientAddr);
     const startDate   = document.getElementById('startDate').value;
     const termVal     = document.getElementById('contractTerm').value;
 
@@ -966,7 +980,7 @@
     <div class="doc-intro">
       This Service Agreement (<strong>"Agreement"</strong>) is entered into as of <strong>${fmtDate(startDate)}</strong> by and between
       <strong>CWI AI LLC</strong>, a Michigan limited liability company (<strong>"Provider"</strong>), and
-      <strong>${clientBiz || '[CLIENT BUSINESS NAME]'}</strong> (<strong>"Client"</strong>).
+      <strong>${safeBiz || '[CLIENT BUSINESS NAME]'}</strong> (<strong>"Client"</strong>).
       Together, Provider and Client are referred to as the <strong>"Parties."</strong>
     </div>
 
@@ -980,17 +994,17 @@
           <div class="party-detail">
             Brian Kalsic, Managing Member<br>
             Southgate, Michigan<br>
-            brian@cwiai.com<br>
-            cwiai.com
+            brian@cwiai.net<br>
+            cwiai.net
           </div>
         </div>
         <div class="party-card">
           <div class="party-role">Client</div>
-          <div class="party-name">${clientBiz || '[CLIENT BUSINESS NAME]'}</div>
+          <div class="party-name">${safeBiz || '[CLIENT BUSINESS NAME]'}</div>
           <div class="party-detail">
-            ${clientOwner ? clientOwner + '<br>' : ''}
-            ${clientEmail ? clientEmail + '<br>' : ''}
-            ${clientAddr || '[CLIENT ADDRESS]'}
+            ${safeOwner ? safeOwner + '<br>' : ''}
+            ${safeEmail ? safeEmail + '<br>' : ''}
+            ${safeAddr || '[CLIENT ADDRESS]'}
           </div>
         </div>
       </div>
@@ -1106,13 +1120,13 @@
         </div>
 
         <div class="sig-block">
-          <div class="sig-party">Client — ${clientBiz || '[CLIENT BUSINESS]'}</div>
+          <div class="sig-party">Client — ${safeBiz || '[CLIENT BUSINESS]'}</div>
           <div class="sig-line"></div>
           <div class="sig-label">
             <span>Authorized Signature</span>
           </div>
-          <div style="margin-top:10px;font-size:12px;color:#333;font-weight:600;">${clientOwner || '[AUTHORIZED SIGNATORY]'}</div>
-          <div style="font-size:11px;color:#666;margin-top:1px;">${clientBiz || '[CLIENT BUSINESS NAME]'}</div>
+          <div style="margin-top:10px;font-size:12px;color:#333;font-weight:600;">${safeOwner || '[AUTHORIZED SIGNATORY]'}</div>
+          <div style="font-size:11px;color:#666;margin-top:1px;">${safeBiz || '[CLIENT BUSINESS NAME]'}</div>
           <div class="sig-date-line"></div>
           <div class="sig-date-label">Date</div>
         </div>
@@ -1124,7 +1138,7 @@
 
   <!-- DOCUMENT FOOTER -->
   <div class="doc-footer">
-    <div class="doc-footer-left">CWI AI LLC &nbsp;·&nbsp; Southgate, Michigan &nbsp;·&nbsp; cwiai.com</div>
+    <div class="doc-footer-left">CWI AI LLC &nbsp;·&nbsp; Southgate, Michigan &nbsp;·&nbsp; cwiai.net</div>
     <div class="doc-footer-right">${agNum} &nbsp;·&nbsp; ${tier.label} Tier &nbsp;·&nbsp; ${fmtDate(startDate)}</div>
   </div>
 

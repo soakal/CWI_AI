@@ -591,6 +591,10 @@ html, body {
 <div id="toast"></div>
 
 <script>
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
 // ── State ──────────────────────────────────────────────────────────────────
 const TODAY = new Date();
 let viewYear  = TODAY.getFullYear();
@@ -813,7 +817,7 @@ function renderCalendar() {
             ${platformIcon(cellData.platform)}
           </div>
         </div>
-        <textarea class="post-text" data-key="${cellKey}" placeholder="Write your post…">${cellData.text}</textarea>
+        <textarea class="post-text" data-key="${cellKey}" placeholder="Write your post…">${escHtml(cellData.text)}</textarea>
         <div class="cell-footer">
           <div class="status-toggle" data-key="${cellKey}">
             <button class="status-btn ${cellData.status==='draft'?'active-draft':''}" data-status="draft">Draft</button>
