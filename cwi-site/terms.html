@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Terms of Service — CWI AI</title>
+<meta name="description" content="Terms of Service for CWI AI LLC — AI chat automation, appointment booking, and follow-up automation for local businesses.">
+<link rel="canonical" href="https://cwiai.net/terms.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Terms of Service — CWI AI">
+<meta property="og:description" content="Terms of Service for CWI AI LLC — AI chat automation, appointment booking, and follow-up automation for local businesses.">
+<meta property="og:url" content="https://cwiai.net/terms.html">
+<meta property="og:image" content="https://cwiai.net/assets/cwi-icon-primary-1024.png">
+<meta property="og:site_name" content="CWI AI">
+<link rel="icon" type="image/png" href="assets/cwi-favicon-64.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="cwi.css">
+<style>
+  /* ── Page hero ── */
+  .page-hero{padding:70px 0 40px;text-align:center}
+  .page-hero .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:700;
+    letter-spacing:.12em;text-transform:uppercase;color:var(--accent);border:1px solid rgba(255,90,31,.28);
+    background:rgba(255,90,31,.07);padding:6px 15px;border-radius:var(--r-pill)}
+  .page-hero h1{font-size:clamp(32px,5vw,54px);margin:20px auto 0;max-width:18ch}
+  .page-hero .meta{font-size:14px;color:var(--steel);margin-top:14px}
+
+  /* ── Layout ── */
+  .tos-wrap{display:grid;grid-template-columns:220px 1fr;gap:52px;align-items:start;padding:50px 0 80px}
+  @media(max-width:900px){.tos-wrap{grid-template-columns:1fr;gap:36px}}
+
+  /* ── Sticky sidebar TOC ── */
+  .tos-toc{position:sticky;top:88px}
+  @media(max-width:900px){.tos-toc{position:static}}
+  .tos-toc h6{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--steel);
+    margin-bottom:14px}
+  .tos-toc a{display:block;font-size:13.5px;color:var(--steel);text-decoration:none;padding:7px 0 7px 14px;
+    border-left:2px solid var(--line);line-height:1.35;transition:.2s}
+  .tos-toc a:hover{color:#fff;border-left-color:var(--accent)}
+  .tos-toc a.active{color:var(--accent);border-left-color:var(--accent)}
+
+  /* ── Content ── */
+  .tos-body{min-width:0}
+  .tos-section{padding:36px 0;border-top:1px solid var(--line)}
+  .tos-section:first-child{border-top:none;padding-top:0}
+  .tos-section h2{font-size:clamp(20px,2.6vw,26px);margin-bottom:14px;scroll-margin-top:100px}
+  .tos-section p{font-size:15.5px;color:var(--text-dim);line-height:1.75;margin-bottom:12px;text-wrap:pretty}
+  .tos-section p:last-child{margin-bottom:0}
+  .tos-section ul{list-style:none;display:flex;flex-direction:column;gap:9px;margin:14px 0}
+  .tos-section ul li{font-size:15px;color:var(--text-dim);padding-left:26px;position:relative;line-height:1.6}
+  .tos-section ul li:before{content:"";position:absolute;left:0;top:8px;width:10px;height:10px;border-radius:50%;
+    background:rgba(255,90,31,.18);box-shadow:inset 0 0 0 2px var(--accent)}
+
+  /* Plan table */
+  .plan-table{width:100%;border-collapse:collapse;margin:18px 0}
+  .plan-table th{text-align:left;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--steel);padding:10px 14px;border-bottom:1px solid var(--line-2)}
+  .plan-table td{font-size:14.5px;color:var(--text-dim);padding:13px 14px;border-bottom:1px solid var(--line)}
+  .plan-table tr:last-child td{border-bottom:none}
+  .plan-table td:first-child{font-weight:600;color:#fff}
+  .plan-table .amt{font-family:var(--font-disp);font-weight:700;color:var(--accent);font-size:16px}
+  .plan-table tr:hover td{background:rgba(255,255,255,.02)}
+
+  /* Notice callout box */
+  .notice{border-radius:var(--r-md);padding:20px 22px;margin:18px 0;display:flex;gap:16px;align-items:flex-start}
+  .notice.warn{background:rgba(255,90,31,.07);border:1px solid rgba(255,90,31,.3)}
+  .notice.info{background:rgba(255,255,255,.03);border:1px solid var(--line-2)}
+  .notice svg{flex:none;margin-top:2px;color:var(--accent)}
+  .notice.info svg{color:var(--steel)}
+  .notice p{font-size:14.5px;color:var(--text-dim);line-height:1.65;margin:0}
+  .notice p strong{color:#fff}
+
+  /* Contact block */
+  .contact-block{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);
+    padding:24px 28px;margin-top:18px;display:flex;flex-wrap:wrap;gap:18px 36px}
+  .contact-block .ci{display:flex;flex-direction:column;gap:4px}
+  .contact-block .ci span{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--steel)}
+  .contact-block .ci a,.contact-block .ci p{font-size:15px;color:#fff;text-decoration:none;margin:0}
+  .contact-block .ci a:hover{color:var(--accent)}
+</style>
+</head>
+<body>
+<div data-cwi-nav></div>
+
+<main>
+  <!-- Hero -->
+  <section class="page-hero">
+    <div class="wrap">
+      <div class="eyebrow">Legal</div>
+      <h1>Terms of Service</h1>
+      <p class="meta">CWI AI LLC &nbsp;&middot;&nbsp; Effective Date: June 9, 2026</p>
+    </div>
+  </section>
+
+  <!-- Body -->
+  <div class="wrap">
+    <div class="tos-wrap">
+
+      <!-- Sidebar TOC -->
+      <aside class="tos-toc" aria-label="Table of contents">
+        <h6>On this page</h6>
+        <a href="#services">1. Services Provided</a>
+        <a href="#billing">2. Subscription &amp; Billing</a>
+        <a href="#setup">3. Setup Fees</a>
+        <a href="#cancellation">4. Cancellation Policy</a>
+        <a href="#responsibilities">5. Client Responsibilities</a>
+        <a href="#ai-disclosure">6. AI Disclosure</a>
+        <a href="#hipaa">7. HIPAA Notice</a>
+        <a href="#liability">8. Limitation of Liability</a>
+        <a href="#governing-law">9. Governing Law</a>
+        <a href="#contact">10. Contact Us</a>
+      </aside>
+
+      <!-- Content -->
+      <div class="tos-body">
+
+        <div class="tos-section">
+          <p>Please read these Terms of Service ("Agreement") carefully before using any services provided by <strong>CWI AI LLC</strong> ("CWI AI," "we," "us," or "our"). By signing a service agreement, submitting payment, or using our platform in any way, you ("Client" or "you") agree to be bound by this Agreement. If you do not agree to these terms, do not use our services.</p>
+        </div>
+
+        <!-- 1. Services -->
+        <div class="tos-section" id="services">
+          <h2>1. Services Provided</h2>
+          <p>CWI AI LLC provides AI-powered automation services for local and regional businesses, including but not limited to:</p>
+          <ul>
+            <li><strong>AI Chat Automation</strong> — Conversational AI assistants deployed on your website, SMS channel, or third-party messaging platforms to engage visitors, answer frequently asked questions, and qualify leads around the clock.</li>
+            <li><strong>Appointment Booking Automation</strong> — Automated scheduling flows that allow prospects and existing clients to book, confirm, or reschedule appointments directly through AI-driven conversations, integrated with your calendar system.</li>
+            <li><strong>Follow-Up Automation</strong> — Outbound and inbound automated follow-up sequences via SMS, email, or chat to nurture leads, confirm upcoming appointments, collect reviews, and re-engage lapsed customers.</li>
+          </ul>
+          <p>The specific features available to you depend on your active subscription plan. CWI AI reserves the right to modify, enhance, or discontinue features with reasonable advance notice.</p>
+        </div>
+
+        <!-- 2. Billing -->
+        <div class="tos-section" id="billing">
+          <h2>2. Subscription Plans and Billing</h2>
+          <p>CWI AI offers the following monthly subscription plans. All prices are in U.S. dollars and are billed on a recurring monthly basis unless otherwise agreed in writing.</p>
+
+          <table class="plan-table" aria-label="Subscription plans">
+            <thead>
+              <tr>
+                <th>Plan</th>
+                <th>Monthly Rate</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Starter</td>
+                <td><span class="amt">$197</span> / mo</td>
+                <td>Core AI chat automation and basic appointment booking for single-location businesses.</td>
+              </tr>
+              <tr>
+                <td>Growth</td>
+                <td><span class="amt">$397</span> / mo</td>
+                <td>Full chat, booking, and follow-up automation with expanded integrations and priority support.</td>
+              </tr>
+              <tr>
+                <td>Pro</td>
+                <td><span class="amt">$597</span> / mo</td>
+                <td>Advanced multi-channel automation, custom AI training, dedicated account management, and premium onboarding.</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <p>Subscriptions begin on the date your account is activated following completion of the onboarding and setup process. Billing recurs on the same calendar date each month. You authorize CWI AI to charge your payment method on file for the applicable monthly fee until the subscription is cancelled in accordance with Section 4 of this Agreement.</p>
+          <p>CWI AI reserves the right to update subscription pricing with no less than thirty (30) days written notice. Continued use of the service after a price change takes effect constitutes your acceptance of the new rate.</p>
+          <p>Late or failed payments may result in service interruption. A late fee of 1.5% per month (or the maximum allowed by applicable law, whichever is less) may be applied to past-due balances.</p>
+        </div>
+
+        <!-- 3. Setup Fees -->
+        <div class="tos-section" id="setup">
+          <h2>3. Setup Fees</h2>
+          <p>A one-time, non-refundable setup fee is required at the time of enrollment to cover onboarding, AI training, configuration, and integration work performed by our team.</p>
+
+          <table class="plan-table" aria-label="Setup fees by plan">
+            <thead>
+              <tr>
+                <th>Plan</th>
+                <th>Setup Fee</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Starter</td>
+                <td><span class="amt">$499</span></td>
+              </tr>
+              <tr>
+                <td>Growth</td>
+                <td><span class="amt">$499</span></td>
+              </tr>
+              <tr>
+                <td>Pro</td>
+                <td><span class="amt">$749</span></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="notice warn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <p><strong>Setup fees are non-refundable.</strong> Once the onboarding process has commenced and setup work has been performed, the setup fee cannot be refunded under any circumstances, including early cancellation, dissatisfaction with results, or failure to complete onboarding.</p>
+          </div>
+        </div>
+
+        <!-- 4. Cancellation -->
+        <div class="tos-section" id="cancellation">
+          <h2>4. Cancellation Policy</h2>
+          <p>Either party may cancel this Agreement by providing no less than <strong>thirty (30) days written notice</strong> prior to the desired cancellation date. Written notice must be delivered via email to <a href="mailto:brian@cwiai.net" style="color:var(--accent)">brian@cwiai.net</a> or by certified mail to our business address.</p>
+          <ul>
+            <li>Cancellation requests received with fewer than 30 days before the next billing date will result in one final billing cycle charge before service termination.</li>
+            <li>Your service and AI system will remain active through the end of the paid billing period following the cancellation notice.</li>
+            <li>Monthly subscription fees are non-refundable for the billing period in which cancellation notice is given.</li>
+            <li>Setup fees are non-refundable under any cancellation scenario.</li>
+            <li>CWI AI may terminate service immediately and without refund if you materially breach this Agreement, engage in illegal activity through our platform, or fail to remit payment after a written cure period of seven (7) days.</li>
+          </ul>
+          <p>Upon cancellation, CWI AI will provide you with a reasonable opportunity to export your data. After 30 days from the effective termination date, CWI AI is not obligated to retain your data.</p>
+        </div>
+
+        <!-- 5. Client Responsibilities -->
+        <div class="tos-section" id="responsibilities">
+          <h2>5. Client Responsibilities</h2>
+          <p>To ensure the service functions properly and to receive full benefit from your subscription, you agree to the following responsibilities:</p>
+          <ul>
+            <li><strong>Accurate Business Information</strong> — You will provide complete, accurate, and current information about your business, services, pricing, hours of operation, service area, and any other details necessary for the AI system to respond correctly on your behalf. You agree to promptly notify CWI AI of any material changes to this information.</li>
+            <li><strong>API Account Maintenance</strong> — Certain features require you to maintain active accounts with third-party providers (such as calendar platforms, CRM systems, or SMS providers). You are solely responsible for maintaining these accounts, keeping credentials current, and complying with those providers' terms of service. CWI AI is not responsible for service disruptions caused by third-party account issues.</li>
+            <li><strong>Lawful Use</strong> — You will use CWI AI services only for lawful purposes and in compliance with all applicable federal, state, and local laws, including but not limited to the Telephone Consumer Protection Act (TCPA), CAN-SPAM Act, and applicable state consumer protection statutes.</li>
+            <li><strong>Required Disclosures</strong> — You acknowledge that certain jurisdictions require disclosure to end users that they are communicating with an AI system. You are responsible for ensuring your use of CWI AI services complies with any such disclosure requirements in your jurisdiction.</li>
+            <li><strong>Content Review</strong> — You are responsible for reviewing AI-generated messages and promptly notifying CWI AI of any inaccuracies, inappropriate responses, or required corrections.</li>
+          </ul>
+        </div>
+
+        <!-- 6. AI Disclosure -->
+        <div class="tos-section" id="ai-disclosure">
+          <h2>6. AI Disclosure</h2>
+          <div class="notice info">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+              <path d="M12 8v4m0 4h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <p><strong>Important:</strong> The automated chat, phone, SMS, and follow-up responses generated through the CWI AI platform are produced by artificial intelligence and are <strong>not written or sent by human staff members</strong> of CWI AI LLC or your business in real time.</p>
+          </div>
+          <p>By using CWI AI services, you acknowledge and agree that:</p>
+          <ul>
+            <li>All automated messages are AI-generated and may not perfectly reflect the nuance or judgment of a human representative.</li>
+            <li>CWI AI makes no guarantee that AI-generated responses will be error-free, complete, or suitable for every situation.</li>
+            <li>You are responsible for establishing appropriate human escalation paths for inquiries that require personal attention, legal or medical advice, or complex customer service decisions.</li>
+            <li>CWI AI is not liable for any harm, misunderstanding, lost business, or legal exposure arising from an end user's reliance on AI-generated content.</li>
+          </ul>
+          <p>CWI AI trains its systems using information you provide and general language model capabilities. The quality and accuracy of AI responses depend heavily on the quality and completeness of information you supply during onboarding and maintenance.</p>
+        </div>
+
+        <!-- 7. HIPAA -->
+        <div class="tos-section" id="hipaa">
+          <h2>7. HIPAA Notice</h2>
+          <div class="notice warn">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <p><strong>CWI AI LLC is not a HIPAA-compliant service provider and does not execute Business Associate Agreements (BAAs).</strong> Our platform is not designed, audited, or certified for the transmission, storage, or processing of Protected Health Information (PHI) as defined under the Health Insurance Portability and Accountability Act of 1996 (HIPAA) and its implementing regulations.</p>
+          </div>
+          <p><strong>Do not use CWI AI services for any business or use case that involves:</strong></p>
+          <ul>
+            <li>Collecting, transmitting, or storing patient health information, medical records, diagnoses, or treatment details.</li>
+            <li>Scheduling appointments where the conversation context reveals PHI (e.g., specific medical conditions, medications, or procedures).</li>
+            <li>Any communication covered under HIPAA's Privacy Rule or Security Rule.</li>
+          </ul>
+          <p>Healthcare providers, medical practices, mental health practitioners, dental offices, and any other Covered Entity or Business Associate under HIPAA must not use CWI AI services for patient-facing communications without first confirming that their specific use case does not involve PHI and does not require HIPAA compliance.</p>
+          <p>CWI AI expressly disclaims all liability for any HIPAA violations, regulatory penalties, breach notifications, or related damages arising from a client's use of our services in a healthcare context.</p>
+        </div>
+
+        <!-- 8. Liability -->
+        <div class="tos-section" id="liability">
+          <h2>8. Limitation of Liability</h2>
+          <p>To the fullest extent permitted by applicable law, CWI AI LLC, its owners, officers, employees, contractors, and agents shall not be liable for any indirect, incidental, special, consequential, punitive, or exemplary damages, including but not limited to:</p>
+          <ul>
+            <li>Loss of revenue, profits, or business opportunities.</li>
+            <li>Loss of data or customer information.</li>
+            <li>Costs of procuring substitute services.</li>
+            <li>Reputational harm or loss of goodwill.</li>
+            <li>Damages arising from reliance on AI-generated content.</li>
+          </ul>
+          <p>In any event, CWI AI's total cumulative liability to you for any claims arising out of or related to this Agreement shall not exceed the total amount of subscription fees actually paid by you to CWI AI in the <strong>three (3) calendar months</strong> immediately preceding the event giving rise to the claim.</p>
+          <p>Some jurisdictions do not allow the exclusion or limitation of certain damages. In such jurisdictions, the limitations above shall apply to the maximum extent permitted by law.</p>
+          <p>CWI AI provides its services on an "as is" and "as available" basis without warranties of any kind, either express or implied, including warranties of merchantability, fitness for a particular purpose, or non-infringement. We do not warrant that the service will be uninterrupted, error-free, or that any defects will be corrected.</p>
+        </div>
+
+        <!-- 9. Governing Law -->
+        <div class="tos-section" id="governing-law">
+          <h2>9. Governing Law</h2>
+          <p>This Agreement shall be governed by and construed in accordance with the laws of the <strong>State of Michigan</strong>, without regard to its conflict of law principles. Any dispute, claim, or controversy arising out of or relating to this Agreement or the services provided hereunder shall be subject to the exclusive jurisdiction of the state and federal courts located in <strong>Wayne County, Michigan</strong>.</p>
+          <p>You consent to personal jurisdiction in Wayne County, Michigan for purposes of any such proceeding. If any provision of this Agreement is found to be unenforceable, the remaining provisions shall remain in full force and effect.</p>
+          <p>Prior to initiating formal legal proceedings, both parties agree to attempt to resolve any dispute in good faith through direct written communication for a period of not less than thirty (30) days.</p>
+        </div>
+
+        <!-- 10. Contact -->
+        <div class="tos-section" id="contact">
+          <h2>10. Contact Us</h2>
+          <p>Questions about these Terms of Service, billing inquiries, cancellation requests, or any other matter related to your account should be directed to:</p>
+          <div class="contact-block">
+            <div class="ci">
+              <span>Company</span>
+              <p>CWI AI LLC</p>
+            </div>
+            <div class="ci">
+              <span>Location</span>
+              <p>Southgate, MI</p>
+            </div>
+            <div class="ci">
+              <span>Email</span>
+              <a href="mailto:brian@cwiai.net">brian@cwiai.net</a>
+            </div>
+            <div class="ci">
+              <span>Phone</span>
+              <a href="tel:+17348129971">(734) 812-9971</a>
+            </div>
+          </div>
+          <p style="margin-top:18px">These Terms of Service are effective as of <strong>June 9, 2026</strong> and supersede any prior agreements or understandings between you and CWI AI LLC regarding the subject matter herein. CWI AI reserves the right to update these Terms at any time; continued use of the service following notice of any change constitutes acceptance of the revised Terms.</p>
+        </div>
+
+      </div><!-- /tos-body -->
+    </div><!-- /tos-wrap -->
+  </div><!-- /wrap -->
+</main>
+
+<div data-cwi-footer></div>
+
+<script src="partials.js"></script>
+<script>
+  /* Highlight active TOC link on scroll */
+  (function () {
+    var links = Array.from(document.querySelectorAll('.tos-toc a'));
+    if (!links.length) return;
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          links.forEach(function (l) { l.classList.remove('active'); });
+          var match = links.find(function (l) { return l.getAttribute('href') === '#' + entry.target.id; });
+          if (match) match.classList.add('active');
+        }
+      });
+    }, { rootMargin: '-20% 0px -70% 0px', threshold: 0 });
+    document.querySelectorAll('.tos-section[id]').forEach(function (s) { observer.observe(s); });
+  })();
+</script>
+</body>
+</html>

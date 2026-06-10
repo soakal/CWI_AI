@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CWI AI vs. The Alternatives — Compare AI Receptionist Options</title>
+<meta name="description" content="See how CWI AI stacks up against answering services, generic chatbots, and hiring staff. Faster, cheaper, and always on — without the overhead.">
+<link rel="icon" type="image/png" href="assets/cwi-favicon-64.png">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+
+<link rel="canonical" href="https://cwiai.net/compare.html">
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="CWI AI vs. The Alternatives">
+<meta property="og:description" content="See how CWI AI stacks up against answering services, generic chatbots, and hiring staff. Faster, cheaper, and always on.">
+<meta property="og:url" content="https://cwiai.net/compare">
+<meta property="og:image" content="https://cwiai.net/assets/cwi-icon-primary-1024.png">
+<meta property="og:site_name" content="CWI AI">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="CWI AI vs. The Alternatives">
+<meta name="twitter:description" content="See how CWI AI stacks up against answering services, generic chatbots, and hiring staff.">
+<meta name="twitter:image" content="https://cwiai.net/assets/cwi-icon-primary-1024.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="cwi.css">
+
+<style>
+  /* ---- PAGE HERO ---- */
+  .page-hero {
+    padding: 80px 0 52px;
+    text-align: center;
+  }
+  .page-hero h1 {
+    font-size: clamp(34px, 5.4vw, 60px);
+    max-width: 18ch;
+    margin: 22px auto 0;
+  }
+  .page-hero p {
+    font-size: clamp(17px, 2vw, 20px);
+    color: var(--text-dim);
+    max-width: 54ch;
+    margin: 20px auto 0;
+    text-wrap: pretty;
+  }
+
+  /* ---- TABLE SECTION ---- */
+  .compare-section {
+    padding: 0 0 72px;
+  }
+  .table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: var(--r-lg);
+    border: 1px solid var(--line-2);
+    background: var(--surface);
+  }
+  /* Scrollbar hint on mobile */
+  .scroll-hint {
+    display: none;
+    text-align: center;
+    font-size: 12.5px;
+    color: var(--steel);
+    margin-bottom: 10px;
+  }
+  @media (max-width: 860px) {
+    .scroll-hint { display: block; }
+  }
+
+  table.ctable {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 680px;
+    font-size: 14.5px;
+  }
+
+  /* Header row */
+  table.ctable thead tr {
+    background: rgba(0, 0, 0, 0.4);
+  }
+  table.ctable thead th {
+    padding: 18px 20px;
+    text-align: center;
+    font-family: var(--font-disp);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: -.01em;
+    color: var(--text-dim);
+    border-bottom: 1px solid var(--line-2);
+    white-space: nowrap;
+  }
+  table.ctable thead th:first-child {
+    text-align: left;
+    width: 34%;
+    color: var(--steel);
+    font-weight: 600;
+    font-size: 11.5px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+  }
+
+  /* CWI AI column header */
+  table.ctable thead th.col-cwi {
+    background: rgba(255, 90, 31, 0.12);
+    color: var(--accent);
+    border-left: 1px solid rgba(255, 90, 31, 0.28);
+    border-right: 1px solid rgba(255, 90, 31, 0.28);
+    position: relative;
+  }
+  table.ctable thead th.col-cwi::after {
+    content: "Best value";
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--accent);
+    color: #0A0A0C;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: 3px 12px;
+    border-radius: var(--r-pill);
+    white-space: nowrap;
+  }
+
+  /* Body rows */
+  table.ctable tbody tr {
+    border-top: 1px solid var(--line);
+    transition: background .15s;
+  }
+  table.ctable tbody tr:hover {
+    background: var(--surface-2);
+  }
+  table.ctable tbody td {
+    padding: 15px 20px;
+    text-align: center;
+    color: var(--text-dim);
+    vertical-align: middle;
+    line-height: 1.4;
+  }
+  table.ctable tbody td:first-child {
+    text-align: left;
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  /* CWI AI column body */
+  table.ctable tbody td.col-cwi {
+    background: rgba(255, 90, 31, 0.07);
+    border-left: 1px solid rgba(255, 90, 31, 0.18);
+    border-right: 1px solid rgba(255, 90, 31, 0.18);
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  /* Last row bottom border on cwi cells */
+  table.ctable tbody tr:last-child td.col-cwi {
+    border-bottom: 1px solid rgba(255, 90, 31, 0.18);
+  }
+
+  /* Symbols */
+  .yes {
+    color: #4ADE80;
+    font-size: 18px;
+    font-weight: 700;
+  }
+  .no {
+    color: var(--steel);
+    font-size: 16px;
+  }
+  .partial {
+    color: var(--text-dim);
+    font-size: 13.5px;
+  }
+  .cost {
+    font-family: var(--font-disp);
+    font-size: 13.5px;
+    font-weight: 700;
+  }
+  .cost.cwi-cost {
+    color: var(--accent);
+  }
+  .cost.high-cost {
+    color: #f87171;
+  }
+
+  /* ---- STAT CALLOUTS ---- */
+  .stats-section {
+    padding: 60px 0 72px;
+    border-top: 1px solid var(--line);
+  }
+  .stats-kicker {
+    text-align: center;
+    margin-bottom: 14px;
+  }
+  .stats-heading {
+    text-align: center;
+    font-size: clamp(26px, 4vw, 40px);
+    margin-bottom: 50px;
+    max-width: 20ch;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  @media (max-width: 720px) {
+    .stat-grid { grid-template-columns: 1fr; gap: 16px; }
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--line-2);
+    border-radius: var(--r-lg);
+    padding: 32px 28px;
+    text-align: center;
+    transition: border-color .2s, transform .2s;
+  }
+  .stat-card:hover {
+    border-color: rgba(255, 90, 31, 0.35);
+    transform: translateY(-3px);
+  }
+  .stat-card.highlight {
+    border-color: rgba(255, 90, 31, 0.45);
+    background: linear-gradient(160deg, rgba(255, 90, 31, 0.08), var(--surface) 55%);
+  }
+  .stat-card .num {
+    font-family: var(--font-disp);
+    font-size: clamp(36px, 5vw, 52px);
+    font-weight: 800;
+    letter-spacing: -.04em;
+    line-height: 1;
+    color: var(--accent);
+  }
+  .stat-card.highlight .num {
+    color: var(--accent);
+  }
+  .stat-card .label {
+    font-size: 15.5px;
+    color: var(--text-dim);
+    margin-top: 12px;
+    text-wrap: pretty;
+    max-width: 22ch;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .stat-card .source {
+    font-size: 11.5px;
+    color: var(--steel);
+    margin-top: 10px;
+  }
+
+  /* ---- CTA SECTION ---- */
+  .cta-section {
+    padding: 60px 0 88px;
+    text-align: center;
+  }
+  .cta-box {
+    background: linear-gradient(160deg, rgba(255, 90, 31, 0.10), var(--surface) 55%);
+    border: 1px solid rgba(255, 90, 31, 0.35);
+    border-radius: var(--r-lg);
+    padding: 58px 36px;
+    max-width: 700px;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+  }
+  .cta-box::before {
+    content: "";
+    position: absolute;
+    top: -80px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 400px;
+    height: 200px;
+    background: radial-gradient(ellipse, rgba(255, 90, 31, 0.18), transparent 70%);
+    pointer-events: none;
+  }
+  .cta-box h2 {
+    font-size: clamp(24px, 4vw, 36px);
+    max-width: 22ch;
+    margin: 0 auto 10px;
+  }
+  .cta-box p {
+    color: var(--text-dim);
+    font-size: 16px;
+    max-width: 44ch;
+    margin: 0 auto 30px;
+    text-wrap: pretty;
+  }
+  .cta-box .btn-primary {
+    font-size: 16px;
+    padding: 16px 36px;
+  }
+  .cta-note {
+    margin-top: 16px;
+    font-size: 13px;
+    color: var(--steel);
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-field"></div>
+<div data-cwi-nav></div>
+
+<!-- ===== HERO ===== -->
+<section class="page-hero">
+  <div class="wrap">
+    <div class="kicker">
+      <span class="pip"></span>Side-by-Side Comparison
+    </div>
+    <h1>Why Local Businesses Choose <span class="acc">CWI AI</span></h1>
+    <p>See how we compare to answering services, generic chatbots, and hiring staff.</p>
+  </div>
+</section>
+
+<!-- ===== COMPARISON TABLE ===== -->
+<section class="compare-section">
+  <div class="wrap">
+    <p class="scroll-hint">&#8592; Scroll to compare all options &#8594;</p>
+    <div class="table-wrap">
+      <table class="ctable" role="table" aria-label="CWI AI competitor comparison">
+        <thead>
+          <tr>
+            <th scope="col">Feature</th>
+            <th scope="col" class="col-cwi">CWI AI</th>
+            <th scope="col">Answering Service</th>
+            <th scope="col">Generic Chatbot</th>
+            <th scope="col">Hiring Staff</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Responds in seconds (24/7)</td>
+            <td class="col-cwi"><span class="yes">&#10003;</span></td>
+            <td><span class="no">&#10007;</span> <span class="partial">humans sleep</span></td>
+            <td><span class="yes">&#10003;</span></td>
+            <td><span class="no">&#10007;</span></td>
+          </tr>
+          <tr>
+            <td>Books appointments automatically</td>
+            <td class="col-cwi"><span class="yes">&#10003;</span></td>
+            <td><span class="no">&#10007;</span></td>
+            <td><span class="partial">Rarely</span></td>
+            <td><span class="no">&#10007;</span></td>
+          </tr>
+          <tr>
+            <td>Sends follow-up automatically</td>
+            <td class="col-cwi"><span class="yes">&#10003;</span></td>
+            <td><span class="no">&#10007;</span></td>
+            <td><span class="no">&#10007;</span></td>
+            <td><span class="partial">Sometimes</span></td>
+          </tr>
+          <tr>
+            <td>Monthly cost</td>
+            <td class="col-cwi"><span class="cost cwi-cost">$197–$597</span></td>
+            <td><span class="cost">$200–$600+</span></td>
+            <td><span class="cost">$50–$300</span></td>
+            <td><span class="cost high-cost">$3,000–$5,000+</span></td>
+          </tr>
+          <tr>
+            <td>Setup time</td>
+            <td class="col-cwi"><strong style="color:var(--accent)">Within 48 hours — many the same day</strong></td>
+            <td><span class="partial">1–2 weeks</span></td>
+            <td><span class="partial">DIY weeks</span></td>
+            <td><span class="partial">Months to hire</span></td>
+          </tr>
+          <tr>
+            <td>Learns your business</td>
+            <td class="col-cwi"><span class="yes">&#10003;</span></td>
+            <td><span class="no">&#10007;</span></td>
+            <td><span class="partial">Limited</span></td>
+            <td><span class="yes">&#10003;</span></td>
+          </tr>
+          <tr>
+            <td>White-labeled to your brand</td>
+            <td class="col-cwi"><span class="yes">&#10003;</span></td>
+            <td><span class="no">&#10007;</span></td>
+            <td><span class="partial">Rarely</span></td>
+            <td><span class="yes">&#10003;</span></td>
+          </tr>
+          <tr>
+            <td>No long-term contract</td>
+            <td class="col-cwi"><span class="yes">&#10003;</span></td>
+            <td><span class="partial">Varies</span></td>
+            <td><span class="partial">Varies</span></td>
+            <td><span class="partial">N/A</span></td>
+          </tr>
+          <tr>
+            <td>Money-back guarantee</td>
+            <td class="col-cwi"><strong style="color:var(--accent)">30 days</strong></td>
+            <td><span class="partial">Rarely</span></td>
+            <td><span class="partial">Rarely</span></td>
+            <td><span class="partial">N/A</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ===== REAL COST OF SLOW RESPONSE ===== -->
+<section class="stats-section">
+  <div class="wrap">
+    <div class="stats-kicker">
+      <div class="kicker"><span class="pip"></span>The Numbers</div>
+    </div>
+    <h2 class="stats-heading">The Real Cost of <span class="acc">Slow Response</span></h2>
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="num">78%</div>
+        <div class="label">of customers hire the first business to respond</div>
+        <div class="source">Source: Velocify Lead Response Study</div>
+      </div>
+      <div class="stat-card">
+        <div class="num">47 hrs</div>
+        <div class="label">Average lead response time for US businesses</div>
+        <div class="source">Source: Harvard Business Review</div>
+      </div>
+      <div class="stat-card highlight">
+        <div class="num">&lt; 5 sec</div>
+        <div class="label">CWI AI response time — day or night, every time</div>
+        <div class="source">Always on. Never misses a lead.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CTA ===== -->
+<section class="cta-section">
+  <div class="wrap">
+    <div class="cta-box">
+      <h2>See It For Yourself</h2>
+      <p>Watch CWI AI answer, book, and follow up in real time — no sales pitch, just a live demo of your future receptionist.</p>
+      <a class="btn btn-primary" href="demo.html">Book a Free Demo &rarr;</a>
+      <p class="cta-note">No credit card. No commitment. Most businesses are live within 48 hours — many the same day.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <p style="color:var(--steel);font-size:14px;max-width:34ch">The always&#8209;on AI receptionist for local business. The line is always live.</p>
+      </div>
+      <div>
+        <h5>Pages</h5>
+        <a class="lnk" href="index.html">Home</a>
+        <a class="lnk" href="pricing.html">Pricing</a>
+        <a class="lnk" href="demo.html">Book a Demo</a>
+      </div>
+      <div>
+        <h5>Compare</h5>
+        <a class="lnk" href="compare.html">CWI AI vs. The Rest</a>
+        <a class="lnk" href="how-it-works.html">How It Works</a>
+        <a class="lnk" href="industries.html">Industries</a>
+      </div>
+      <div>
+        <h5>Get Started</h5>
+        <a class="lnk" href="tel:+17348129971">(734)&nbsp;812&#8209;9971</a>
+        <a class="lnk" href="mailto:brian@cwiai.net">brian@cwiai.net</a>
+        <a class="lnk" href="demo.html">Free Demo &rarr;</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; <span data-year>2026</span> CWI AI LLC &middot; Southgate, MI &middot; cwiai.net</span>
+      <span><a class="lnk" href="privacy.html">Privacy</a> &middot; <a class="lnk" href="terms.html">Terms</a></span>
+    </div>
+  </div>
+</footer>
+
+<script src="partials.js"></script>
+<script src="site.js"></script>
+<script>
+  // Update copyright year
+  document.querySelectorAll('[data-year]').forEach(function(el) {
+    el.textContent = new Date().getFullYear();
+  });
+</script>
+</body>
+</html>

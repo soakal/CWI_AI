@@ -1,0 +1,67 @@
+[build]
+  publish = "."
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+# 301 redirects from .html variants to canonical extensionless URLs
+# Prevents duplicate indexable pages and enforces a single canonical form.
+
+[[redirects]]
+  from = "/index.html"
+  to = "/"
+  status = 301
+
+[[redirects]]
+  from = "/pricing.html"
+  to = "/pricing"
+  status = 301
+
+[[redirects]]
+  from = "/demo.html"
+  to = "/demo"
+  status = 301
+
+[[redirects]]
+  from = "/roi.html"
+  to = "/roi"
+  status = 301
+
+[[redirects]]
+  from = "/free-audit.html"
+  to = "/free-audit"
+  status = 301
+
+[[redirects]]
+  from = "/compare.html"
+  to = "/compare"
+  status = 301
+
+[[redirects]]
+  from = "/testimonials.html"
+  to = "/testimonials"
+  status = 301
+
+[[redirects]]
+  from = "/how-it-works.html"
+  to = "/how-it-works"
+  status = 301
+
+[[redirects]]
+  from = "/industries.html"
+  to = "/industries"
+  status = 301
+
+[[redirects]]
+  from = "/privacy.html"
+  to = "/privacy"
+  status = 301
+
+[[redirects]]
+  from = "/terms.html"
+  to = "/terms"
+  status = 301

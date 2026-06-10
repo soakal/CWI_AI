@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy Policy — CWI AI</title>
+<meta name="description" content="Privacy Policy for CWI AI LLC — how we collect, use, and protect your information when you use our AI receptionist services.">
+<link rel="canonical" href="https://cwiai.net/privacy.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Privacy Policy — CWI AI">
+<meta property="og:description" content="Privacy Policy for CWI AI LLC — how we collect, use, and protect your information when you use our AI receptionist services.">
+<meta property="og:url" content="https://cwiai.net/privacy.html">
+<meta property="og:image" content="https://cwiai.net/assets/cwi-icon-primary-1024.png">
+<meta property="og:site_name" content="CWI AI">
+<link rel="icon" type="image/png" href="assets/cwi-favicon-64.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="cwi.css">
+<style>
+  /* ---- Page layout ---- */
+  .privacy-hero{padding:70px 0 44px;text-align:center}
+  .privacy-hero .kicker{margin-bottom:24px}
+  .privacy-hero h1{font-size:clamp(30px,4.6vw,50px);max-width:20ch;margin:0 auto}
+  .privacy-hero .lead{font-size:clamp(15px,1.8vw,17.5px);color:var(--text-dim);max-width:58ch;margin:18px auto 0;line-height:1.72;text-wrap:pretty}
+
+  /* ---- Two-column layout (TOC + content) ---- */
+  .privacy-layout{display:grid;grid-template-columns:220px 1fr;gap:56px;align-items:start;padding-bottom:100px}
+  @media(max-width:900px){.privacy-layout{grid-template-columns:1fr;gap:32px}}
+
+  /* ---- Sticky TOC ---- */
+  .privacy-toc{position:sticky;top:88px}
+  @media(max-width:900px){.privacy-toc{display:none}}
+  .privacy-toc h6{font-family:var(--font-body);font-size:11px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--steel);margin-bottom:14px}
+  .privacy-toc a{display:block;font-size:13.5px;font-weight:500;color:var(--steel);padding:7px 12px;border-left:2px solid var(--line);margin-bottom:2px;transition:color .2s,border-color .2s}
+  .privacy-toc a:hover,.privacy-toc a.active{color:var(--accent);border-left-color:var(--accent)}
+
+  /* ---- Content ---- */
+  .privacy-body{min-width:0}
+  .privacy-section{margin-bottom:64px;scroll-margin-top:96px}
+  .privacy-section h2{font-size:clamp(20px,2.6vw,26px);font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:14px}
+  .privacy-section h2 .s-num{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;
+    border-radius:50%;background:rgba(255,90,31,.12);border:1px solid rgba(255,90,31,.25);
+    font-family:var(--font-body);font-size:13px;font-weight:700;color:var(--accent);flex:none}
+  .privacy-section p{color:var(--text-dim);font-size:15.5px;line-height:1.78;margin-bottom:16px;text-wrap:pretty}
+  .privacy-section p:last-child{margin-bottom:0}
+  .privacy-section ul{list-style:none;margin:0 0 16px;padding:0}
+  .privacy-section ul li{color:var(--text-dim);font-size:15.5px;line-height:1.78;padding-left:22px;position:relative;margin-bottom:8px;text-wrap:pretty}
+  .privacy-section ul li::before{content:"";position:absolute;left:0;top:10px;width:6px;height:6px;
+    border-radius:50%;background:var(--accent);opacity:.7}
+
+  /* ---- Highlight boxes ---- */
+  .info-box{background:var(--surface);border:1px solid var(--line-2);border-radius:var(--r-md);padding:22px 26px;margin:24px 0}
+  .info-box.accent{border-color:rgba(255,90,31,.28);background:linear-gradient(135deg,rgba(255,90,31,.06),transparent)}
+  .info-box h4{font-size:14px;font-weight:700;margin-bottom:10px;color:var(--text)}
+  .info-box p{font-size:14.5px;color:var(--text-dim);line-height:1.7;margin:0}
+
+  /* ---- Third-party table ---- */
+  .tp-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden;margin:24px 0}
+  @media(max-width:640px){.tp-grid{grid-template-columns:1fr}}
+  .tp-head{background:var(--surface-2);padding:11px 16px;font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--steel)}
+  .tp-cell{background:var(--surface);padding:15px 16px;font-size:14px;color:var(--text-dim);line-height:1.55}
+  .tp-cell strong{color:var(--text);font-weight:600;display:block;margin-bottom:3px}
+  .tp-cell a{color:var(--accent)}
+  .tp-cell a:hover{color:var(--ember)}
+
+  /* ---- Divider ---- */
+  .privacy-divider{border:none;border-top:1px solid var(--line);margin:0 0 64px}
+
+  /* ---- Contact card ---- */
+  .contact-card{background:var(--surface);border:1px solid var(--line-2);border-radius:var(--r-lg);padding:32px 36px;display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap}
+  .contact-card .cc-icon{width:48px;height:48px;border-radius:var(--r-md);background:rgba(255,90,31,.12);border:1px solid rgba(255,90,31,.22);display:flex;align-items:center;justify-content:center;color:var(--accent);flex:none}
+  .contact-card .cc-info h4{font-size:17px;font-weight:700;margin-bottom:6px}
+  .contact-card .cc-info p{font-size:14.5px;color:var(--text-dim);margin-bottom:4px}
+  .contact-card .cc-info a{color:var(--accent)}
+  .contact-card .cc-info a:hover{color:var(--ember)}
+
+  /* ---- Effective date badge ---- */
+  .eff-date{display:inline-flex;align-items:center;gap:9px;font-size:13px;font-weight:600;color:var(--steel);
+    border:1px solid var(--line);padding:8px 16px;border-radius:var(--r-pill);background:rgba(255,255,255,.015);margin-top:40px}
+  .eff-date .pip{width:7px;height:7px;border-radius:50%;background:var(--accent)}
+</style>
+</head>
+<body>
+<div class="bg-field"></div>
+<div data-cwi-nav></div>
+
+<main>
+  <section class="privacy-hero">
+    <div class="wrap">
+      <div class="kicker"><span class="pip"></span>Legal</div>
+      <h1 class="disp">Privacy Policy</h1>
+      <p class="lead">We take your privacy seriously. This policy explains exactly what information CWI AI LLC collects, why we collect it, and how we protect it.</p>
+      <div class="eff-date"><span class="pip"></span>Effective Date: June 9, 2026</div>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <div class="privacy-layout">
+
+      <!-- Sticky TOC -->
+      <aside class="privacy-toc" aria-label="Table of contents">
+        <h6>Contents</h6>
+        <a href="#section-1">1. Information We Collect</a>
+        <a href="#section-2">2. How We Use Your Information</a>
+        <a href="#section-3">3. AI &amp; Automated Processing</a>
+        <a href="#section-4">4. Data Storage &amp; Security</a>
+        <a href="#section-5">5. Third-Party Services</a>
+        <a href="#section-6">6. Your Rights</a>
+        <a href="#section-7">7. Contact Us</a>
+      </aside>
+
+      <!-- Body -->
+      <article class="privacy-body" itemscope itemtype="https://schema.org/WebPage">
+
+        <div class="info-box accent">
+          <h4>Plain-Language Summary</h4>
+          <p>CWI AI LLC operates cwiai.net and provides AI-powered receptionist services. We collect information you give us voluntarily (inquiry forms, phone conversations, demo requests) and standard technical data your browser sends automatically. We use that information to provide our service, contact you, and improve our platform. We do not sell your personal information to third parties.</p>
+        </div>
+
+        <!-- Section 1 -->
+        <section class="privacy-section" id="section-1" aria-labelledby="h-section-1">
+          <h2 id="h-section-1"><span class="s-num">1</span>Information We Collect</h2>
+          <p>We collect information in the following ways when you visit our website, contact us, or use our services:</p>
+
+          <p><strong>Information you provide directly:</strong></p>
+          <ul>
+            <li>Name, email address, phone number, and business details submitted through contact forms, demo request forms, or scheduling tools.</li>
+            <li>Messages, questions, and inquiries submitted through chat widgets or email.</li>
+            <li>Payment information processed when you subscribe to a paid plan (handled by our payment processor — see Section 5).</li>
+            <li>Business information you share during onboarding or setup calls, including industry, service area, and operating hours.</li>
+          </ul>
+
+          <p><strong>Information collected automatically:</strong></p>
+          <ul>
+            <li>IP address, browser type and version, operating system, and referring URL.</li>
+            <li>Pages visited, time spent on pages, and links clicked on cwiai.net.</li>
+            <li>Cookies and similar tracking technologies used to maintain session state and support analytics (see below).</li>
+          </ul>
+
+          <p><strong>Information from AI-assisted interactions:</strong></p>
+          <ul>
+            <li>Transcripts or summaries of conversations conducted through our AI chat or voice receptionist features, where applicable.</li>
+            <li>Caller-provided information (name, callback number, nature of inquiry) captured during AI-handled phone interactions on behalf of our clients.</li>
+          </ul>
+
+          <p><strong>Cookies and tracking:</strong> We use first-party cookies for essential site function (session management) and may use third-party analytics cookies to understand aggregate traffic patterns. You may disable cookies through your browser settings; however, certain site features may not function properly if you do so.</p>
+        </section>
+
+        <hr class="privacy-divider">
+
+        <!-- Section 2 -->
+        <section class="privacy-section" id="section-2" aria-labelledby="h-section-2">
+          <h2 id="h-section-2"><span class="s-num">2</span>How We Use Your Information</h2>
+          <p>CWI AI LLC uses the information we collect for the following purposes:</p>
+          <ul>
+            <li><strong>Service delivery.</strong> To configure, operate, and improve your AI receptionist, including routing calls, handling chat inquiries, and booking appointments on your behalf.</li>
+            <li><strong>Customer support.</strong> To respond to questions, troubleshoot issues, and communicate updates about your account or subscription.</li>
+            <li><strong>Billing and payments.</strong> To process subscription fees, issue receipts, and manage your billing relationship with us.</li>
+            <li><strong>Marketing and outreach.</strong> To send informational emails about new features, pricing changes, or relevant updates. You may opt out of marketing communications at any time by following the unsubscribe link in any email or by contacting us directly.</li>
+            <li><strong>Analytics and improvement.</strong> To understand how visitors use our website and how clients interact with our service, so we can make meaningful improvements.</li>
+            <li><strong>Legal compliance.</strong> To comply with applicable laws, regulations, court orders, or lawful government requests.</li>
+            <li><strong>Security.</strong> To detect, prevent, and respond to fraud, abuse, or security incidents.</li>
+          </ul>
+          <p>We do not sell, rent, or trade your personal information to third parties for their own marketing purposes.</p>
+        </section>
+
+        <hr class="privacy-divider">
+
+        <!-- Section 3 -->
+        <section class="privacy-section" id="section-3" aria-labelledby="h-section-3">
+          <h2 id="h-section-3"><span class="s-num">3</span>AI and Automated Processing Disclosure</h2>
+
+          <div class="info-box accent">
+            <h4>Important Notice Regarding AI Processing</h4>
+            <p>CWI AI's core service involves artificial intelligence systems that process your inquiries, calls, and messages in an automated manner. By submitting an inquiry through our chat widget, contact form, or phone system, your message may be received, interpreted, and responded to by an AI model before or instead of a human agent.</p>
+          </div>
+
+          <p>Specifically, the following AI-assisted processes may occur when you interact with CWI AI or any of our clients' AI receptionists:</p>
+          <ul>
+            <li><strong>Natural language processing (NLP).</strong> Your written or spoken inquiry is analyzed by a language model to determine intent, extract relevant details (such as requested services, preferred appointment times, or callback numbers), and generate an appropriate response.</li>
+            <li><strong>Automated routing.</strong> Based on the content of your inquiry, the AI may route your request to a specific calendar, department, or escalation queue without human review.</li>
+            <li><strong>Conversation logging.</strong> AI-handled conversations may be stored as transcripts to enable follow-up by a human team member, for quality assurance purposes, and for ongoing model improvement (in aggregate, de-identified form where possible).</li>
+            <li><strong>Voice recognition.</strong> For voice-based interactions, your spoken words may be transcribed and processed by automated speech-recognition systems.</li>
+          </ul>
+
+          <p>CWI AI uses third-party AI model providers (including OpenRouter and its upstream model providers) to power these capabilities. Data transmitted to those providers is subject to their respective data processing agreements, which include confidentiality and data security obligations.</p>
+          <p>You are not required to interact with our AI systems. If you prefer to speak directly with a human, you may reach us at <a href="tel:+17348129971" style="color:var(--accent)">(734) 812-9971</a> or email <a href="mailto:brian@cwiai.net" style="color:var(--accent)">brian@cwiai.net</a>.</p>
+        </section>
+
+        <hr class="privacy-divider">
+
+        <!-- Section 4 -->
+        <section class="privacy-section" id="section-4" aria-labelledby="h-section-4">
+          <h2 id="h-section-4"><span class="s-num">4</span>Data Storage and Security</h2>
+          <p>CWI AI LLC stores data using reputable cloud infrastructure and SaaS platforms. Data may be stored and processed in the United States. We implement the following security practices:</p>
+          <ul>
+            <li>Encryption of data in transit using TLS 1.2 or higher for all web communications.</li>
+            <li>Access controls limiting data access to authorized personnel who require it to perform their job functions.</li>
+            <li>Regular review of third-party vendor security practices and data processing agreements.</li>
+            <li>Prompt incident response procedures in the event of a suspected breach or unauthorized access.</li>
+          </ul>
+          <p>No method of electronic transmission or storage is 100% secure. While we strive to protect your personal information using commercially reasonable means, we cannot guarantee absolute security. In the event of a data breach that affects your personal information, we will notify you as required by applicable law.</p>
+
+          <div class="info-box">
+            <h4>Data Retention</h4>
+            <p>We retain personal information for as long as necessary to provide our services and fulfill the purposes described in this policy, unless a longer retention period is required by law. When data is no longer needed, we delete or anonymize it in a reasonably secure manner. You may request deletion of your data at any time — see Section 6 for your rights.</p>
+          </div>
+        </section>
+
+        <hr class="privacy-divider">
+
+        <!-- Section 5 -->
+        <section class="privacy-section" id="section-5" aria-labelledby="h-section-5">
+          <h2 id="h-section-5"><span class="s-num">5</span>Third-Party Services</h2>
+          <p>CWI AI integrates with the following third-party platforms in order to deliver our service. Each of these providers may receive certain personal information as necessary for their function. We encourage you to review their respective privacy policies:</p>
+
+          <div class="tp-grid" role="table" aria-label="Third-party service providers">
+            <div class="tp-head" role="columnheader">Service</div>
+            <div class="tp-head" role="columnheader">Purpose</div>
+            <div class="tp-head" role="columnheader">Privacy Policy</div>
+
+            <div class="tp-cell" role="cell"><strong>Make.com</strong>Workflow automation; connects our tools and triggers automated responses.</div>
+            <div class="tp-cell" role="cell">Processes data events (inquiry details, contact records) to route information between connected apps.</div>
+            <div class="tp-cell" role="cell"><a href="https://www.make.com/en/privacy-notice" target="_blank" rel="noopener noreferrer">make.com/privacy</a></div>
+
+            <div class="tp-cell" role="cell"><strong>Freshchat</strong>Live chat and AI chat widget embedded on our website.</div>
+            <div class="tp-cell" role="cell">Collects visitor conversation data, IP address, and any contact details you voluntarily provide in chat.</div>
+            <div class="tp-cell" role="cell"><a href="https://www.freshworks.com/privacy/" target="_blank" rel="noopener noreferrer">freshworks.com/privacy</a></div>
+
+            <div class="tp-cell" role="cell"><strong>HubSpot</strong>Customer relationship management (CRM) and email marketing platform.</div>
+            <div class="tp-cell" role="cell">Stores contact records, tracks email engagement, and powers lead management workflows.</div>
+            <div class="tp-cell" role="cell"><a href="https://legal.hubspot.com/privacy-policy" target="_blank" rel="noopener noreferrer">legal.hubspot.com/privacy-policy</a></div>
+
+            <div class="tp-cell" role="cell"><strong>Stripe</strong>Payment processing for subscription billing.</div>
+            <div class="tp-cell" role="cell">Processes and stores payment card data and billing information. CWI AI does not store full card numbers on its own systems.</div>
+            <div class="tp-cell" role="cell"><a href="https://stripe.com/privacy" target="_blank" rel="noopener noreferrer">stripe.com/privacy</a></div>
+
+            <div class="tp-cell" role="cell"><strong>Calendly</strong>Appointment scheduling for demo bookings and onboarding calls.</div>
+            <div class="tp-cell" role="cell">Collects your name, email, and any information you provide when booking a meeting through our scheduling links.</div>
+            <div class="tp-cell" role="cell"><a href="https://calendly.com/privacy" target="_blank" rel="noopener noreferrer">calendly.com/privacy</a></div>
+
+            <div class="tp-cell" role="cell"><strong>OpenRouter</strong>AI model routing layer used to power AI receptionist and chat capabilities.</div>
+            <div class="tp-cell" role="cell">Routes natural language requests to underlying language models. Conversation content may be transmitted for inference processing.</div>
+            <div class="tp-cell" role="cell"><a href="https://openrouter.ai/privacy" target="_blank" rel="noopener noreferrer">openrouter.ai/privacy</a></div>
+          </div>
+
+          <p>We enter into data processing agreements with our key vendors and require them to process data only as directed and to maintain appropriate security standards. We do not authorize these third parties to use your information for their own independent marketing purposes.</p>
+        </section>
+
+        <hr class="privacy-divider">
+
+        <!-- Section 6 -->
+        <section class="privacy-section" id="section-6" aria-labelledby="h-section-6">
+          <h2 id="h-section-6"><span class="s-num">6</span>Your Rights</h2>
+          <p>Depending on your location and applicable law, you may have the following rights with respect to your personal information. To exercise any of these rights, please contact us using the information in Section 7.</p>
+          <ul>
+            <li><strong>Right to access.</strong> You may request a copy of the personal information we hold about you.</li>
+            <li><strong>Right to correction.</strong> You may request that we correct inaccurate or incomplete information we hold about you.</li>
+            <li><strong>Right to deletion.</strong> You may request that we delete your personal information. We will honor this request unless we are required to retain the data by law or to complete a pending transaction.</li>
+            <li><strong>Right to opt out of marketing.</strong> You may unsubscribe from marketing emails at any time using the unsubscribe link in our emails, or by contacting us directly. Note that transactional and service-related communications are not subject to opt-out.</li>
+            <li><strong>Right to data portability.</strong> Where technically feasible, you may request your personal data in a commonly used, machine-readable format.</li>
+            <li><strong>Right to restrict processing.</strong> In certain circumstances, you may request that we limit the way we use your personal information.</li>
+            <li><strong>Right to lodge a complaint.</strong> If you believe your privacy rights have been violated, you have the right to lodge a complaint with your applicable data protection authority.</li>
+          </ul>
+
+          <div class="info-box">
+            <h4>Michigan Residents</h4>
+            <p>CWI AI LLC is based in Michigan. While Michigan does not currently have a comprehensive consumer privacy statute equivalent to the CCPA or GDPR, we extend the rights described above to all users of our services regardless of location, as a matter of good practice. If you are a California resident, you may have additional rights under the California Consumer Privacy Act (CCPA). Please contact us for more information.</p>
+          </div>
+
+          <p>We will respond to verifiable requests within 30 days. In certain circumstances we may need to verify your identity before fulfilling a request to protect against unauthorized access to your information.</p>
+        </section>
+
+        <hr class="privacy-divider">
+
+        <!-- Section 7 -->
+        <section class="privacy-section" id="section-7" aria-labelledby="h-section-7">
+          <h2 id="h-section-7"><span class="s-num">7</span>Contact Us</h2>
+          <p>If you have questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us using any of the following methods. We will make every effort to respond promptly.</p>
+
+          <div class="contact-card">
+            <div class="cc-icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </div>
+            <div class="cc-info">
+              <h4>CWI AI LLC — Privacy Inquiries</h4>
+              <p>Southgate, MI, United States</p>
+              <p>Email: <a href="mailto:brian@cwiai.net">brian@cwiai.net</a></p>
+              <p>Phone: <a href="tel:+17348129971">(734) 812-9971</a></p>
+              <p style="margin-top:10px;font-size:13.5px">Business hours: Monday–Friday, 9 am–5 pm ET.<br>We aim to respond to all privacy inquiries within 2 business days.</p>
+            </div>
+          </div>
+
+          <p style="margin-top:32px">We reserve the right to update this Privacy Policy at any time. When we make material changes, we will post the updated policy on this page with a revised effective date and, where appropriate, notify you by email. Your continued use of our services after any such changes constitutes your acceptance of the updated policy.</p>
+
+          <p>This Privacy Policy was last updated and is effective as of <strong>June 9, 2026</strong>.</p>
+        </section>
+
+      </article>
+    </div><!-- /.privacy-layout -->
+  </div><!-- /.wrap -->
+</main>
+
+<div data-cwi-footer></div>
+<script src="partials.js"></script>
+<script>
+  // Highlight active TOC link on scroll
+  (function () {
+    var sections = document.querySelectorAll('.privacy-section');
+    var links = document.querySelectorAll('.privacy-toc a');
+    if (!sections.length || !links.length) return;
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) {
+          links.forEach(function (l) { l.classList.remove('active'); });
+          var match = document.querySelector('.privacy-toc a[href="#' + e.target.id + '"]');
+          if (match) match.classList.add('active');
+        }
+      });
+    }, { rootMargin: '-20% 0px -70% 0px' });
+    sections.forEach(function (s) { io.observe(s); });
+  })();
+</script>
+</body>
+</html>

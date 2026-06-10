@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Industries — CWI</title>
+<meta name="description" content="CWI is tuned for how local businesses book — salons, clinics, restaurants, trades, auto, fitness and more.">
+<link rel="canonical" href="https://cwiai.net/industries.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Industries We Serve — CWI AI">
+<meta property="og:description" content="CWI is tuned for how local businesses book — salons, clinics, restaurants, trades, auto, fitness and more.">
+<meta property="og:url" content="https://cwiai.net/industries.html">
+<meta property="og:image" content="https://cwiai.net/assets/cwi-icon-primary-1024.png">
+<meta property="og:site_name" content="CWI AI">
+<link rel="icon" type="image/png" href="assets/cwi-favicon-64.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="cwi.css">
+<style>
+  .page-hero{padding:70px 0 50px;text-align:center}
+  .page-hero h1{font-size:clamp(34px,5.4vw,60px);max-width:15ch;margin:24px auto 0}
+  .page-hero p{font-size:clamp(17px,2vw,20px);color:var(--text-dim);max-width:54ch;margin:20px auto 0;text-wrap:pretty}
+
+  .ind-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  @media(max-width:900px){.ind-grid{grid-template-columns:1fr 1fr}}
+  @media(max-width:600px){.ind-grid{grid-template-columns:1fr}}
+  .ind-card{display:flex;flex-direction:column}
+  .ind-card .top{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+  .ind-card .top .ic-tile{width:50px;height:50px}
+  .ind-card .top .ic-tile svg{width:26px;height:26px;color:var(--accent)}
+  .ind-card h3{font-size:20px}
+  .ind-card p{font-size:14.5px;color:var(--text-dim);text-wrap:pretty}
+  .ind-card .does{list-style:none;margin-top:16px;display:flex;flex-direction:column;gap:8px;
+    border-top:1px solid var(--line);padding-top:16px}
+  .ind-card .does li{font-size:13.5px;color:var(--text-dim);padding-left:22px;position:relative}
+  .ind-card .does li:before{content:"";position:absolute;left:0;top:7px;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+
+  /* spotlight */
+  .spot{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center;
+    background:linear-gradient(180deg,#141418,#0d0d10);border:1px solid var(--line);border-radius:var(--r-lg);padding:44px}
+  @media(max-width:860px){.spot{grid-template-columns:1fr;padding:30px}}
+  .spot h2{font-size:clamp(26px,3.4vw,38px)}
+  .spot .scene{background:#0a0a0c;border:1px solid var(--line);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:12px}
+  .sb{max-width:88%;padding:11px 15px;border-radius:14px;font-size:14.5px;line-height:1.5}
+  .sb.cwi{align-self:flex-start;background:rgba(255,90,31,.13);border:1px solid rgba(255,90,31,.22);color:#FFE9DE;border-bottom-left-radius:5px}
+  .sb.cal{align-self:flex-end;background:var(--surface-2);border:1px solid var(--line);border-bottom-right-radius:5px}
+  .scene .meta{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--steel);font-weight:700}
+</style>
+</head>
+<body>
+<div class="bg-field"></div>
+<div data-cwi-nav></div>
+
+<section class="page-hero">
+  <div class="wrap">
+    <span class="kicker reveal in"><span class="pip"></span> Built for local business</span>
+    <h1 class="reveal in">It speaks your industry — not generic robot.</h1>
+    <p class="reveal in">A fill, a fitting and a flat tire are not the same booking. CWI knows the difference, asks the right questions, and books the way your trade actually works.</p>
+  </div>
+</section>
+
+<section class="sec-tight">
+  <div class="wrap">
+    <div class="ind-grid">
+
+      <div class="card ind-card reveal">
+        <div class="top"><div class="ic-tile"><svg viewBox="0 0 24 24" fill="none"><path d="M7 4v7a5 5 0 0 0 10 0V4M12 16v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg></div><h3>Salons &amp; Spas</h3></div>
+        <p>Capture the after‑hours “can I get in this weekend?” calls that used to go to voicemail.</p>
+        <ul class="does"><li>Books by service, stylist &amp; duration</li><li>Handles deposits &amp; cancellation policies</li><li>Fills last‑minute openings automatically</li></ul>
+      </div>
+
+      <div class="card ind-card reveal">
+        <div class="top"><div class="ic-tile"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3a4 4 0 0 0-4 4c0 4-2 4-2 8a4 4 0 0 0 8 0 4 4 0 0 0 8 0c0-4-2-4-2-8a4 4 0 0 0-4-4 4 4 0 0 0-2 .5A4 4 0 0 0 12 3Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path></svg></div><h3>Dental &amp; Clinics</h3></div>
+        <p>Give the front desk room to breathe while every patient still gets answered fast.</p>
+        <ul class="does"><li>New‑patient intake &amp; insurance questions</li><li>Reschedules &amp; recall reminders</li><li>Triages urgent vs. routine requests</li></ul>
+      </div>
+
+      <div class="card ind-card reveal">
+        <div class="top"><div class="ic-tile"><svg viewBox="0 0 24 24" fill="none"><path d="M6 3v8a3 3 0 0 0 6 0V3M9 3v18M18 3c-1.5 1-2 3-2 6s.5 4 2 4v8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></div><h3>Restaurants</h3></div>
+        <p>Never let a reservation — or a big catering lead — ring out during the dinner rush.</p>
+        <ul class="does"><li>Reservations, party size &amp; waitlist</li><li>Hours, menu &amp; dietary questions</li><li>Takes catering &amp; private‑event inquiries</li></ul>
+      </div>
+
+      <div class="card ind-card reveal">
+        <div class="top"><div class="ic-tile"><svg viewBox="0 0 24 24" fill="none"><path d="M3 11l9-7 9 7M5 9v11h14V9" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path></svg></div><h3>Home &amp; Trades</h3></div>
+        <p>You're under a sink or up a ladder — CWI answers and books the job from the field.</p>
+        <ul class="does"><li>Captures job type, address &amp; urgency</li><li>Quotes call‑out fees &amp; books site visits</li><li>Flags emergencies for an instant callback</li></ul>
+      </div>
+
+      <div class="card ind-card reveal">
+        <div class="top"><div class="ic-tile"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l1.5-5h11L19 13M5 13h14v5H5zM7 18v2M17 18v2" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path></svg></div><h3>Auto Services</h3></div>
+        <p>Bays stay full when every “do you have time today?” gets a real answer.</p>
+        <ul class="does"><li>Books by service &amp; vehicle</li><li>Quotes lead times &amp; drop‑off windows</li><li>Sends status updates &amp; pickup texts</li></ul>
+      </div>
+
+      <div class="card ind-card reveal">
+        <div class="top"><div class="ic-tile"><svg viewBox="0 0 24 24" fill="none"><path d="M6 9v6M18 9v6M3 11v2M21 11v2M6 12h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg></div><h3>Fitness &amp; Studios</h3></div>
+        <p>Turn class curiosity into booked spots and trial memberships, day or night.</p>
+        <ul class="does"><li>Class &amp; session booking with capacity</li><li>Trials, memberships &amp; pricing questions</li><li>Waitlists &amp; cancellation handling</li></ul>
+      </div>
+
+    </div>
+
+    <p class="reveal" style="text-align:center;color:var(--steel);font-size:14.5px;margin-top:28px">Also serving real estate, legal &amp; professional services, veterinary, beauty, and more.</p>
+  </div>
+</section>
+
+<!-- SPOTLIGHT -->
+<section class="sec">
+  <div class="wrap">
+    <div class="spot reveal">
+      <div>
+        <span class="eyebrow">In the field</span>
+        <h2 style="margin:14px 0 14px">A trades call, booked while your hands are full.</h2>
+        <p style="color:var(--text-dim);font-size:16px;text-wrap:pretty">CWI gathers the job details, quotes your call‑out fee, checks your real availability, and books the visit — then texts you the address before you've wiped your hands.</p>
+        <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:24px">
+          <a class="btn btn-primary" href="demo.html">Book a demo</a>
+          <a class="btn btn-ghost" href="how-it-works.html">How it works</a>
+        </div>
+      </div>
+      <div class="scene">
+        <span class="meta">Incoming call · 7:42 PM</span>
+        <div class="sb cal">Hey, my kitchen tap won't stop dripping — can someone come out?</div>
+        <div class="sb cwi">Sorry about that! I can get a plumber to you. Is this an emergency or can it wait for a scheduled visit?</div>
+        <div class="sb cal">It can wait till tomorrow.</div>
+        <div class="sb cwi">Great — Tom has 9:00 AM or 1:30 PM tomorrow. The call‑out is $89, applied to the repair. Which works?</div>
+        <div class="sb cal">9 is perfect.</div>
+        <div class="sb cwi">Booked for 9:00 AM ✓ I've texted you the confirmation and Tom has the address. Anything else?</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="sec-tight">
+  <div class="wrap">
+    <div class="card reveal" style="text-align:center;padding:54px 28px;background:linear-gradient(180deg,#141418,#0d0d10)">
+      <h2 style="font-size:clamp(26px,3.6vw,40px)">Don't see your trade?</h2>
+      <p style="color:var(--text-dim);font-size:18px;margin:14px auto 0;max-width:46ch">If customers call to book, CWI can answer. Tell us how your business works and we'll tune it.</p>
+      <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:28px">
+        <a class="btn btn-primary btn-lg" href="demo.html">Book a demo</a>
+        <a class="btn btn-ghost btn-lg" href="pricing.html">See pricing</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div data-cwi-footer></div>
+<script src="partials.js"></script>
+<script src="site.js"></script>
+</body>
+</html>

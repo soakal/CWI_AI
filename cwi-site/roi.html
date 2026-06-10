@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ROI Calculator — CWI AI</title>
+<meta name="description" content="Calculate your ROI from AI chat automation, automated booking, and 24/7 lead capture.">
+<link rel="icon" type="image/png" href="assets/cwi-favicon-64.png">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="cwi.css">
+<link rel="canonical" href="https://cwiai.net/roi.html">
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="ROI Calculator — What is AI Automation Worth to Your Business?">
+<meta property="og:description" content="Calculate your ROI from AI chat automation, automated booking, and 24/7 lead capture.">
+<meta property="og:url" content="https://cwiai.net/roi">
+<meta property="og:image" content="https://cwiai.net/assets/cwi-icon-primary-1024.png">
+<meta property="og:site_name" content="CWI AI">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="ROI Calculator — What is AI Automation Worth to Your Business?">
+<meta name="twitter:description" content="Calculate your ROI from AI chat automation, automated booking, and 24/7 lead capture.">
+<meta name="twitter:image" content="https://cwiai.net/assets/cwi-icon-primary-1024.png">
+<style>
+  /* ---- Page hero ---- */
+  .page-hero {
+    padding: 72px 0 28px;
+    text-align: center;
+  }
+  .page-hero h1 {
+    font-size: clamp(30px, 5vw, 54px);
+    max-width: 20ch;
+    margin: 22px auto 0;
+  }
+  .page-hero p {
+    font-size: clamp(16px, 1.8vw, 19px);
+    color: var(--text-dim);
+    max-width: 52ch;
+    margin: 18px auto 0;
+    text-wrap: pretty;
+  }
+
+  /* ---- Calculator layout ---- */
+  .calc-grid {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 28px;
+    align-items: start;
+    margin: 48px 0 80px;
+  }
+  @media (max-width: 980px) {
+    .calc-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* ---- Inputs panel ---- */
+  .inputs-panel {
+    background: var(--surface);
+    border: 1px solid var(--line-2);
+    border-radius: var(--r-lg);
+    padding: 36px 32px;
+  }
+  .inputs-panel h2 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 30px;
+    color: var(--text);
+  }
+
+  .field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .field-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+  .field label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-dim);
+    flex: 1;
+  }
+  .field-val {
+    font-family: var(--font-disp);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent);
+    white-space: nowrap;
+    min-width: 72px;
+    text-align: right;
+  }
+
+  /* Slider */
+  .slider-wrap {
+    position: relative;
+  }
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 4px;
+    background: var(--line-2);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+    position: relative;
+  }
+  input[type="range"]::-webkit-slider-runnable-track {
+    height: 4px;
+    border-radius: 2px;
+    background: linear-gradient(to right, var(--accent) var(--pct, 0%), var(--line-2) var(--pct, 0%));
+  }
+  input[type="range"]::-moz-range-track {
+    height: 4px;
+    border-radius: 2px;
+    background: var(--line-2);
+  }
+  input[type="range"]::-moz-range-progress {
+    height: 4px;
+    border-radius: 2px;
+    background: var(--accent);
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid #0A0A0C;
+    box-shadow: 0 0 0 3px rgba(255,90,31,.25);
+    cursor: pointer;
+    margin-top: -7px;
+    transition: box-shadow .15s;
+  }
+  input[type="range"]::-webkit-slider-thumb:hover {
+    box-shadow: 0 0 0 5px rgba(255,90,31,.35);
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid #0A0A0C;
+    box-shadow: 0 0 0 3px rgba(255,90,31,.25);
+    cursor: pointer;
+  }
+
+  /* ---- Results panel ---- */
+  .results-panel {
+    position: sticky;
+    top: 28px;
+  }
+
+  .results-card {
+    background: linear-gradient(180deg, rgba(255,90,31,.07) 0%, transparent 40%), var(--surface);
+    border: 1px solid rgba(255,90,31,.35);
+    border-radius: var(--r-lg);
+    padding: 34px 28px 28px;
+    box-shadow: 0 30px 80px rgba(255,90,31,.09), 0 0 0 1px rgba(255,90,31,.08);
+    position: relative;
+    overflow: hidden;
+  }
+  .results-card:before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+  }
+
+  .results-card h2 {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--steel);
+    margin-bottom: 24px;
+  }
+
+  .result-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .result-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 13px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .result-row:last-child {
+    border-bottom: none;
+  }
+  .result-row .rlabel {
+    font-size: 13.5px;
+    color: var(--text-dim);
+  }
+  .result-row .rval {
+    font-family: var(--font-disp);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+
+  /* Total value — featured row */
+  .result-total {
+    background: rgba(255,90,31,.08);
+    border: 1px solid rgba(255,90,31,.22);
+    border-radius: var(--r-md);
+    padding: 20px 22px;
+    margin: 20px 0 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .result-total .rlabel {
+    font-family: var(--font-disp);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .result-total .rval {
+    font-family: var(--font-disp);
+    font-size: 34px;
+    font-weight: 800;
+    color: var(--accent);
+    letter-spacing: -.03em;
+    white-space: nowrap;
+  }
+
+  /* ROI multiple pill */
+  .roi-meta {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+  .roi-pill {
+    flex: 1;
+    min-width: 120px;
+    background: rgba(0,0,0,.4);
+    border: 1px solid var(--line-2);
+    border-radius: var(--r-md);
+    padding: 14px 16px;
+    text-align: center;
+  }
+  .roi-pill .pval {
+    font-family: var(--font-disp);
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--accent);
+    letter-spacing: -.02em;
+    display: block;
+  }
+  .roi-pill .plabel {
+    font-size: 11.5px;
+    color: var(--steel);
+    margin-top: 4px;
+    display: block;
+    text-wrap: balance;
+  }
+
+  /* CTA */
+  .results-cta {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .btn-roi {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: var(--accent);
+    color: #0A0A0C;
+    font-family: var(--font-body);
+    font-size: 15px;
+    font-weight: 700;
+    padding: 15px 24px;
+    border-radius: var(--r-pill);
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background .2s, transform .15s;
+    width: 100%;
+    text-align: center;
+  }
+  .btn-roi:hover {
+    background: var(--ember);
+    transform: translateY(-1px);
+  }
+  .btn-roi svg {
+    display: inline-block;
+    flex-shrink: 0;
+  }
+
+  /* Disclaimer */
+  .disclaimer {
+    text-align: center;
+    font-size: 12px;
+    color: var(--steel);
+    margin-top: 12px;
+    padding: 0 4px;
+    line-height: 1.5;
+  }
+
+  /* Trust strip under CTA */
+  .trust-strip {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
+    margin: 48px 0 80px;
+    color: var(--steel);
+    font-size: 13px;
+  }
+  .trust-strip span {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .trust-strip svg {
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  /* Responsive adjustments for small inputs panel */
+  @media (max-width: 540px) {
+    .inputs-panel {
+      padding: 28px 20px;
+    }
+    .results-card {
+      padding: 28px 20px 22px;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="bg-field"></div>
+<div data-cwi-nav></div>
+
+<main>
+  <section class="page-hero">
+    <div class="wrap">
+      <div class="kicker">
+        <svg width="6" height="6" viewBox="0 0 6 6"><circle cx="3" cy="3" r="3" fill="currentColor"/></svg>
+        ROI Calculator
+      </div>
+      <h1>What is AI Automation Worth to&nbsp;Your Business?</h1>
+      <p>Plug in your numbers and see exactly what CWI AI puts back in your pocket every month.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="calc-grid">
+
+        <!-- ========= INPUTS ========= -->
+        <div class="inputs-panel">
+          <h2>Your Business Numbers</h2>
+          <div class="field-group">
+
+            <!-- 1. Monthly website visitors -->
+            <div class="field">
+              <div class="field-header">
+                <label for="s-visitors">Monthly website visitors</label>
+                <span class="field-val" id="v-visitors">500</span>
+              </div>
+              <input type="range" id="s-visitors" min="100" max="10000" step="50" value="500"
+                     aria-label="Monthly website visitors">
+            </div>
+
+            <!-- 2. Lead-to-booking conversion rate -->
+            <div class="field">
+              <div class="field-header">
+                <label for="s-conv">Current lead-to-booking conversion rate</label>
+                <span class="field-val" id="v-conv">15%</span>
+              </div>
+              <input type="range" id="s-conv" min="1" max="50" step="1" value="15"
+                     aria-label="Lead to booking conversion rate percent">
+            </div>
+
+            <!-- 3. Average job / sale value -->
+            <div class="field">
+              <div class="field-header">
+                <label for="s-job">Average job / sale value</label>
+                <span class="field-val" id="v-job">$350</span>
+              </div>
+              <input type="range" id="s-job" min="50" max="5000" step="10" value="350"
+                     aria-label="Average job or sale value in dollars">
+            </div>
+
+            <!-- 4. Hours on scheduling/follow-up -->
+            <div class="field">
+              <div class="field-header">
+                <label for="s-hours">Hours/week on scheduling &amp; follow-up</label>
+                <span class="field-val" id="v-hours">8 hrs</span>
+              </div>
+              <input type="range" id="s-hours" min="1" max="40" step="1" value="8"
+                     aria-label="Hours per week spent on scheduling and follow-up">
+            </div>
+
+            <!-- 5. Your hourly rate -->
+            <div class="field">
+              <div class="field-header">
+                <label for="s-rate">Your hourly rate (or value of your time)</label>
+                <span class="field-val" id="v-rate">$75/hr</span>
+              </div>
+              <input type="range" id="s-rate" min="25" max="500" step="5" value="75"
+                     aria-label="Your hourly rate in dollars">
+            </div>
+
+            <!-- 6. After-hours leads lost -->
+            <div class="field">
+              <div class="field-header">
+                <label for="s-lost">Leads lost after hours per month (estimate)</label>
+                <span class="field-val" id="v-lost">12 leads</span>
+              </div>
+              <input type="range" id="s-lost" min="0" max="100" step="1" value="12"
+                     aria-label="Leads lost after business hours per month">
+            </div>
+
+          </div><!-- /field-group -->
+        </div><!-- /inputs-panel -->
+
+        <!-- ========= RESULTS ========= -->
+        <div class="results-panel">
+          <div class="results-card">
+            <h2>Your Monthly Value</h2>
+
+            <div class="result-rows">
+              <div class="result-row">
+                <span class="rlabel">Time Saved</span>
+                <span class="rval" id="r-time">$2,598/mo</span>
+              </div>
+              <div class="result-row">
+                <span class="rlabel">After-Hours Recovery</span>
+                <span class="rval" id="r-ah">$1,680/mo</span>
+              </div>
+              <div class="result-row">
+                <span class="rlabel">Conversion Lift</span>
+                <span class="rval" id="r-lift">$3,500/mo</span>
+              </div>
+            </div>
+
+            <div class="result-total">
+              <span class="rlabel">Total Value</span>
+              <span class="rval" id="r-total">$7,778/mo</span>
+            </div>
+
+            <div class="roi-meta">
+              <div class="roi-pill">
+                <span class="pval" id="r-multiple">19.6×</span>
+                <span class="plabel">return on Growth tier</span>
+              </div>
+              <div class="roi-pill">
+                <span class="pval" id="r-payback">&lt;1 wk</span>
+                <span class="plabel">payback period</span>
+              </div>
+            </div>
+
+            <div class="results-cta">
+              <a class="btn-roi" href="demo.html">
+                Get This ROI — Book a Demo
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </a>
+              <p class="disclaimer">Estimates based on industry averages. Actual results vary.</p>
+            </div>
+          </div><!-- /results-card -->
+        </div><!-- /results-panel -->
+
+      </div><!-- /calc-grid -->
+
+      <div class="trust-strip">
+        <span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          No credit card required
+        </span>
+        <span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Setup in under 48 hours
+        </span>
+        <span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          30-day results guarantee
+        </span>
+      </div>
+    </div><!-- /wrap -->
+  </section>
+</main>
+
+<div data-cwi-footer></div>
+<script src="partials.js"></script>
+<script src="site.js"></script>
+
+<script>
+(function () {
+  "use strict";
+
+  var PLAN_PRICE = 397;
+
+  // Slider config: [inputId, displayId, format]
+  var fields = [
+    { sid: "s-visitors", vid: "v-visitors", fmt: function(v){ return v.toLocaleString(); } },
+    { sid: "s-conv",     vid: "v-conv",     fmt: function(v){ return v + "%"; } },
+    { sid: "s-job",      vid: "v-job",      fmt: function(v){ return "$" + v.toLocaleString(); } },
+    { sid: "s-hours",    vid: "v-hours",    fmt: function(v){ return v + " hrs"; } },
+    { sid: "s-rate",     vid: "v-rate",     fmt: function(v){ return "$" + v + "/hr"; } },
+    { sid: "s-lost",     vid: "v-lost",     fmt: function(v){ return v + " leads"; } }
+  ];
+
+  function getValues() {
+    return {
+      visitors: parseFloat(document.getElementById("s-visitors").value),
+      conv:     parseFloat(document.getElementById("s-conv").value),
+      job:      parseFloat(document.getElementById("s-job").value),
+      hours:    parseFloat(document.getElementById("s-hours").value),
+      rate:     parseFloat(document.getElementById("s-rate").value),
+      lost:     parseFloat(document.getElementById("s-lost").value)
+    };
+  }
+
+  function calcResults(v) {
+    var timeSavings     = v.hours * 4.33 * v.rate;
+    var afterHours      = v.lost * (v.job * 0.4);
+    var convLift        = v.visitors * 0.02 * v.job;
+    var total           = timeSavings + afterHours + convLift;
+    var multiple        = total / PLAN_PRICE;
+    var paybackWeeks    = (PLAN_PRICE / total) * 4.33; // weeks
+
+    return {
+      timeSavings:  timeSavings,
+      afterHours:   afterHours,
+      convLift:     convLift,
+      total:        total,
+      multiple:     multiple,
+      paybackWeeks: paybackWeeks
+    };
+  }
+
+  function fmt$(n) {
+    return "$" + Math.round(n).toLocaleString() + "/mo";
+  }
+
+  function fmtMultiple(n) {
+    if (n >= 100) return Math.round(n) + "×";
+    return n.toFixed(1) + "×";
+  }
+
+  function fmtPayback(w) {
+    if (w < 1) return "<1 wk";
+    if (w < 4.33) return w.toFixed(1) + " wks";
+    var months = w / 4.33;
+    if (months < 1.05) return "~1 mo";
+    return months.toFixed(1) + " mo";
+  }
+
+  function updateDisplay() {
+    var v = getValues();
+    var r = calcResults(v);
+
+    document.getElementById("r-time").textContent    = fmt$(r.timeSavings);
+    document.getElementById("r-ah").textContent      = fmt$(r.afterHours);
+    document.getElementById("r-lift").textContent    = fmt$(r.convLift);
+    document.getElementById("r-total").textContent   = fmt$(r.total);
+    document.getElementById("r-multiple").textContent = fmtMultiple(r.multiple);
+    document.getElementById("r-payback").textContent = fmtPayback(r.paybackWeeks);
+  }
+
+  function updateSliderFill(input) {
+    var min = parseFloat(input.min);
+    var max = parseFloat(input.max);
+    var val = parseFloat(input.value);
+    var pct = ((val - min) / (max - min)) * 100;
+    input.style.setProperty("--pct", pct.toFixed(2) + "%");
+  }
+
+  function updateLabel(field) {
+    var input = document.getElementById(field.sid);
+    var label = document.getElementById(field.vid);
+    label.textContent = field.fmt(parseFloat(input.value));
+  }
+
+  // Wire up all sliders
+  fields.forEach(function (field) {
+    var input = document.getElementById(field.sid);
+
+    function onInput() {
+      updateLabel(field);
+      updateSliderFill(input);
+      updateDisplay();
+    }
+
+    input.addEventListener("input", onInput);
+
+    // Initialise fill track
+    updateSliderFill(input);
+  });
+
+  // Initial render
+  updateDisplay();
+})();
+</script>
+</body>
+</html>

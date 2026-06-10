@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>404 — Page Not Found | CWI AI</title>
+<meta name="description" content="The page you are looking for does not exist or has moved.">
+<meta name="robots" content="noindex,follow">
+<link rel="icon" type="image/png" href="assets/cwi-favicon-64.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink:      #0A0A0C;
+    --accent:   #FF5A1F;
+    --text:     #F0EFE9;
+    --text-dim: #9C9C9C;
+    --line:     rgba(255,255,255,.08);
+    --font:     'Sora', sans-serif;
+  }
+
+  html, body {
+    height: 100%;
+  }
+
+  body {
+    background: var(--ink);
+    color: var(--text);
+    font-family: var(--font);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* ---- Subtle grid texture ---- */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ---- Glow ---- */
+  body::after {
+    content: "";
+    position: fixed;
+    top: -160px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(255,90,31,.12) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ---- Layout ---- */
+  main {
+    position: relative;
+    z-index: 1;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+  }
+
+  .card {
+    text-align: center;
+    max-width: 520px;
+    width: 100%;
+  }
+
+  /* ---- 404 number ---- */
+  .num {
+    font-size: clamp(96px, 20vw, 160px);
+    font-weight: 800;
+    line-height: 1;
+    color: var(--accent);
+    letter-spacing: -.04em;
+    user-select: none;
+  }
+
+  /* ---- Divider ---- */
+  .divider {
+    width: 48px;
+    height: 3px;
+    background: var(--accent);
+    border-radius: 2px;
+    margin: 28px auto 28px;
+    opacity: .6;
+  }
+
+  /* ---- Headline ---- */
+  h1 {
+    font-size: clamp(22px, 5vw, 32px);
+    font-weight: 700;
+    letter-spacing: -.02em;
+    color: var(--text);
+    margin-bottom: 14px;
+  }
+
+  /* ---- Subtext ---- */
+  p {
+    font-size: clamp(14px, 2.5vw, 17px);
+    font-weight: 400;
+    color: var(--text-dim);
+    line-height: 1.6;
+    max-width: 40ch;
+    margin: 0 auto;
+  }
+
+  /* ---- Buttons ---- */
+  .btns {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 40px;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: var(--font);
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -.01em;
+    border-radius: 9999px;
+    padding: 13px 28px;
+    text-decoration: none;
+    cursor: pointer;
+    border: none;
+    transition: transform .15s ease, opacity .15s ease, box-shadow .15s ease;
+    white-space: nowrap;
+  }
+
+  .btn:hover  { transform: translateY(-2px); }
+  .btn:active { transform: translateY(0);    }
+
+  .btn-primary {
+    background: var(--accent);
+    color: var(--ink);
+    box-shadow: 0 4px 24px rgba(255,90,31,.35);
+  }
+
+  .btn-primary:hover {
+    opacity: .92;
+    box-shadow: 0 8px 32px rgba(255,90,31,.45);
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid rgba(255,255,255,.18);
+  }
+
+  .btn-ghost:hover {
+    border-color: rgba(255,255,255,.38);
+    background: rgba(255,255,255,.05);
+  }
+
+  /* ---- Footer ---- */
+  footer {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding: 20px;
+    font-size: 13px;
+    color: rgba(255,255,255,.2);
+    border-top: 1px solid var(--line);
+  }
+
+  footer a {
+    color: rgba(255,255,255,.35);
+    text-decoration: none;
+  }
+
+  footer a:hover {
+    color: rgba(255,255,255,.6);
+  }
+</style>
+</head>
+<body>
+
+<main>
+  <div class="card">
+    <div class="num" aria-label="Error 404">404</div>
+    <div class="divider"></div>
+    <h1>Page not found</h1>
+    <p>The page you are looking for does not exist or has moved.</p>
+    <div class="btns">
+      <a href="/" class="btn btn-primary">Go Home</a>
+      <a href="/demo.html" class="btn btn-ghost">Book a Demo</a>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <a href="/">cwiai.net</a> &nbsp;&mdash;&nbsp; &copy; 2026 CWI AI LLC. All rights reserved.
+</footer>
+
+</body>
+</html>
