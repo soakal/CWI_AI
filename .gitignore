@@ -1,0 +1,27 @@
+# Root .gitignore — ready for when `git init` is run
+
+# Secrets and credentials
+.env
+.env.*
+credentials/
+*.key
+*.pem
+secrets/
+
+# Backups
+_overnight_backup/
+*.bak
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Node (if a sub-project adds it in future)
+node_modules/
+dist/
+.next/
+
+# Logs
+*.log
+logs/
