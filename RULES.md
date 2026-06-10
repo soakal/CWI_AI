@@ -196,7 +196,7 @@ VERSION        = 0.1.0
 STACK          = Static HTML5 + vanilla JS/CSS (cwi-site/) | PowerShell + Make.com JSON blueprints (cwi-automation/)
 TARGET_USERS   = CWI team — internal ops, customer management, and site visitors
 NORTH_STAR     = Never miss a customer call
-REPO           = not yet initialized — run `git init` in project root before any git workflows
+REPO           = https://github.com/soakal/CWI_AI
 DEPLOY_TARGET  = Netlify (cwi-site/) | Make.com cloud (cwi-automation/)
 NODE_VERSION   = N/A — no Node.js runtime in use
 LAST_UPDATED   = 2026-06-09
@@ -1379,7 +1379,7 @@ docs_tools        = 80+ standalone HTML tools in cwi-automation/docs/
 notable_dirs      = blueprints/, scripts/, docs/
 
 ## Shared
-version_control   = none (git not yet initialized — run `git init` first)
+version_control   = git — remote: https://github.com/soakal/CWI_AI
 package_manager   = none (no package.json or node_modules)
 node              = N/A
 typescript        = N/A
