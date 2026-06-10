@@ -72,6 +72,7 @@
     ];
 
     var transcript = root.querySelector('[data-transcript]');
+    if (!transcript) return;
     var tabs = root.querySelectorAll('[data-tab]');
     var statusEl = root.querySelector('[data-status]');
     var timer = null, mode = 'call';
@@ -243,9 +244,16 @@
     self.addConfirm = function (c) {
       var el = document.createElement('div');
       el.className = 'cwi-confirm';
-      el.innerHTML = '<div class="cwi-confirm-title">' + c.title + '</div>' +
-        '<div class="cwi-confirm-detail">' + c.detail + '</div>' +
-        '<div class="cwi-confirm-note">' + c.note + '</div>';
+      var title = document.createElement('div');
+      title.className = 'cwi-confirm-title';
+      title.textContent = c.title;
+      var detail = document.createElement('div');
+      detail.className = 'cwi-confirm-detail';
+      detail.textContent = c.detail;
+      var note = document.createElement('div');
+      note.className = 'cwi-confirm-note';
+      note.textContent = c.note;
+      el.appendChild(title); el.appendChild(detail); el.appendChild(note);
       self.msgs.appendChild(el);
       self.msgs.scrollTop = self.msgs.scrollHeight;
     };

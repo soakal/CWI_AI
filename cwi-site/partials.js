@@ -24,7 +24,7 @@
       '<div class="nav-cta">' +
         '<a class="nav-tel" href="tel:+17348129971"><span class="dot"></span>(734)\u00A0812\u20119971</a>' +
         '<button class="nav-burger" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>' +
-        '<a class="btn btn-secondary btn-sm" href="free-audit.html">Free audit</a>' +
+        '<a class="btn btn-ghost btn-sm" href="free-audit.html">Free audit</a>' +
         '<a class="btn btn-primary btn-sm" href="demo.html">Book a demo</a>' +
       '</div>' +
     '</nav></header>';
@@ -45,7 +45,7 @@
         '<a class="lnk" href="free-audit.html">Free audit</a>' +
         '<a class="lnk" href="demo.html">Book a demo</a></div>' +
       '<div><h5>Company</h5>' +
-        '<a class="lnk" href="how-it-works.html">About</a>' +
+        '<a class="lnk" href="how-it-works.html">How It Works</a>' +
         '<a class="lnk" href="mailto:brian@cwiai.net">Contact</a></div>' +
       '<div><h5>Get started</h5>' +
         '<a class="lnk" href="tel:+17348129971">(734)\u00A0812\u20119971</a>' +

@@ -696,7 +696,10 @@
 <script>
 (function () {
   // TODO: replace with the real Make.com webhook URL before launch
-  var MAKE_WEBHOOK_URL = ''; // TODO: set to real Make.com webhook, e.g. 'https://hook.us1.make.com/YOUR_REAL_WEBHOOK_ID'
+  var MAKE_WEBHOOK_URL = ''; // ⚠️ REQUIRED before launch: replace '' with your real Make.com webhook URL
+  if (!MAKE_WEBHOOK_URL) {
+    console.warn('[free-audit] MAKE_WEBHOOK_URL is not configured — form submissions will fail until this is set.');
+  }
 
   var form      = document.getElementById('auditForm');
   var thankYou  = document.getElementById('thankYou');
