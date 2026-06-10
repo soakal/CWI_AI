@@ -10,45 +10,41 @@
 - STACK: Static HTML5/CSS/JS (cwi-site/ → Netlify) + PowerShell + Make.com (cwi-automation/)
 - GIT: Active — branch `master`, remote: https://github.com/soakal/CWI_AI
 - NO package.json, no Node.js, no TypeScript compiler, no database
+- NOTIFICATIONS: Resend email only — NO SMS, NO Twilio
 
 ## Sub-projects
 - `cwi-site/`: Static website. Files: site.js, partials.js, cwi.css, tweaks-app.jsx, tweaks-panel.jsx. Fonts: Sora + Instrument Sans.
-- `cwi-automation/`: Business ops toolkit. PowerShell scripts, Make.com JSON blueprints, 80+ HTML tools in docs/, integrations with Freshchat, HubSpot, Apollo, Stripe, Google Apps Script. Has its own `CLAUDE.md`.
+- `cwi-automation/`: Business ops toolkit. PowerShell scripts, Make.com JSON blueprints (a–at = 40+ scenarios), 80+ dark-branded HTML tools in docs/. Integrations: Freshchat, HubSpot, Apollo, Stripe, Resend, Calendly, Google Calendar, Google Apps Script.
+
+## Key Decisions (permanent)
+- Notifications are **email only via Resend** — no SMS/Twilio integration exists or is planned
+- Confirmed active integrations: Freshchat, HubSpot, Apollo, Stripe, Resend, Calendly, Google Calendar
+- Removed from website (not offered): Square, Acuity, Jobber, Housecall Pro, Salesforce, Twilio
+- All `cwi-automation/docs/` HTML tools use CWI dark brand (dark #0A0A0C bg, Sora/Instrument Sans, #FF5A1F accent) as of 2026-06-10
+- Nav/footer are managed via `partials.js` — edit there, not per-page
 
 ## Session History
 | Date | Agent | Session ID | What happened | Next task |
 |------|-------|------------|---------------|-----------|
-| 2026-06-09 | Sonnet 4.6 (Writer) | 1d577438 | Opus planner analyzed RULES.md + CLAUDE.md. Found fictional stack (Next.js/React/Prisma). Verified model IDs. Produced 20-task update plan. Writer executed ALL 20 tasks (all Critical, High, and Medium tasks; Low tasks covered by existing files). | All tasks complete — see below |
+| 2026-06-09 | Sonnet 4.6 (Writer) | 1d577438 | Opus planner analyzed RULES.md + CLAUDE.md. Found fictional stack (Next.js/React/Prisma). Verified model IDs. Produced 20-task update plan. Writer executed ALL 20 tasks. | All tasks complete |
+| 2026-06-10 | Sonnet 4.6 (Writer) | 721a7e47 | Fixed stale git notes in RULES.md/CLAUDE.md/ai-memory.md. Committed all untracked files + pushed. Full code review on cwi-site/ (9 findings applied). Ran comprehensive audit of cwi-automation/. Applied all 5 user decisions. | All tasks complete — see below |
 
-## Active Decisions
-- Option A chosen: keep RULES.md aspirational but fix factual errors (not a full rewrite)
-- Model IDs verified 2026-06-09: claude-fable-5 ✓, claude-opus-4-8 ✓, claude-sonnet-4-6 ✓, claude-haiku-4-5 ✓ (no date suffix on haiku)
-
-## Completed Tasks (from 20-task Opus plan — session 2026-06-09)
-- ✅ Task 1: §1 Project Identity filled (NORTH_STAR, STACK, DEPLOY, NODE=N/A, REPO=not initialized)
-- ✅ Task 2: §27 Stack Registry rewritten with actual HTML/PS/Make.com stack
-- ✅ Task 3: "⚠️ Project Reality" preamble added to top of RULES.md
-- ✅ Task 4: "scan package.json" fixed in RULES.md §0, CLAUDE.md, .cursorrules, chatgpt-instructions.md, RULES-COMPACT.md
-- ✅ Task 5: Git commit steps in CLAUDE.md, .cursorrules, RULES.md §0 session end — added "if git repo exists" caveat
-- ✅ Task 6: Created docs/ai-memory.md and docs/ directory
-- ✅ Task 7: Removed duplicate RULES-COMPACT.md line in §3 folder structure
-- ✅ Task 8: §3 folder map updated with project reality caveat + actual cwi-site/ / cwi-automation/ layout
-- ✅ Task 9: Fixed duplicate step "7" in §0 bootstrap (renumbered to step 9)
-- ✅ Task 10: Git file list standardized (all bootloaders now say "if git repo exists")
-- ✅ Task 11: Haiku model ID: RULES-COMPACT.md clarified (no date suffix); §27 footer fixed from haiku-4-5-20251001 → haiku-4-5
-- ✅ Task 12: .cursorrules updated (package.json ref fixed, git caveat added)
-- ✅ Task 13: chatgpt-instructions.md updated (package.json ref fixed)
-- ✅ Task 14: AGENTS.md Executable Commands section — added NOTE that npm commands don't apply currently
-- ✅ Task 15: Created cwi-automation/CLAUDE.md with sub-project-specific rules
-- ✅ Task 16: Created root .gitignore (ready for git init)
-- ✅ Task 17: §28 Change Log seeded with this session's changes
-- ✅ Task 18: §28 Change Log seeded (same as 17)
-- ✅ Task 19 (Low): Root README.md — deferred; cwi-site/ and cwi-automation/ have own docs; add if user requests
-- ✅ Task 20 (Low): §N cross-references in CLAUDE.md — already in sync; no moves made
+## Completed Tasks (session 2026-06-10)
+- ✅ Fixed stale "no git repo" notes in RULES.md, CLAUDE.md, docs/ai-memory.md
+- ✅ Committed all untracked cwi-automation/ files + pushed to origin/master
+- ✅ Code review on cwi-site/ — 9 findings: XSS fix (addConfirm), nav/footer to partials.js, favicon path, demo.html URLs, webhook warning, btn-secondary→btn-ghost, footer link label, transcript null guard
+- ✅ Removed unimplemented integrations from cwi-site/how-it-works.html (Square, Acuity, Jobber, Housecall Pro, Salesforce, Twilio)
+- ✅ Changed "text/SMS" copy to "email" across index.html, pricing.html, how-it-works.html
+- ✅ Built 7 new industry Make.com scenarios: scenario-an (last-minute opening), ao (emergency callback), ap (waitlist manager), aq (trades intake), ar (vehicle status), as (patient intake), at (catering inquiry)
+- ✅ Rebuilt 12 stub HTML files in cwi-automation/docs/ with real functional CWI-branded content
+- ✅ Brand-fixed 35 off-brand HTML tools in cwi-automation/docs/ (dark theme, correct fonts)
+- ✅ All changes committed in 3 logical commits and pushed to origin/master
 
 ## Remaining / Deferred
-- Root README.md (Task 19): Low priority; skip unless user asks
+- Root README.md: Low priority; skip unless user asks
 - docs/decisions/ directory: create when first ADR is needed
+- Calendly account `calendly.com/cwiai/15min` — verify this is live before launch (demo.html TODO comment)
+- Make webhook URL in free-audit.html — blank until configured (console.warn guard in place)
 
 ---
-_written_by: claude-sonnet-4-6 | timestamp: 2026-06-09 | session_id: 1d577438_
+_written_by: claude-sonnet-4-6 | timestamp: 2026-06-10 | session_id: 721a7e47_

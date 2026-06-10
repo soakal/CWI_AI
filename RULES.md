@@ -1358,7 +1358,7 @@ Agents must actively keep context lean throughout a session — not just at the 
 > Humans should not edit this section manually.
 
 ```
-LAST_SCANNED      = 2026-06-09
+LAST_SCANNED      = 2026-06-10
 
 ## cwi-site/ — Static Website
 runtime           = none (static files, no build step)
@@ -1373,8 +1373,10 @@ notable_files     = site.js, partials.js, cwi.css, tweaks-app.jsx, tweaks-panel.
 runtime           = PowerShell (Windows) + Make.com cloud automation
 automation        = Make.com JSON blueprints
 scripts           = PowerShell (.ps1) — local execution
-integrations      = Freshchat, HubSpot, Apollo, Stripe, Google Apps Script
-docs_tools        = 80+ standalone HTML tools in cwi-automation/docs/
+integrations      = Freshchat, HubSpot, Apollo, Stripe, Google Apps Script, Resend (email), Calendly, Google Calendar
+notifications     = Resend (email only — no SMS/Twilio)
+docs_tools        = 80+ standalone HTML tools in cwi-automation/docs/ (all CWI dark-branded as of 2026-06-10)
+make_scenarios    = 40+ Make.com blueprints in cwi-automation/make-scenarios/ (scenarios a-at)
 notable_dirs      = blueprints/, scripts/, docs/
 
 ## Shared
@@ -1435,6 +1437,12 @@ image_provider    = <OpenAI | Google | fal | Replicate | BFL | Atlas Cloud>
 | 2026-06-09 | claude-sonnet-4-6 (Writer) | Header | Added ⚠️ Project Reality preamble | Prevent future agents assuming SaaS stack |
 | 2026-06-09 | claude-sonnet-4-6 (Writer) | CLAUDE.md | Fixed package.json scan ref; added no-git caveat to git rules | Accuracy |
 | 2026-06-09 | claude-sonnet-4-6 (Writer) | RULES-COMPACT.md | Fixed stack scan line; clarified Haiku model ID (no date suffix) | Accuracy |
+| 2026-06-10 | claude-sonnet-4-6 (Writer) | cwi-site/ | Full code review (9 findings applied): XSS fix in addConfirm, nav/footer moved to partials.js, favicon path fix, demo.html hardcoded URLs fixed, webhook warning added | Site correctness + security |
+| 2026-06-10 | claude-sonnet-4-6 (Writer) | cwi-site/ | Removed unimplemented integrations (Square, Acuity, Jobber, Housecall Pro, Salesforce, Twilio) from how-it-works.html logos; changed SMS/text-back copy to email across index.html, pricing.html | Align site with actual capabilities |
+| 2026-06-10 | claude-sonnet-4-6 (Writer) | cwi-automation/make-scenarios/ | Added 7 industry-specific Make.com scenarios (an-at): last-minute opening, emergency callback, waitlist manager, trades intake, vehicle status, patient intake, catering inquiry | Feature: industry scenario coverage |
+| 2026-06-10 | claude-sonnet-4-6 (Writer) | cwi-automation/docs/ | Rebuilt 12 stub HTML files with real functional content | Fix: stubs contained only Windows path strings |
+| 2026-06-10 | claude-sonnet-4-6 (Writer) | cwi-automation/docs/ | Brand-fixed all 35 off-brand HTML tools (light theme → CWI dark theme, Sora/Instrument Sans, #FF5A1F accent) | Brand consistency across all tools |
+| 2026-06-10 | claude-sonnet-4-6 (Writer) | §27 | Updated LAST_SCANNED, added Resend/Calendly to integrations, documented notification channel (email only), updated docs_tools and make_scenarios counts | Accuracy |
 
 ---
 
