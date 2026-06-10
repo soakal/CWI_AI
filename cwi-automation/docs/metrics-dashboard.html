@@ -1,0 +1,1569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CWI AI LLC — KPI Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0A0A0C;
+    --surface: #141418;
+    --surface2: #1C1C22;
+    --surface3: #24242C;
+    --text: #F4F4F6;
+    --text-muted: #8888A0;
+    --accent: #FF5A1F;
+    --accent-hover: #FF7A45;
+    --border: #2A2A34;
+    --green: #22C55E;
+    --green-bg: rgba(34,197,94,0.12);
+    --yellow: #EAB308;
+    --yellow-bg: rgba(234,179,8,0.12);
+    --red: #EF4444;
+    --red-bg: rgba(239,68,68,0.12);
+    --blue: #3B82F6;
+    --blue-bg: rgba(59,130,246,0.12);
+  }
+
+  html { font-size: 16px; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Instrument Sans', sans-serif;
+    min-height: 100vh;
+    line-height: 1.5;
+  }
+
+  /* ── Header ── */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 1.25rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .header-left { display: flex; align-items: center; gap: 0.75rem; }
+
+  .logo-mark {
+    width: 36px; height: 36px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Sora', sans-serif;
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: #fff;
+    letter-spacing: 0.05em;
+    flex-shrink: 0;
+  }
+
+  .header-title {
+    font-family: 'Sora', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .header-sub {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 0.1rem;
+  }
+
+  .header-actions { display: flex; gap: 0.75rem; align-items: center; }
+
+  .btn {
+    padding: 0.45rem 1rem;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 500;
+    transition: all 0.15s ease;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+  }
+  .btn-primary:hover { background: var(--accent-hover); }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { color: var(--text); border-color: var(--text-muted); }
+
+  .save-indicator {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    transition: color 0.3s;
+  }
+  .save-indicator.saved { color: var(--green); }
+
+  /* ── Tabs ── */
+  .tabs-wrapper {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    overflow-x: auto;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 0;
+    min-width: max-content;
+  }
+
+  .tab-btn {
+    padding: 0.9rem 1.25rem;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-muted);
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+  }
+
+  .tab-btn:hover { color: var(--text); }
+
+  .tab-btn.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  .tab-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px; height: 18px;
+    background: var(--surface3);
+    border-radius: 4px;
+    font-size: 0.7rem;
+    margin-right: 0.4rem;
+    color: var(--text-muted);
+  }
+
+  .tab-btn.active .tab-number {
+    background: rgba(255,90,31,0.15);
+    color: var(--accent);
+  }
+
+  /* ── Main content ── */
+  .main { padding: 2rem; max-width: 1400px; margin: 0 auto; }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ── Section headers ── */
+  .section-header { margin-bottom: 1.5rem; }
+
+  .section-title {
+    font-family: 'Sora', sans-serif;
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 0.35rem;
+  }
+
+  .section-desc {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .card-title {
+    font-family: 'Sora', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .card-title-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+  }
+
+  /* ── Benchmarks bar ── */
+  .benchmarks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .benchmark-pill {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 0.3rem 0.85rem;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .benchmark-pill .label { color: var(--text); font-weight: 500; }
+
+  /* ── Tables ── */
+  .table-scroll { overflow-x: auto; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.84rem;
+  }
+
+  thead th {
+    background: var(--surface2);
+    color: var(--text-muted);
+    font-weight: 500;
+    font-size: 0.76rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 0.7rem 0.9rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+
+  tbody tr:hover { background: var(--surface2); }
+  tbody tr:last-child { border-bottom: none; }
+
+  tbody td {
+    padding: 0.65rem 0.9rem;
+    color: var(--text);
+    vertical-align: middle;
+  }
+
+  /* ── Row label (first col) ── */
+  .row-label {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  /* ── Editable cells ── */
+  [contenteditable] {
+    outline: none;
+    border-radius: 4px;
+    padding: 0.2rem 0.4rem;
+    min-width: 60px;
+    display: inline-block;
+    transition: background 0.15s, box-shadow 0.15s;
+    cursor: text;
+  }
+
+  [contenteditable]:focus {
+    background: var(--surface3);
+    box-shadow: 0 0 0 2px var(--accent);
+  }
+
+  [contenteditable]:empty::before {
+    content: attr(data-placeholder);
+    color: var(--text-muted);
+    opacity: 0.5;
+  }
+
+  /* ── Color coding ── */
+  .cell-green { background: var(--green-bg); color: var(--green); border-radius: 4px; }
+  .cell-yellow { background: var(--yellow-bg); color: var(--yellow); border-radius: 4px; }
+  .cell-red { background: var(--red-bg); color: var(--red); border-radius: 4px; }
+  .cell-calc { color: var(--text-muted); font-style: italic; font-size: 0.8rem; }
+
+  /* ── Status badges ── */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  .badge-green { background: var(--green-bg); color: var(--green); }
+  .badge-yellow { background: var(--yellow-bg); color: var(--yellow); }
+  .badge-red { background: var(--red-bg); color: var(--red); }
+  .badge-blue { background: var(--blue-bg); color: var(--blue); }
+
+  .badge-select {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: 0.78rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 20px;
+    cursor: pointer;
+    outline: none;
+  }
+
+  .badge-select:focus { box-shadow: 0 0 0 2px var(--accent); }
+
+  /* ── Financial health grid ── */
+  .fin-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .fin-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem;
+  }
+
+  .fin-card-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .fin-card-value {
+    font-family: 'Sora', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .fin-card-sub {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+  }
+
+  /* ── Break-even ── */
+  .breakeven-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+  }
+
+  .breakeven-formula {
+    font-family: 'Sora', sans-serif;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+    font-style: italic;
+  }
+
+  .breakeven-inputs {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.75rem;
+  }
+
+  .breakeven-inputs label {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+  }
+
+  .breakeven-inputs input {
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: 0.85rem;
+    padding: 0.35rem 0.6rem;
+    width: 100px;
+    outline: none;
+    transition: box-shadow 0.15s;
+  }
+
+  .breakeven-inputs input:focus { box-shadow: 0 0 0 2px var(--accent); border-color: var(--accent); }
+
+  .breakeven-result {
+    font-family: 'Sora', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  /* ── Checklist ── */
+  .checklist { list-style: none; }
+
+  .checklist-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border);
+    transition: opacity 0.2s;
+  }
+
+  .checklist-item:last-child { border-bottom: none; }
+
+  .checklist-item.done { opacity: 0.5; }
+
+  .checklist-item.done .checklist-text { text-decoration: line-through; color: var(--text-muted); }
+
+  .checklist-checkbox {
+    width: 20px; height: 20px;
+    border: 2px solid var(--border);
+    border-radius: 5px;
+    flex-shrink: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 0.1rem;
+    transition: all 0.15s;
+    background: transparent;
+  }
+
+  .checklist-checkbox:hover { border-color: var(--accent); }
+
+  .checklist-checkbox.checked {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .checklist-checkbox.checked::after {
+    content: '';
+    width: 5px; height: 9px;
+    border-right: 2px solid #fff;
+    border-bottom: 2px solid #fff;
+    transform: rotate(40deg) translateY(-1px);
+  }
+
+  .checklist-text {
+    font-size: 0.9rem;
+    color: var(--text);
+    line-height: 1.5;
+  }
+
+  .checklist-reset {
+    margin-top: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .checklist-progress {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+  }
+
+  .checklist-progress strong { color: var(--accent); }
+
+  /* ── Progress bar ── */
+  .progress-bar-wrap {
+    height: 4px;
+    background: var(--surface3);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 1.25rem;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.3s ease;
+  }
+
+  /* ── Milestone table specific ── */
+  .milestone-target { color: var(--text-muted); font-size: 0.82rem; }
+
+  /* ── Divider ── */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 1.5rem 0;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    .header { padding: 1rem; }
+    .tabs-wrapper { padding: 0 1rem; }
+    .main { padding: 1rem; }
+    .card { padding: 1rem; }
+    .fin-grid { grid-template-columns: 1fr 1fr; }
+    thead th, tbody td { padding: 0.5rem 0.6rem; font-size: 0.78rem; }
+  }
+
+  @media (max-width: 480px) {
+    .fin-grid { grid-template-columns: 1fr; }
+    .header-title { font-size: 0.95rem; }
+    .section-title { font-size: 1.1rem; }
+  }
+
+  /* ── Tooltip ── */
+  [data-tip] { position: relative; cursor: help; }
+
+  [data-tip]::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 0.75rem;
+    padding: 0.35rem 0.65rem;
+    border-radius: 6px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+    z-index: 200;
+  }
+
+  [data-tip]:hover::after { opacity: 1; }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--surface); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════ HEADER ══════════════════ -->
+<header class="header">
+  <div class="header-left">
+    <div class="logo-mark">CWI</div>
+    <div>
+      <div class="header-title">CWI AI LLC — KPI Dashboard</div>
+      <div class="header-sub">Internal Business Metrics · Review monthly, first week</div>
+    </div>
+  </div>
+  <div class="header-actions">
+    <span class="save-indicator" id="saveIndicator">Auto-save on</span>
+    <button class="btn btn-ghost" onclick="clearAllData()">Clear Data</button>
+    <button class="btn btn-primary" onclick="exportJSON()">Export JSON</button>
+  </div>
+</header>
+
+<!-- ══════════════════ TABS ══════════════════ -->
+<div class="tabs-wrapper">
+  <nav class="tabs" role="tablist">
+    <button class="tab-btn active" onclick="switchTab(0)" role="tab" aria-selected="true">
+      <span class="tab-number">1</span>Outreach &amp; Sales
+    </button>
+    <button class="tab-btn" onclick="switchTab(1)" role="tab">
+      <span class="tab-number">2</span>Revenue
+    </button>
+    <button class="tab-btn" onclick="switchTab(2)" role="tab">
+      <span class="tab-number">3</span>Client Retention
+    </button>
+    <button class="tab-btn" onclick="switchTab(3)" role="tab">
+      <span class="tab-number">4</span>Financial Health
+    </button>
+    <button class="tab-btn" onclick="switchTab(4)" role="tab">
+      <span class="tab-number">5</span>Monthly Checklist
+    </button>
+  </nav>
+</div>
+
+<!-- ══════════════════ MAIN ══════════════════ -->
+<main class="main">
+
+  <!-- ─────────── TAB 1: Outreach & Sales ─────────── -->
+  <section class="tab-panel active" id="tab-0">
+    <div class="section-header">
+      <h1 class="section-title">Outreach &amp; Sales Metrics</h1>
+      <p class="section-desc">Track these to know if your pipeline is healthy. Review weekly for outreach numbers.</p>
+    </div>
+
+    <div class="benchmarks">
+      <div class="benchmark-pill"><span class="label">Reply Rate</span> 8–12%</div>
+      <div class="benchmark-pill"><span class="label">Close Rate</span> 20–40%</div>
+      <div class="benchmark-pill"><span class="label">CAC</span> &lt;$150</div>
+      <div class="benchmark-pill"><span class="label">Sales Cycle</span> 14–30 days</div>
+      <div class="benchmark-pill"><span class="label">Qualified Lead Rate</span> 30–50%</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="card-title-dot"></span>Monthly Outreach Tracker</div>
+      <div class="table-scroll">
+        <table id="outreach-table">
+          <thead>
+            <tr>
+              <th>Month</th>
+              <th data-tip="Total cold emails sent">Emails Sent</th>
+              <th data-tip="Replies received">Replies</th>
+              <th data-tip="Auto-calc: Replies÷Emails×100">Reply Rate (%)</th>
+              <th data-tip="Replies that passed qualification">Qualified</th>
+              <th data-tip="Discovery calls booked">Calls</th>
+              <th data-tip="Clients signed">Signed</th>
+              <th data-tip="Auto-calc: Signed÷Calls×100">Close Rate (%)</th>
+              <th data-tip="Cost to acquire one client ($)">CAC ($)</th>
+              <th data-tip="Days from first email to signed">Sales Cycle (days)</th>
+            </tr>
+          </thead>
+          <tbody id="outreach-body">
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────── TAB 2: Revenue ─────────── -->
+  <section class="tab-panel" id="tab-1">
+    <div class="section-header">
+      <h1 class="section-title">Revenue Metrics</h1>
+      <p class="section-desc">Track these to know if the business is financially healthy. Auto-calculated fields update as you type.</p>
+    </div>
+
+    <div class="benchmarks">
+      <div class="benchmark-pill"><span class="label">Gross Margin</span> &gt;75%</div>
+      <div class="benchmark-pill"><span class="label">MRR Growth</span> 15–25%/mo early stage</div>
+      <div class="benchmark-pill"><span class="label">ARPU</span> $500–$800</div>
+      <div class="benchmark-pill"><span class="label">Churned MRR</span> $0 ideally</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="card-title-dot"></span>Monthly Revenue Tracker</div>
+      <div class="table-scroll">
+        <table id="revenue-table">
+          <thead>
+            <tr>
+              <th>Month</th>
+              <th>Active Clients</th>
+              <th data-tip="Total monthly recurring revenue">MRR ($)</th>
+              <th data-tip="Revenue from new clients">New MRR ($)</th>
+              <th data-tip="Revenue lost from cancellations">Churned MRR ($)</th>
+              <th data-tip="Total platform/tool costs">Platform Costs ($)</th>
+              <th data-tip="Auto-calc: (MRR-Costs)÷MRR×100">Gross Margin (%)</th>
+              <th data-tip="Auto-calc: MRR×12">ARR ($)</th>
+              <th data-tip="Auto-calc: vs prior month">MRR Growth (%)</th>
+            </tr>
+          </thead>
+          <tbody id="revenue-body">
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────── TAB 3: Client Retention ─────────── -->
+  <section class="tab-panel" id="tab-2">
+    <div class="section-header">
+      <h1 class="section-title">Client Retention Metrics</h1>
+      <p class="section-desc">Track these to know if clients are staying and happy.</p>
+    </div>
+
+    <div class="benchmarks">
+      <div class="benchmark-pill"><span class="label">Churn Rate</span> &lt;5%/month</div>
+      <div class="benchmark-pill"><span class="label">NPS</span> &gt;50 is excellent</div>
+      <div class="benchmark-pill"><span class="label">Client Lifetime</span> 12–24 months</div>
+      <div class="benchmark-pill"><span class="label">LTV:CAC</span> &gt;3:1</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="card-title-dot"></span>Monthly Retention Tracker</div>
+      <div class="table-scroll">
+        <table id="retention-table">
+          <thead>
+            <tr>
+              <th>Month</th>
+              <th>Clients Start</th>
+              <th>Cancelled</th>
+              <th data-tip="Auto-calc: Cancelled÷ClientsStart×100">Churn Rate (%)</th>
+              <th data-tip="Number of upsells this month">Upsells</th>
+              <th data-tip="Net Promoter Score (target >50)">NPS</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody id="retention-body">
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="card">
+      <div class="card-title"><span class="card-title-dot"></span>Per-Client Chatbot Tracker</div>
+      <div class="benchmarks" style="margin-bottom:1rem;">
+        <div class="benchmark-pill"><span class="label">Containment</span> 40–65%</div>
+        <div class="benchmark-pill"><span class="label">Escalation</span> &lt;35%</div>
+        <div class="benchmark-pill"><span class="label">Support Tickets</span> &lt;2/mo</div>
+      </div>
+      <div class="table-scroll">
+        <table id="chatbot-table">
+          <thead>
+            <tr>
+              <th>Client</th>
+              <th>Industry</th>
+              <th data-tip="% conversations bot handled without human (target 40-65%)">Containment Rate (%)</th>
+              <th data-tip="% conversations handed to human (target <35%)">Escalation Rate (%)</th>
+              <th data-tip="Support tickets you received this month (target <2)">Support Tickets/mo</th>
+              <th data-tip="Date of last bot retrain">Last Retrain</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="chatbot-body">
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────── TAB 4: Financial Health ─────────── -->
+  <section class="tab-panel" id="tab-3">
+    <div class="section-header">
+      <h1 class="section-title">Financial Health</h1>
+      <p class="section-desc">Snapshot view at key intervals. Target effective hourly rate &gt;$75/hour.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="card-title-dot"></span>Financial Snapshot by Month</div>
+      <div class="table-scroll">
+        <table id="financial-table">
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>Month 1</th>
+              <th>Month 3</th>
+              <th>Month 6</th>
+              <th>Month 12</th>
+            </tr>
+          </thead>
+          <tbody id="financial-body">
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="card-title-dot"></span>Break-Even Calculator</div>
+      <div class="breakeven-box">
+        <div class="breakeven-formula">Break-even clients = Total monthly platform costs ÷ Average client monthly fee</div>
+        <div class="breakeven-inputs">
+          <label for="be-costs">Monthly Platform Costs ($)</label>
+          <input type="number" id="be-costs" placeholder="150" min="0" step="1" oninput="calcBreakEven(); saveBreakEven();">
+          <label for="be-fee">Avg Client Fee ($)</label>
+          <input type="number" id="be-fee" placeholder="500" min="1" step="1" oninput="calcBreakEven(); saveBreakEven();">
+        </div>
+        <div class="breakeven-result" id="be-result">Enter values above to calculate</div>
+      </div>
+      <p style="font-size:0.8rem;color:var(--text-muted);">Example: $150 costs ÷ $500 avg fee = 0.3 → break even at 1 client</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="card-title-dot"></span>Milestone Tracker</div>
+      <div class="table-scroll">
+        <table id="milestones-table">
+          <thead>
+            <tr>
+              <th>Milestone</th>
+              <th>Target</th>
+              <th>Target Date</th>
+              <th>Actual Date</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="milestones-body">
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────── TAB 5: Monthly Checklist ─────────── -->
+  <section class="tab-panel" id="tab-4">
+    <div class="section-header">
+      <h1 class="section-title">Monthly Review Checklist</h1>
+      <p class="section-desc">Run through this every first week of the month. Checks are saved automatically.</p>
+    </div>
+
+    <div class="card">
+      <div id="checklist-progress-wrap">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+          <div class="checklist-progress">Progress: <strong id="checklist-done-count">0</strong> / <strong id="checklist-total-count">8</strong> completed</div>
+          <button class="btn btn-ghost" onclick="resetChecklist()" style="font-size:0.78rem;padding:0.3rem 0.7rem;">Reset Month</button>
+        </div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar-fill" id="checklist-bar" style="width:0%"></div>
+        </div>
+      </div>
+
+      <ul class="checklist" id="checklist">
+        <li class="checklist-item" data-key="cl-0">
+          <div class="checklist-checkbox" onclick="toggleCheck(this)"></div>
+          <span class="checklist-text">Update all trackers above with last month's numbers</span>
+        </li>
+        <li class="checklist-item" data-key="cl-1">
+          <div class="checklist-checkbox" onclick="toggleCheck(this)"></div>
+          <span class="checklist-text">Calculate MRR, churn rate, and gross margin</span>
+        </li>
+        <li class="checklist-item" data-key="cl-2">
+          <div class="checklist-checkbox" onclick="toggleCheck(this)"></div>
+          <span class="checklist-text">Review outreach: which industry/sequence had the best reply rate?</span>
+        </li>
+        <li class="checklist-item" data-key="cl-3">
+          <div class="checklist-checkbox" onclick="toggleCheck(this)"></div>
+          <span class="checklist-text">Check containment rate for each client — anyone below 30%?</span>
+        </li>
+        <li class="checklist-item" data-key="cl-4">
+          <div class="checklist-checkbox" onclick="toggleCheck(this)"></div>
+          <span class="checklist-text">Count support tickets per client — anyone over 5?</span>
+        </li>
+        <li class="checklist-item" data-key="cl-5">
+          <div class="checklist-checkbox" onclick="toggleCheck(this)"></div>
+          <span class="checklist-text">Send NPS survey to all active clients (1 question: "How likely are you to recommend us? 0–10")</span>
+        </li>
+        <li class="checklist-item" data-key="cl-6">
+          <div class="checklist-checkbox" onclick="toggleCheck(this)"></div>
+          <span class="checklist-text">Identify one thing to improve next month</span>
+        </li>
+        <li class="checklist-item" data-key="cl-7">
+          <div class="checklist-checkbox" onclick="toggleCheck(this)"></div>
+          <span class="checklist-text">Update 90-day timeline with actual vs. projected progress</span>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+</main>
+
+<script>
+// ══════════════════════════════════════════════
+// CONFIGURATION
+// ══════════════════════════════════════════════
+
+const MONTHS = ['Month 1','Month 2','Month 3','Month 4','Month 5','Month 6',
+                'Month 7','Month 8','Month 9','Month 10','Month 11','Month 12'];
+
+const MILESTONES = [
+  { name: 'First client signed',     target: 'Week 6' },
+  { name: 'Break-even (costs covered)', target: 'Month 2' },
+  { name: '$1,000 MRR',              target: 'Month 3' },
+  { name: '$3,000 MRR',              target: 'Month 5' },
+  { name: '$5,000 MRR',              target: 'Month 8' },
+  { name: '$10,000 MRR',             target: 'Month 12–15' },
+];
+
+const FINANCIAL_ROWS = [
+  'MRR ($)',
+  'Platform Costs ($)',
+  'Gross Profit ($)',
+  'Hours Worked',
+  'Effective Hourly Rate ($/hr)',
+  'Break-even Point (clients)',
+];
+
+const FIN_COLS = ['m1','m3','m6','m12'];
+
+// ══════════════════════════════════════════════
+// TAB SWITCHING
+// ══════════════════════════════════════════════
+
+function switchTab(idx) {
+  document.querySelectorAll('.tab-panel').forEach((p,i) => {
+    p.classList.toggle('active', i === idx);
+  });
+  document.querySelectorAll('.tab-btn').forEach((b,i) => {
+    b.classList.toggle('active', i === idx);
+    b.setAttribute('aria-selected', i === idx);
+  });
+  localStorage.setItem('cwi-active-tab', idx);
+}
+
+// ══════════════════════════════════════════════
+// SAVE / LOAD
+// ══════════════════════════════════════════════
+
+let saveTimer = null;
+
+function scheduleSave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveAll, 600);
+}
+
+function showSaved() {
+  const el = document.getElementById('saveIndicator');
+  el.textContent = 'Saved';
+  el.classList.add('saved');
+  setTimeout(() => {
+    el.textContent = 'Auto-save on';
+    el.classList.remove('saved');
+  }, 1500);
+}
+
+function saveAll() {
+  const data = {};
+
+  // Outreach
+  data.outreach = collectTableData('outreach-body', ['emails','replies','replyRate','qualified','calls','signed','closeRate','cac','salesCycle']);
+
+  // Revenue
+  data.revenue = collectTableData('revenue-body', ['clients','mrr','newMrr','churnedMrr','costs','grossMargin','arr','mrrGrowth']);
+
+  // Retention
+  data.retention = collectTableData('retention-body', ['start','cancelled','churnRate','upsells','nps','notes']);
+
+  // Chatbot
+  data.chatbot = [];
+  document.querySelectorAll('#chatbot-body tr').forEach((row, ri) => {
+    const cells = row.querySelectorAll('[contenteditable]');
+    const sel = row.querySelector('.badge-select');
+    data.chatbot.push({
+      client: cells[0]?.textContent || '',
+      industry: cells[1]?.textContent || '',
+      containment: cells[2]?.textContent || '',
+      escalation: cells[3]?.textContent || '',
+      tickets: cells[4]?.textContent || '',
+      retrain: cells[5]?.textContent || '',
+      status: sel?.value || 'active',
+    });
+  });
+
+  // Financial snapshot
+  data.financial = {};
+  document.querySelectorAll('#financial-body tr').forEach((row, ri) => {
+    const rowKey = 'row' + ri;
+    data.financial[rowKey] = {};
+    FIN_COLS.forEach((col, ci) => {
+      const cell = row.querySelector(`[data-col="${col}"]`);
+      data.financial[rowKey][col] = cell?.textContent || '';
+    });
+  });
+
+  // Milestones
+  data.milestones = [];
+  document.querySelectorAll('#milestones-body tr').forEach((row, ri) => {
+    const cells = row.querySelectorAll('[contenteditable]');
+    const sel = row.querySelector('.badge-select');
+    data.milestones.push({
+      targetDate: cells[0]?.textContent || '',
+      actualDate: cells[1]?.textContent || '',
+      status: sel?.value || 'pending',
+    });
+  });
+
+  // Break-even inputs
+  data.breakeven = {
+    costs: document.getElementById('be-costs').value,
+    fee: document.getElementById('be-fee').value,
+  };
+
+  localStorage.setItem('cwi-dashboard', JSON.stringify(data));
+  showSaved();
+}
+
+function collectTableData(tbodyId, keys) {
+  const rows = [];
+  document.querySelectorAll(`#${tbodyId} tr`).forEach(row => {
+    const obj = {};
+    keys.forEach((k, i) => {
+      const cell = row.querySelector(`[data-col="${k}"]`);
+      obj[k] = cell ? cell.textContent : '';
+    });
+    rows.push(obj);
+  });
+  return rows;
+}
+
+function loadAll() {
+  const raw = localStorage.getItem('cwi-dashboard');
+  if (!raw) return;
+  let data;
+  try { data = JSON.parse(raw); } catch(e) { return; }
+
+  // Outreach
+  if (data.outreach) {
+    const keys = ['emails','replies','replyRate','qualified','calls','signed','closeRate','cac','salesCycle'];
+    data.outreach.forEach((rowData, ri) => {
+      const row = document.querySelector(`#outreach-body tr:nth-child(${ri+1})`);
+      if (!row) return;
+      keys.forEach(k => {
+        const cell = row.querySelector(`[data-col="${k}"]`);
+        if (cell && rowData[k] !== undefined) cell.textContent = rowData[k];
+      });
+    });
+    recalcOutreach();
+  }
+
+  // Revenue
+  if (data.revenue) {
+    const keys = ['clients','mrr','newMrr','churnedMrr','costs','grossMargin','arr','mrrGrowth'];
+    data.revenue.forEach((rowData, ri) => {
+      const row = document.querySelector(`#revenue-body tr:nth-child(${ri+1})`);
+      if (!row) return;
+      keys.forEach(k => {
+        const cell = row.querySelector(`[data-col="${k}"]`);
+        if (cell && rowData[k] !== undefined) cell.textContent = rowData[k];
+      });
+    });
+    recalcRevenue();
+  }
+
+  // Retention
+  if (data.retention) {
+    const keys = ['start','cancelled','churnRate','upsells','nps','notes'];
+    data.retention.forEach((rowData, ri) => {
+      const row = document.querySelector(`#retention-body tr:nth-child(${ri+1})`);
+      if (!row) return;
+      keys.forEach(k => {
+        const cell = row.querySelector(`[data-col="${k}"]`);
+        if (cell && rowData[k] !== undefined) cell.textContent = rowData[k];
+      });
+    });
+    recalcRetention();
+  }
+
+  // Chatbot
+  if (data.chatbot) {
+    data.chatbot.forEach((rowData, ri) => {
+      const row = document.querySelector(`#chatbot-body tr:nth-child(${ri+1})`);
+      if (!row) return;
+      const cells = row.querySelectorAll('[contenteditable]');
+      ['client','industry','containment','escalation','tickets','retrain'].forEach((k, ci) => {
+        if (cells[ci] && rowData[k] !== undefined) cells[ci].textContent = rowData[k];
+      });
+      const sel = row.querySelector('.badge-select');
+      if (sel && rowData.status) sel.value = rowData.status;
+    });
+    colorChatbot();
+  }
+
+  // Financial
+  if (data.financial) {
+    Object.keys(data.financial).forEach(rowKey => {
+      const ri = parseInt(rowKey.replace('row',''));
+      const row = document.querySelector(`#financial-body tr:nth-child(${ri+1})`);
+      if (!row) return;
+      FIN_COLS.forEach(col => {
+        const cell = row.querySelector(`[data-col="${col}"]`);
+        if (cell && data.financial[rowKey][col] !== undefined) cell.textContent = data.financial[rowKey][col];
+      });
+    });
+  }
+
+  // Milestones
+  if (data.milestones) {
+    data.milestones.forEach((rowData, ri) => {
+      const row = document.querySelector(`#milestones-body tr:nth-child(${ri+1})`);
+      if (!row) return;
+      const cells = row.querySelectorAll('[contenteditable]');
+      if (cells[0] && rowData.targetDate !== undefined) cells[0].textContent = rowData.targetDate;
+      if (cells[1] && rowData.actualDate !== undefined) cells[1].textContent = rowData.actualDate;
+      const sel = row.querySelector('.badge-select');
+      if (sel && rowData.status) sel.value = rowData.status;
+    });
+  }
+
+  // Break-even
+  if (data.breakeven) {
+    if (data.breakeven.costs) document.getElementById('be-costs').value = data.breakeven.costs;
+    if (data.breakeven.fee) document.getElementById('be-fee').value = data.breakeven.fee;
+    calcBreakEven();
+  }
+
+  // Checklist
+  loadChecklist();
+}
+
+function saveBreakEven() {
+  scheduleSave();
+}
+
+// ══════════════════════════════════════════════
+// EXPORT
+// ══════════════════════════════════════════════
+
+function exportJSON() {
+  saveAll();
+  const raw = localStorage.getItem('cwi-dashboard') || '{}';
+  const blob = new Blob([JSON.stringify(JSON.parse(raw), null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const date = new Date().toISOString().split('T')[0];
+  a.download = `cwi-kpi-dashboard-${date}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function clearAllData() {
+  if (!confirm('Clear all dashboard data? This cannot be undone.')) return;
+  localStorage.removeItem('cwi-dashboard');
+  localStorage.removeItem('cwi-checklist');
+  location.reload();
+}
+
+// ══════════════════════════════════════════════
+// COLOR CODING HELPERS
+// ══════════════════════════════════════════════
+
+function colorCell(cell, value, benchmark, direction) {
+  // direction: 'above' = higher is better, 'below' = lower is better
+  cell.classList.remove('cell-green','cell-yellow','cell-red');
+  if (value === null || value === '' || isNaN(value)) return;
+
+  const v = parseFloat(value);
+  const b = parseFloat(benchmark);
+
+  if (direction === 'above') {
+    if (v >= b) cell.classList.add('cell-green');
+    else if (v >= b * 0.80) cell.classList.add('cell-yellow');
+    else cell.classList.add('cell-red');
+  } else {
+    // lower is better
+    if (v <= b) cell.classList.add('cell-green');
+    else if (v <= b * 1.20) cell.classList.add('cell-yellow');
+    else cell.classList.add('cell-red');
+  }
+}
+
+// ══════════════════════════════════════════════
+// TAB 1 — OUTREACH TABLE
+// ══════════════════════════════════════════════
+
+function buildOutreachTable() {
+  const tbody = document.getElementById('outreach-body');
+  tbody.innerHTML = '';
+  MONTHS.forEach((month, ri) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="row-label">${month}</td>
+      <td><span contenteditable data-col="emails" data-row="${ri}" data-placeholder="0" oninput="onOutreachInput(${ri})"></span></td>
+      <td><span contenteditable data-col="replies" data-row="${ri}" data-placeholder="0" oninput="onOutreachInput(${ri})"></span></td>
+      <td><span data-col="replyRate" data-row="${ri}" class="cell-calc">—</span></td>
+      <td><span contenteditable data-col="qualified" data-row="${ri}" data-placeholder="0" oninput="onOutreachInput(${ri})"></span></td>
+      <td><span contenteditable data-col="calls" data-row="${ri}" data-placeholder="0" oninput="onOutreachInput(${ri})"></span></td>
+      <td><span contenteditable data-col="signed" data-row="${ri}" data-placeholder="0" oninput="onOutreachInput(${ri})"></span></td>
+      <td><span data-col="closeRate" data-row="${ri}" class="cell-calc">—</span></td>
+      <td><span contenteditable data-col="cac" data-row="${ri}" data-placeholder="0" oninput="onOutreachInput(${ri})"></span></td>
+      <td><span contenteditable data-col="salesCycle" data-row="${ri}" data-placeholder="0" oninput="onOutreachInput(${ri})"></span></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function onOutreachInput(ri) {
+  recalcOutreachRow(ri);
+  scheduleSave();
+}
+
+function recalcOutreach() {
+  for (let i = 0; i < MONTHS.length; i++) recalcOutreachRow(i);
+}
+
+function recalcOutreachRow(ri) {
+  const getVal = (col) => {
+    const el = document.querySelector(`#outreach-body tr:nth-child(${ri+1}) [data-col="${col}"]`);
+    return el ? parseFloat(el.textContent) : NaN;
+  };
+  const getCell = (col) => document.querySelector(`#outreach-body tr:nth-child(${ri+1}) [data-col="${col}"]`);
+
+  const emails = getVal('emails');
+  const replies = getVal('replies');
+  const calls = getVal('calls');
+  const signed = getVal('signed');
+
+  // Reply rate
+  const rrCell = getCell('replyRate');
+  if (rrCell && !isNaN(emails) && !isNaN(replies) && emails > 0) {
+    const rr = (replies / emails * 100).toFixed(1);
+    rrCell.textContent = rr + '%';
+    rrCell.className = '';
+    colorCell(rrCell, rr, 8, 'above'); // benchmark min 8%
+  } else if (rrCell) { rrCell.textContent = '—'; rrCell.className = 'cell-calc'; }
+
+  // Close rate
+  const crCell = getCell('closeRate');
+  if (crCell && !isNaN(calls) && !isNaN(signed) && calls > 0) {
+    const cr = (signed / calls * 100).toFixed(1);
+    crCell.textContent = cr + '%';
+    crCell.className = '';
+    colorCell(crCell, cr, 20, 'above'); // benchmark min 20%
+  } else if (crCell) { crCell.textContent = '—'; crCell.className = 'cell-calc'; }
+
+  // CAC color
+  const cacCell = getCell('cac');
+  if (cacCell) colorCell(cacCell, getVal('cac'), 150, 'below');
+
+  // Sales cycle color
+  const scCell = getCell('salesCycle');
+  if (scCell) colorCell(scCell, getVal('salesCycle'), 30, 'below');
+
+  // Emails color (benchmark 50+)
+  const emailCell = getCell('emails');
+  if (emailCell) colorCell(emailCell, emails, 150, 'above');
+}
+
+// ══════════════════════════════════════════════
+// TAB 2 — REVENUE TABLE
+// ══════════════════════════════════════════════
+
+function buildRevenueTable() {
+  const tbody = document.getElementById('revenue-body');
+  tbody.innerHTML = '';
+  MONTHS.forEach((month, ri) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="row-label">${month}</td>
+      <td><span contenteditable data-col="clients" data-row="${ri}" data-placeholder="0" oninput="onRevenueInput(${ri})"></span></td>
+      <td><span contenteditable data-col="mrr" data-row="${ri}" data-placeholder="0" oninput="onRevenueInput(${ri})"></span></td>
+      <td><span contenteditable data-col="newMrr" data-row="${ri}" data-placeholder="0" oninput="onRevenueInput(${ri})"></span></td>
+      <td><span contenteditable data-col="churnedMrr" data-row="${ri}" data-placeholder="0" oninput="onRevenueInput(${ri})"></span></td>
+      <td><span contenteditable data-col="costs" data-row="${ri}" data-placeholder="0" oninput="onRevenueInput(${ri})"></span></td>
+      <td><span data-col="grossMargin" data-row="${ri}" class="cell-calc">—</span></td>
+      <td><span data-col="arr" data-row="${ri}" class="cell-calc">—</span></td>
+      <td><span data-col="mrrGrowth" data-row="${ri}" class="cell-calc">—</span></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function onRevenueInput(ri) {
+  recalcRevenueRow(ri);
+  if (ri + 1 < MONTHS.length) recalcRevenueRow(ri + 1); // update growth of next row
+  scheduleSave();
+}
+
+function recalcRevenue() {
+  for (let i = 0; i < MONTHS.length; i++) recalcRevenueRow(i);
+}
+
+function recalcRevenueRow(ri) {
+  const getVal = (col, row) => {
+    const r = row !== undefined ? row : ri;
+    const el = document.querySelector(`#revenue-body tr:nth-child(${r+1}) [data-col="${col}"]`);
+    return el ? parseFloat(el.textContent) : NaN;
+  };
+  const getCell = (col) => document.querySelector(`#revenue-body tr:nth-child(${ri+1}) [data-col="${col}"]`);
+
+  const mrr = getVal('mrr');
+  const costs = getVal('costs');
+  const churnedMrr = getVal('churnedMrr');
+
+  // Gross margin
+  const gmCell = getCell('grossMargin');
+  if (gmCell && !isNaN(mrr) && !isNaN(costs) && mrr > 0) {
+    const gm = ((mrr - costs) / mrr * 100).toFixed(1);
+    gmCell.textContent = gm + '%';
+    gmCell.className = '';
+    colorCell(gmCell, gm, 75, 'above');
+  } else if (gmCell) { gmCell.textContent = '—'; gmCell.className = 'cell-calc'; }
+
+  // ARR
+  const arrCell = getCell('arr');
+  if (arrCell && !isNaN(mrr)) {
+    arrCell.textContent = '$' + (mrr * 12).toLocaleString();
+    arrCell.className = 'cell-calc';
+  } else if (arrCell) { arrCell.textContent = '—'; arrCell.className = 'cell-calc'; }
+
+  // MRR Growth vs prior month
+  const growthCell = getCell('mrrGrowth');
+  if (growthCell && ri > 0) {
+    const prevMrr = getVal('mrr', ri - 1);
+    if (!isNaN(mrr) && !isNaN(prevMrr) && prevMrr > 0) {
+      const growth = ((mrr - prevMrr) / prevMrr * 100).toFixed(1);
+      growthCell.textContent = (growth > 0 ? '+' : '') + growth + '%';
+      growthCell.className = '';
+      colorCell(growthCell, growth, 15, 'above');
+    } else { growthCell.textContent = '—'; growthCell.className = 'cell-calc'; }
+  } else if (growthCell) { growthCell.textContent = '—'; growthCell.className = 'cell-calc'; }
+
+  // Churned MRR color (lower is better, benchmark $0 → color anything >0 as yellow/red)
+  const churnedCell = getCell('churnedMrr');
+  if (churnedCell && !isNaN(churnedMrr)) {
+    churnedCell.classList.remove('cell-green','cell-yellow','cell-red');
+    if (churnedMrr === 0) churnedCell.classList.add('cell-green');
+    else if (churnedMrr <= mrr * 0.10) churnedCell.classList.add('cell-yellow');
+    else churnedCell.classList.add('cell-red');
+  }
+}
+
+// ══════════════════════════════════════════════
+// TAB 3 — RETENTION TABLE
+// ══════════════════════════════════════════════
+
+function buildRetentionTable() {
+  const tbody = document.getElementById('retention-body');
+  tbody.innerHTML = '';
+  MONTHS.forEach((month, ri) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="row-label">${month}</td>
+      <td><span contenteditable data-col="start" data-row="${ri}" data-placeholder="0" oninput="onRetentionInput(${ri})"></span></td>
+      <td><span contenteditable data-col="cancelled" data-row="${ri}" data-placeholder="0" oninput="onRetentionInput(${ri})"></span></td>
+      <td><span data-col="churnRate" data-row="${ri}" class="cell-calc">—</span></td>
+      <td><span contenteditable data-col="upsells" data-row="${ri}" data-placeholder="0" oninput="onRetentionInput(${ri})"></span></td>
+      <td><span contenteditable data-col="nps" data-row="${ri}" data-placeholder="—" oninput="onRetentionInput(${ri})"></span></td>
+      <td><span contenteditable data-col="notes" data-row="${ri}" data-placeholder="Notes..." oninput="scheduleSave()" style="min-width:120px;"></span></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function onRetentionInput(ri) {
+  recalcRetentionRow(ri);
+  scheduleSave();
+}
+
+function recalcRetention() {
+  for (let i = 0; i < MONTHS.length; i++) recalcRetentionRow(i);
+}
+
+function recalcRetentionRow(ri) {
+  const getVal = (col) => {
+    const el = document.querySelector(`#retention-body tr:nth-child(${ri+1}) [data-col="${col}"]`);
+    return el ? parseFloat(el.textContent) : NaN;
+  };
+  const getCell = (col) => document.querySelector(`#retention-body tr:nth-child(${ri+1}) [data-col="${col}"]`);
+
+  const start = getVal('start');
+  const cancelled = getVal('cancelled');
+  const nps = getVal('nps');
+
+  // Churn rate
+  const churnCell = getCell('churnRate');
+  if (churnCell && !isNaN(start) && !isNaN(cancelled) && start > 0) {
+    const churn = (cancelled / start * 100).toFixed(1);
+    churnCell.textContent = churn + '%';
+    churnCell.className = '';
+    colorCell(churnCell, churn, 5, 'below');
+  } else if (churnCell) { churnCell.textContent = '—'; churnCell.className = 'cell-calc'; }
+
+  // NPS color
+  const npsCell = getCell('nps');
+  if (npsCell && !isNaN(nps)) {
+    npsCell.classList.remove('cell-green','cell-yellow','cell-red');
+    if (nps >= 50) npsCell.classList.add('cell-green');
+    else if (nps >= 0) npsCell.classList.add('cell-yellow');
+    else npsCell.classList.add('cell-red');
+  }
+}
+
+// ══════════════════════════════════════════════
+// TAB 3 — CHATBOT TABLE
+// ══════════════════════════════════════════════
+
+function buildChatbotTable() {
+  const tbody = document.getElementById('chatbot-body');
+  tbody.innerHTML = '';
+  for (let i = 1; i <= 5; i++) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><span contenteditable data-placeholder="Client ${i}" oninput="scheduleSave()"></span></td>
+      <td><span contenteditable data-placeholder="Industry" oninput="scheduleSave()"></span></td>
+      <td><span contenteditable data-col="containment" data-row="${i-1}" data-placeholder="0" oninput="colorChatbotRow(this.closest('tr')); scheduleSave();"></span></td>
+      <td><span contenteditable data-col="escalation" data-row="${i-1}" data-placeholder="0" oninput="colorChatbotRow(this.closest('tr')); scheduleSave();"></span></td>
+      <td><span contenteditable data-col="tickets" data-row="${i-1}" data-placeholder="0" oninput="colorChatbotRow(this.closest('tr')); scheduleSave();"></span></td>
+      <td><span contenteditable data-col="retrain" data-placeholder="YYYY-MM-DD" oninput="scheduleSave()"></span></td>
+      <td>
+        <select class="badge-select" onchange="scheduleSave()">
+          <option value="active">Active</option>
+          <option value="needs-retrain">Needs Retrain</option>
+          <option value="at-risk">At Risk</option>
+          <option value="healthy">Healthy</option>
+          <option value="churned">Churned</option>
+        </select>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  }
+}
+
+function colorChatbot() {
+  document.querySelectorAll('#chatbot-body tr').forEach(row => colorChatbotRow(row));
+}
+
+function colorChatbotRow(row) {
+  const containmentCell = row.querySelector('[data-col="containment"]');
+  const escalationCell = row.querySelector('[data-col="escalation"]');
+  const ticketsCell = row.querySelector('[data-col="tickets"]');
+
+  if (containmentCell) colorCell(containmentCell, parseFloat(containmentCell.textContent), 40, 'above');
+  if (escalationCell) colorCell(escalationCell, parseFloat(escalationCell.textContent), 35, 'below');
+  if (ticketsCell) colorCell(ticketsCell, parseFloat(ticketsCell.textContent), 2, 'below');
+}
+
+// ══════════════════════════════════════════════
+// TAB 4 — FINANCIAL TABLE
+// ══════════════════════════════════════════════
+
+function buildFinancialTable() {
+  const tbody = document.getElementById('financial-body');
+  tbody.innerHTML = '';
+  FINANCIAL_ROWS.forEach((rowName, ri) => {
+    const tr = document.createElement('tr');
+    const cells = FIN_COLS.map(col =>
+      `<td><span contenteditable data-col="${col}" data-row="${ri}" data-placeholder="0" oninput="scheduleSave()"></span></td>`
+    ).join('');
+    tr.innerHTML = `<td class="row-label">${rowName}</td>${cells}`;
+    tbody.appendChild(tr);
+  });
+}
+
+// ══════════════════════════════════════════════
+// TAB 4 — BREAK-EVEN
+// ══════════════════════════════════════════════
+
+function calcBreakEven() {
+  const costs = parseFloat(document.getElementById('be-costs').value);
+  const fee = parseFloat(document.getElementById('be-fee').value);
+  const result = document.getElementById('be-result');
+
+  if (isNaN(costs) || isNaN(fee) || fee === 0) {
+    result.textContent = 'Enter values above to calculate';
+    return;
+  }
+
+  const be = costs / fee;
+  const clients = Math.ceil(be);
+  result.textContent = `Break-even at ${clients} client${clients !== 1 ? 's' : ''} (${be.toFixed(2)} exact) — $${costs.toFixed(0)} ÷ $${fee.toFixed(0)}/mo`;
+}
+
+// ══════════════════════════════════════════════
+// TAB 4 — MILESTONES TABLE
+// ══════════════════════════════════════════════
+
+function buildMilestonesTable() {
+  const tbody = document.getElementById('milestones-body');
+  tbody.innerHTML = '';
+  MILESTONES.forEach((ms, ri) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="font-weight:500;">${ms.name}</td>
+      <td class="milestone-target">${ms.target}</td>
+      <td><span contenteditable data-placeholder="YYYY-MM-DD" oninput="scheduleSave()"></span></td>
+      <td><span contenteditable data-placeholder="YYYY-MM-DD" oninput="scheduleSave()"></span></td>
+      <td>
+        <select class="badge-select" onchange="scheduleSave()">
+          <option value="pending">Pending</option>
+          <option value="achieved">Achieved</option>
+          <option value="behind">Behind</option>
+          <option value="ahead">Ahead</option>
+        </select>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// ══════════════════════════════════════════════
+// TAB 5 — CHECKLIST
+// ══════════════════════════════════════════════
+
+function toggleCheck(checkbox) {
+  const item = checkbox.closest('.checklist-item');
+  const key = item.dataset.key;
+  const isChecked = !checkbox.classList.contains('checked');
+  checkbox.classList.toggle('checked', isChecked);
+  item.classList.toggle('done', isChecked);
+
+  // save
+  var rawChecks = localStorage.getItem('cwi-checklist');
+  var checks;
+  try { checks = rawChecks ? JSON.parse(rawChecks) : {}; } catch(e) { checks = {}; }
+  checks[key] = isChecked;
+  localStorage.setItem('cwi-checklist', JSON.stringify(checks));
+
+  updateChecklistProgress();
+}
+
+function loadChecklist() {
+  var rawLoad = localStorage.getItem('cwi-checklist');
+  var checks;
+  try { checks = rawLoad ? JSON.parse(rawLoad) : {}; } catch(e) { checks = {}; }
+  document.querySelectorAll('.checklist-item').forEach(item => {
+    const key = item.dataset.key;
+    if (checks[key]) {
+      const cb = item.querySelector('.checklist-checkbox');
+      cb.classList.add('checked');
+      item.classList.add('done');
+    }
+  });
+  updateChecklistProgress();
+}
+
+function updateChecklistProgress() {
+  const total = document.querySelectorAll('.checklist-item').length;
+  const done = document.querySelectorAll('.checklist-item.done').length;
+  document.getElementById('checklist-done-count').textContent = done;
+  document.getElementById('checklist-total-count').textContent = total;
+  document.getElementById('checklist-bar').style.width = (done / total * 100) + '%';
+}
+
+function resetChecklist() {
+  if (!confirm('Reset all checklist items for this month?')) return;
+  localStorage.removeItem('cwi-checklist');
+  document.querySelectorAll('.checklist-item').forEach(item => {
+    item.querySelector('.checklist-checkbox').classList.remove('checked');
+    item.classList.remove('done');
+  });
+  updateChecklistProgress();
+}
+
+// ══════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════
+
+document.addEventListener('DOMContentLoaded', () => {
+  buildOutreachTable();
+  buildRevenueTable();
+  buildRetentionTable();
+  buildChatbotTable();
+  buildFinancialTable();
+  buildMilestonesTable();
+
+  loadAll();
+  updateChecklistProgress();
+
+  // Restore active tab
+  const savedTab = localStorage.getItem('cwi-active-tab');
+  if (savedTab !== null) switchTab(parseInt(savedTab));
+});
+</script>
+</body>
+</html>

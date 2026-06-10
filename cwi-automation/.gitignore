@@ -1,0 +1,10 @@
+.env
+clients/*/.env
+clients/clients-log.txt
+clients/*/README.md
+credentials/
+*.key
+*.pem
+*.bak
+node_modules/
+_overnight_backup/

@@ -191,7 +191,7 @@ Resume with: "Read RULES.md and docs/ai-memory.md, then continue."
 ## 1. Project Identity
 
 ```
-PROJECT_NAME   = CWI (Central Wireless, Inc.)
+PROJECT_NAME   = CWI — Compute With Imagination (legal: CWI AI LLC)
 VERSION        = 0.1.0
 STACK          = Static HTML5 + vanilla JS/CSS (cwi-site/) | PowerShell + Make.com JSON blueprints (cwi-automation/)
 TARGET_USERS   = CWI team — internal ops, customer management, and site visitors

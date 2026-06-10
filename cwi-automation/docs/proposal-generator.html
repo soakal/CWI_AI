@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CWI AI — Proposal Generator</title>
+  <style>
+    /* ── Reset & Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f4f6fa;
+      color: #1a2236;
+      min-height: 100vh;
+      padding: 32px 16px 64px;
+    }
+
+    /* ── Layout ── */
+    .container { max-width: 820px; margin: 0 auto; }
+
+    /* ── Page Header ── */
+    .page-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .page-header .logo {
+      font-size: 2rem;
+      font-weight: 800;
+      color: #1a56db;
+      letter-spacing: -1px;
+    }
+    .page-header .logo span { color: #f59e0b; }
+    .page-header p {
+      color: #6b7280;
+      margin-top: 4px;
+      font-size: 0.95rem;
+    }
+
+    /* ── Form Card ── */
+    .form-card {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+      padding: 36px 40px;
+      margin-bottom: 40px;
+    }
+    .form-card h2 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 24px;
+      color: #1a2236;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group.full { grid-column: 1 / -1; }
+    label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #374151;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    input, select, textarea {
+      border: 1.5px solid #d1d5db;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.97rem;
+      font-family: inherit;
+      color: #1a2236;
+      background: #f9fafb;
+      transition: border-color 0.2s;
+      outline: none;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: #1a56db;
+      background: #fff;
+    }
+    textarea { resize: vertical; min-height: 100px; }
+    .btn-generate {
+      margin-top: 28px;
+      width: 100%;
+      background: linear-gradient(135deg, #1a56db 0%, #1e40af 100%);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 14px 0;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.02em;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    .btn-generate:hover { opacity: 0.92; transform: translateY(-1px); }
+    .btn-generate:active { transform: translateY(0); }
+
+    /* ── Proposal Output ── */
+    #proposal-output { display: none; }
+    .proposal {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 2px 24px rgba(0,0,0,0.10);
+      padding: 52px 52px 44px;
+    }
+
+    /* Proposal Header */
+    .prop-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 3px solid #1a56db;
+      padding-bottom: 20px;
+      margin-bottom: 32px;
+    }
+    .prop-logo { font-size: 1.6rem; font-weight: 800; color: #1a56db; letter-spacing: -0.5px; }
+    .prop-logo span { color: #f59e0b; }
+    .prop-meta { text-align: right; }
+    .prop-meta .prop-date { font-size: 0.88rem; color: #6b7280; }
+    .tier-badge {
+      display: inline-block;
+      margin-top: 6px;
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .tier-badge.starter  { background: #dbeafe; color: #1e40af; }
+    .tier-badge.growth   { background: #d1fae5; color: #065f46; }
+    .tier-badge.pro      { background: #fef3c7; color: #92400e; }
+
+    /* Proposal Title */
+    .prop-title {
+      font-size: 1.55rem;
+      font-weight: 800;
+      color: #1a2236;
+      margin-bottom: 6px;
+    }
+    .prop-subtitle {
+      font-size: 0.97rem;
+      color: #6b7280;
+      margin-bottom: 36px;
+    }
+
+    /* Sections */
+    .prop-section { margin-bottom: 32px; }
+    .prop-section h3 {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #1a56db;
+      margin-bottom: 10px;
+    }
+    .prop-section p, .prop-section li {
+      font-size: 0.97rem;
+      line-height: 1.7;
+      color: #374151;
+    }
+    .prop-section ul, .prop-section ol {
+      padding-left: 22px;
+    }
+    .prop-section li { margin-bottom: 6px; }
+
+    /* Investment Table */
+    .invest-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 4px;
+    }
+    .invest-table td {
+      padding: 11px 14px;
+      font-size: 0.96rem;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .invest-table tr:last-child td { border-bottom: none; }
+    .invest-table td:first-child { color: #6b7280; }
+    .invest-table td:last-child { font-weight: 700; text-align: right; color: #1a2236; }
+    .invest-table .row-total td { background: #eff6ff; }
+    .invest-table .row-total td:first-child { color: #1a56db; font-weight: 700; border-radius: 0 0 0 8px; }
+    .invest-table .row-total td:last-child { color: #1a56db; border-radius: 0 0 8px 0; }
+    .invest-table .row-savings td:first-child { color: #065f46; }
+    .invest-table .row-savings td:last-child { color: #065f46; }
+
+    /* Guarantee Box */
+    .guarantee-box {
+      background: #f0fdf4;
+      border: 1.5px solid #86efac;
+      border-radius: 10px;
+      padding: 18px 22px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 32px;
+    }
+    .guarantee-box .icon {
+      font-size: 1.6rem;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .guarantee-box p {
+      font-size: 0.96rem;
+      color: #065f46;
+      line-height: 1.6;
+    }
+    .guarantee-box p strong { display: block; margin-bottom: 2px; }
+
+    /* Footer */
+    .prop-footer {
+      border-top: 2px solid #f3f4f6;
+      padding-top: 22px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .prop-footer .contact-block p {
+      font-size: 0.88rem;
+      color: #374151;
+      line-height: 1.7;
+    }
+    .prop-footer .contact-block strong { display: block; font-size: 0.97rem; color: #1a2236; }
+    .prop-footer .tagline {
+      font-size: 0.82rem;
+      color: #9ca3af;
+      font-style: italic;
+    }
+
+    /* Print Button */
+    .print-bar {
+      text-align: center;
+      margin-top: 28px;
+    }
+    .btn-print {
+      background: #f9fafb;
+      border: 1.5px solid #d1d5db;
+      border-radius: 8px;
+      padding: 11px 32px;
+      font-size: 0.96rem;
+      font-weight: 600;
+      color: #374151;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-print:hover { background: #f3f4f6; }
+
+    /* ── Print Styles ── */
+    @media print {
+      body { background: #fff; padding: 0; }
+      .form-card, .print-bar, .page-header { display: none !important; }
+      #proposal-output { display: block !important; }
+      .proposal {
+        box-shadow: none;
+        border-radius: 0;
+        padding: 32px 40px;
+      }
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 600px) {
+      .form-card { padding: 24px 18px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .proposal { padding: 28px 18px; }
+      .prop-header { flex-direction: column; gap: 12px; }
+      .prop-meta { text-align: left; }
+      .prop-footer { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="logo">CWI<span> AI</span></div>
+    <p>Proposal Generator — fill in the details and click Generate</p>
+  </div>
+
+  <!-- Input Form -->
+  <div class="form-card" id="form-section">
+    <h2>Client Details</h2>
+    <div class="form-grid">
+
+      <div class="form-group">
+        <label for="business-name">Business Name</label>
+        <input type="text" id="business-name" placeholder="Apex Plumbing LLC" />
+      </div>
+
+      <div class="form-group">
+        <label for="owner-name">Owner First Name</label>
+        <input type="text" id="owner-name" placeholder="Mike" />
+      </div>
+
+      <div class="form-group">
+        <label for="industry">Industry</label>
+        <select id="industry">
+          <option value="plumbing">Plumbing</option>
+          <option value="hvac">HVAC</option>
+          <option value="accounting">Accounting</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="monthly-volume">Approx. Monthly Revenue ($)</label>
+        <input type="number" id="monthly-volume" placeholder="25000" min="0" />
+      </div>
+
+      <div class="form-group full">
+        <label for="current-problem">Current Problem / Pain Point</label>
+        <textarea id="current-problem" placeholder="Describe the biggest challenge the business is facing right now..."></textarea>
+      </div>
+
+      <div class="form-group full">
+        <label for="selected-tier">Selected Tier</label>
+        <select id="selected-tier">
+          <option value="starter">Starter — $497/mo</option>
+          <option value="growth">Growth — $997/mo</option>
+          <option value="pro">Pro — $1,997/mo</option>
+        </select>
+      </div>
+
+    </div>
+    <button class="btn-generate" onclick="generateProposal()">Generate Proposal</button>
+  </div>
+
+  <!-- Proposal Output -->
+  <div id="proposal-output">
+    <div class="proposal" id="proposal-doc">
+      <!-- injected by JS -->
+    </div>
+    <div class="print-bar">
+      <button class="btn-print" onclick="window.print()">Print / Save as PDF</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  /* ───────────────────────────────────────────
+     CONFIGURATION — edit TIERS object if pricing changes
+  ─────────────────────────────────────────── */
+  const TIERS = {
+    starter: {
+      label: 'Starter',
+      monthly: 497,
+      setup: 497,
+      badgeClass: 'starter',
+      features: [
+        'AI-powered lead capture chatbot (website + SMS)',
+        'Automated appointment reminder sequences (email + text)',
+        'Missed-call auto-response with scheduling link',
+        'Monthly performance dashboard',
+        'Email support — response within 1 business day',
+      ],
+    },
+    growth: {
+      label: 'Growth',
+      monthly: 997,
+      setup: 797,
+      badgeClass: 'growth',
+      features: [
+        'Everything in Starter, plus:',
+        'CRM integration & automated follow-up pipelines',
+        'Review request automation (Google / Facebook)',
+        'Estimate & invoice automation workflows',
+        'Bi-weekly strategy calls',
+        'Priority email & chat support',
+      ],
+    },
+    pro: {
+      label: 'Pro',
+      monthly: 1997,
+      setup: 997,
+      badgeClass: 'pro',
+      features: [
+        'Everything in Growth, plus:',
+        'Custom AI voice receptionist (answers calls 24/7)',
+        'Advanced reporting & predictive analytics',
+        'Multi-location or multi-team workflow automation',
+        'Dedicated account manager',
+        'Same-day support with 4-hour response SLA',
+      ],
+    },
+  };
+
+  const INDUSTRY_SOLUTIONS = {
+    plumbing: [
+      'Automate after-hours lead capture so every missed call becomes a booked job — no dispatcher required.',
+      'Send AI-driven follow-up sequences that turn one-time customers into repeat service plan subscribers.',
+      'Eliminate manual scheduling conflicts with smart calendar automation that syncs your field techs in real time.',
+    ],
+    hvac: [
+      'Deploy seasonal campaign automation to flood your schedule before the summer heat and winter cold hits.',
+      'Automate maintenance agreement renewals and upsell reminders to maximise contract revenue with zero manual effort.',
+      'Use AI-powered diagnostic intake forms to pre-qualify calls and route the right tech — cutting truck-roll costs.',
+    ],
+    accounting: [
+      'Automate client onboarding and document-collection workflows to eliminate back-and-forth email chains.',
+      'Deploy AI-driven deadline reminder sequences that keep clients compliant and reduce last-minute fire drills.',
+      'Use intelligent follow-up pipelines to convert proposals into signed engagements faster — without the sales pressure.',
+    ],
+    other: [
+      'Automate your lead capture and follow-up so prospects are nurtured even when your team is unavailable.',
+      'Streamline repetitive administrative tasks with AI workflows — freeing your team to focus on high-value work.',
+      'Build a consistent client communication engine that drives reviews, referrals, and repeat business on autopilot.',
+    ],
+  };
+
+  /* ───────────────────────────────────────────
+     HELPERS
+  ─────────────────────────────────────────── */
+  function fmt(n) {
+    return '$' + Number(n).toLocaleString('en-US', { maximumFractionDigits: 0 });
+  }
+
+  function todayFormatted() {
+    const d = new Date();
+    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  }
+
+  function escapeHTML(str) {
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/\n/g, '<br>');
+  }
+
+  /* ───────────────────────────────────────────
+     MAIN GENERATOR
+  ─────────────────────────────────────────── */
+  function generateProposal() {
+    const businessName  = document.getElementById('business-name').value.trim()  || 'Your Business';
+    const ownerName     = document.getElementById('owner-name').value.trim()     || 'there';
+    const industry      = document.getElementById('industry').value;
+    const monthlyVolume = parseFloat(document.getElementById('monthly-volume').value) || 0;
+    const problem       = document.getElementById('current-problem').value.trim() || 'Not specified.';
+    const tierKey       = document.getElementById('selected-tier').value;
+
+    const tier      = TIERS[tierKey];
+    const solutions = INDUSTRY_SOLUTIONS[industry];
+
+    const annualFee     = tier.monthly * 12;
+    const annualTotal   = annualFee + tier.setup;
+    const annualSavings = Math.round(monthlyVolume * 0.15 * 12);
+
+    const featureItems  = tier.features.map(f => `<li>${f}</li>`).join('\n');
+    const solutionItems = solutions.map(s => `<li>${s}</li>`).join('\n');
+
+    const savingsRow = annualSavings > 0 ? `
+      <tr class="row-savings">
+        <td>Estimated Annual Value Created *</td>
+        <td>${fmt(annualSavings)}</td>
+      </tr>` : '';
+
+    const savingsNote = annualSavings > 0
+      ? `<p style="font-size:0.8rem;color:#9ca3af;margin-top:8px;">* Estimate based on capturing an additional 15% of current monthly revenue through automated follow-up and after-hours coverage, annualized.</p>`
+      : '';
+
+    document.getElementById('proposal-doc').innerHTML = `
+      <div class="prop-header">
+        <div class="prop-logo">CWI<span> AI</span></div>
+        <div class="prop-meta">
+          <div class="prop-date">${todayFormatted()}</div>
+          <span class="tier-badge ${tier.badgeClass}">${tier.label} Plan</span>
+        </div>
+      </div>
+
+      <p class="prop-title">Custom AI Automation Proposal for ${escapeHTML(businessName)}</p>
+      <p class="prop-subtitle">Prepared exclusively for ${escapeHTML(ownerName)} &mdash; confidential &amp; not for distribution</p>
+
+      <div class="prop-section">
+        <h3>Your Challenge</h3>
+        <p>${escapeHTML(problem)}</p>
+      </div>
+
+      <div class="prop-section">
+        <h3>Our Solution</h3>
+        <ul>${solutionItems}</ul>
+      </div>
+
+      <div class="prop-section">
+        <h3>What You Get &mdash; ${tier.label} Plan</h3>
+        <ul>${featureItems}</ul>
+      </div>
+
+      <div class="prop-section">
+        <h3>Your Investment</h3>
+        <table class="invest-table">
+          <tr>
+            <td>Monthly Retainer</td>
+            <td>${fmt(tier.monthly)} / month</td>
+          </tr>
+          <tr>
+            <td>One-Time Setup Fee</td>
+            <td>${fmt(tier.setup)}</td>
+          </tr>
+          <tr>
+            <td>Annual Retainer Total</td>
+            <td>${fmt(annualFee)}</td>
+          </tr>
+          <tr class="row-total">
+            <td>First-Year Total Investment</td>
+            <td>${fmt(annualTotal)}</td>
+          </tr>
+          ${savingsRow}
+        </table>
+        ${savingsNote}
+      </div>
+
+      <div class="guarantee-box">
+        <div class="icon">&#10003;</div>
+        <p>
+          <strong>30-Day Money-Back Guarantee</strong>
+          If you are not completely satisfied within the first 30 days, we will refund your setup fee in full &mdash; no questions asked. We stand behind our work.
+        </p>
+      </div>
+
+      <div class="prop-section">
+        <h3>Next Steps</h3>
+        <ol>
+          <li>Review and sign the service agreement (sent by email within 24 hours).</li>
+          <li>Pay the one-time setup fee to reserve your onboarding slot.</li>
+          <li>Complete a 30-minute kickoff call &mdash; we handle the rest and go live within <strong>5 business days</strong>.</li>
+        </ol>
+      </div>
+
+      <div class="prop-footer">
+        <div class="contact-block">
+          <p>
+            <strong>Brian Kalsic &mdash; Founder, CWI AI</strong>
+            Phone: (734) 812-9971<br>
+            Email: brian@cwiai.net<br>
+            Web: cwiai.net
+          </p>
+        </div>
+        <div class="tagline">Automate the work. Amplify the results.</div>
+      </div>
+    `;
+
+    const output = document.getElementById('proposal-output');
+    output.style.display = 'block';
+    output.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+</script>
+</body>
+</html>

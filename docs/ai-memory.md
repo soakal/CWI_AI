@@ -5,7 +5,7 @@
 ---
 
 ## Project Context
-- PROJECT: CWI (Central Wireless, Inc.)
+- PROJECT: CWI — Compute With Imagination (legal: CWI AI LLC)
 - NORTH_STAR: Never miss a customer call
 - STACK: Static HTML5/CSS/JS (cwi-site/ → Netlify) + PowerShell + Make.com (cwi-automation/)
 - GIT: Not initialized — run `git init` before any git workflows; `.gitignore` is ready at root

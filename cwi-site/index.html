@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CWI — Your AI receptionist that never misses a call</title>
+<link rel="canonical" href="https://cwiai.net/">
+<meta name="description" content="CWI answers your phone and chats 24/7, books appointments into your calendar, and sounds exactly like your business. The line is always live.">
+<link rel="icon" type="image/png" href="assets/cwi-favicon-64.png">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<!-- Google Analytics: Replace UA-XXXXXXXX with your GA4 measurement ID -->
+<!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script> -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Instrument+Sans:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&family=Archivo:wght@400;500;600;700;800&family=Figtree:wght@400;500;600&family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="cwi.css">
+<meta property="og:type" content="website">
+<meta property="og:title" content="CWI AI — Your AI receptionist that never misses a call">
+<meta property="og:description" content="CWI answers your phone and chats 24/7, books appointments, and sounds exactly like your business. Never lose a customer to voicemail again.">
+<meta property="og:url" content="https://cwiai.net/">
+<meta property="og:image" content="https://cwiai.net/assets/cwi-icon-primary-1024.png">
+<meta property="og:site_name" content="CWI AI">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="CWI AI — Your AI receptionist that never misses a call">
+<meta name="twitter:description" content="CWI answers your phone and chats 24/7, books appointments, and sounds exactly like your business.">
+<meta name="twitter:image" content="https://cwiai.net/assets/cwi-icon-primary-1024.png">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"LocalBusiness","name":"CWI AI LLC","alternateName":"Compute With Imagination","description":"AI assistants for local service businesses in Downriver, Michigan — answering every call, booking appointments 24/7.","url":"https://cwiai.net","telephone":"+17348129971","email":"brian@cwiai.net","founder":{"@type":"Person","name":"Brian Kalsic"},"address":{"@type":"PostalAddress","addressLocality":"Southgate","addressRegion":"MI","addressCountry":"US"},"areaServed":"Downriver, Michigan"}
+</script>
+<style>
+  /* ---------- HERO ---------- */
+  .hero{padding:82px 0 70px;position:relative}
+  .hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:54px;align-items:center}
+  @media(max-width:980px){.hero-grid{grid-template-columns:1fr;gap:44px}}
+  .hero h1{font-size:clamp(38px,6vw,68px);max-width:11ch}
+  .hero h1 .ln{display:block}
+  .hero .lead{font-size:clamp(17px,2vw,20px);color:var(--text-dim);max-width:46ch;margin-top:24px;text-wrap:pretty}
+  .hero-cta{display:flex;gap:14px;flex-wrap:wrap;margin-top:34px}
+  .hero-trust{display:flex;align-items:center;gap:14px;margin-top:34px;color:var(--steel);font-size:13.5px}
+  .hero-trust .avs{display:flex}
+  .hero-trust .avs span{width:30px;height:30px;border-radius:50%;border:2px solid var(--ink);margin-left:-8px;
+    background:linear-gradient(135deg,#2a2a30,#0e0e11);display:grid;place-items:center;font-size:11px;font-weight:700;color:var(--text-dim)}
+  .hero-trust .avs span:first-child{margin-left:0}
+
+  /* ---------- DEMO WIDGET ---------- */
+  .demo{background:linear-gradient(180deg,#141418,#0d0d10);border:1px solid var(--line-2);
+    border-radius:var(--r-lg);padding:18px;box-shadow:0 40px 90px rgba(0,0,0,.55),0 0 0 1px rgba(255,90,31,.05);position:relative}
+  .demo:before{content:"";position:absolute;inset:-1px;border-radius:inherit;pointer-events:none;
+    background:linear-gradient(180deg,rgba(255,90,31,.18),transparent 30%);-webkit-mask:linear-gradient(#000,#000) content-box,linear-gradient(#000,#000);-webkit-mask-composite:xor;mask-composite:exclude;padding:1px}
+  .demo-top{display:flex;align-items:center;gap:12px;padding:8px 10px 16px}
+  .demo-id{display:flex;align-items:center;gap:11px}
+  .demo-id .mk{width:36px;height:36px}
+  .demo-id b{font-family:var(--font-disp);font-size:15px;font-weight:700;letter-spacing:-.02em}
+  .demo-id span{display:block;font-size:11.5px;color:var(--steel);margin-top:1px}
+  .demo-status{margin-left:auto;display:inline-flex;align-items:center;gap:7px;font-size:11.5px;font-weight:600;
+    color:var(--accent);background:rgba(255,90,31,.1);padding:6px 11px;border-radius:var(--r-pill)}
+  .demo-status .lp{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 9px var(--accent);animation:blink 1.4s infinite}
+  .demo-tabs{display:flex;gap:4px;background:rgba(0,0,0,.45);border:1px solid var(--line);border-radius:var(--r-pill);padding:4px;width:fit-content;margin:0 10px}
+  .demo-tabs button{font-family:var(--font-body);font-weight:600;font-size:13px;color:var(--steel);background:transparent;border:0;
+    padding:8px 18px;border-radius:var(--r-pill);cursor:pointer;display:flex;align-items:center;gap:7px;transition:.2s}
+  .demo-tabs button.active{background:var(--accent);color:#0A0A0C}
+  .demo-stage{margin:14px 10px 6px;background:#0a0a0c;border:1px solid var(--line);border-radius:16px;overflow:hidden}
+  .demo-wave{display:flex;align-items:center;justify-content:center;gap:4px;height:74px;
+    background:radial-gradient(120px 60px at 50% 50%,rgba(255,90,31,.12),transparent 70%);border-bottom:1px solid var(--line)}
+  .demo-wave i{width:4px;border-radius:4px;background:var(--accent);transform-origin:center bottom;
+    animation:eqs 1s ease-in-out infinite}
+  @keyframes eqs{0%,100%{transform:scaleY(.55)}50%{transform:scaleY(1.35)}}
+  .demo[data-mode="chat"] .demo-wave{display:none}
+  .transcript{height:268px;overflow:hidden;padding:18px 18px 8px;display:flex;flex-direction:column;gap:12px}
+  .tline{max-width:84%;transition:opacity .45s var(--ease),transform .45s var(--ease)}
+  .tline.pre{opacity:0;transform:translateY(10px)}
+  .tline-who{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--steel)}
+  .tline p{font-size:14.5px;line-height:1.5;margin-top:5px;padding:11px 15px;border-radius:14px}
+  .tline.is-cwi{align-self:flex-start}
+  .tline.is-cwi p{background:rgba(255,90,31,.13);border:1px solid rgba(255,90,31,.22);color:#FFE9DE;border-bottom-left-radius:5px}
+  .tline.is-caller{align-self:flex-end;text-align:right}
+  .tline.is-caller p{background:var(--surface-2);border:1px solid var(--line);border-bottom-right-radius:5px}
+  .demo-foot{display:flex;align-items:center;gap:10px;padding:10px 12px 6px;color:var(--steel);font-size:12px}
+  .demo-foot .live-wave{height:18px}
+  .demo-foot .live-wave i{width:2.5px}
+
+  /* floating booking chip */
+  .demo-chip{position:absolute;right:-14px;bottom:34px;background:#fff;color:#15140f;border-radius:14px;
+    padding:12px 15px;box-shadow:0 18px 40px rgba(0,0,0,.5);display:flex;align-items:center;gap:11px;
+    animation:floaty 5s ease-in-out infinite}
+  @media(max-width:980px){.demo-chip{right:6px}}
+  @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+  .demo-chip .ck{width:30px;height:30px;border-radius:9px;background:var(--accent);display:grid;place-items:center;flex:none}
+  .demo-chip b{font-size:13px;font-family:var(--font-disp)}
+  .demo-chip span{display:block;font-size:11px;color:#6c6a62}
+
+  /* ---------- STAT BAND ---------- */
+  .stats{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:rgba(255,255,255,.012)}
+  .stats-grid{display:grid;grid-template-columns:repeat(4,1fr)}
+  @media(max-width:720px){.stats-grid{grid-template-columns:1fr 1fr}}
+  .stat{padding:34px 28px;border-left:1px solid var(--line)}
+  .stat:first-child{border-left:0}
+  @media(max-width:720px){.stat:nth-child(3){border-left:0}.stat:nth-child(odd){border-left:0}}
+  .stat .n{font-family:var(--font-disp);font-weight:800;font-size:clamp(30px,3.6vw,40px);letter-spacing:-.04em;color:#fff}
+  .stat .n em{color:var(--accent);font-style:normal}
+  .stat .l{font-size:13.5px;color:var(--steel);margin-top:6px}
+
+  /* ---------- STEPS ---------- */
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;counter-reset:s}
+  @media(max-width:820px){.steps{grid-template-columns:1fr}}
+  .step{counter-increment:s;position:relative;padding-top:8px}
+  .step .num{font-family:var(--font-disp);font-weight:800;font-size:15px;color:var(--accent);
+    display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:12px;
+    border:1px solid rgba(255,90,31,.3);background:rgba(255,90,31,.07);margin-bottom:18px}
+  .step .num:before{content:"0" counter(s)}
+  .step h3{font-size:20px;margin-bottom:10px}
+  .step p{font-size:15px;color:var(--text-dim);text-wrap:pretty}
+  .step:not(:last-child):after{content:"";position:absolute;top:28px;right:-8px;width:16px;height:1px;background:var(--line)}
+
+  /* ---------- FEATURE CARDS ---------- */
+  .feat h3{font-size:18px;margin:16px 0 8px}
+  .feat p{font-size:14.5px;color:var(--text-dim);text-wrap:pretty}
+
+  /* ---------- INDUSTRIES ---------- */
+  .inds{display:flex;flex-wrap:wrap;gap:12px}
+  .ind{display:inline-flex;align-items:center;gap:10px;padding:13px 20px;border:1px solid var(--line);
+    border-radius:var(--r-pill);font-size:15px;font-weight:500;color:var(--text-dim);transition:.2s;background:rgba(255,255,255,.012)}
+  .ind:hover{border-color:var(--accent);color:#fff;background:rgba(255,90,31,.06)}
+  .ind svg{width:18px;height:18px;color:var(--accent)}
+
+  /* ---------- TESTIMONIALS ---------- */
+  .quote{font-family:var(--font-disp);font-weight:600;font-size:18px;line-height:1.45;letter-spacing:-.02em;
+    color:#fff;text-wrap:pretty}
+  .who{display:flex;align-items:center;gap:12px;margin-top:22px}
+  .who .pic{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#2a2a30,#0e0e11);
+    display:grid;place-items:center;font-weight:700;font-size:14px;color:var(--accent);flex:none}
+  .who b{font-size:14px;display:block}
+  .who span{font-size:12.5px;color:var(--steel)}
+
+  /* ---------- CTA BAND (orange — reversed mark) ---------- */
+  .cta-band{background:var(--accent);color:#190800;border-radius:var(--r-lg);padding:64px 54px;
+    position:relative;overflow:hidden}
+  @media(max-width:680px){.cta-band{padding:44px 28px}}
+  .cta-band h2{font-size:clamp(30px,4.4vw,50px);color:#160700;max-width:16ch}
+  .cta-band p{font-size:18px;color:rgba(25,8,0,.72);margin-top:16px;max-width:42ch}
+  .cta-band .hero-cta{margin-top:30px}
+  .cta-band .btn-ink{box-shadow:0 10px 30px rgba(0,0,0,.25)}
+  .cta-band .btn-ghost{border-color:rgba(25,8,0,.3);color:#190800}
+  .cta-band .btn-ghost:hover{border-color:#190800;background:rgba(25,8,0,.06);color:#190800}
+  .cta-wave{position:absolute;right:-40px;top:50%;transform:translateY(-50%);opacity:.16;pointer-events:none}
+  @media(max-width:820px){.cta-wave{display:none}}
+</style>
+</head>
+<body>
+<div class="bg-field"></div>
+
+<!-- ===================== NAV ===================== -->
+<header class="nav">
+  <nav class="nav-in">
+    <a class="brand" href="index.html" aria-label="CWI home">
+      <svg class="mk" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <rect x="6" y="6" width="108" height="108" rx="30" fill="#0E0E11"></rect>
+        <rect x="6.8" y="6.8" width="106.4" height="106.4" rx="29.2" stroke="rgba(255,255,255,.10)" stroke-width="1.6"></rect>
+        <path d="M41 28 H79 a16 16 0 0 1 16 16 V60 a16 16 0 0 1 -16 16 H55 l-13 12 V76 h-1 a16 16 0 0 1 -16 -16 V44 a16 16 0 0 1 16 -16 Z" fill="none" stroke="#fff" stroke-width="6" stroke-linejoin="round"></path>
+        <path d="M37 52 H45 L50 43 L55 60 L60 34 L65 60 L70 43 L75 52 H83" fill="none" stroke="#FF5A1F" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"></path>
+      </svg>
+      <span class="wm">CWI<small>Compute With Imagination</small></span>
+    </a>
+    <div class="nav-links">
+      <a href="how-it-works.html">How it works</a>
+      <a href="industries.html">Industries</a>
+      <a href="pricing.html">Pricing</a>
+    </div>
+    <div class="nav-cta">
+      <a class="nav-tel" href="tel:+17348129971"><span class="dot"></span>(734) 812‑9971</a>
+      <a class="btn btn-primary btn-sm" href="demo.html">Book a demo</a>
+      <button class="nav-burger" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
+    </div>
+  </nav>
+</header>
+
+<!-- ===================== HERO ===================== -->
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div class="reveal">
+      <span class="kicker"><span class="pip"></span> Always‑on AI receptionist</span>
+      <h1 style="margin-top:26px"><span class="ln">Never miss</span><span class="ln">a call. Or a <span class="acc">booking.</span></span></h1>
+      <p class="lead">CWI answers your phone and your chats 24/7, books appointments straight into your calendar, and sounds exactly like your business. The line is always live — so you never lose a customer to voicemail again.</p>
+      <div class="hero-cta">
+        <a class="btn btn-primary btn-lg" href="demo.html">Book a demo</a>
+        <a class="btn btn-ghost btn-lg" href="#riley-demo">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M8 5v14l11-7z" fill="currentColor"></path></svg>
+          Hear it live
+        </a>
+      </div>
+      <div class="hero-trust">
+        <div class="avs"><span>S</span><span>D</span><span>R</span><span>T</span></div>
+        <span>Trusted by salons, clinics, restaurants &amp; trades</span>
+      </div>
+    </div>
+
+    <!-- DEMO WIDGET -->
+    <div class="reveal" style="position:relative">
+      <div class="demo" id="demo" data-mode="call">
+        <div class="demo-top">
+          <div class="demo-id">
+            <svg class="mk" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <rect x="6" y="6" width="108" height="108" rx="30" fill="#0E0E11"></rect>
+              <path d="M41 28 H79 a16 16 0 0 1 16 16 V60 a16 16 0 0 1 -16 16 H55 l-13 12 V76 h-1 a16 16 0 0 1 -16 -16 V44 a16 16 0 0 1 16 -16 Z" fill="none" stroke="#fff" stroke-width="6" stroke-linejoin="round"></path>
+              <path d="M37 52 H45 L50 43 L55 60 L60 34 L65 60 L70 43 L75 52 H83" fill="none" stroke="#FF5A1F" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+            <b>Ava · CWI Assistant<span>Lumière Salon — front desk</span></b>
+          </div>
+          <span class="demo-status" data-status>Live call · connected</span>
+        </div>
+
+        <div class="demo-tabs">
+          <button data-tab="call" class="active">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 4h4l2 5-3 2a11 11 0 0 0 5 5l2-3 5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path></svg>
+            Phone
+          </button>
+          <button data-tab="chat">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 5h14a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H9l-4 4v-4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path></svg>
+            Chat
+          </button>
+        </div>
+
+        <div class="demo-stage">
+          <div class="demo-wave" data-wave>
+            <i style="height:10px;animation-delay:0s"></i><i style="height:18px;animation-delay:.1s"></i><i style="height:26px;animation-delay:.2s"></i>
+            <i style="height:16px;animation-delay:.32s"></i><i style="height:34px;animation-delay:.18s"></i><i style="height:22px;animation-delay:.05s"></i>
+            <i style="height:14px;animation-delay:.26s"></i><i style="height:46px;animation-delay:.14s"></i><i style="height:14px;animation-delay:.3s"></i>
+            <i style="height:22px;animation-delay:.08s"></i><i style="height:34px;animation-delay:.22s"></i><i style="height:16px;animation-delay:.12s"></i>
+            <i style="height:26px;animation-delay:.28s"></i><i style="height:18px;animation-delay:.04s"></i><i style="height:10px;animation-delay:.2s"></i>
+          </div>
+          <div class="transcript" data-transcript>
+            <div class="tline is-cwi"><span class="tline-who">CWI</span><p>Thanks for calling Lumière Salon, this is Ava. How can I help?</p></div>
+            <div class="tline is-caller"><span class="tline-who">Caller</span><p>Hi, do you have anything for a cut and color this Saturday?</p></div>
+            <div class="tline is-cwi"><span class="tline-who">CWI</span><p>Let me check… Saturday I have 11:00 AM or 2:30 PM with Renée. Which works?</p></div>
+            <div class="tline is-caller"><span class="tline-who">Caller</span><p>2:30 would be perfect.</p></div>
+            <div class="tline is-cwi"><span class="tline-who">CWI</span><p>Let me check availability for 2:30 with Renée… that time looks open. I'll hold it and text you a confirmation once it's locked in — anything else?</p></div>
+          </div>
+        </div>
+        <div class="demo-foot">
+          <span class="live-wave"><i style="animation-delay:0s"></i><i style="animation-delay:.15s"></i><i style="animation-delay:.3s"></i><i style="animation-delay:.1s"></i></span>
+          Real-time · books into your calendar · texts a confirmation
+        </div>
+      </div>
+      <div class="demo-chip">
+        <span class="ck"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#0A0A0C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
+        <b>Checking…<span>Sat 2:30 · Renée</span></b>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== STATS ===================== -->
+<section class="stats">
+  <div class="wrap" style="padding:0">
+    <div class="stats-grid">
+      <div class="stat reveal"><div class="n"><em>24/7</em></div><div class="l">Answered, every hour of every day</div></div>
+      <div class="stat reveal"><div class="n">+38<em>%</em></div><div class="l">More bookings captured after hours</div></div>
+      <div class="stat reveal"><div class="n">&lt;1<em> ring</em></div><div class="l">Average time to answer</div></div>
+      <div class="stat reveal"><div class="n">0</div><div class="l">Calls sent to voicemail</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== HOW IT WORKS ===================== -->
+<section class="sec">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">How it works</span>
+      <h2>Live in an afternoon. Working while you sleep.</h2>
+      <p>No new hardware, no call center, no scripts to memorize. CWI plugs into the number and calendar you already use.</p>
+    </div>
+    <div class="steps">
+      <div class="step reveal">
+        <div class="num"></div>
+        <h3>Connect your number</h3>
+        <p>Forward your existing line — or get a fresh local number in minutes. Calls and texts route straight to CWI.</p>
+      </div>
+      <div class="step reveal">
+        <div class="num"></div>
+        <h3>Train it in your voice</h3>
+        <p>CWI learns your services, hours, prices and FAQs. It greets callers by your business name and sounds on‑brand.</p>
+      </div>
+      <div class="step reveal">
+        <div class="num"></div>
+        <h3>Go live</h3>
+        <p>It answers, books into your calendar, texts confirmations, and drops you a tidy summary after every conversation.</p>
+      </div>
+    </div>
+    <div style="margin-top:38px" class="reveal">
+      <a class="btn btn-ghost" href="how-it-works.html">See the full walkthrough →</a>
+    </div>
+  </div>
+</section>
+
+<div class="wrap"><div class="rule"></div></div>
+
+<!-- ===================== LIVE DEMO — RILEY ===================== -->
+<section class="sec" id="riley-demo">
+  <div class="wrap">
+    <div class="sec-head center reveal">
+      <span class="eyebrow">See it live</span>
+      <h2>Chat with Riley &mdash; right now.</h2>
+      <p>This is exactly what your customers experience: instant, 24/7, on-brand. Try booking an appointment, asking about hours, or getting a quote. Watch how Riley handles it.</p>
+    </div>
+    <div style="max-width:400px;margin:0 auto" class="reveal" id="riley-embed-root"></div>
+  </div>
+</section>
+
+<div class="wrap"><div class="rule"></div></div>
+
+<!-- ===================== FEATURES ===================== -->
+<section class="sec">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">What it does</span>
+      <h2>A front desk that never clocks out.</h2>
+      <p>Everything a great receptionist does — answering, booking, following up — handled the moment it happens.</p>
+    </div>
+    <div class="grid g-3">
+      <div class="card feat reveal">
+        <div class="ic-tile"><svg viewBox="0 0 24 24" fill="none"><path d="M5 4h4l2 5-3 2a11 11 0 0 0 5 5l2-3 5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z" stroke="#FF5A1F" stroke-width="2" stroke-linejoin="round"></path></svg></div>
+        <h3>Answers every call &amp; chat</h3>
+        <p>Phone, website chat, text and social DMs — picked up instantly, in a natural voice, 24/7/365.</p>
+      </div>
+      <div class="card feat reveal">
+        <div class="ic-tile"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="16" rx="2" stroke="#FF5A1F" stroke-width="2"></rect><path d="M3 9h18M8 3v4M16 3v4" stroke="#FF5A1F" stroke-width="2" stroke-linecap="round"></path></svg></div>
+        <h3>Books into your calendar</h3>
+        <p>Two‑way sync with Google, Outlook, Square &amp; Calendly. Real availability, no double‑bookings.</p>
+      </div>
+      <div class="card feat reveal">
+        <div class="ic-tile"><svg viewBox="0 0 24 24" fill="none"><path d="M3 12h3l2-6 3 12 2-9 2 5h6" stroke="#FF5A1F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
+        <h3>Sounds like your brand</h3>
+        <p>Your name, your tone, your policies. Friendly or buttoned‑up — it speaks the way your business does.</p>
+      </div>
+      <div class="card feat reveal">
+        <div class="ic-tile"><svg viewBox="0 0 24 24" fill="none"><path d="M4 5h16v11H8l-4 4z" stroke="#FF5A1F" stroke-width="2" stroke-linejoin="round"></path></svg></div>
+        <h3>Texts &amp; confirmations</h3>
+        <p>Sends a confirmation, reminder and any forms automatically — and chases no‑shows so you don't have to.</p>
+      </div>
+      <div class="card feat reveal">
+        <div class="ic-tile"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3l2.5 5.5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-.5L12 3Z" stroke="#FF5A1F" stroke-width="2" stroke-linejoin="round"></path></svg></div>
+        <h3>Captures every lead</h3>
+        <p>Name, number, reason for calling — logged and qualified, so no opportunity slips through the cracks.</p>
+      </div>
+      <div class="card feat reveal">
+        <div class="ic-tile"><svg viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 12h16M4 18h10" stroke="#FF5A1F" stroke-width="2" stroke-linecap="round"></path></svg></div>
+        <h3>Smart call summaries</h3>
+        <p>A clean recap after every conversation, pushed to your phone, inbox or CRM. Read it in five seconds.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== INDUSTRIES ===================== -->
+<section class="sec on-paper">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Built for local business</span>
+      <h2 style="color:#15140f">Tuned for the way your industry books.</h2>
+      <p>CWI knows the difference between a fill, a fitting and a flat tire. Pick your trade and it speaks the language.</p>
+    </div>
+    <div class="inds reveal">
+      <span class="ind"><svg viewBox="0 0 24 24" fill="none"><path d="M7 4v7a5 5 0 0 0 10 0V4M12 16v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg> Salons &amp; Spas</span>
+      <span class="ind"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3a4 4 0 0 0-4 4c0 4-2 4-2 8a4 4 0 0 0 8 0 4 4 0 0 0 8 0c0-4-2-4-2-8a4 4 0 0 0-4-4 4 4 0 0 0-2 .5A4 4 0 0 0 12 3Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path></svg> Dental &amp; Clinics</span>
+      <span class="ind"><svg viewBox="0 0 24 24" fill="none"><path d="M6 3v8a3 3 0 0 0 6 0V3M9 3v18M18 3c-1.5 1-2 3-2 6s.5 4 2 4v8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg> Restaurants</span>
+      <span class="ind"><svg viewBox="0 0 24 24" fill="none"><path d="M3 11l9-7 9 7M5 9v11h14V9" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path></svg> Home &amp; Trades</span>
+      <span class="ind"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l1.5-5h11L19 13M5 13h14v5H5zM7 18v2M17 18v2" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path></svg> Auto Services</span>
+      <span class="ind"><svg viewBox="0 0 24 24" fill="none"><path d="M6 9v6M18 9v6M3 11v2M21 11v2M6 12h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg> Fitness &amp; Studios</span>
+      <span class="ind"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16v12H4zM4 7l8 6 8-6" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path></svg> Real Estate</span>
+      <span class="ind"><svg viewBox="0 0 24 24" fill="none"><path d="M9 7V5a3 3 0 0 1 6 0v2M5 7h14l-1 13H6z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path></svg> Legal &amp; Pro Services</span>
+    </div>
+    <div style="margin-top:34px" class="reveal">
+      <a class="btn btn-ink" href="industries.html">Explore by industry →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== GUARANTEE ===================== -->
+<section class="sec">
+  <div class="wrap">
+    <div class="card reveal" style="max-width:640px;margin:0 auto;text-align:center;padding:48px 40px">
+      <div class="ic-tile" style="margin:0 auto 20px"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3l2.5 5.5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-.5L12 3Z" stroke="#FF5A1F" stroke-width="2" stroke-linejoin="round"></path></svg></div>
+      <h2 style="font-size:clamp(24px,3.5vw,36px)">30-day results guarantee.</h2>
+      <p style="color:var(--text-dim);margin-top:16px;max-width:42ch;margin-left:auto;margin-right:auto">If CWI doesn't book you more jobs in the first 30 days, you pay nothing. The risk is on us — not you.</p>
+      <div style="margin-top:28px"><a class="btn btn-primary btn-lg" href="demo.html">Start risk-free</a></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== CTA BAND ===================== -->
+<section class="sec-tight">
+  <div class="wrap">
+    <div class="cta-band reveal">
+      <svg class="cta-wave" width="420" height="420" viewBox="0 0 120 120" fill="none"><path d="M10 60 H30 L40 30 L50 90 L60 12 L70 90 L80 30 L90 60 H110" stroke="#190800" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+      <span class="kicker" style="border-color:rgba(25,8,0,.25);color:#3a1404;background:rgba(255,255,255,.25)"><span class="pip" style="background:#190800;box-shadow:none"></span> Your phone is ringing</span>
+      <h2 style="margin-top:22px">Answer every customer, even the ones you'd have missed.</h2>
+      <p>See CWI handle a live call and book an appointment in real time. Setup takes one afternoon.</p>
+      <div class="hero-cta">
+        <a class="btn btn-ink btn-lg" href="demo.html">Book a demo</a>
+        <a class="btn btn-ghost btn-lg" href="pricing.html">See pricing</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== FOOTER ===================== -->
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <a class="brand" href="index.html">
+          <svg class="mk" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect x="6" y="6" width="108" height="108" rx="30" fill="#0E0E11"></rect>
+            <rect x="6.8" y="6.8" width="106.4" height="106.4" rx="29.2" stroke="rgba(255,255,255,.10)" stroke-width="1.6"></rect>
+            <path d="M41 28 H79 a16 16 0 0 1 16 16 V60 a16 16 0 0 1 -16 16 H55 l-13 12 V76 h-1 a16 16 0 0 1 -16 -16 V44 a16 16 0 0 1 16 -16 Z" fill="none" stroke="#fff" stroke-width="6" stroke-linejoin="round"></path>
+            <path d="M37 52 H45 L50 43 L55 60 L60 34 L65 60 L70 43 L75 52 H83" fill="none" stroke="#FF5A1F" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"></path>
+          </svg>
+          <span class="wm">CWI<small>Compute With Imagination</small></span>
+        </a>
+        <p style="color:var(--steel);font-size:14px;margin-top:18px;max-width:34ch">The always‑on AI receptionist for local business. The line is always live.</p>
+        <div class="live-wave" style="margin-top:20px"><i style="animation-delay:0s"></i><i style="animation-delay:.12s"></i><i style="animation-delay:.24s"></i><i style="animation-delay:.08s"></i><i style="animation-delay:.3s"></i></div>
+      </div>
+      <div>
+        <h5>Product</h5>
+        <a class="lnk" href="how-it-works.html">How it works</a>
+        <a class="lnk" href="industries.html">Industries</a>
+        <a class="lnk" href="pricing.html">Pricing</a>
+        <a class="lnk" href="demo.html">Book a demo</a>
+      </div>
+      <div>
+        <h5>Company</h5>
+        <a class="lnk" href="how-it-works.html">About</a>
+        <a class="lnk" href="mailto:brian@cwiai.net">Contact</a>
+        <a class="lnk" href="tel:+17348129971">Call us</a>
+        <a class="lnk" href="demo.html">Book a demo</a>
+      </div>
+      <div>
+        <h5>Get started</h5>
+        <a class="lnk" href="tel:+17348129971">(734) 812‑9971</a>
+        <a class="lnk" href="mailto:brian@cwiai.net">brian@cwiai.net</a>
+        <a class="lnk" href="demo.html">Book a demo →</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; <span data-year>2026</span> CWI AI LLC &middot; Brian Kalsic &middot; Southgate, MI &middot; cwiai.net</span>
+      <span><a href="privacy.html" style="color:inherit">Privacy</a> · <a href="terms.html" style="color:inherit">Terms</a></span>
+    </div>
+  </div>
+</footer>
+
+<script src="site.js"></script>
+<script>document.addEventListener('DOMContentLoaded',function(){window.CWIDemo(document.getElementById('demo'));var e=document.getElementById('riley-embed-root');if(window.CWIRileyChat&&e)window.CWIRileyChat(e,{mode:'embed'});if(window.CWIRileyFloat)window.CWIRileyFloat();});</script>
+
+<!-- Tweaks panel (design-time only) removed from production.
+     To restore during design work, load behind a query-string flag on a non-published branch. -->
+</body>
+</html>

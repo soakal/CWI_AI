@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CWI AI — Webhook Payload Tester</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #0A0A0C;
+      --surface: #13131A;
+      --surface-2: #1C1C27;
+      --border: #2A2A3A;
+      --accent: #FF5A1F;
+      --accent-hover: #FF7340;
+      --accent-dim: rgba(255, 90, 31, 0.15);
+      --text: #F0F0F5;
+      --text-muted: #7A7A9A;
+      --success: #22C55E;
+      --error: #EF4444;
+      --warning: #F59E0B;
+      --font: 'Sora', system-ui, sans-serif;
+      --radius: 10px;
+      --radius-sm: 6px;
+    }
+
+    html, body {
+      height: 100%;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 14px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ── Layout ─────────────────────────────────────── */
+    .page {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+
+    /* ── Header ──────────────────────────────────────── */
+    header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 36px;
+    }
+
+    .logo-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      background: var(--accent);
+      border-radius: var(--radius-sm);
+      flex-shrink: 0;
+    }
+
+    .logo-badge svg {
+      width: 22px;
+      height: 22px;
+      fill: #fff;
+    }
+
+    .header-text h1 {
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: -0.3px;
+    }
+
+    .header-text p {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 300;
+      margin-top: 2px;
+    }
+
+    /* ── Card ─────────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 16px;
+    }
+
+    .card-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    /* ── Form controls ────────────────────────────────── */
+    select, input[type="text"], textarea {
+      width: 100%;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    select:focus, input[type="text"]:focus, textarea:focus {
+      border-color: var(--accent);
+    }
+
+    select {
+      padding: 10px 14px;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%237A7A9A' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 32px;
+    }
+
+    input[type="text"] {
+      padding: 10px 14px;
+    }
+
+    textarea {
+      padding: 12px 14px;
+      resize: vertical;
+      font-size: 12px;
+      font-family: 'Courier New', Courier, monospace;
+      line-height: 1.55;
+      min-height: 220px;
+    }
+
+    /* ── Buttons ──────────────────────────────────────── */
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 500;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      padding: 9px 18px;
+      transition: background 0.15s, opacity 0.15s, transform 0.1s;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    button:active {
+      transform: scale(0.97);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--accent-hover);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background: var(--surface-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* ── URL row ──────────────────────────────────────── */
+    .url-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .url-row input {
+      flex: 1;
+    }
+
+    /* ── Status badge ─────────────────────────────────── */
+    .status-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 16px;
+      min-height: 30px;
+    }
+
+    .status-icon {
+      font-size: 18px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .status-code {
+      font-size: 13px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 20px;
+      display: none;
+    }
+
+    .status-code.ok {
+      background: rgba(34, 197, 94, 0.15);
+      color: var(--success);
+      display: inline-block;
+    }
+
+    .status-code.err {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--error);
+      display: inline-block;
+    }
+
+    .status-code.loading {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--warning);
+      display: inline-block;
+    }
+
+    .status-msg {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* ── Response box ─────────────────────────────────── */
+    .response-box {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 12px;
+      color: var(--text-muted);
+      min-height: 80px;
+      white-space: pre-wrap;
+      word-break: break-all;
+      margin-top: 12px;
+      display: none;
+    }
+
+    .response-box.visible {
+      display: block;
+    }
+
+    /* ── Scenario tag ─────────────────────────────────── */
+    .scenario-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .scenario-tag {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 9px;
+      border-radius: 20px;
+      background: var(--accent-dim);
+      color: var(--accent);
+      letter-spacing: 0.3px;
+    }
+
+    .scenario-name {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* ── Divider ──────────────────────────────────────── */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 20px 0;
+    }
+
+    /* ── Copy toast ───────────────────────────────────── */
+    #copy-toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 13px;
+      padding: 9px 20px;
+      border-radius: 30px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+
+    #copy-toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ── Spinner ──────────────────────────────────────── */
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255,255,255,0.25);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- Header -->
+  <header>
+    <div class="logo-badge">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.18l7.5 3.75-7.5 3.75-7.5-3.75L12 4.18zM4 8.97l7 3.5v6.55l-7-3.5V8.97zm9 10.05v-6.55l7-3.5v6.55l-7 3.5z"/>
+      </svg>
+    </div>
+    <div class="header-text">
+      <h1>CWI AI — Webhook Payload Tester</h1>
+      <p>Fire sample payloads at Make.com webhooks before going live</p>
+    </div>
+  </header>
+
+  <!-- Step 1: Scenario -->
+  <div class="card">
+    <div class="card-label">Step 1 — Select Scenario</div>
+    <select id="scenario-select">
+      <option value="">— Choose a scenario —</option>
+      <option value="freshchat">A · Freshchat Incoming Message</option>
+      <option value="apollo_contact">D · Apollo Contact Enrolled</option>
+      <option value="apollo_reply">E · Apollo Email Reply</option>
+      <option value="stripe_payment">F · Stripe Payment Succeeded</option>
+      <option value="calendly_created">G / J / M · Calendly Event Created</option>
+      <option value="calendly_canceled">L · Calendly Event Canceled</option>
+      <option value="hubspot_closed_won">H · HubSpot Deal Closed Won</option>
+      <option value="stripe_failed">I · Stripe Payment Failed</option>
+    </select>
+  </div>
+
+  <!-- Step 2: Payload -->
+  <div class="card" id="payload-card" style="display:none;">
+    <div class="scenario-meta">
+      <span class="scenario-tag" id="scenario-tag">A</span>
+      <span class="scenario-name" id="scenario-name">Freshchat Incoming Message</span>
+    </div>
+    <div class="card-label">JSON Payload (editable)</div>
+    <textarea id="payload-textarea" spellcheck="false" placeholder="Select a scenario above to load a sample payload..."></textarea>
+    <div class="btn-row">
+      <button class="btn-secondary" id="copy-btn">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4C2.9 1 2 1.9 2 3v14h2V3h12V1zm3 4H8C6.9 5 6 5.9 6 7v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+        Copy Payload
+      </button>
+      <button class="btn-secondary" id="format-btn">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M3 18h6v-2H3v2zm0-5h12v-2H3v2zm0-7v2h18V6H3zm16 9.34c.47-.2 1-.31 1.5-.31C22.88 15.03 24 16.15 24 17.5S22.88 19.97 20.5 19.97c-1.65 0-3.07-.97-3.71-2.38l1.12-.46c.39.88 1.28 1.5 2.35 1.5.97 0 1.76-.79 1.76-1.76s-.79-1.76-1.76-1.76c-.48 0-.91.19-1.23.5l.94.94H17V14l1.03 1.03L19 14.03v1.31z"/></svg>
+        Format JSON
+      </button>
+      <button class="btn-secondary" id="reset-btn">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+        Reset
+      </button>
+    </div>
+  </div>
+
+  <!-- Step 3: Webhook URL + Send -->
+  <div class="card" id="send-card" style="display:none;">
+    <div class="card-label">Step 2 — Enter Webhook URL</div>
+    <div class="url-row">
+      <input type="text" id="webhook-url" placeholder="https://hook.us1.make.com/xxxxxxxxxxxxxxxxxxxx" />
+    </div>
+
+    <hr class="divider" />
+
+    <div class="card-label">Step 3 — Fire Request</div>
+    <div class="btn-row">
+      <button class="btn-primary" id="send-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+        Send Test
+      </button>
+    </div>
+
+    <!-- Status -->
+    <div class="status-row" id="status-row">
+      <span class="status-icon" id="status-icon"></span>
+      <span class="status-code" id="status-code"></span>
+      <span class="status-msg" id="status-msg">Ready — fill in the URL and press Send Test.</span>
+    </div>
+
+    <!-- Response body -->
+    <div class="response-box" id="response-box"></div>
+  </div>
+
+</div>
+
+<!-- Copy toast -->
+<div id="copy-toast">Payload copied to clipboard</div>
+
+<script>
+  // ── Sample payloads ───────────────────────────────────────────────
+  const PAYLOADS = {
+    freshchat: {
+      tag: 'A',
+      name: 'Freshchat Incoming Message',
+      json: {
+        messages: [{
+          channel_id: 'ch1',
+          text: 'I want to book an appointment',
+          actor_type: 'user',
+          actor_id: 'u1'
+        }],
+        conversation: {
+          id: 'conv1',
+          status: 'open',
+          labels: []
+        }
+      }
+    },
+    apollo_contact: {
+      tag: 'D',
+      name: 'Apollo Contact Enrolled',
+      json: {
+        contact: {
+          id: 'c1',
+          first_name: 'John',
+          last_name: 'Smith',
+          company_name: 'Smith Plumbing',
+          email: 'john@smithplumbing.com'
+        },
+        event: 'contact.enrolled_in_sequence'
+      }
+    },
+    apollo_reply: {
+      tag: 'E',
+      name: 'Apollo Email Reply',
+      json: {
+        email: {
+          from: 'john@smithplumbing.com',
+          body: 'Yes I am interested in learning more'
+        },
+        contact: {
+          id: 'c1',
+          name: 'John Smith'
+        },
+        event: 'email.reply_received'
+      }
+    },
+    stripe_payment: {
+      tag: 'F',
+      name: 'Stripe Payment Succeeded',
+      json: {
+        type: 'payment_intent.succeeded',
+        data: {
+          object: {
+            id: 'pi_test',
+            amount: 39700,
+            currency: 'usd',
+            customer: 'cus_test',
+            receipt_email: 'john@smithplumbing.com'
+          }
+        }
+      }
+    },
+    calendly_created: {
+      tag: 'G/J/M',
+      name: 'Calendly Event Created',
+      json: {
+        event: 'invitee.created',
+        payload: {
+          event: {
+            start_time: '2026-06-10T14:00:00Z',
+            name: '15-Minute Discovery Call'
+          },
+          invitee: {
+            name: 'John Smith',
+            email: 'john@smithplumbing.com'
+          }
+        }
+      }
+    },
+    calendly_canceled: {
+      tag: 'L',
+      name: 'Calendly Event Canceled',
+      json: {
+        event: 'invitee.canceled',
+        payload: {
+          event: {
+            start_time: '2026-06-10T14:00:00Z',
+            name: '15-Minute Discovery Call'
+          },
+          invitee: {
+            name: 'John Smith',
+            email: 'john@smithplumbing.com'
+          },
+          cancellation: {
+            reason: 'Schedule conflict'
+          }
+        }
+      }
+    },
+    hubspot_closed_won: {
+      tag: 'H',
+      name: 'HubSpot Deal Closed Won',
+      json: {
+        objectId: '123',
+        propertyName: 'dealstage',
+        propertyValue: 'closedwon',
+        objectType: 'deal'
+      }
+    },
+    stripe_failed: {
+      tag: 'I',
+      name: 'Stripe Payment Failed',
+      json: {
+        type: 'payment_intent.payment_failed',
+        data: {
+          object: {
+            id: 'pi_test',
+            amount: 39700,
+            currency: 'usd',
+            customer: 'cus_test',
+            last_payment_error: {
+              message: 'Your card was declined.'
+            }
+          }
+        }
+      }
+    }
+  };
+
+  // ── DOM refs ──────────────────────────────────────────────────────
+  const scenarioSelect  = document.getElementById('scenario-select');
+  const payloadCard     = document.getElementById('payload-card');
+  const sendCard        = document.getElementById('send-card');
+  const payloadTextarea = document.getElementById('payload-textarea');
+  const scenarioTag     = document.getElementById('scenario-tag');
+  const scenarioName    = document.getElementById('scenario-name');
+  const webhookUrl      = document.getElementById('webhook-url');
+  const sendBtn         = document.getElementById('send-btn');
+  const copyBtn         = document.getElementById('copy-btn');
+  const formatBtn       = document.getElementById('format-btn');
+  const resetBtn        = document.getElementById('reset-btn');
+  const statusIcon      = document.getElementById('status-icon');
+  const statusCode      = document.getElementById('status-code');
+  const statusMsg       = document.getElementById('status-msg');
+  const responseBox     = document.getElementById('response-box');
+  const copyToast       = document.getElementById('copy-toast');
+
+  let currentKey = null;
+
+  // ── Scenario selection ────────────────────────────────────────────
+  scenarioSelect.addEventListener('change', () => {
+    currentKey = scenarioSelect.value;
+    if (!currentKey) {
+      payloadCard.style.display = 'none';
+      sendCard.style.display = 'none';
+      return;
+    }
+    const data = PAYLOADS[currentKey];
+    scenarioTag.textContent  = data.tag;
+    scenarioName.textContent = data.name;
+    payloadTextarea.value    = JSON.stringify(data.json, null, 2);
+    payloadCard.style.display = 'block';
+    sendCard.style.display    = 'block';
+    clearStatus();
+  });
+
+  // ── Format JSON ───────────────────────────────────────────────────
+  formatBtn.addEventListener('click', () => {
+    try {
+      const parsed = JSON.parse(payloadTextarea.value);
+      payloadTextarea.value = JSON.stringify(parsed, null, 2);
+    } catch (e) {
+      showStatus('error', null, 'Invalid JSON — cannot format.');
+    }
+  });
+
+  // ── Reset to default ──────────────────────────────────────────────
+  resetBtn.addEventListener('click', () => {
+    if (!currentKey) return;
+    payloadTextarea.value = JSON.stringify(PAYLOADS[currentKey].json, null, 2);
+    clearStatus();
+  });
+
+  // ── Copy payload ──────────────────────────────────────────────────
+  copyBtn.addEventListener('click', async () => {
+    if (!payloadTextarea.value.trim()) return;
+    try {
+      await navigator.clipboard.writeText(payloadTextarea.value);
+      showToast();
+    } catch {
+      // Fallback for older/non-https contexts
+      payloadTextarea.select();
+      document.execCommand('copy');
+      showToast();
+    }
+  });
+
+  function showToast() {
+    copyToast.classList.add('show');
+    setTimeout(() => copyToast.classList.remove('show'), 2000);
+  }
+
+  // ── Send test ─────────────────────────────────────────────────────
+  sendBtn.addEventListener('click', async () => {
+    const url = webhookUrl.value.trim();
+    if (!url) {
+      showStatus('error', null, 'Please enter a Webhook URL first.');
+      return;
+    }
+    if (!url.startsWith('http')) {
+      showStatus('error', null, 'Webhook URL must start with http:// or https://');
+      return;
+    }
+
+    let parsed;
+    try {
+      parsed = JSON.parse(payloadTextarea.value);
+    } catch (e) {
+      showStatus('error', null, 'Payload contains invalid JSON — please fix before sending.');
+      return;
+    }
+
+    // Loading state
+    sendBtn.disabled = true;
+    sendBtn.innerHTML = '<span class="spinner"></span> Sending…';
+    clearStatus();
+    statusMsg.textContent = 'Sending request…';
+    statusCode.className = 'status-code loading';
+    statusCode.textContent = '…';
+    statusCode.style.display = 'inline-block';
+    responseBox.classList.remove('visible');
+    responseBox.textContent = '';
+
+    const ctrl = new AbortController();
+    const fetchTimer = setTimeout(() => ctrl.abort(), 5000);
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(parsed),
+        signal: ctrl.signal
+      });
+      clearTimeout(fetchTimer);
+
+      let bodyText = '';
+      try {
+        bodyText = await response.text();
+      } catch (_) {}
+
+      const ok = response.ok;
+      showStatus(ok ? 'ok' : 'error', response.status, ok ? 'Request accepted.' : `Server returned an error.`);
+
+      if (bodyText) {
+        let displayText = bodyText;
+        try {
+          displayText = JSON.stringify(JSON.parse(bodyText), null, 2);
+        } catch (_) {}
+        responseBox.textContent = displayText;
+        responseBox.classList.add('visible');
+      }
+
+    } catch (err) {
+      clearTimeout(fetchTimer);
+      const msg = err.name === 'AbortError' ? 'Request timed out after 5 seconds.' : `Network error: ${err.message}`;
+      showStatus('error', null, msg);
+      responseBox.textContent = err.toString();
+      responseBox.classList.add('visible');
+    } finally {
+      sendBtn.disabled = false;
+      sendBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg> Send Test';
+    }
+  });
+
+  // ── Status helpers ────────────────────────────────────────────────
+  function showStatus(type, code, msg) {
+    statusCode.className  = 'status-code';
+    statusCode.style.display = 'none';
+
+    if (type === 'ok') {
+      statusIcon.textContent = '✅';
+      statusCode.classList.add('ok');
+      statusCode.textContent = code !== null ? `HTTP ${code}` : 'OK';
+      statusCode.style.display = 'inline-block';
+      statusMsg.style.color = 'var(--success)';
+    } else if (type === 'error') {
+      statusIcon.textContent = '❌';
+      statusCode.classList.add('err');
+      if (code !== null) {
+        statusCode.textContent = `HTTP ${code}`;
+        statusCode.style.display = 'inline-block';
+      }
+      statusMsg.style.color = 'var(--error)';
+    } else {
+      statusIcon.textContent = '';
+      statusMsg.style.color = 'var(--text-muted)';
+    }
+    statusMsg.textContent = msg || '';
+  }
+
+  function clearStatus() {
+    statusIcon.textContent = '';
+    statusCode.textContent = '';
+    statusCode.className = 'status-code';
+    statusCode.style.display = 'none';
+    statusMsg.textContent = 'Ready — fill in the URL and press Send Test.';
+    statusMsg.style.color = 'var(--text-muted)';
+    responseBox.classList.remove('visible');
+    responseBox.textContent = '';
+  }
+</script>
+</body>
+</html>

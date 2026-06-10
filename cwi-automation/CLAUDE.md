@@ -1,6 +1,6 @@
 # Claude Code — CWI Automation Instructions
 
-> Sub-project: `cwi-automation/` — Business ops toolkit
+> Sub-project: `cwi-automation/` — Business ops toolkit (CWI — Compute With Imagination)
 > Stack: PowerShell scripts + Make.com JSON blueprints + standalone HTML tools
 > Parent rules: See root `RULES.md` and `CLAUDE.md` for the full standard.
 
